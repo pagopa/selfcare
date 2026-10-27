@@ -300,10 +300,11 @@ resource "azurerm_monitor_scheduled_query_rules_alert_v2" "api_400_rate" {
   count = var.env_short == "p" && var.api_400_alert_enabled ? 1 : 0
 
   name                = "${local.project}-api-400-rate"
+  display_name        = "[SELC PROD] Too many HTTP 400 on a single API"
   resource_group_name = var.monitor_rg_name
   location            = var.monitor_rg_location
 
-  description             = "Triggered when a single API (operation_Name) returns more than ${var.api_400_alert_threshold} HTTP 400 within ${var.api_400_alert_window_frequency}."
+  description             = "[SELC PROD] A single API returned more than ${var.api_400_alert_threshold} HTTP 400 (Bad Request) within ${var.api_400_alert_window_frequency} on Application Insights ${var.application_insights_name}. The affected API and service are in the 'Api' dimension (format: 'operation_Name (cloud_RoleName)') and in the AffectedApi custom property. Check whether a client is sending invalid requests or a recent release changed the API contract."
   severity                = var.api_400_alert_severity
   enabled                 = true
   auto_mitigation_enabled = false
@@ -316,7 +317,7 @@ resource "azurerm_monitor_scheduled_query_rules_alert_v2" "api_400_rate" {
     query = <<-KQL
       requests
       | where resultCode == "400"
-      | summarize Count = count() by operation_Name
+      | summarize Count = count() by Api = strcat(operation_Name, " (", cloud_RoleName, ")")
     KQL
 
     time_aggregation_method = "Total"
@@ -324,8 +325,9 @@ resource "azurerm_monitor_scheduled_query_rules_alert_v2" "api_400_rate" {
     operator                = "GreaterThan"
     threshold               = var.api_400_alert_threshold
 
+    # Single dimension so that dimensions[0] in the alert payload is always the affected API
     dimension {
-      name     = "operation_Name"
+      name     = "Api"
       operator = "Include"
       values   = ["*"]
     }
@@ -338,6 +340,14 @@ resource "azurerm_monitor_scheduled_query_rules_alert_v2" "api_400_rate" {
 
   action {
     action_groups = [azurerm_monitor_action_group.error_action_group[0].id]
+    custom_properties = {
+      Summary       = "[SELC PROD] $${data.alertContext.condition.allOf[0].metricValue} HTTP 400 in ${var.api_400_alert_window_frequency} on $${data.alertContext.condition.allOf[0].dimensions[0].value} (threshold ${var.api_400_alert_threshold})"
+      AffectedApi   = "$${data.alertContext.condition.allOf[0].dimensions[0].value}"
+      Http400Count  = "$${data.alertContext.condition.allOf[0].metricValue}"
+      Threshold     = "> ${var.api_400_alert_threshold} in ${var.api_400_alert_window_frequency}"
+      SearchResults = "$${data.alertContext.condition.allOf[0].linkToFilteredSearchResultsUI}"
+      Triage        = "Open SearchResults or query Application Insights ${var.application_insights_name}: requests | where resultCode == \"400\" and operation_Name == \"<API>\" | summarize count() by cloud_RoleName, client_IP, url. Look for a single client sending invalid payloads or a recent release changing the API contract."
+    }
   }
 
   tags = var.tags

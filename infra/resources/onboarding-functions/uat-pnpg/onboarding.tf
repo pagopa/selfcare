@@ -74,6 +74,7 @@ locals {
       "SELFCARE_URL"                                       = "https://imprese.uat.notifichedigitali.it"
       "MAIL_ONBOARDING_CONFIRMATION_LINK"                  = "https://imprese.uat.notifichedigitali.it/onboarding/confirm?jwt="
       "MAIL_USER_CONFIRMATION_LINK"                        = "https://imprese.uat.notifichedigitali.it/onboarding/confirm?add-user=true&jwt="
+      "MAIL_CONTRACT_UPDATE_CONFIRMATION_LINK"             = "https://imprese.uat.notifichedigitali.it/onboarding/confirm?contract-update=true&jwt="
       "MAIL_ONBOARDING_REJECTION_LINK"                     = "https://imprese.uat.notifichedigitali.it/onboarding/cancel?jwt="
       "MAIL_ONBOARDING_URL"                                = "https://imprese.uat.notifichedigitali.it/onboarding/"
       "MS_USER_URL"                                        = "https://selc-${module.local.config.env_short}-${module.local.config.domain}-user-ms-ca.${module.local.config.private_dns_name_domain}"

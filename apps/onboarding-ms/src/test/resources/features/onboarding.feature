@@ -263,13 +263,33 @@ Feature: Onboarding collection
     Then the response status code should be 400
     And the response should contain the text "Field digitalAddress or description are not valid"
 
-  Scenario: Successfully store onboarding for GPU in status REQUEST
+  Scenario: Can't perform self-service onboarding for GPU when the pair is reserved to managed flows
     Given I have a request object named "success_gpu_request"
     When I send a POST request to "" with this request
+    Then the response status code should be 400
+    And the response body should not be empty
+    And the response should contain the text "institution with institution type GPU and origin SELC can onboard product prod-pagopa only through the flows managed by PagoPA"
+
+  Scenario: Successfully complete onboarding for GPU through a managed flow
+    Given I have a request object named "success_gpu_completion_request"
+    When I send a POST request to "/completion" with this request
     Then the response status code should be 200
     And the response body should not be empty
-    And the response should have field "status" with value "REQUEST"
-    And the response should have field "workflowType" with value "FOR_APPROVE_GPU"
+    And the response should have field "workflowType" with value "CONFIRMATION"
+
+  Scenario: Can't perform onboarding request when no workflow is configured for the pair
+    Given I have a request object named "invalid_gpu_no_workflow_request"
+    When I send a POST request to "" with this request
+    Then the response status code should be 400
+    And the response body should not be empty
+    And the response should contain the text "No workflow configured for product prod-io, institutionType GPU, origin SELC"
+
+  Scenario: Can't perform onboarding request with institutionType SA and origin IPA
+    Given I have a request object named "invalid_sa_ipa_request"
+    When I send a POST request to "" with this request
+    Then the response status code should be 400
+    And the response body should not be empty
+    And the response should contain the text "InstitutionType 'SA' is not allowed for origin 'IPA'. Allowed institution types: [GSP, PA, SCEC]"
 
   #Scenario: Can't perform onboarding request for UO Aggregate
    # Given I have a request object named "invalid_aggregate_pa_request"
@@ -394,6 +414,21 @@ Feature: Onboarding collection
     When I send a POST request for contract update to "/contract-update" with this request
     Then the response status code should be 404
     And the response should contain the text "Onboarding for taxCode 00095990644, origin IPA, originId c_a489, productId prod-io, subunitCode null not found"
+
+  Scenario: Successfully upload signed contract for pending contract update
+    When I upload the contract "documents/test.pdf" to "/{onboardingId}/complete" for onboarding "7c4d5f0e-1a2b-4c3d-8e9f-0a1b2c3d4e02"
+    Then the response status code should be 204
+    And the document-ms contract for onboarding "7c4d5f0e-1a2b-4c3d-8e9f-0a1b2c3d4e02" is signed
+
+  Scenario: Can't upload signed contract for contract update not in PENDING status
+    When I upload the contract "documents/test.pdf" to "/{onboardingId}/complete" for onboarding "7c4d5f0e-1a2b-4c3d-8e9f-0a1b2c3d4e03"
+    Then the response status code should be 400
+    And the response should contain the text "must be in PENDING status but it is in COMPLETED status"
+
+  Scenario: Can't upload signed contract for contract update with missing reference onboarding
+    When I upload the contract "documents/test.pdf" to "/{onboardingId}/complete" for onboarding "7c4d5f0e-1a2b-4c3d-8e9f-0a1b2c3d4e04"
+    Then the response status code should be 400
+    And the response should contain the text "not onboarded or isn't ACTIVE"
 
   Scenario: Successfully store onboarding for SCP in status REQUEST
     Given I have a request object named "success_scp_request"

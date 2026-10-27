@@ -90,7 +90,7 @@ class ProductServiceHttpTest {
         assertEquals(8, calls.size());
         assertEquals(4, calls.stream().filter(call -> "AR".equals(call.get("tenant"))).count());
         for (Map<String, String> call : calls) {
-            assertWire(call, call.get("tenant"), "GET", "/prod-io");
+            assertWire(call, call.get("tenant"), "GET", "/prod-io/valid");
         }
     }
 
@@ -100,34 +100,33 @@ class ProductServiceHttpTest {
             String type = "AR".equals(tenant) ? "PA" : "PG";
             String origin = "AR".equals(tenant) ? "IPA" : "INFOCAMERE";
             request(tenant).queryParam("institutionType", type).queryParam("origin", origin)
-                    .get("/product-http-contract/workflow/prod-io").then().statusCode(200)
+                    .get("/product-http-contract/decision/prod-io").then().statusCode(200)
+                    .body("allowed", org.hamcrest.Matchers.equalTo(true))
                     .body("workflowType", org.hamcrest.Matchers.equalTo(
-                            "AR".equals(tenant) ? "CONTRACT_REGISTRATION" : "FOR_APPROVE"));
+                            "AR".equals(tenant) ? "CONTRACT_REGISTRATION" : "FOR_APPROVE"))
+                    .body("expirationDays", org.hamcrest.Matchers.equalTo("AR".equals(tenant) ? 15 : 45))
+                    .body("product.tenantId", org.hamcrest.Matchers.equalTo(tenant));
             request(tenant).queryParam("institutionType", type).queryParam("origin", origin)
                     .get("/product-http-contract/documents/prod-io").then().statusCode(200)
                     .body("[0].id", org.hamcrest.Matchers.equalTo(tenant.toLowerCase(Locale.ROOT) + "-doc"))
                     .body("[0].required", org.hamcrest.Matchers.equalTo(true))
                     .body("[0].storageOrigin", org.hamcrest.Matchers.equalTo("USER"));
-            assertEquals("true", request(tenant)
-                    .queryParam("institutionType", type).queryParam("origin", origin)
-                    .get("/product-http-contract/enabled/prod-io").then().statusCode(200).extract().asString());
             assertEquals("AR".equals(tenant) ? "15" : "45", request(tenant)
                     .get("/product-http-contract/expiration/prod-io").then().statusCode(200).extract().asString());
         }
         List<Map<String, String>> calls = recordedRequests();
-        assertEquals(8, calls.size());
-        for (int offset : List.of(0, 4)) {
+        assertEquals(6, calls.size());
+        for (int offset : List.of(0, 3)) {
             String tenant = offset == 0 ? "AR" : "PNPG";
             Map<String, String> query = Map.of("institutionType", offset == 0 ? "PA" : "PG",
                     "origin", offset == 0 ? "IPA" : "INFOCAMERE", "tenantId", tenant);
-            assertWire(calls.get(offset), tenant, "GET", "/workflow-type");
-            assertEquals("prod-io", query(calls.get(offset)).get("productId"));
-            assertTrue(query(calls.get(offset)).entrySet().containsAll(query.entrySet()));
+            assertWire(calls.get(offset), tenant, "POST", "/prod-io/onboarding-decision");
+            assertEquals(Map.of("tenantId", tenant), query(calls.get(offset)));
+            assertEquals(Map.of("institutionType", query.get("institutionType"), "origin", query.get("origin"),
+                    "channel", "SELF_SERVICE"), MAPPER.readValue(calls.get(offset).get("body"), new TypeReference<>() {}));
             assertWire(calls.get(offset + 1), tenant, "GET", "/prod-io/required-documents");
             assertEquals(query, query(calls.get(offset + 1)));
-            assertWire(calls.get(offset + 2), tenant, "HEAD", "/prod-io/required-documents/enabled");
-            assertEquals(query, query(calls.get(offset + 2)));
-            assertWire(calls.get(offset + 3), tenant, "GET", "/prod-io/expiration-days");
+            assertWire(calls.get(offset + 2), tenant, "GET", "/prod-io/expiration-days");
         }
     }
 
@@ -136,14 +135,6 @@ class ProductServiceHttpTest {
         assertEquals("30", request("AR").get("/product-http-contract/expiration/empty-expiration")
                 .then().statusCode(200).extract().asString());
         assertWire(recordedRequests().get(0), "AR", "GET", "/empty-expiration/expiration-days");
-    }
-
-    @Test
-    void emptyRequiredDocumentsFlagIsFalse() throws Exception {
-        assertEquals("false", request("PNPG").queryParam("institutionType", "PG")
-                .queryParam("origin", "INFOCAMERE").get("/product-http-contract/enabled/prod-pn")
-                .then().statusCode(200).extract().asString());
-        assertWire(recordedRequests().get(0), "PNPG", "HEAD", "/prod-pn/required-documents/enabled");
     }
 
     @Test
@@ -161,7 +152,7 @@ class ProductServiceHttpTest {
     void canonicalTenantIsPropagatedAndConflictsDoNotReachProduct() throws Exception {
         assertEquals("PAGOPA", JWT.decode(tokens.get("AR")).getIssuer());
         request("ar").get("/product-http-contract/product/prod-io").then().statusCode(200);
-        assertWire(recordedRequests().get(0), "AR", "GET", "/prod-io");
+        assertWire(recordedRequests().get(0), "AR", "GET", "/prod-io/valid");
         request("AR").queryParam("explicitTenant", "PNPG")
                 .get("/product-http-contract/valid/prod-io").then().statusCode(502)
                 .body("exception", org.hamcrest.Matchers.endsWith("IllegalArgumentException"));
@@ -182,7 +173,7 @@ class ProductServiceHttpTest {
             request(tenant, token).get("/product-http-contract/product/prod-io").then()
                     .statusCode(200).body("tenantId", org.hamcrest.Matchers.equalTo(tenant));
             List<Map<String, String>> calls = recordedRequests();
-            assertWire(calls.get(calls.size() - 1), tenant, "GET", "/prod-io", token);
+            assertWire(calls.get(calls.size() - 1), tenant, "GET", "/prod-io/valid", token);
         }
         assertEquals(2, recordedRequests().size());
     }
@@ -203,7 +194,7 @@ class ProductServiceHttpTest {
         assertEquals("AR", JWT.decode(arToken).getClaim("tenant_id").asString());
         request("PNPG", arToken).get("/product-http-contract/product/prod-io").then()
                 .statusCode(200).body("tenantId", org.hamcrest.Matchers.equalTo("PNPG"));
-        assertWire(recordedRequests().get(0), "PNPG", "GET", "/prod-io", arToken);
+        assertWire(recordedRequests().get(0), "PNPG", "GET", "/prod-io/valid", arToken);
     }
 
     private RequestSpecification request(String tenant) {

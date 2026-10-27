@@ -1,25 +1,23 @@
 package it.pagopa.selfcare.mscore.connector.azure_storage.health;
 
 import it.pagopa.selfcare.commons.health.spring.AbstractBlobStorageReadinessIndicator;
-import it.pagopa.selfcare.mscore.config.AzureStorageConfig;
+import it.pagopa.selfcare.commons.tenant.TenantRegistry;
 import it.pagopa.selfcare.mscore.connector.azure_storage.AzureBlobClient;
-import org.springframework.context.annotation.Profile;
+import java.util.HashMap;
+import java.util.Map;
 import org.springframework.stereotype.Component;
 
 @Component("fileBlobStorageReadiness")
-@Profile("AzureStorage")
 public class FileBlobStorageReadinessIndicator extends AbstractBlobStorageReadinessIndicator {
 
-    private static final String ACCOUNT_NOT_APPLICABLE = "n/a";
-
     private final AzureBlobClient blobClient;
-    private final AzureStorageConfig config;
+    private final TenantRegistry tenantRegistry;
 
     public FileBlobStorageReadinessIndicator(
             AzureBlobClient blobClient,
-            AzureStorageConfig config) {
+            TenantRegistry tenantRegistry) {
         this.blobClient = blobClient;
-        this.config = config;
+        this.tenantRegistry = tenantRegistry;
     }
 
     @Override
@@ -29,17 +27,32 @@ public class FileBlobStorageReadinessIndicator extends AbstractBlobStorageReadin
 
     @Override
     protected String account() {
-        String account = config.getAccountName();
-        return account == null || account.isBlank() ? ACCOUNT_NOT_APPLICABLE : account;
+        return "tenant-specific";
     }
 
     @Override
     protected String container() {
-        return config.getContainer();
+        return "tenant-specific";
     }
 
     @Override
     protected void probe() {
-        blobClient.probeContainer();
+        tenantRegistry.supportedTenantIds().forEach(tenantId -> {
+            try {
+                blobClient.probeContainer(tenantId);
+            } catch (RuntimeException exception) {
+                throw new IllegalStateException(
+                        "Blob storage probe failed for tenant "
+                                + tenantId + " and key mail-templates");
+            }
+        });
+    }
+
+    @Override
+    protected Map<String, Object> data() {
+        Map<String, Object> details = new HashMap<>(super.data());
+        details.put("tenants", tenantRegistry.supportedTenantIds());
+        details.put("storageKey", "mail-templates");
+        return details;
     }
 }
