@@ -15,6 +15,7 @@ import it.pagopa.selfcare.onboarding.HttpResponseMessageMock;
 import it.pagopa.selfcare.onboarding.dto.NotificationCountResult;
 import it.pagopa.selfcare.onboarding.dto.ResendNotificationsFilters;
 import it.pagopa.selfcare.onboarding.entity.Onboarding;
+import it.pagopa.selfcare.onboarding.exception.DatabaseThrottledException;
 import it.pagopa.selfcare.onboarding.exception.NotificationException;
 import it.pagopa.selfcare.onboarding.service.NotificationEventResenderService;
 import it.pagopa.selfcare.onboarding.service.NotificationEventService;
@@ -27,6 +28,7 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
@@ -341,8 +343,8 @@ public class NotificationFunctionsTest {
     @Test
     public void countOnboardingShouldReturnOkWhenEmptyList() {
         // Given
-        final String from = "from";
-        final String to = "to";
+        final String from = "2021-01-01";
+        final String to = "2021-12-31";
         @SuppressWarnings("unchecked") final HttpRequestMessage<Optional<String>> req = mock(HttpRequestMessage.class);
         final Map<String, String> queryParams = new HashMap<>();
         queryParams.put("productId", null);
@@ -372,8 +374,8 @@ public class NotificationFunctionsTest {
     public void countOnboardingShouldReturnOkWithCorrectBodyWhenServiceReturnsData() {
         // Given
         final String productId = "productId";
-        final String from = "from";
-        final String to = "to";
+        final String from = "2021-01-01";
+        final String to = "2021-12-31";
         @SuppressWarnings("unchecked") final HttpRequestMessage<Optional<String>> req = mock(HttpRequestMessage.class);
         final Map<String, String> queryParams = new HashMap<>();
         queryParams.put("productId", productId);
@@ -397,6 +399,48 @@ public class NotificationFunctionsTest {
         assertEquals(HttpStatus.OK.value(), responseMessage.getStatusCode());
         assertEquals(expectedResults, responseMessage.getBody());
         verify(onboardingService, times(1)).countNotifications(productId, from, to, context);
+    }
+
+    private HttpResponseMessage callCountNotifications(String from, String to, ExecutionContext context) {
+        @SuppressWarnings("unchecked") final HttpRequestMessage<Optional<String>> req = mock(HttpRequestMessage.class);
+        final Map<String, String> queryParams = new HashMap<>();
+        queryParams.put("from", from);
+        queryParams.put("to", to);
+        doReturn(queryParams).when(req).getQueryParameters();
+        doAnswer((Answer<HttpResponseMessage.Builder>) invocation -> {
+            HttpStatus status = (HttpStatus) invocation.getArguments()[0];
+            return new HttpResponseMessageMock.HttpResponseMessageBuilderMock().status(status);
+        }).when(req).createResponseBuilder(any(HttpStatus.class));
+        return function.countNotifications(req, context);
+    }
+
+    @ParameterizedTest
+    @CsvSource({
+        "not-a-date,2021-12-31",
+        "2021-01-01,31/12/2021",
+        "2021-12-31,2021-01-01"
+    })
+    public void countOnboardingShouldReturnBadRequestWhenRangeIsInvalid(String from, String to) {
+        final ExecutionContext context = mock(ExecutionContext.class);
+        doReturn(Logger.getGlobal()).when(context).getLogger();
+
+        HttpResponseMessage responseMessage = callCountNotifications(from, to, context);
+
+        assertEquals(HttpStatus.BAD_REQUEST.value(), responseMessage.getStatusCode());
+        verify(onboardingService, never()).countNotifications(any(), any(), any(), any());
+    }
+
+    @Test
+    public void countOnboardingShouldReturnTooManyRequestsWhenDatabaseIsThrottled() {
+        final ExecutionContext context = mock(ExecutionContext.class);
+        doReturn(Logger.getGlobal()).when(context).getLogger();
+        when(onboardingService.countNotifications(null, "2021-01-01", "2021-12-31", context))
+            .thenThrow(new DatabaseThrottledException("throttled", 2500L, null));
+
+        HttpResponseMessage responseMessage = callCountNotifications("2021-01-01", "2021-12-31", context);
+
+        assertEquals(HttpStatus.TOO_MANY_REQUESTS.value(), responseMessage.getStatusCode());
+        assertEquals("3", responseMessage.getHeader("Retry-After"));
     }
 
     @Test
