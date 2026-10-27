@@ -32,7 +32,9 @@ import org.openapi.quarkus.product_json.model.ProductResponse;
 import org.openapi.quarkus.product_json.model.ProductExpirationResponse;
 import org.openapi.quarkus.product_json.model.RequiredDocumentResponse;
 import org.openapi.quarkus.product_json.model.WorkflowType;
-import org.openapi.quarkus.product_json.model.WorkflowTypeResponse;
+import org.openapi.quarkus.product_json.model.OnboardingChannel;
+import org.openapi.quarkus.product_json.model.OnboardingDecisionRequest;
+import org.openapi.quarkus.product_json.model.OnboardingDecisionResponse;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -43,6 +45,9 @@ import static org.mockito.Mockito.*;
 
 @QuarkusTest
 class ProductServiceImplTest {
+    private static final OnboardingDecisionRequest DECISION_REQUEST = new OnboardingDecisionRequest()
+            .institutionType(InstitutionType.PA).origin(Origin.IPA).channel(OnboardingChannel.SELF_SERVICE);
+
 
     private final Logger serviceLogger = LogContext.getLogContext().getLogger(ProductServiceImpl.class.getName());
     private final List<String> logMessages = new ArrayList<>();
@@ -82,31 +87,26 @@ class ProductServiceImplTest {
     void productLookups_shouldEscapeOnlyLoggedValues(String productId, String loggedProductId) {
         // Given
         ProductResponse expected = new ProductResponse();
-        when(productApi.getProductById(productId, "AR")).thenReturn(Uni.createFrom().item(expected));
         when(productApi.getValidProductById(productId, "AR")).thenReturn(Uni.createFrom().item(expected));
         when(productApi.getProductExpirationDays(productId, "AR"))
                 .thenReturn(Uni.createFrom().item(new ProductExpirationResponse().expirationDays(45)));
 
         // When
-        ProductResponse product = productService.getProduct(productId).await().indefinitely();
         ProductResponse validProduct = productService.getValidProduct(productId).await().indefinitely();
         ProductResponse explicitTenantProduct = productService.getValidProduct(productId, " ar ")
                 .await().indefinitely();
         Integer expirationDays = productService.getProductExpirationDays(productId).await().indefinitely();
 
         // Then
-        assertSame(expected, product);
         assertSame(expected, validProduct);
         assertSame(expected, explicitTenantProduct);
         assertEquals(45, expirationDays);
         assertEquals(List.of(
-                "Calling getProductById: productId=" + loggedProductId,
                 "Calling getValidProductById: productId=" + loggedProductId,
                 "Calling getValidProductById: productId=" + loggedProductId + ", tenantId=null",
                 "Calling getValidProductById: productId=" + loggedProductId + ", tenantId= ar ",
                 "Calling getProductExpirationDays: productId=" + loggedProductId), logMessages);
         assertSingleLineMessages();
-        verify(productApi).getProductById(productId, "AR");
         verify(productApi, times(2)).getValidProductById(productId, "AR");
         verify(productApi).getProductExpirationDays(productId, "AR");
         verifyNoMoreInteractions(productApi);
@@ -179,27 +179,24 @@ class ProductServiceImplTest {
     }
 
     @Test
-    void getWorkflowType_shouldReturnWorkflowTypeResponse() {
+    void getOnboardingDecision_shouldCallProductMsWithCanonicalTenant() {
         // Given
-        InstitutionType institutionType = InstitutionType.PA;
-        Origin origin = Origin.IPA;
-        ProductId productId = ProductId.PROD_IO;
-
-        WorkflowTypeResponse expected = new WorkflowTypeResponse();
-        expected.setWorkflowType(WorkflowType.CONTRACT_REGISTRATION);
-
-        when(productApi.getWorkflowType(institutionType, origin, productId.getValue(), "AR"))
+        OnboardingDecisionRequest request = new OnboardingDecisionRequest()
+                .institutionType(InstitutionType.GPU).origin(Origin.SELC).channel(OnboardingChannel.MANAGED);
+        OnboardingDecisionResponse expected = new OnboardingDecisionResponse()
+                .allowed(true).workflowType(WorkflowType.FOR_APPROVE_GPU);
+        when(productApi.getOnboardingDecision("prod-pagopa", request, "AR"))
                 .thenReturn(Uni.createFrom().item(expected));
 
         // When
-        WorkflowTypeResponse result = productService
-                .getWorkflowType(institutionType, origin, productId)
+        OnboardingDecisionResponse result = productService.getOnboardingDecision("prod-pagopa", request, " ar ")
                 .await().indefinitely();
 
         // Then
-        assertNotNull(result);
-        assertEquals(WorkflowType.CONTRACT_REGISTRATION, result.getWorkflowType());
-        verify(productApi).getWorkflowType(institutionType, origin, productId.getValue(), "AR");
+        assertSame(expected, result);
+        assertEquals(List.of("Calling getOnboardingDecision: productId=prod-pagopa, institutionType=GPU, "
+                + "origin=SELC, channel=MANAGED"), logMessages);
+        verify(productApi).getOnboardingDecision("prod-pagopa", request, "AR");
         verifyNoMoreInteractions(productApi);
     }
 
@@ -233,30 +230,6 @@ class ProductServiceImplTest {
     }
 
     @Test
-    void isRequiredDocuments_shouldReturnBooleanFromHeader() {
-        // Given
-        ProductId productId = ProductId.PROD_IO;
-        InstitutionType institutionType = InstitutionType.PA;
-        Origin origin = Origin.IPA;
-
-        Response expectedResponse = Response.ok().header("X-Required-Documents-Enabled", "true").build();
-
-        when(productApi.isRequiredDocumentsEnabled(productId.getValue(), institutionType, origin, "AR"))
-                .thenReturn(Uni.createFrom().item(expectedResponse));
-
-        // When
-        Boolean result = productService
-                .isRequiredDocuments(productId, institutionType, origin)
-                .await().indefinitely();
-
-        // Then
-        assertNotNull(result);
-        assertEquals(Boolean.TRUE, result);
-        verify(productApi).isRequiredDocumentsEnabled(productId.getValue(), institutionType, origin, "AR");
-        verifyNoMoreInteractions(productApi);
-    }
-
-    @Test
     void getValidProduct_shouldInitializeCanonicalTenantFromExplicitParameter() {
         tenantContext.clear();
         ProductResponse expected = new ProductResponse();
@@ -273,58 +246,58 @@ class ProductServiceImplTest {
     }
 
     @Test
-    void getProduct_shouldNormalizeContextTenant() {
+    void getOnboardingDecision_shouldNormalizeContextTenant() {
         tenantContext.setTenantId(" ar ");
-        ProductResponse expected = new ProductResponse().productId("prod-io").tenantId("AR");
-        when(productApi.getProductById("prod-io", "AR")).thenReturn(Uni.createFrom().item(expected));
+        OnboardingDecisionResponse expected = new OnboardingDecisionResponse().allowed(true);
+        when(productApi.getOnboardingDecision("prod-io", DECISION_REQUEST, "AR")).thenReturn(Uni.createFrom().item(expected));
 
-        assertSame(expected, productService.getProduct("prod-io").await().indefinitely());
+        assertSame(expected, productService.getOnboardingDecision("prod-io", DECISION_REQUEST, null).await().indefinitely());
         assertEquals("AR", tenantContext.getTenantId());
     }
 
     @Test
-    void getProduct_shouldAcceptEquivalentExplicitTenant() {
-        when(productApi.getProductById("prod-io", "AR")).thenReturn(Uni.createFrom().item(new ProductResponse()));
+    void getOnboardingDecision_shouldAcceptEquivalentExplicitTenant() {
+        when(productApi.getOnboardingDecision("prod-io", DECISION_REQUEST, "AR")).thenReturn(Uni.createFrom().item(new OnboardingDecisionResponse()));
 
-        productService.getProduct("prod-io", " ar ").await().indefinitely();
+        productService.getOnboardingDecision("prod-io", DECISION_REQUEST, " ar ").await().indefinitely();
 
-        verify(productApi).getProductById("prod-io", "AR");
+        verify(productApi).getOnboardingDecision("prod-io", DECISION_REQUEST, "AR");
     }
 
     @Test
-    void getProduct_shouldRejectConflictingTenantBeforeCallingApi() {
-        assertThrows(IllegalArgumentException.class, () -> productService.getProduct("prod-io", "PNPG"));
+    void getOnboardingDecision_shouldRejectConflictingTenantBeforeCallingApi() {
+        assertThrows(IllegalArgumentException.class, () -> productService.getOnboardingDecision("prod-io", DECISION_REQUEST, "PNPG"));
         assertEquals("AR", tenantContext.getTenantId());
         verifyNoInteractions(productApi);
     }
 
     @Test
-    void getProduct_shouldRejectMissingTenantBeforeCallingApi() {
+    void getOnboardingDecision_shouldRejectMissingTenantBeforeCallingApi() {
         tenantContext.clear();
-        assertThrows(UnresolvedTenantException.class, () -> productService.getProduct("prod-io"));
+        assertThrows(UnresolvedTenantException.class, () -> productService.getOnboardingDecision("prod-io", DECISION_REQUEST, null));
         verifyNoInteractions(productApi);
     }
 
     @Test
-    void getProduct_shouldRejectUnknownTenantBeforeCallingApi() {
-        assertThrows(UnknownTenantException.class, () -> productService.getProduct("prod-io", "unknown"));
+    void getOnboardingDecision_shouldRejectUnknownTenantBeforeCallingApi() {
+        assertThrows(UnknownTenantException.class, () -> productService.getOnboardingDecision("prod-io", DECISION_REQUEST, "unknown"));
         verifyNoInteractions(productApi);
     }
 
     @ParameterizedTest
     @ValueSource(strings = {"", " "})
-    void getProduct_shouldRejectBlankExplicitTenant(String tenant) {
-        assertThrows(IllegalArgumentException.class, () -> productService.getProduct("prod-io", tenant));
+    void getOnboardingDecision_shouldRejectBlankExplicitTenant(String tenant) {
+        assertThrows(IllegalArgumentException.class, () -> productService.getOnboardingDecision("prod-io", DECISION_REQUEST, tenant));
         verifyNoInteractions(productApi);
     }
 
     @Test
-    void getProduct_shouldTranslateNotFound() {
-        when(productApi.getProductById("prod-io", "AR"))
+    void getOnboardingDecision_shouldTranslateNotFound() {
+        when(productApi.getOnboardingDecision("prod-io", DECISION_REQUEST, "AR"))
                 .thenReturn(Uni.createFrom().failure(new WebApplicationException(Response.Status.NOT_FOUND)));
 
         assertThrows(ResourceNotFoundException.class,
-                () -> productService.getProduct("prod-io").await().indefinitely());
+                () -> productService.getOnboardingDecision("prod-io", DECISION_REQUEST, null).await().indefinitely());
     }
 
     @ParameterizedTest
@@ -338,12 +311,12 @@ class ProductServiceImplTest {
     }
 
     @Test
-    void getProduct_shouldPreserveTimeout() {
+    void getOnboardingDecision_shouldPreserveTimeout() {
         ProcessingException failure = new ProcessingException("read timed out");
-        when(productApi.getProductById("prod-io", "AR")).thenReturn(Uni.createFrom().failure(failure));
+        when(productApi.getOnboardingDecision("prod-io", DECISION_REQUEST, "AR")).thenReturn(Uni.createFrom().failure(failure));
 
         assertSame(failure, assertThrows(ProcessingException.class,
-                () -> productService.getProduct("prod-io").await().indefinitely()));
+                () -> productService.getOnboardingDecision("prod-io", DECISION_REQUEST, null).await().indefinitely()));
     }
 
     @Test
@@ -360,14 +333,5 @@ class ProductServiceImplTest {
                 .thenReturn(Uni.createFrom().item(new ProductExpirationResponse()));
 
         assertEquals(30, productService.getProductExpirationDays("prod-io").await().indefinitely());
-    }
-
-    @Test
-    void isRequiredDocuments_shouldKeepFalseForMissingHeader() {
-        when(productApi.isRequiredDocumentsEnabled("prod-io", InstitutionType.PA, Origin.IPA, "AR"))
-                .thenReturn(Uni.createFrom().item(Response.ok().build()));
-
-        assertFalse(productService.isRequiredDocuments(ProductId.PROD_IO, InstitutionType.PA, Origin.IPA, "AR")
-                .await().indefinitely());
     }
 }

@@ -46,7 +46,8 @@ import org.openapi.quarkus.product_json.model.Features;
 import org.openapi.quarkus.product_json.model.ProductResponse;
 import org.openapi.quarkus.product_json.model.RoleMapping;
 import org.openapi.quarkus.product_json.model.WorkflowType;
-import org.openapi.quarkus.product_json.model.WorkflowTypeResponse;
+import org.openapi.quarkus.product_json.model.OnboardingDecisionRequest;
+import org.openapi.quarkus.product_json.model.OnboardingDecisionResponse;
 import org.openapi.quarkus.user_registry_json.api.UserApi;
 import org.openapi.quarkus.user_registry_json.model.CertifiableFieldResourceOfstring;
 import org.openapi.quarkus.user_registry_json.model.UserResource;
@@ -169,12 +170,16 @@ class OnboardingServiceIntegrationTest {
 
     @BeforeEach
     void setupDefaultMocks() {
-        WorkflowTypeResponse defaultResponse =
-                new WorkflowTypeResponse().workflowType(WorkflowType.CONTRACT_REGISTRATION);
-        when(productService.getWorkflowType(any(), any(), any()))
-                .thenReturn(Uni.createFrom().item(defaultResponse));
-        when(productService.getWorkflowType(any(), any(), any(), nullable(String.class)))
-                .thenReturn(Uni.createFrom().item(defaultResponse));
+        when(productService.getOnboardingDecision(anyString(), any(), nullable(String.class)))
+                .thenAnswer(invocation -> Objects.requireNonNullElse(
+                                productService.getValidProduct(invocation.<String>getArgument(0)),
+                                Uni.createFrom().<ProductResponse>nullItem())
+                        .map(product -> new OnboardingDecisionResponse().allowed(true)
+                                .workflowType(Objects.requireNonNullElse(
+                                        invocation.<OnboardingDecisionRequest>getArgument(1).getWorkflowType(),
+                                        WorkflowType.CONTRACT_REGISTRATION))
+                                .expirationDays(30)
+                                .product(product)));
         when(productService.getProductExpirationDays(anyString())).thenReturn(Uni.createFrom().item(30));
         when(productService.getProductExpirationDays(anyString(), nullable(String.class)))
                 .thenReturn(Uni.createFrom().item(30));

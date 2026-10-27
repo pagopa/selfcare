@@ -11,7 +11,10 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import com.mongodb.client.MongoClient;
+import com.mongodb.client.MongoClients;
 import com.mongodb.client.MongoDatabase;
+import com.mongodb.client.model.Filters;
 import com.mongodb.client.model.Indexes;
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
@@ -41,6 +44,7 @@ import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 import lombok.extern.slf4j.Slf4j;
@@ -81,6 +85,11 @@ public class OnboardingStep extends CucumberQuarkusTest {
   private static final String TENANT_ID = "AR";
   private static final String MOCK_SERVER_URL = "http://localhost:1080";
   private static final String PRODUCT_REQUEST_MATCHER = "{\"path\":\"/product.*\"}";
+  private static final String CONTRACT_UPDATE_REFERENCE_ID = "7c4d5f0e-1a2b-4c3d-8e9f-0a1b2c3d4e01";
+  private static final String CONTRACT_UPDATE_PENDING_ID = "7c4d5f0e-1a2b-4c3d-8e9f-0a1b2c3d4e02";
+  private static final String CONTRACT_UPDATE_COMPLETED_ID = "7c4d5f0e-1a2b-4c3d-8e9f-0a1b2c3d4e03";
+  private static final String CONTRACT_UPDATE_MISSING_REFERENCE_ID = "7c4d5f0e-1a2b-4c3d-8e9f-0a1b2c3d4e04";
+  private static final String DOCUMENT_MS_DATABASE = "selcDocument";
 
   @InjectMock @RestClient OrchestrationApi orchestrationApi;
   @InjectMock @RestClient InstitutionApi institutionApi;
@@ -114,6 +123,7 @@ public class OnboardingStep extends CucumberQuarkusTest {
             .waitingFor("mongo-db", Wait.forListeningPort())
             .waitingFor("mock-server", Wait.forListeningPort())
             .waitingFor("azure-cli", Wait.forLogMessage(".*BLOBSTORAGE INITIALIZED.*", 1))
+            .waitingFor("document-ms", Wait.forListeningPort())
             .withStartupTimeout(Duration.ofMinutes(5));
 
     composeContainer.start();
@@ -204,6 +214,19 @@ public class OnboardingStep extends CucumberQuarkusTest {
       Onboarding duplicatedOnboardingPA = createOnboardingForConflictScenario();
       Onboarding contractUpdateOnboarding = createOnboardingForContractUpdateScenario();
       Token token = createDummyToken();
+
+      Uni.combine().all().unis(
+                      createContractUpdateCompletionOnboarding(CONTRACT_UPDATE_REFERENCE_ID, null,
+                              WorkflowType.CONTRACT_REGISTRATION, OnboardingStatus.COMPLETED).persist(),
+                      createContractUpdateCompletionOnboarding(CONTRACT_UPDATE_PENDING_ID, CONTRACT_UPDATE_REFERENCE_ID,
+                              WorkflowType.CONTRACT_UPDATE, OnboardingStatus.PENDING).persist(),
+                      createContractUpdateCompletionOnboarding(CONTRACT_UPDATE_COMPLETED_ID, CONTRACT_UPDATE_REFERENCE_ID,
+                              WorkflowType.CONTRACT_UPDATE, OnboardingStatus.COMPLETED).persist(),
+                      createContractUpdateCompletionOnboarding(CONTRACT_UPDATE_MISSING_REFERENCE_ID,
+                              UUID.randomUUID().toString(), WorkflowType.CONTRACT_UPDATE, OnboardingStatus.PENDING).persist())
+              .discardItems()
+              .await().indefinitely();
+      seedContractUpdateDocument();
 
       Uni.combine().all().unis(
                       onboarding.persist(),
@@ -321,6 +344,29 @@ public class OnboardingStep extends CucumberQuarkusTest {
                     .when()
                     .post(url)
                     .then();
+  }
+
+  @When("I upload the contract {string} to {string} for onboarding {string}")
+  public void iUploadContract(String filePath, String url, String onboardingId) {
+    validatableResponse =
+            authenticatedRequest()
+                    .pathParam("onboardingId", onboardingId)
+                    .multiPart("contract", new File("src/test/resources/" + filePath), "application/pdf")
+                    .when()
+                    .put(url)
+                    .then();
+  }
+
+  @Then("the document-ms contract for onboarding {string} is signed")
+  public void verifyDocumentMsContractSigned(String onboardingId) {
+    try (MongoClient client = MongoClients.create(
+            ConfigProvider.getConfig().getValue("MONGODB_CONNECTION_STRING_AR", String.class))) {
+      Document document = client.getDatabase(DOCUMENT_MS_DATABASE).getCollection("documents")
+              .find(Filters.eq("onboardingId", onboardingId)).first();
+      assertNotNull(document);
+      assertNotNull(document.getString("contractSigned"));
+      assertEquals(1, document.getInteger("signingStep"));
+    }
   }
 
   @When("I send a POST request for PSP to {string} with this request")
@@ -554,6 +600,36 @@ public class OnboardingStep extends CucumberQuarkusTest {
     onboarding.getInstitution().setDescription("Comune di Rieti");
     onboarding.getInstitution().setTaxCode("00100700574");
     return onboarding;
+  }
+
+  private static Onboarding createContractUpdateCompletionOnboarding(String id, String referenceOnboardingId,
+                                                                     WorkflowType workflowType, OnboardingStatus status) {
+    Onboarding onboarding = createOnboardingForConflictScenario();
+    onboarding.setId(id);
+    onboarding.setReferenceOnboardingId(referenceOnboardingId);
+    onboarding.setWorkflowType(workflowType);
+    onboarding.setStatus(status);
+    onboarding.getInstitution().setOriginId("c_cu_complete");
+    onboarding.getInstitution().setDescription("Comune Contract Update Complete");
+    onboarding.getInstitution().setTaxCode("99999999999");
+    onboarding.getUsers().get(0).setId("35a78332-d038-4bfa-8e85-2cba7f6b7bf7");
+    return onboarding;
+  }
+
+  private static void seedContractUpdateDocument() {
+    try (MongoClient client = MongoClients.create(
+            ConfigProvider.getConfig().getValue("MONGODB_CONNECTION_STRING_AR", String.class))) {
+      client.getDatabase(DOCUMENT_MS_DATABASE).getCollection("documents").insertOne(
+              new Document("_id", UUID.randomUUID().toString())
+                      .append("tenantId", TENANT_ID)
+                      .append("type", "INSTITUTION")
+                      .append("onboardingId", CONTRACT_UPDATE_PENDING_ID)
+                      .append("rootOnboardingId", CONTRACT_UPDATE_REFERENCE_ID)
+                      .append("productId", "prod-io")
+                      .append("contractFilename", "contract-update.pdf")
+                      .append("storageOrigin", "SYSTEM")
+                      .append("createdAt", new Date()));
+    }
   }
 
   private static Token createDummyToken() {

@@ -22,4 +22,14 @@ public class ActionMapRetrieverTest {
         assertTrue(actionMapRetriever.getUserActionsMap().containsKey(PartyRole.OPERATOR.name()));
 
     }
+
+    @Test
+    void retrieveActionsMap_adminEaHasNoViewContractAction() {
+
+        ActionMapRetriever actionMapRetriever = new ActionMapRetriever();
+
+        actionMapRetriever.getUserActionsMap().get(PartyRole.ADMIN_EA.name())
+                .forEach((productId, actions) -> assertFalse(actions.contains("Selc:ViewContract"),
+                        "ADMIN_EA must not have Selc:ViewContract for " + productId));
+    }
 }

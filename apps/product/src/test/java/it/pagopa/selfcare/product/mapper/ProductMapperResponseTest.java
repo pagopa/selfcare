@@ -1,9 +1,14 @@
 package it.pagopa.selfcare.product.mapper;
 
+import it.pagopa.selfcare.product.model.OriginEntry;
 import it.pagopa.selfcare.product.model.Product;
 import it.pagopa.selfcare.product.model.RequiredDocument;
 import it.pagopa.selfcare.product.model.dto.response.ProductBaseResponse;
+import it.pagopa.selfcare.product.model.dto.response.ProductOriginResponse;
 import it.pagopa.selfcare.product.model.dto.response.ProductResponse;
+import it.pagopa.selfcare.product.model.enums.InstitutionType;
+import it.pagopa.selfcare.product.model.enums.Origin;
+import java.util.List;
 import it.pagopa.selfcare.product.model.dto.response.RequiredDocumentResponse;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -92,5 +97,59 @@ public class ProductMapperResponseTest {
 
     // then
     Assertions.assertNull(response);
+  }
+
+  @Test
+  public void toProductOriginResponse_keepsOnlySelfOnboardablePairsWithoutFlag() {
+    // given
+    Product product =
+        Product.builder()
+            .productId("prod-pagopa")
+            .institutionOrigins(
+                List.of(
+                    OriginEntry.builder()
+                        .institutionType(InstitutionType.PA)
+                        .origin(Origin.IPA)
+                        .labelKey("pa")
+                        .build(),
+                    OriginEntry.builder()
+                        .institutionType(InstitutionType.PSP)
+                        .origin(Origin.SELC)
+                        .labelKey("psp")
+                        .selfOnboarding(true)
+                        .build(),
+                    OriginEntry.builder()
+                        .institutionType(InstitutionType.GPU)
+                        .origin(Origin.SELC)
+                        .labelKey("gpu")
+                        .selfOnboarding(false)
+                        .build()))
+            .build();
+
+    // when
+    ProductOriginResponse response = productMapperResponse.toProductOriginResponse(product);
+
+    // then
+    Assertions.assertEquals(
+        List.of(
+            OriginEntry.builder()
+                .institutionType(InstitutionType.PA)
+                .origin(Origin.IPA)
+                .labelKey("pa")
+                .build(),
+            OriginEntry.builder()
+                .institutionType(InstitutionType.PSP)
+                .origin(Origin.SELC)
+                .labelKey("psp")
+                .build()),
+        response.getOrigins());
+  }
+
+  @Test
+  public void toProductOriginResponse_keepsNullOrigins() {
+    ProductOriginResponse response =
+        productMapperResponse.toProductOriginResponse(Product.builder().build());
+
+    Assertions.assertNull(response.getOrigins());
   }
 }

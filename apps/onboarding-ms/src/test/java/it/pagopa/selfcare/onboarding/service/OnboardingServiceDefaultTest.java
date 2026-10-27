@@ -34,6 +34,7 @@ import it.pagopa.selfcare.onboarding.constants.CustomError;
 import it.pagopa.selfcare.onboarding.controller.request.*;
 import it.pagopa.selfcare.onboarding.controller.response.*;
 import it.pagopa.selfcare.onboarding.entity.*;
+import it.pagopa.selfcare.onboarding.exception.InstitutionTypeNotAllowedException;
 import it.pagopa.selfcare.onboarding.exception.InvalidRequestException;
 import it.pagopa.selfcare.onboarding.exception.OnboardingNotAllowedException;
 import it.pagopa.selfcare.onboarding.exception.ResourceConflictException;
@@ -73,7 +74,6 @@ import org.openapi.quarkus.product_json.model.OriginEntry;
 import org.openapi.quarkus.product_json.model.ProductResponse;
 import org.openapi.quarkus.product_json.model.RoleMapping;
 import org.openapi.quarkus.product_json.model.SigningConfiguration;
-import org.openapi.quarkus.product_json.model.WorkflowTypeResponse;
 import org.openapi.quarkus.party_registry_proxy_json.api.*;
 import org.openapi.quarkus.party_registry_proxy_json.model.*;
 import org.openapi.quarkus.user_json.model.UserInstitutionResponse;
@@ -241,54 +241,57 @@ class OnboardingServiceDefaultTest {
         when(tenantContext.requiredTenantId()).thenReturn("AR");
         when(tenantContext.getTenantId()).thenReturn("AR");
         when(tenantContext.isInitialized()).thenReturn(true);
-        when(productService.getWorkflowType(any(), any(), any()))
-                .thenReturn(Uni.createFrom().item(new WorkflowTypeResponse()
-                        .workflowType(org.openapi.quarkus.product_json.model.WorkflowType.CONTRACT_REGISTRATION)));
-        when(productService.getWorkflowType(any(), eq(org.openapi.quarkus.product_json.model.Origin.SELC), any()))
-                .thenReturn(Uni.createFrom().item(new WorkflowTypeResponse()
-                        .workflowType(org.openapi.quarkus.product_json.model.WorkflowType.FOR_APPROVE)));
-        when(productService.getWorkflowType(any(), any(), any(), nullable(String.class)))
-                .thenAnswer(invocation -> productService.getWorkflowType(
-                        invocation.getArgument(0), invocation.getArgument(1), invocation.getArgument(2)));
-        when(productService.getValidProduct(anyString(), nullable(String.class))).thenAnswer(invocation ->
-                productService.getValidProduct(invocation.getArgument(0)));
-        when(productService.getProduct(anyString(), nullable(String.class))).thenAnswer(invocation ->
-                productService.getProduct(invocation.getArgument(0)));
-        when(productService.getProductExpirationDays(anyString(), nullable(String.class))).thenAnswer(invocation ->
-                productService.getProductExpirationDays(invocation.getArgument(0)));
-        when(productService.isRequiredDocuments(any(), any(), any(), nullable(String.class))).thenAnswer(invocation ->
-                productService.isRequiredDocuments(invocation.getArgument(0), invocation.getArgument(1),
-                        invocation.getArgument(2)));
+        doAnswer(invocation -> productMsDecision(invocation.getArgument(0), invocation.getArgument(1)))
+                .when(productService).getOnboardingDecision(anyString(), any(), nullable(String.class));
+        doAnswer(invocation -> productService.getValidProduct(invocation.<String>getArgument(0)))
+                .when(productService).getValidProduct(anyString(), nullable(String.class));
+        doAnswer(invocation -> productService.getProductExpirationDays(invocation.<String>getArgument(0)))
+                .when(productService).getProductExpirationDays(anyString(), nullable(String.class));
         when(productService.getRequiredDocuments(any(), any(), any(), nullable(String.class))).thenAnswer(invocation ->
                 productService.getRequiredDocuments(invocation.getArgument(0), invocation.getArgument(1),
                         invocation.getArgument(2)));
     }
 
-    @Test
-    @RunOnVertxContext
-    void onboardingPa_throwExceptionIfProductThrowException(UniAsserter asserter) {
-        Onboarding onboardingRequest = createDummyOnboarding();
-        List<UserRequest> users = List.of(manager);
-        onboardingRequest.setProductId(PROD_IO.getValue());
-
-        ProductResponse product = createDummyProduct(onboardingRequest.getProductId(), false, false, true);
-        asserter.execute(() -> when(productService.getProductExpirationDays(onboardingRequest.getProductId()))
-                .thenReturn(Uni.createFrom().item(30)));
-        // Workflow resolution succeeds; the subsequent onboarding validation lookup fails.
-        asserter.execute(() -> {
-            doReturn(Uni.createFrom().item(product),
-                    Uni.createFrom().failure(new IllegalArgumentException()))
-                    .when(productService).getValidProduct(
-                            onboardingRequest.getProductId(), onboardingRequest.getTenantId());
-        });
-
-        asserter.assertFailedWith(() -> onboardingService.onboarding(onboardingRequest, users, null, null), OnboardingNotAllowedException.class);
-        asserter.execute(() -> {
-            verify(productService, times(2)).getValidProduct(
-                    onboardingRequest.getProductId(), onboardingRequest.getTenantId());
-        });
+    /**
+     * Emulates the product-ms onboarding decision from the per-test stubs: the product is the valid product,
+     * the workflow is the imposed one or the one resolved with the product-ms priorities, and every pair is
+     * admitted. Tests about denied decisions stub {@code getOnboardingDecision} explicitly.
+     */
+    private Uni<org.openapi.quarkus.product_json.model.OnboardingDecisionResponse> productMsDecision(
+            String productId, org.openapi.quarkus.product_json.model.OnboardingDecisionRequest request) {
+        Uni<ProductResponse> product = Objects.requireNonNullElse(productService.getValidProduct(productId),
+                Uni.createFrom().item(new ProductResponse().id(productId)));
+        Uni<Integer> expiration = Objects.requireNonNullElse(productService.getProductExpirationDays(productId),
+                Uni.createFrom().nullItem());
+        return product.flatMap(validProduct -> expiration.map(days ->
+                new org.openapi.quarkus.product_json.model.OnboardingDecisionResponse()
+                        .allowed(true)
+                        .product(validProduct)
+                        .expirationDays(days)
+                        .workflowType(Objects.requireNonNullElseGet(request.getWorkflowType(),
+                                () -> productMsWorkflow(validProduct, request)))));
     }
 
+    private static org.openapi.quarkus.product_json.model.WorkflowType productMsWorkflow(
+            ProductResponse product, org.openapi.quarkus.product_json.model.OnboardingDecisionRequest request) {
+        if (request.getInstitutionType() == org.openapi.quarkus.product_json.model.InstitutionType.PT) {
+            return org.openapi.quarkus.product_json.model.WorkflowType.FOR_APPROVE_PT;
+        }
+        if (Boolean.TRUE.equals(request.getAggregator())) {
+            return org.openapi.quarkus.product_json.model.WorkflowType.CONTRACT_REGISTRATION_AGGREGATOR;
+        }
+        if (Objects.nonNull(product.getSigningConfiguration())
+                && Objects.nonNull(product.getSigningConfiguration().getRequiredSignatures())
+                && product.getSigningConfiguration().getRequiredSignatures() > 1) {
+            return org.openapi.quarkus.product_json.model.WorkflowType.CONTRACT_WITH_COUNTERSIGNATURE;
+        }
+        if (Objects.nonNull(product.getParentId())) {
+            return org.openapi.quarkus.product_json.model.WorkflowType.CONTRACT_REGISTRATION;
+        }
+        return request.getOrigin() == org.openapi.quarkus.product_json.model.Origin.SELC
+                ? org.openapi.quarkus.product_json.model.WorkflowType.FOR_APPROVE
+                : org.openapi.quarkus.product_json.model.WorkflowType.CONTRACT_REGISTRATION;
+    }
 
     @Test
     @RunOnVertxContext
@@ -297,21 +300,16 @@ class OnboardingServiceDefaultTest {
         List<UserRequest> users = List.of(manager);
         onboardingRequest.setProductId(PROD_IO.getValue());
 
-        ProductResponse product = createDummyProduct(onboardingRequest.getProductId(), false, false, true);
-        asserter.execute(() -> when(productService.getProductExpirationDays(onboardingRequest.getProductId()))
-                .thenReturn(Uni.createFrom().item(30)));
-        // Workflow resolution succeeds; the subsequent onboarding validation lookup fails.
+        asserter.execute(() -> PanacheMock.mock(Onboarding.class));
         asserter.execute(() -> {
-            doReturn(Uni.createFrom().item(product),
-                    Uni.createFrom().failure(new ResourceNotFoundException("Product not found")))
-                    .when(productService).getValidProduct(
-                            onboardingRequest.getProductId(), onboardingRequest.getTenantId());
+            doReturn(Uni.createFrom().failure(new ResourceNotFoundException("Product not found")))
+                    .when(productService).getOnboardingDecision(anyString(), any(), nullable(String.class));
         });
 
-        asserter.assertFailedWith(() -> onboardingService.onboarding(onboardingRequest, users, null, null), OnboardingNotAllowedException.class);
+        asserter.assertFailedWith(() -> onboardingService.onboarding(onboardingRequest, users, null, null),
+                OnboardingNotAllowedException.class);
         asserter.execute(() -> {
-            verify(productService, times(2)).getValidProduct(
-                    onboardingRequest.getProductId(), onboardingRequest.getTenantId());
+            PanacheMock.verify(Onboarding.class, never()).persist(any(Onboarding.class), any());
         });
     }
 
@@ -1010,14 +1008,24 @@ class OnboardingServiceDefaultTest {
         uoResource.setCodiceFiscaleSfe("codSfe");
         uoResource.setCodiceIpa("originId");
         when(uoApi.findByUnicodeUsingGET1("recCode", null)).thenReturn(Uni.createFrom().item(uoResource));
+        stubDeniedDecision(asserter, org.openapi.quarkus.product_json.model.OnboardingDecisionReason.INSTITUTION_TYPE_NOT_ALLOWED);
 
-        InstitutionResource institutionResource = new InstitutionResource();
-        institutionResource.setDescription("TEST");
-        institutionResource.setDigitalAddress(DIGITAL_ADDRESS_FIELD);
-        asserter.execute(() -> when(institutionRegistryProxyApi.findIpaInstitutionByTaxCodeOnSearchEngine(eq(institutionBaseRequest.getTaxCode()), isNull()))
-                .thenReturn(Uni.createFrom().item(institutionResource)));
+        asserter.assertFailedWith(() -> onboardingService.onboarding(request, users, null, null),
+                InstitutionTypeNotAllowedException.class);
+        asserter.execute(() -> {
+            verifyNoInteractions(institutionRegistryProxyApi);
+            PanacheMock.verify(Onboarding.class, never()).persist(any(Onboarding.class), any());
+        });
+    }
 
-        asserter.assertFailedWith(() -> onboardingService.onboarding(request, users, null, null), InvalidRequestException.class);
+    private void stubDeniedDecision(UniAsserter asserter,
+                                    org.openapi.quarkus.product_json.model.OnboardingDecisionReason reason) {
+        asserter.execute(() -> {
+            doReturn(Uni.createFrom().item(
+                    new org.openapi.quarkus.product_json.model.OnboardingDecisionResponse()
+                            .allowed(false).reason(reason).message("denied by product-ms")))
+                    .when(productService).getOnboardingDecision(anyString(), any(), nullable(String.class));
+        });
     }
 
     void mockSimpleSearchPOSTAndPersist(UniAsserter asserter) {
@@ -1558,7 +1566,6 @@ class OnboardingServiceDefaultTest {
 
     private void stubProduct(ProductResponse product) {
         when(productService.getValidProduct(product.getProductId())).thenReturn(Uni.createFrom().item(product));
-        when(productService.getProduct(product.getProductId())).thenReturn(Uni.createFrom().item(product));
         when(productService.getProductExpirationDays(product.getProductId())).thenReturn(Uni.createFrom().item(30));
     }
 
@@ -2165,6 +2172,115 @@ class OnboardingServiceDefaultTest {
 
     @Test
     @RunOnVertxContext
+    void completeContractUpdate_shouldRejectWhenStatusIsNotPending(UniAsserter asserter) {
+        Onboarding onboarding = createDummyOnboarding();
+        onboarding.setWorkflowType(CONTRACT_UPDATE);
+        onboarding.setStatus(OnboardingStatus.OVERRIDDEN);
+        asserter.execute(() -> PanacheMock.mock(Onboarding.class));
+        asserter.execute(() -> when(Onboarding.findByIdOptional(any()))
+                .thenReturn(Uni.createFrom().item(Optional.of(onboarding))));
+
+        asserter.assertFailedWith(
+                () -> onboardingService.complete(onboarding.getId(), TEST_FORM_ITEM),
+                InvalidRequestException.class);
+        asserter.execute(() -> verifyNoInteractions(documentContentControllerApi));
+    }
+
+    @Test
+    @RunOnVertxContext
+    void completeContractUpdate_shouldContinueWhenReferenceOnboardingIsCompleted(UniAsserter asserter) {
+        Onboarding onboarding = createDummyOnboarding();
+        onboarding.setWorkflowType(CONTRACT_UPDATE);
+        onboarding.setStatus(OnboardingStatus.PENDING);
+        String referenceOnboardingId = UUID.randomUUID().toString();
+        onboarding.setReferenceOnboardingId(referenceOnboardingId);
+        Onboarding referenceOnboarding = createDummyOnboarding();
+        referenceOnboarding.setId(referenceOnboardingId);
+        referenceOnboarding.setStatus(OnboardingStatus.COMPLETED);
+
+        asserter.execute(() -> PanacheMock.mock(Onboarding.class));
+        asserter.execute(() -> when(Onboarding.findByIdOptional(onboarding.getId()))
+                .thenReturn(Uni.createFrom().item(Optional.of(onboarding))));
+        asserter.execute(() -> when(Onboarding.findByIdOptional(referenceOnboardingId))
+                .thenReturn(Uni.createFrom().item(Optional.of(referenceOnboarding))));
+
+        ProductResponse product = mockSimpleProductValidAssert(onboarding.getProductId(), false, asserter, false, true);
+        asserter.execute(() -> when(productService.getValidProduct(onboarding.getProductId(), onboarding.getTenantId()))
+                .thenReturn(Uni.createFrom().item(product)));
+        UserResource managerResource = new UserResource();
+        managerResource.setFiscalCode("ACTUAL-FISCAL-CODE");
+        asserter.execute(() -> when(userRegistryApi.findByIdUsingGET(
+                USERS_FIELD_TAXCODE, onboarding.getUsers().get(0).getId()))
+                .thenReturn(Uni.createFrom().item(managerResource)));
+        IllegalStateException downstreamFailure = new IllegalStateException("Contract update validation passed");
+        asserter.execute(() -> when(onboardingUtils.buildUploadSignedContractRequest(
+                any(Onboarding.class),
+                anyBoolean(),
+                any(FormItem.class),
+                any(org.openapi.quarkus.product_json.model.ProductResponse.class),
+                any(DocumentType.class),
+                anyList(),
+                anyInt()))
+                .thenReturn(Uni.createFrom().failure(downstreamFailure)));
+
+        asserter.assertFailedWith(
+                () -> onboardingService.complete(onboarding.getId(), TEST_FORM_ITEM),
+                IllegalStateException.class);
+        asserter.execute(() -> {
+            verify(onboardingUtils).buildUploadSignedContractRequest(
+                    any(Onboarding.class),
+                    anyBoolean(),
+                    any(FormItem.class),
+                    any(org.openapi.quarkus.product_json.model.ProductResponse.class),
+                    eq(DocumentType.INSTITUTION),
+                    anyList(),
+                    anyInt());
+        });
+    }
+
+    @Test
+    @RunOnVertxContext
+    void completeContractUpdate_shouldRejectWhenReferenceOnboardingIsNotCompleted(UniAsserter asserter) {
+        Onboarding onboarding = createDummyOnboarding();
+        onboarding.setWorkflowType(CONTRACT_UPDATE);
+        onboarding.setStatus(OnboardingStatus.PENDING);
+        String referenceOnboardingId = UUID.randomUUID().toString();
+        onboarding.setReferenceOnboardingId(referenceOnboardingId);
+        Onboarding referenceOnboarding = createDummyOnboarding();
+        referenceOnboarding.setId(referenceOnboardingId);
+        referenceOnboarding.setStatus(OnboardingStatus.PENDING);
+
+        asserter.execute(() -> PanacheMock.mock(Onboarding.class));
+        asserter.execute(() -> when(Onboarding.findByIdOptional(onboarding.getId()))
+                .thenReturn(Uni.createFrom().item(Optional.of(onboarding))));
+        asserter.execute(() -> when(Onboarding.findByIdOptional(referenceOnboardingId))
+                .thenReturn(Uni.createFrom().item(Optional.of(referenceOnboarding))));
+        mockSimpleProductValidAssert(onboarding.getProductId(), false, asserter, false, true);
+
+        asserter.assertFailedWith(
+                () -> onboardingService.complete(onboarding.getId(), TEST_FORM_ITEM),
+                InvalidRequestException.class);
+        asserter.execute(() -> verifyNoInteractions(documentContentControllerApi));
+    }
+
+    @Test
+    @RunOnVertxContext
+    void consumeContractUpdate_shouldRejectWhenStatusIsNotPending(UniAsserter asserter) {
+        Onboarding onboarding = createDummyOnboarding();
+        onboarding.setWorkflowType(CONTRACT_UPDATE);
+        onboarding.setStatus(OnboardingStatus.COMPLETED);
+        asserter.execute(() -> PanacheMock.mock(Onboarding.class));
+        asserter.execute(() -> when(Onboarding.findByIdOptional(any()))
+                .thenReturn(Uni.createFrom().item(Optional.of(onboarding))));
+
+        asserter.assertFailedWith(
+                () -> onboardingService.completeWithoutSignatureVerification(onboarding.getId(), TEST_FORM_ITEM),
+                InvalidRequestException.class);
+        asserter.execute(() -> verifyNoInteractions(documentContentControllerApi));
+    }
+
+    @Test
+    @RunOnVertxContext
     void completeWithoutSignatureVerification(UniAsserter asserter) {
         Onboarding onboarding = createDummyOnboarding();
         asserter.execute(() -> PanacheMock.mock(Onboarding.class));
@@ -2547,6 +2663,7 @@ class OnboardingServiceDefaultTest {
         institution.setTaxCode("taxCode");
         institution.setSubunitCode("subunitCode");
         institution.setOrigin(Origin.IPA);
+        institution.setInstitutionType(InstitutionType.PA);
         onboarding.setInstitution(institution);
         onboarding.setUserRequester(userRequester);
 
@@ -2571,6 +2688,7 @@ class OnboardingServiceDefaultTest {
         institution.setTaxCode("taxCode");
         institution.setSubunitCode("subunitCode");
         institution.setOrigin(Origin.IPA);
+        institution.setInstitutionType(InstitutionType.PA);
         onboarding.setInstitution(institution);
         onboarding.setUserRequester(userRequester);
 
@@ -2860,6 +2978,7 @@ class OnboardingServiceDefaultTest {
         request.setProductId(PROD_INTEROP.getValue());
         Institution institutionBaseRequest = new Institution();
         institutionBaseRequest.setOrigin(Origin.IPA);
+        institutionBaseRequest.setInstitutionType(InstitutionType.PA);
         institutionBaseRequest.setTaxCode("taxCode");
         institutionBaseRequest.setImported(true);
         institutionBaseRequest.setDescription(DESCRIPTION_FIELD);
@@ -3015,9 +3134,6 @@ class OnboardingServiceDefaultTest {
         mockSimpleProductValidAssert(request.getProductId(), false, asserter, false, true);
         mockVerifyOnboardingNotFound();
 
-        asserter.execute(() -> when(productService.getProduct(product.getProductId()))
-                .thenReturn(Uni.createFrom().item(product)));
-
         asserter.execute(() -> when(userRegistryApi.updateUsingPATCH(any(), any()))
                 .thenReturn(Uni.createFrom().item(Response.noContent().build())));
 
@@ -3056,15 +3172,15 @@ class OnboardingServiceDefaultTest {
         mockSimpleProductValidAssert(request.getProductId(), false, asserter, false, true);
         mockVerifyOnboardingNotFound();
 
-        asserter.execute(() -> when(productService.getProduct(product.getProductId()))
-                .thenReturn(Uni.createFrom().item(product)));
-
         InstitutionResource institutionResource = new InstitutionResource();
         institutionResource.setCategory("L37");
         institutionResource.setDigitalAddress(DIGITAL_ADDRESS_FIELD);
         institutionResource.setDescription(DESCRIPTION_FIELD);
         asserter.execute(() -> when(institutionRegistryProxyApi.findIpaInstitutionByTaxCodeOnSearchEngine(eq(institutionBaseRequest.getTaxCode()), isNull()))
                 .thenReturn(Uni.createFrom().item(institutionResource)));
+
+        stubDeniedDecision(asserter,
+                org.openapi.quarkus.product_json.model.OnboardingDecisionReason.ORIGIN_INSTITUTION_TYPE_MISMATCH);
 
         asserter.assertFailedWith(() -> onboardingService.onboardingCompletion(request, users, null),
                 InvalidRequestException.class);
@@ -3088,9 +3204,6 @@ class OnboardingServiceDefaultTest {
         mockSimpleSearchPOSTAndPersist(asserter);
         mockSimpleProductValidAssert(request.getProductId(), false, asserter, false, true);
         mockVerifyOnboardingNotFound();
-
-        asserter.execute(() -> when(productService.getProduct(product.getProductId()))
-                .thenReturn(Uni.createFrom().item(product)));
 
         asserter.execute(() -> when(userRegistryApi.updateUsingPATCH(any(), any()))
                 .thenReturn(Uni.createFrom().item(Response.noContent().build())));
@@ -4521,6 +4634,7 @@ class OnboardingServiceDefaultTest {
 
         Institution institutionBaseRequest = new Institution();
         institutionBaseRequest.setOrigin(Origin.IPA);
+        institutionBaseRequest.setInstitutionType(InstitutionType.PA);
         institutionBaseRequest.setTaxCode("taxCode");
         institutionBaseRequest.setImported(true);
         institutionBaseRequest.setDescription(DESCRIPTION_FIELD);
@@ -4591,6 +4705,7 @@ class OnboardingServiceDefaultTest {
 
         Institution institutionBaseRequest = new Institution();
         institutionBaseRequest.setOrigin(Origin.IPA);
+        institutionBaseRequest.setInstitutionType(InstitutionType.PA);
         institutionBaseRequest.setTaxCode("taxCode");
         institutionBaseRequest.setImported(true);
         institutionBaseRequest.setDescription(DESCRIPTION_FIELD);
@@ -4662,6 +4777,7 @@ class OnboardingServiceDefaultTest {
 
         Institution institutionBaseRequest = new Institution();
         institutionBaseRequest.setOrigin(Origin.IPA);
+        institutionBaseRequest.setInstitutionType(InstitutionType.PA);
         institutionBaseRequest.setTaxCode("taxCode");
         institutionBaseRequest.setImported(true);
         institutionBaseRequest.setDescription(DESCRIPTION_FIELD);
@@ -4752,6 +4868,7 @@ class OnboardingServiceDefaultTest {
 
         Institution institutionBaseRequest = new Institution();
         institutionBaseRequest.setOrigin(Origin.IPA);
+        institutionBaseRequest.setInstitutionType(InstitutionType.PA);
         institutionBaseRequest.setTaxCode("taxCode");
         institutionBaseRequest.setImported(true);
         institutionBaseRequest.setDescription(DESCRIPTION_FIELD);
@@ -4859,6 +4976,7 @@ class OnboardingServiceDefaultTest {
 
         Institution institutionBaseRequest = new Institution();
         institutionBaseRequest.setOrigin(Origin.IPA);
+        institutionBaseRequest.setInstitutionType(InstitutionType.PA);
         institutionBaseRequest.setTaxCode("taxCode");
         institutionBaseRequest.setImported(true);
         institutionBaseRequest.setDescription(DESCRIPTION_FIELD);
@@ -4947,6 +5065,7 @@ class OnboardingServiceDefaultTest {
 
         Institution institutionBaseRequest = new Institution();
         institutionBaseRequest.setOrigin(Origin.IPA);
+        institutionBaseRequest.setInstitutionType(InstitutionType.PA);
         institutionBaseRequest.setTaxCode("taxCode");
         institutionBaseRequest.setImported(true);
         institutionBaseRequest.setDescription(DESCRIPTION_FIELD);
@@ -5388,15 +5507,7 @@ class OnboardingServiceDefaultTest {
         asserter.execute(() -> stubProduct(product));
 
         // Product-ms flag: same user MANAGER+DELEGATE is allowed for this product
-        org.openapi.quarkus.product_json.model.Features features =
-                new org.openapi.quarkus.product_json.model.Features();
-        features.setAllowSameUserManagerAndDelegate(true);
-        org.openapi.quarkus.product_json.model.ProductResponse productResponse =
-                new org.openapi.quarkus.product_json.model.ProductResponse();
-        productResponse.setProductId(PROD_IO.getValue());
-        productResponse.setFeatures(features);
-        asserter.execute(() -> when(productService.getProduct(PROD_IO.getValue()))
-                .thenReturn(Uni.createFrom().item(productResponse)));
+        product.getFeatures().setAllowSameUserManagerAndDelegate(true);
 
         mockVerifyOnboardingNotFound();
         InsuranceCompanyResource insuranceCompanyResource = new InsuranceCompanyResource();
@@ -5423,20 +5534,8 @@ class OnboardingServiceDefaultTest {
         billing.setRecipientCode("REC123");
         request.setBilling(billing);
 
-        setupPrvHappyPathMocks(request, asserter);
-        asserter.execute(() -> when(productService.isRequiredDocuments(any(), any(), any()))
-                .thenReturn(Uni.createFrom().item(Boolean.FALSE)));
-
         // Product-ms flag: recipientCode is required for this product
-        org.openapi.quarkus.product_json.model.Features features =
-                new org.openapi.quarkus.product_json.model.Features();
-        features.setRequiredRecipientCode(true);
-        org.openapi.quarkus.product_json.model.ProductResponse productResponse =
-                new org.openapi.quarkus.product_json.model.ProductResponse();
-        productResponse.setProductId(request.getProductId());
-        productResponse.setFeatures(features);
-        asserter.execute(() -> when(productService.getProduct(request.getProductId()))
-                .thenReturn(Uni.createFrom().item(productResponse)));
+        setupPrvHappyPathMocks(request, asserter).getFeatures().setRequiredRecipientCode(true);
 
         asserter.assertThat(() -> onboardingService.onboarding(request, List.of(manager), null, newUserRequesterDto()),
                 Assertions::assertNotNull);
@@ -5448,20 +5547,8 @@ class OnboardingServiceDefaultTest {
         Onboarding request = buildPrvOnboardingRequest();
         // no billing / recipientCode set on purpose
 
-        setupPrvHappyPathMocks(request, asserter);
-        asserter.execute(() -> when(productService.isRequiredDocuments(any(), any(), any()))
-                .thenReturn(Uni.createFrom().item(Boolean.FALSE)));
-
         // Product-ms flag: recipientCode is required but the request carries none
-        org.openapi.quarkus.product_json.model.Features features =
-                new org.openapi.quarkus.product_json.model.Features();
-        features.setRequiredRecipientCode(true);
-        org.openapi.quarkus.product_json.model.ProductResponse productResponse =
-                new org.openapi.quarkus.product_json.model.ProductResponse();
-        productResponse.setProductId(request.getProductId());
-        productResponse.setFeatures(features);
-        asserter.execute(() -> when(productService.getProduct(request.getProductId()))
-                .thenReturn(Uni.createFrom().item(productResponse)));
+        setupPrvHappyPathMocks(request, asserter).getFeatures().setRequiredRecipientCode(true);
 
         asserter.assertFailedWith(() -> onboardingService.onboarding(request, List.of(manager), null, newUserRequesterDto()),
                 InvalidRequestException.class);
@@ -5488,8 +5575,6 @@ class OnboardingServiceDefaultTest {
         mockVerifyOnboardingNotFound();
 
         asserter.execute(() -> {
-            when(productService.isRequiredDocuments(any(), any(), any()))
-                    .thenReturn(Uni.createFrom().item(Boolean.FALSE));
             when(userRegistryApi.updateUsingPATCH(any(), any()))
                     .thenReturn(Uni.createFrom().item(Response.noContent().build()));
             when(userRegistryApi.findByIdUsingGET(any(), any()))
@@ -6061,48 +6146,23 @@ class OnboardingServiceDefaultTest {
     }
 
     @Test
-    void resolveRequiredDocumentsEnabled_returnsFalseWithoutCallingProductMs_whenFeatureIsDisabled() throws Exception {
-        // given
-        Onboarding onboarding = createDummyOnboarding();
-        java.lang.reflect.Field featureFlag = OnboardingServiceDefault.class
-                .getDeclaredField("requiredDocumentsEnabled");
-        featureFlag.setAccessible(true);
-        boolean initialFeatureFlagValue = featureFlag.getBoolean(onboardingService);
-        featureFlag.setBoolean(onboardingService, false);
-
-        try {
-            java.lang.reflect.Method resolveRequiredDocuments = OnboardingServiceDefault.class
-                    .getDeclaredMethod("resolveRequiredDocumentsEnabled", Onboarding.class);
-            resolveRequiredDocuments.setAccessible(true);
-
-            // when
-            @SuppressWarnings("unchecked")
-            Uni<Boolean> result = (Uni<Boolean>) resolveRequiredDocuments.invoke(onboardingService, onboarding);
-
-            // then
-            assertFalse(result.await().indefinitely());
-            verifyNoInteractions(productService);
-        } finally {
-            featureFlag.setBoolean(onboardingService, initialFeatureFlagValue);
-        }
-    }
-
-    @Test
     @RunOnVertxContext
     void onboarding_setsStatusRequestingAndSkipsOrchestration_whenRequiredDocumentsEnabled(UniAsserter asserter) {
         Onboarding request = buildPrvOnboardingRequest();
         setupPrvHappyPathMocks(request, asserter);
-        asserter.execute(() -> when(productService.isRequiredDocuments(any(), any(), any()))
-                .thenReturn(Uni.createFrom().item(Boolean.TRUE)));
+        stubDecisionWithRequiredDocuments(asserter);
 
         asserter.assertThat(() -> onboardingService.onboarding(request, List.of(manager), null, newUserRequesterDto()),
                 Assertions::assertNotNull);
 
         asserter.execute(() -> {
-            verify(productService).isRequiredDocuments(
-                    eq(PROD_PAGOPA),
-                    eq(org.openapi.quarkus.product_json.model.InstitutionType.PRV),
-                    eq(org.openapi.quarkus.product_json.model.Origin.PDND_INFOCAMERE));
+            String expectedRequest = new org.openapi.quarkus.product_json.model.OnboardingDecisionRequest()
+                            .institutionType(org.openapi.quarkus.product_json.model.InstitutionType.PRV)
+                            .origin(org.openapi.quarkus.product_json.model.Origin.PDND_INFOCAMERE)
+                            .channel(org.openapi.quarkus.product_json.model.OnboardingChannel.SELF_SERVICE)
+                            .aggregator(false).toString();
+            verify(productService).getOnboardingDecision(eq(PROD_PAGOPA.getValue()),
+                    argThat(sent -> expectedRequest.equals(sent.toString())), nullable(String.class));
             // When status is REQUESTING, orchestration must NOT start, but persistOrUpdate
             // (called via OnboardingPersistenceHelper.updateOnboarding) YES: it serves to flush
             // the users populated asynchronously by retrieveUserResources after the first persist.
@@ -6116,8 +6176,6 @@ class OnboardingServiceDefaultTest {
         Onboarding request = buildPrvOnboardingRequest();
         setupPrvHappyPathMocks(request, asserter);
 
-        asserter.execute(() -> when(productService.isRequiredDocuments(any(), any(), any()))
-                .thenReturn(Uni.createFrom().item(Boolean.FALSE)));
 
         asserter.assertThat(() -> onboardingService.onboarding(request, List.of(manager), null, newUserRequesterDto()),
                 Assertions::assertNotNull);
@@ -6127,17 +6185,81 @@ class OnboardingServiceDefaultTest {
 
     @Test
     @RunOnVertxContext
-    void onboarding_fallsBackToLegacyRequestFlow_whenIsRequiredDocumentsFails(UniAsserter asserter) {
+    void onboarding_fails_whenProductDecisionIsUnavailable(UniAsserter asserter) {
         Onboarding request = buildPrvOnboardingRequest();
         setupPrvHappyPathMocks(request, asserter);
 
-        asserter.execute(() -> when(productService.isRequiredDocuments(any(), any(), any()))
-                .thenReturn(Uni.createFrom().failure(new WebApplicationException("product-ms down"))));
+        asserter.execute(() -> {
+            doReturn(Uni.createFrom().failure(new WebApplicationException("product-ms down")))
+                    .when(productService).getOnboardingDecision(anyString(), any(), nullable(String.class));
+        });
+
+        asserter.assertFailedWith(() -> onboardingService.onboarding(request, List.of(manager), null,
+                newUserRequesterDto()), WebApplicationException.class);
+        asserter.execute(() -> {
+            PanacheMock.verify(Onboarding.class, never()).persist(any(Onboarding.class), any());
+        });
+    }
+
+    @Test
+    @RunOnVertxContext
+    void onboarding_setsStatusRequest_whenRequiredDocumentsFeatureIsDisabled(UniAsserter asserter) throws Exception {
+        Onboarding request = buildPrvOnboardingRequest();
+        setupPrvHappyPathMocks(request, asserter);
+        stubDecisionWithRequiredDocuments(asserter);
+        java.lang.reflect.Field featureFlag = OnboardingServiceDefault.class
+                .getDeclaredField("requiredDocumentsEnabled");
+        featureFlag.setAccessible(true);
+        asserter.execute(() -> setField(featureFlag, false));
 
         asserter.assertThat(() -> onboardingService.onboarding(request, List.of(manager), null, newUserRequesterDto()),
                 Assertions::assertNotNull);
 
-        asserter.execute(() -> assertOnboardingBranching(OnboardingStatus.REQUEST, 1));
+        asserter.execute(() -> {
+            setField(featureFlag, true);
+            assertOnboardingBranching(OnboardingStatus.REQUEST, 1);
+        });
+    }
+
+    @Test
+    @RunOnVertxContext
+    void onboarding_usesDefaultExpiration_whenDecisionHasNoExpirationDays(UniAsserter asserter) {
+        Onboarding request = buildPrvOnboardingRequest();
+        setupPrvHappyPathMocks(request, asserter);
+        asserter.execute(() -> {
+            doAnswer(invocation -> productMsDecision(invocation.getArgument(0), invocation.getArgument(1))
+                    .map(decision -> decision.expirationDays(null)))
+                    .when(productService).getOnboardingDecision(anyString(), any(), nullable(String.class));
+        });
+
+        asserter.assertThat(() -> onboardingService.onboarding(request, List.of(manager), null, newUserRequesterDto()),
+                Assertions::assertNotNull);
+
+        asserter.execute(() -> {
+            ArgumentCaptor<Onboarding> captor = ArgumentCaptor.forClass(Onboarding.class);
+            PanacheMock.verify(Onboarding.class).persist(captor.capture(), any());
+            LocalDateTime expiringDate = captor.getValue().getExpiringDate();
+            assertTrue(expiringDate.isAfter(LocalDateTime.now().plusDays(29)));
+            assertTrue(expiringDate.isBefore(LocalDateTime.now().plusDays(31)));
+        });
+    }
+
+    private void setField(java.lang.reflect.Field field, boolean value) {
+        try {
+            field.setBoolean(io.quarkus.arc.ClientProxy.unwrap(onboardingService), value);
+        } catch (IllegalAccessException e) {
+            throw new IllegalStateException(e);
+        }
+    }
+
+    private void stubDecisionWithRequiredDocuments(UniAsserter asserter) {
+        asserter.execute(() -> {
+            doAnswer(invocation -> productMsDecision(invocation.getArgument(0),
+                    invocation.getArgument(1)).map(decision -> decision.requiredDocuments(List.of(
+                            new org.openapi.quarkus.product_json.model.RequiredDocumentResponse()
+                                    .id("doc").required(true)))))
+                    .when(productService).getOnboardingDecision(anyString(), any(), nullable(String.class));
+        });
     }
 
     private void assertOnboardingBranching(OnboardingStatus expectedStatus, int expectedOrchestrationInvocations) {
@@ -6169,10 +6291,10 @@ class OnboardingServiceDefaultTest {
         return dto;
     }
 
-    private void setupPrvHappyPathMocks(Onboarding request, UniAsserter asserter) {
+    private ProductResponse setupPrvHappyPathMocks(Onboarding request, UniAsserter asserter) {
         mockPersistOnboarding(asserter);
         mockSimpleSearchPOSTAndPersist(asserter);
-        mockSimpleProductValidAssert(request.getProductId(), false, asserter, false, true);
+        ProductResponse product = mockSimpleProductValidAssert(request.getProductId(), false, asserter, false, true);
         mockVerifyOnboardingNotFound();
 
         PDNDBusinessResource pdndBusinessResource = new PDNDBusinessResource();
@@ -6189,6 +6311,7 @@ class OnboardingServiceDefaultTest {
             when(userRegistryApi.findByIdUsingGET(any(), any()))
                     .thenReturn(Uni.createFrom().item(managerResourceWk));
         });
+        return product;
     }
 
     @Nested

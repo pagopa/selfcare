@@ -29,6 +29,7 @@ import java.net.URI;
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import lombok.extern.slf4j.Slf4j;
 import org.bson.types.ObjectId;
@@ -72,6 +73,9 @@ public class WebhookNotificationService {
 
   @ConfigProperty(name = "webhook.jwt.header-prefix", defaultValue = "Bearer ")
   String jwtHeaderPrefix;
+
+  @ConfigProperty(name = "webhook.default-tenant-id")
+  Optional<String> defaultTenantId;
 
   private volatile WebClient webClient;
 
@@ -249,11 +253,36 @@ public class WebhookNotificationService {
             .putHeader("Content-Type", "application/json")
             .putHeader("X-Webhook-Notification-Id", notification.getId().toHexString());
 
-    // Add custom headers
+    // The notification tenant wins; the infra-provided default (AR or PNPG) is the fallback.
+    String tenantId = resolveTenantId(notification, defaultTenantId);
+    if (tenantId != null) {
+      request.putHeader("X-Tenant-Id", tenantId);
+    }
+
+    // Add custom headers (they may override the defaults above)
     if (webhook.getHeaders() != null) {
       DataEncryptionConfig.decrypt(webhook.getHeaders()).forEach(request::putHeader);
     }
     return request;
+  }
+
+  static String resolveTenantId(WebhookNotification notification, Optional<String> defaultTenant) {
+    String tenantId = notification.getTenantId();
+    if (tenantId != null && !tenantId.isBlank()) {
+      return tenantId;
+    }
+    String fallback = defaultTenant.filter(value -> !value.isBlank()).orElse(null);
+    if (fallback == null) {
+      log.warn(
+          "Notification {} has no tenantId and no default tenant is configured: X-Tenant-Id header not set",
+          notification.getId());
+    } else {
+      log.warn(
+          "Notification {} has no tenantId: using default tenant {} for X-Tenant-Id header",
+          notification.getId(),
+          fallback);
+    }
+    return fallback;
   }
 
   private static long elapsedMs(long startNanos) {

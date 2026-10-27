@@ -104,6 +104,7 @@ locals {
       "SELFCARE_URL"                                       = "https://imprese.notifichedigitali.it"
       "MAIL_ONBOARDING_CONFIRMATION_LINK"                  = "https://imprese.notifichedigitali.it/onboarding/confirm?jwt="
       "MAIL_USER_CONFIRMATION_LINK"                        = "https://imprese.notifichedigitali.it/onboarding/confirm?jwt=%s#add-user=true"
+      "MAIL_CONTRACT_UPDATE_CONFIRMATION_LINK"             = "https://imprese.notifichedigitali.it/onboarding/confirm?contract-update=true&jwt="
       "MAIL_ONBOARDING_REJECTION_LINK"                     = "https://imprese.notifichedigitali.it/onboarding/cancel?jwt="
       "MAIL_ONBOARDING_URL"                                = "https://imprese.notifichedigitali.it/onboarding/"
       "USER_MS_SEND_MAIL"                                  = "false"
