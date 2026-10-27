@@ -13,6 +13,7 @@ import it.pagopa.selfcare.onboarding.exception.GenericOnboardingException;
 import it.pagopa.selfcare.onboarding.mapper.UserMapper;
 import it.pagopa.selfcare.onboarding.dto.AttachmentTemplate;
 import jakarta.inject.Inject;
+import org.bson.Document;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -744,25 +745,60 @@ class OnboardingServiceTest {
 
         ProductResponse product1 = new ProductResponse();
         product1.setProductId("product1");
-        when(productService.getProducts(false, false)).thenReturn(List.of(product1));
+        ProductResponse product2 = new ProductResponse();
+        product2.setProductId("product2");
+        when(productService.getProducts(false, false)).thenReturn(List.of(product1, product2));
 
-        when(onboardingRepositoryService.countByQuery(any())).thenReturn(5L).thenReturn(3L);
+        when(onboardingRepositoryService.countByProduct(any()))
+                .thenReturn(Map.of("product1", 5L, "product2", 1L, "unknown", 9L))
+                .thenReturn(Map.of("product1", 3L));
 
         List<NotificationCountResult> results =
-                onboardingService.countNotifications(product1.getProductId(), from, to, context);
+                onboardingService.countNotifications(null, from, to, context);
+
+        assertEquals(2, results.size());
+        assertEquals("product1", results.get(0).getProductId());
+        assertEquals(8, results.get(0).getNotificationCount());
+        assertEquals("product2", results.get(1).getProductId());
+        assertEquals(1, results.get(1).getNotificationCount());
+        verify(onboardingRepositoryService, times(2)).countByProduct(any());
+    }
+
+    @Test
+    void countOnboardingShouldFilterByProductIdInQuery() {
+        ExecutionContext context = getExecutionContext();
+
+        ProductResponse product1 = new ProductResponse();
+        product1.setProductId("product1");
+        ProductResponse product2 = new ProductResponse();
+        product2.setProductId("product2");
+        when(productService.getProducts(false, false)).thenReturn(List.of(product1, product2));
+        when(onboardingRepositoryService.countByProduct(any())).thenReturn(Map.of());
+
+        List<NotificationCountResult> results =
+                onboardingService.countNotifications("product2", null, null, context);
 
         assertEquals(1, results.size());
-        assertEquals(8, results.get(0).getNotificationCount());
+        assertEquals("product2", results.get(0).getProductId());
+        assertEquals(0, results.get(0).getNotificationCount());
+        ArgumentCaptor<Document> queries = ArgumentCaptor.forClass(Document.class);
+        verify(onboardingRepositoryService, times(2)).countByProduct(queries.capture());
+        queries.getAllValues().forEach(query -> {
+            List<Document> branches = query.getList("$or", Document.class);
+            assertEquals(2, branches.size());
+            branches.forEach(branch -> assertEquals("product2", branch.getString("productId")));
+        });
     }
 
     @Test
     void countOnboardingShouldReturnEmptyListWhenNoProductsExist() {
         ExecutionContext context = getExecutionContext();
 
-        when(productService.getProducts(true, false)).thenReturn(List.of());
+        when(productService.getProducts(false, false)).thenReturn(List.of());
         List<NotificationCountResult> results =
                 onboardingService.countNotifications(null, null, null, context);
         assertTrue(results.isEmpty());
+        verify(onboardingRepositoryService, never()).countByProduct(any());
     }
 
     @Test
