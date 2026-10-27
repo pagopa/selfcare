@@ -934,6 +934,24 @@
             }
           },
           {
+            "name": "statusUpdatedFromDate",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "statusUpdatedToDate",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
             "name": "page",
             "in": "query",
             "required": false,
@@ -1081,7 +1099,7 @@
           "institution"
         ],
         "summary": "Retrieve IPA institutions",
-        "description": "Retrieves a list of IPA institutions from the Azure AI Search index with optional text search and category filter",
+        "description": "Retrieves a list of IPA institutions from the Azure AI Search index with optional text search and comma-separated category filter",
         "operationId": "searchIpaInstitutionsOnSearchEngine",
         "parameters": [
           {
@@ -1097,7 +1115,7 @@
           {
             "name": "category",
             "in": "query",
-            "description": "Filter from origin category",
+            "description": "Filter from origin category. Multiple comma-separated values are supported",
             "required": false,
             "schema": {
               "type": "string"
@@ -1134,6 +1152,66 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/InstitutionsResource"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        },
+        "security": [
+          {
+            "apiKeyHeader": [
+              "global"
+            ]
+          }
+        ]
+      }
+    },
+    "/institutions/ipa/{taxCode}": {
+      "get": {
+        "tags": [
+          "institution"
+        ],
+        "summary": "Find IPA institution by tax code",
+        "description": "Returns the single IPA institution matching the exact tax code and optional comma-separated category filter from the Azure AI Search index",
+        "operationId": "findIpaInstitutionByTaxCodeOnSearchEngine",
+        "parameters": [
+          {
+            "name": "taxCode",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "category",
+            "in": "query",
+            "description": "Filter from origin category. Multiple comma-separated values are supported",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InstitutionResource1"
                 }
               }
             }
@@ -1274,8 +1352,8 @@
             "name": "name",
             "in": "query",
             "schema": {
-              "type": "string",
-              "pattern": "^[a-zA-Z0-9 ]+$"
+              "pattern": "^[a-zA-Z0-9 ]+$",
+              "type": "string"
             },
             "required": true
           },
@@ -1288,11 +1366,19 @@
             "required": true
           },
           {
+            "description": "Optional. Defaults to the X-Tenant-Id header, or to the JWT tenant_id claim when the header is absent.",
+            "name": "tenantId",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
             "name": "version",
             "in": "query",
             "schema": {
-              "type": "string",
-              "pattern": "^\\d+\\.\\d+\\.\\d+$"
+              "pattern": "^\\d+\\.\\d+\\.\\d+$",
+              "type": "string"
             },
             "required": true
           }
@@ -1301,14 +1387,14 @@
           "content": {
             "multipart/form-data": {
               "schema": {
-                "type": "object",
                 "required": [
                   "file"
                 ],
+                "type": "object",
                 "properties": {
                   "file": {
-                    "type": "string",
-                    "format": "binary"
+                    "format": "binary",
+                    "type": "string"
                   }
                 }
               }
@@ -1395,6 +1481,14 @@
             }
           },
           {
+            "description": "Optional. Defaults to the X-Tenant-Id header, or to the JWT tenant_id claim when the header is absent.",
+            "name": "tenantId",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
             "name": "version",
             "in": "query",
             "schema": {
@@ -1470,12 +1564,20 @@
             "name": "fileType",
             "in": "query",
             "schema": {
-              "type": "string",
-              "default": "HTML"
+              "default": "HTML",
+              "type": "string"
             }
           },
           {
             "name": "productId",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Optional. Defaults to the X-Tenant-Id header, or to the JWT tenant_id claim when the header is absent.",
+            "name": "tenantId",
             "in": "query",
             "schema": {
               "type": "string"
@@ -1488,8 +1590,8 @@
             "content": {
               "application/octet-stream": {
                 "schema": {
-                  "type": "string",
-                  "format": "binary"
+                  "format": "binary",
+                  "type": "string"
                 }
               }
             }
@@ -1630,6 +1732,14 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "description": "Optional. Defaults to the X-Tenant-Id header, or to the JWT tenant_id claim when the header is absent.",
+            "name": "tenantId",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -1698,6 +1808,14 @@
           },
           {
             "name": "createdBy",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Optional. Defaults to the X-Tenant-Id header, or to the JWT tenant_id claim when the header is absent.",
+            "name": "tenantId",
             "in": "query",
             "schema": {
               "type": "string"
@@ -1785,6 +1903,14 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "description": "Optional. Defaults to the X-Tenant-Id header, or to the JWT tenant_id claim when the header is absent.",
+            "name": "tenantId",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -1845,6 +1971,14 @@
             "name": "productId",
             "in": "path",
             "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Optional. Defaults to the X-Tenant-Id header, or to the JWT tenant_id claim when the header is absent.",
+            "name": "tenantId",
+            "in": "query",
             "schema": {
               "type": "string"
             }
@@ -1995,13 +2129,19 @@
             }
           },
           {
+            "description": "Optional. Defaults to the X-Tenant-Id header, or to the JWT tenant_id claim when the header is absent.",
             "name": "tenantId",
             "in": "query",
             "schema": {
-              "type": "string",
-              "pattern": "\\S"
-            },
-            "required": true
+              "type": "string"
+            }
+          },
+          {
+            "name": "X-Tenant-Id",
+            "in": "header",
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -2025,6 +2165,14 @@
         "parameters": [
           {
             "name": "productId",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Optional. Defaults to the X-Tenant-Id header, or to the JWT tenant_id claim when the header is absent.",
+            "name": "tenantId",
             "in": "query",
             "schema": {
               "type": "string"
@@ -2111,6 +2259,14 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "description": "Optional. Defaults to the X-Tenant-Id header, or to the JWT tenant_id claim when the header is absent.",
+            "name": "tenantId",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -2168,6 +2324,14 @@
           },
           {
             "name": "productId",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Optional. Defaults to the X-Tenant-Id header, or to the JWT tenant_id claim when the header is absent.",
+            "name": "tenantId",
             "in": "query",
             "schema": {
               "type": "string"
@@ -2254,6 +2418,14 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "description": "Optional. Defaults to the X-Tenant-Id header, or to the JWT tenant_id claim when the header is absent.",
+            "name": "tenantId",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -2332,6 +2504,14 @@
           },
           {
             "name": "productId",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Optional. Defaults to the X-Tenant-Id header, or to the JWT tenant_id claim when the header is absent.",
+            "name": "tenantId",
             "in": "query",
             "schema": {
               "type": "string"
@@ -2883,6 +3063,16 @@
             "name": "productId",
             "in": "query",
             "description": "Product's unique identifier",
+            "required": false,
+            "style": "form",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "documentId",
+            "in": "query",
+            "description": "Unique identifier of a related document",
             "required": false,
             "style": "form",
             "schema": {
@@ -3563,6 +3753,13 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "name": "workflowType",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/WorkflowType"
+            }
           }
         ],
         "responses": {
@@ -3841,6 +4038,14 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "name": "downloadP7MFile",
+            "in": "query",
+            "schema": {
+              "default": false,
+              "type": "boolean"
+            }
           }
         ],
         "responses": {
@@ -4087,6 +4292,9 @@
           },
           "originId": {
             "type": "string"
+          },
+          "isPartnerTech": {
+            "type": "boolean"
           }
         }
       },
@@ -4630,6 +4838,14 @@
           "expiringDate": {
             "type": "string",
             "format": "date-time"
+          },
+          "deletedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "statusUpdatedAt": {
+            "type": "string",
+            "format": "date-time"
           }
         }
       },
@@ -4779,6 +4995,9 @@
           "contractTemplateVersion": {
             "type": "string"
           },
+          "tenantId": {
+            "type": "string"
+          },
           "productId": {
             "type": "string"
           },
@@ -4800,18 +5019,16 @@
         }
       },
       "Instant": {
-        "type": "string",
         "format": "date-time",
-        "examples": [
-          "2022-03-10T16:15:50Z"
-        ]
+        "type": "string",
+        "example": "2022-03-10T16:15:50Z"
       },
       "ContractTemplateFileType": {
-        "type": "string",
         "enum": [
           "HTML",
           "PDF"
-        ]
+        ],
+        "type": "string"
       },
       "Problem6": {
         "type": "object",
@@ -4823,8 +5040,8 @@
             "type": "string"
           },
           "status": {
-            "type": "integer",
-            "format": "int32"
+            "format": "int32",
+            "type": "integer"
           },
           "title": {
             "type": "string"
@@ -4854,29 +5071,39 @@
           "productId": {
             "type": "string"
           },
+          "tenantId": {
+            "type": "string"
+          },
           "status": {
             "$ref": "#/components/schemas/ProductStatus"
           }
         }
       },
       "ProductStatus": {
-        "type": "string",
         "enum": [
           "TESTING",
           "ACTIVE",
           "DELETED",
-          "SUSPEND"
-        ]
+          "SUSPEND",
+          "PHASE_OUT",
+          "INACTIVE"
+        ],
+        "type": "string"
       },
       "ProductCreateRequest": {
-        "type": "object",
         "required": [
-          "productId"
+          "productId",
+          "tenantId"
         ],
+        "type": "object",
         "properties": {
           "productId": {
-            "type": "string",
-            "pattern": "\\S"
+            "pattern": "\\S",
+            "type": "string"
+          },
+          "tenantId": {
+            "pattern": "\\S",
+            "type": "string"
           },
           "parentId": {
             "type": "string"
@@ -4906,6 +5133,12 @@
             "$ref": "#/components/schemas/Features"
           },
           "roleMappings": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RoleMapping"
+            }
+          },
+          "partnerTechRoleMappings": {
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/RoleMapping"
@@ -5008,11 +5241,17 @@
           "requiresParentOnboarding": {
             "type": "boolean"
           },
+          "allowSameUserManagerAndDelegate": {
+            "type": "boolean"
+          },
           "expirationDays": {
-            "type": "integer",
-            "format": "int32"
+            "format": "int32",
+            "type": "integer"
           },
           "enabled": {
+            "type": "boolean"
+          },
+          "requiredRecipientCode": {
             "type": "boolean"
           }
         }
@@ -5047,7 +5286,6 @@
         }
       },
       "InstitutionType1": {
-        "type": "string",
         "enum": [
           "PA",
           "PG",
@@ -5064,7 +5302,8 @@
           "GPU",
           "SCEC",
           "DEFAULT"
-        ]
+        ],
+        "type": "string"
       },
       "BackOfficeRole": {
         "type": "object",
@@ -5114,8 +5353,8 @@
             "type": "string"
           },
           "order": {
-            "type": "integer",
-            "format": "int32"
+            "format": "int32",
+            "type": "integer"
           },
           "generated": {
             "type": "boolean"
@@ -5132,29 +5371,28 @@
           "workflowType": {
             "type": "array",
             "items": {
-              "$ref": "#/components/schemas/WorkflowType"
+              "$ref": "#/components/schemas/WorkflowType1"
             }
           }
         }
       },
       "OnboardingType": {
-        "type": "string",
         "enum": [
           "INSTITUTION",
           "INSTITUTION_AGGREGATOR",
           "USER",
           "USER_AGGREGATOR"
-        ]
+        ],
+        "type": "string"
       },
       "ContractType": {
-        "type": "string",
         "enum": [
           "CONTRACT",
           "ATTACHMENT"
-        ]
+        ],
+        "type": "string"
       },
-      "WorkflowType": {
-        "type": "string",
+      "WorkflowType1": {
         "enum": [
           "CONTRACT_REGISTRATION",
           "CONTRACT_WITH_COUNTERSIGNATURE",
@@ -5172,7 +5410,8 @@
           "CONFIRMATION_AGGREGATOR",
           "USERS_PG",
           "USERS_EA"
-        ]
+        ],
+        "type": "string"
       },
       "OriginEntry": {
         "type": "object",
@@ -5185,11 +5424,13 @@
           },
           "labelKey": {
             "type": "string"
+          },
+          "selfOnboarding": {
+            "type": "boolean"
           }
         }
       },
       "Origin1": {
-        "type": "string",
         "enum": [
           "IPA",
           "SELC",
@@ -5198,13 +5439,14 @@
           "INFOCAMERE",
           "IVASS",
           "PDND_INFOCAMERE"
-        ]
+        ],
+        "type": "string"
       },
       "EmailTemplateConfig": {
         "type": "object",
         "properties": {
           "type": {
-            "$ref": "#/components/schemas/WorkflowType"
+            "$ref": "#/components/schemas/WorkflowType1"
           },
           "institutionType": {
             "$ref": "#/components/schemas/InstitutionType1"
@@ -5221,7 +5463,6 @@
         }
       },
       "OnboardingStatus1": {
-        "type": "string",
         "enum": [
           "REQUEST",
           "TOBEVALIDATED",
@@ -5230,7 +5471,8 @@
           "FAILED",
           "REJECTED",
           "DELETED"
-        ]
+        ],
+        "type": "string"
       },
       "BackOfficeEnvironmentConfiguration": {
         "type": "object",
@@ -5253,8 +5495,8 @@
         "type": "object",
         "properties": {
           "requiredSignatures": {
-            "type": "integer",
-            "format": "int32"
+            "format": "int32",
+            "type": "integer"
           },
           "skipSignerIdentityCheck": {
             "type": "boolean"
@@ -5271,8 +5513,8 @@
         "type": "object",
         "properties": {
           "order": {
-            "type": "integer",
-            "format": "int32"
+            "format": "int32",
+            "type": "integer"
           },
           "label": {
             "type": "string"
@@ -5295,8 +5537,8 @@
             "type": "string"
           },
           "signingStep": {
-            "type": "integer",
-            "format": "int32"
+            "format": "int32",
+            "type": "integer"
           }
         }
       },
@@ -5310,7 +5552,7 @@
             "$ref": "#/components/schemas/Origin1"
           },
           "workflowType": {
-            "$ref": "#/components/schemas/WorkflowType"
+            "$ref": "#/components/schemas/WorkflowType1"
           }
         }
       },
@@ -5333,8 +5575,8 @@
             "type": "string"
           },
           "maxDocumentsRequired": {
-            "type": "integer",
-            "format": "int32"
+            "format": "int32",
+            "type": "integer"
           },
           "filter": {
             "$ref": "#/components/schemas/RequiredDocumentFilter"
@@ -5380,14 +5622,19 @@
         }
       },
       "ProductPatchRequest": {
-        "type": "object",
         "required": [
-          "productId"
+          "productId",
+          "tenantId"
         ],
+        "type": "object",
         "properties": {
           "productId": {
-            "type": "string",
-            "pattern": "\\S"
+            "pattern": "\\S",
+            "type": "string"
+          },
+          "tenantId": {
+            "pattern": "\\S",
+            "type": "string"
           },
           "parentId": {
             "type": "string"
@@ -5417,6 +5664,12 @@
             "$ref": "#/components/schemas/Features"
           },
           "roleMappings": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RoleMapping"
+            }
+          },
+          "partnerTechRoleMappings": {
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/RoleMapping"
@@ -5482,14 +5735,19 @@
         }
       },
       "ProductResponse": {
-        "type": "object",
         "required": [
-          "productId"
+          "productId",
+          "tenantId"
         ],
+        "type": "object",
         "properties": {
           "productId": {
-            "type": "string",
-            "pattern": "\\S"
+            "pattern": "\\S",
+            "type": "string"
+          },
+          "tenantId": {
+            "pattern": "\\S",
+            "type": "string"
           },
           "parentId": {
             "type": "string"
@@ -5519,6 +5777,12 @@
             "$ref": "#/components/schemas/Features"
           },
           "roleMappings": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RoleMapping"
+            }
+          },
+          "partnerTechRoleMappings": {
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/RoleMapping"
@@ -5588,8 +5852,8 @@
             "type": "string"
           },
           "version": {
-            "type": "integer",
-            "format": "int32"
+            "format": "int32",
+            "type": "integer"
           },
           "metadata": {
             "$ref": "#/components/schemas/ProductMetadata"
@@ -5608,25 +5872,25 @@
         }
       },
       "WebhookRequest": {
-        "type": "object",
         "required": [
           "url",
           "tenantId",
           "productId",
           "httpMethod"
         ],
+        "type": "object",
         "properties": {
           "url": {
-            "type": "string",
-            "pattern": "\\S"
+            "pattern": "\\S",
+            "type": "string"
           },
           "tenantId": {
-            "type": "string",
-            "pattern": "\\S"
+            "pattern": "\\S",
+            "type": "string"
           },
           "productId": {
-            "type": "string",
-            "pattern": "\\S"
+            "pattern": "\\S",
+            "type": "string"
           },
           "httpMethod": {
             "type": "string"
@@ -5634,6 +5898,12 @@
           "headers": {
             "type": "object",
             "additionalProperties": {
+              "type": "string"
+            }
+          },
+          "topics": {
+            "type": "array",
+            "items": {
               "type": "string"
             }
           },
@@ -5646,20 +5916,20 @@
         "type": "object",
         "properties": {
           "maxAttempts": {
-            "type": "integer",
-            "format": "int32"
+            "format": "int32",
+            "type": "integer"
           },
           "initialDelayMs": {
-            "type": "integer",
-            "format": "int64"
+            "format": "int64",
+            "type": "integer"
           },
           "maxDelayMs": {
-            "type": "integer",
-            "format": "int64"
+            "format": "int64",
+            "type": "integer"
           },
           "backoffMultiplier": {
-            "type": "number",
-            "format": "double"
+            "format": "double",
+            "type": "number"
           }
         }
       },
@@ -5695,6 +5965,9 @@
           "productId": {
             "type": "string"
           },
+          "tenantId": {
+            "type": "string"
+          },
           "roles": {
             "type": "array",
             "items": {
@@ -5713,8 +5986,8 @@
             "type": "string"
           },
           "status": {
-            "type": "integer",
-            "format": "int32"
+            "format": "int32",
+            "type": "integer"
           },
           "title": {
             "type": "string"
@@ -5725,14 +5998,14 @@
         }
       },
       "SaveUserRequest": {
-        "type": "object",
         "required": [
           "email"
         ],
+        "type": "object",
         "properties": {
           "email": {
-            "type": "string",
-            "minLength": 1
+            "minLength": 1,
+            "type": "string"
           },
           "uid": {
             "type": "string"
@@ -5757,9 +6030,6 @@
           "userId": {
             "type": "string"
           },
-          "productId": {
-            "type": "string"
-          },
           "name": {
             "type": "string"
           },
@@ -5781,6 +6051,9 @@
         "type": "object",
         "properties": {
           "productId": {
+            "type": "string"
+          },
+          "tenantId": {
             "type": "string"
           },
           "role": {
@@ -6697,9 +6970,6 @@
           "billing": {
             "$ref": "#/components/schemas/BillingResponse2"
           },
-          "payment": {
-            "$ref": "#/components/schemas/PaymentResponse"
-          },
           "signContract": {
             "type": "boolean"
           },
@@ -6732,6 +7002,9 @@
             "items": {
               "type": "string"
             }
+          },
+          "contractUpdateRequired": {
+            "type": "boolean"
           }
         }
       },
@@ -6956,17 +7229,6 @@
           }
         }
       },
-      "PaymentResponse": {
-        "type": "object",
-        "properties": {
-          "iban": {
-            "type": "string"
-          },
-          "holder": {
-            "type": "string"
-          }
-        }
-      },
       "AdditionalInformationsDto1": {
         "type": "object",
         "properties": {
@@ -7030,6 +7292,28 @@
         ],
         "type": "string"
       },
+      "WorkflowType": {
+        "enum": [
+          "CONTRACT_REGISTRATION",
+          "CONTRACT_WITH_COUNTERSIGNATURE",
+          "CONTRACT_UPDATE",
+          "FOR_APPROVE",
+          "FOR_APPROVE_PT",
+          "FOR_APPROVE_GPU",
+          "CONFIRMATION",
+          "USERS",
+          "USERS_IMPORT",
+          "IMPORT",
+          "IMPORT_AGGREGATION",
+          "CONTRACT_REGISTRATION_AGGREGATOR",
+          "CONFIRMATION_AGGREGATE",
+          "INCREMENT_REGISTRATION_AGGREGATOR",
+          "CONFIRMATION_AGGREGATOR",
+          "USERS_PG",
+          "USERS_EA"
+        ],
+        "type": "string"
+      },
       "Problem3": {
         "type": "object",
         "properties": {
@@ -7069,6 +7353,17 @@
       }
     },
     "securitySchemes": {
+      "SecurityScheme": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "description": "Authentication"
+      },
+      "bearerAuth1": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      },
       "apiKeyHeader": {
         "type": "apiKey",
         "name": "Ocp-Apim-Subscription-Key",
