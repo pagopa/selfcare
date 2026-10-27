@@ -5826,7 +5826,7 @@
           },
           "contractEnabled" : {
             "type" : "boolean",
-            "description" : "If the contract documents view is enabled for the product"
+            "description" : "If the documents view is enabled for the product"
           }
         },
         "description" : "Product's sub products list"
