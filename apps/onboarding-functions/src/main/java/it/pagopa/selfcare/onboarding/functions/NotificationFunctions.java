@@ -212,7 +212,14 @@ public class NotificationFunctions {
         .build();
     }
 
+    TenantContext.Scope tenantScope;
     try {
+      tenantScope = TenantContext.open(request, context);
+    } catch (IllegalArgumentException exception) {
+      return invalidTenantResponse(request, context);
+    }
+
+    try (TenantContext.Scope ignored = tenantScope) {
       List<NotificationCountResult> countedResult = onboardingService.countNotifications(productId, from, to, context);
       return request.createResponseBuilder(HttpStatus.OK)
         .body(countedResult)

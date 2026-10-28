@@ -29,6 +29,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.NullAndEmptySource;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
@@ -351,6 +353,7 @@ public class NotificationFunctionsTest {
         queryParams.put("from", from);
         queryParams.put("to", to);
         doReturn(queryParams).when(req).getQueryParameters();
+        doReturn(Map.of("X-Tenant-Id", "AR")).when(req).getHeaders();
 
         final ExecutionContext context = mock(ExecutionContext.class);
         doReturn(Logger.getGlobal()).when(context).getLogger();
@@ -382,6 +385,7 @@ public class NotificationFunctionsTest {
         queryParams.put("from", from);
         queryParams.put("to", to);
         doReturn(queryParams).when(req).getQueryParameters();
+        doReturn(Map.of("X-Tenant-Id", "AR")).when(req).getHeaders();
         final ExecutionContext context = mock(ExecutionContext.class);
         doReturn(Logger.getGlobal()).when(context).getLogger();
         List<NotificationCountResult> expectedResults = List.of(new NotificationCountResult("product1", 1L));
@@ -402,11 +406,16 @@ public class NotificationFunctionsTest {
     }
 
     private HttpResponseMessage callCountNotifications(String from, String to, ExecutionContext context) {
+        return callCountNotifications(from, to, Map.of("X-Tenant-Id", "AR"), context);
+    }
+
+    private HttpResponseMessage callCountNotifications(String from, String to, Map<String, String> headers, ExecutionContext context) {
         @SuppressWarnings("unchecked") final HttpRequestMessage<Optional<String>> req = mock(HttpRequestMessage.class);
         final Map<String, String> queryParams = new HashMap<>();
         queryParams.put("from", from);
         queryParams.put("to", to);
         doReturn(queryParams).when(req).getQueryParameters();
+        doReturn(headers).when(req).getHeaders();
         doAnswer((Answer<HttpResponseMessage.Builder>) invocation -> {
             HttpStatus status = (HttpStatus) invocation.getArguments()[0];
             return new HttpResponseMessageMock.HttpResponseMessageBuilderMock().status(status);
@@ -425,6 +434,20 @@ public class NotificationFunctionsTest {
         doReturn(Logger.getGlobal()).when(context).getLogger();
 
         HttpResponseMessage responseMessage = callCountNotifications(from, to, context);
+
+        assertEquals(HttpStatus.BAD_REQUEST.value(), responseMessage.getStatusCode());
+        verify(onboardingService, never()).countNotifications(any(), any(), any(), any());
+    }
+
+    @ParameterizedTest
+    @NullAndEmptySource
+    @ValueSource(strings = "UNKNOWN")
+    public void countOnboardingShouldReturnBadRequestWhenTenantIsMissingOrUnsupported(String tenant) {
+        final ExecutionContext context = mock(ExecutionContext.class);
+        doReturn(Logger.getGlobal()).when(context).getLogger();
+        Map<String, String> headers = tenant == null ? Map.of() : Map.of("X-Tenant-Id", tenant);
+
+        HttpResponseMessage responseMessage = callCountNotifications("2021-01-01", "2021-12-31", headers, context);
 
         assertEquals(HttpStatus.BAD_REQUEST.value(), responseMessage.getStatusCode());
         verify(onboardingService, never()).countNotifications(any(), any(), any(), any());
