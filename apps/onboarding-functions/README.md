@@ -26,7 +26,10 @@ use a stable identity such as `m2m:onboarding-ms` or `m2m:onboarding-cdc`.
 All twelve HTTP triggers require three independent credentials: the Azure Function
 key, `X-Tenant-Id`, and `Authorization: Bearer <jwt>`. The JWT must use RS256, be
 signed by the public key configured for the header tenant, contain an unexpired
-`exp`, an allowed `iss`, `uid`, and a matching `tenant_id`. Missing or unsupported
+`exp`, an allowed `iss`, `uid`, and a matching `tenant_id`. Tokens without
+`tenant_id` (the legacy PNPG SPID hub does not emit it) are attributed to
+`JWT_DEFAULT_TENANT` (default `PNPG`), which must still match the header; set
+`JWT_TENANT_CLAIM_REQUIRED=true` to reject them. Missing or unsupported
 tenant context returns `400`; JWT failures return `401` with
 `WWW-Authenticate: Bearer`. Validation runs before request parsing, telemetry with
 application data, service calls, or Durable orchestration scheduling.
@@ -61,6 +64,8 @@ Before running you must set these properties as environment variables.
 | onboarding-functions.jwt.validation.tenants.AR.public-key<br/>        | JWT_PUBLIC_KEY_AR          |             | for AR       |
 | onboarding-functions.jwt.validation.tenants.PNPG.public-key<br/>      | JWT_PUBLIC_KEY_PNPG        |             | for PNPG     |
 | onboarding-functions.jwt.validation.allowed-issuers<br/>              | JWT_ALLOWED_ISSUERS        | SPID,PAGOPA | yes          |
+| onboarding-functions.jwt.validation.default-tenant<br/>               | JWT_DEFAULT_TENANT         | PNPG        | no           |
+| onboarding-functions.jwt.validation.tenant-claim-required<br/>        | JWT_TENANT_CLAIM_REQUIRED  | false       | no           |
 
 ### Blob storage authentication
 

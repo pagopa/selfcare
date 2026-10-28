@@ -15,6 +15,17 @@ public interface JwtValidationConfig {
   @WithDefault("SPID,PAGOPA")
   Set<String> allowedIssuers();
 
+  /**
+   * Tenant attributed to tokens without the {@code tenant_id} claim, emitted by legacy issuers such
+   * as the PNPG SPID hub. It must still match the {@code X-Tenant-Id} header.
+   */
+  @WithDefault("PNPG")
+  String defaultTenant();
+
+  /** When {@code true}, tokens without the {@code tenant_id} claim are rejected. */
+  @WithDefault("false")
+  boolean tenantClaimRequired();
+
   /** RSA verification keys, indexed by canonical tenant id. */
   Map<String, TenantKey> tenants();
 
