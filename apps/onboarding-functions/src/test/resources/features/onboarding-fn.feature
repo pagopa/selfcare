@@ -242,3 +242,10 @@ Feature: Onboarding collection
     When I send a GET request with given onboardingId
     Then the response should have status code 400
     And the onboarding status should not change
+
+  Scenario: Accept StartOnboardingOrchestration with a token without tenant_id claim attributed to the default tenant
+    Given Preparing the invocation of "StartOnboardingOrchestration" HTTP call with onboardingId "89ad7142-24bb-48ad-8504-9c9231137e85"
+    And the request token has no tenant_id claim
+    When I send a GET request with given onboardingId
+    Then the response should have status code 202
+    And the answer should contain "id,purgeHistoryDeleteUri,restartPostUri"

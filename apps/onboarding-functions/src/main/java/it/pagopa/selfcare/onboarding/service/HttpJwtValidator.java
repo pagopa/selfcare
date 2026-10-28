@@ -94,13 +94,24 @@ public class HttpJwtValidator {
       throw new JwtException("Missing uid claim");
     }
 
-    String claimTenant = normalize(claims.get(TenantContext.TENANT_CLAIM, String.class));
-    if (claimTenant == null) {
-      throw new JwtException("Missing tenant_id claim");
-    }
-    if (!claimTenant.equals(headerTenant)) {
+    if (!resolveTokenTenant(claims).equals(headerTenant)) {
       throw new JwtException("Tenant claim does not match tenant header");
     }
+  }
+
+  private String resolveTokenTenant(Claims claims) {
+    if (claims.get(TenantContext.TENANT_CLAIM) == null) {
+      if (config.tenantClaimRequired()) {
+        throw new JwtException("Missing tenant_id claim");
+      }
+      return Optional.ofNullable(normalize(config.defaultTenant()))
+          .orElseThrow(() -> new IllegalArgumentException("No JWT default tenant configured"));
+    }
+    String claimTenant = normalize(claims.get(TenantContext.TENANT_CLAIM, String.class));
+    if (claimTenant == null) {
+      throw new JwtException("Invalid tenant_id claim");
+    }
+    return claimTenant;
   }
 
   private String extractBearerToken(HttpRequestMessage<?> request) {
