@@ -1,0 +1,150 @@
+<html>
+
+<head>
+  <meta content="text/html; charset=UTF-8" http-equiv="content-type" />
+  <style type="text/css">
+    @page {
+      size: A4;
+      margin: 2cm 2cm 2.2cm 2cm;
+      @bottom-center {
+        content: counter(page);
+        font-family: Helvetica, sans-serif;
+        font-size: 9pt;
+      }
+    }
+
+    body {
+      font-family: Helvetica, sans-serif;
+      font-size: 10pt;
+      line-height: 1.35;
+      color: #000000;
+    }
+
+    p {
+      margin: 0 0 7pt 0;
+      text-align: justify;
+    }
+
+    .title {
+      text-align: center;
+      font-weight: bold;
+      font-size: 11pt;
+    }
+
+    .center {
+      text-align: center;
+    }
+
+    .heading {
+      font-weight: bold;
+      margin-top: 12pt;
+      page-break-after: avoid;
+    }
+
+    .c3 {
+      font-weight: bold;
+    }
+
+    .item {
+      margin-left: 18pt;
+    }
+
+    .subitem {
+      margin-left: 36pt;
+    }
+
+    .c141 {
+      margin: 0 0 2pt 18pt;
+      text-align: left;
+    }
+
+    .c6 {
+      font-weight: normal;
+    }
+
+    .logo-table {
+      width: 100%;
+      margin-bottom: 14pt;
+    }
+
+    .logo-table td {
+      padding: 0;
+      vertical-align: middle;
+    }
+
+    .signature-box {
+      width: 301px;
+      height: 52px;
+      border: solid black 1px;
+      margin-bottom: 14pt;
+    }
+
+    .signature-block {
+      page-break-inside: avoid;
+    }
+  </style>
+</head>
+
+<body>
+
+  <table class="logo-table">
+    <tr>
+      <td style="text-align: left;">
+        <img alt="logo_sx_pagopa" src="https://selfcare.pagopa.it/assets/logo_pagopacorp.png"
+          style="width: 125.75px; height: 35.18px;" title="logo_sx_pagopa" />
+      </td>
+      <td style="text-align: right;">
+        <img alt="logo_dx_ced" src="https://selfcare.pagopa.it/resources/products/prod-ced/logo.png"
+          style="height: 80px;" title="logo_dx_ced" />
+      </td>
+    </tr>
+  </table>
+
+  <p>Spett.le PagoPA S.p.A.<br />PEC: selfcare@pec.pagopa.it</p>
+
+  <p class="title">Nomina dell’utente con ruolo di Amministratore - Portale CED (Convenzione Dipartimento per le
+    politiche in favore delle persone con disabilità)</p>
+
+  <p><span class="c3">${institutionName}${parentInfo}</span>, con sede in ${address}, CAP ${zipCode}, codice fiscale
+    ${institutionTaxCode}, partita IVA ${institutionVatNumber}, codice IPA ${originId}, domicilio digitale
+    ${institutionMail}, nella persona del legale rappresentante pro tempore <span class="c3">${managerName}
+      ${managerSurname}</span>, codice fiscale ${managerTaxCode}, e-mail ${managerEmail}, munito dei necessari poteri
+    (di seguito “Partner Aderente”),</p>
+
+  <p class="center">premesso che</p>
+
+  <p class="item">- il Partner Aderente ha sottoscritto la Convenzione con la Presidenza del Consiglio dei ministri -
+    Dipartimento per le politiche in favore delle persone con disabilità, ai sensi dell’articolo 6 del D.P.C.M. 6
+    novembre 2020 (di seguito “Convenzione”), per l’adesione al Portale CED;</p>
+
+  <p class="item">- ai sensi dell’articolo 10 della Convenzione, il Partner Aderente è responsabile della nomina,
+    aggiunta, gestione e aggiornamento degli Amministratori abilitati ad operare sul Portale;</p>
+
+  <p class="item">- il Partner Aderente intende nominare un nuovo utente autorizzato ad agire per proprio conto con il
+    ruolo di Amministratore;</p>
+
+  <p class="center">con la presente nomina</p>
+
+  <p>quale utente autorizzato ad agire per proprio conto con il ruolo di Amministratore del Portale CED il soggetto di
+    seguito indicato:</p>
+
+  ${delegates}
+
+  <p>Il Partner Aderente dichiara e garantisce di aver conferito al suindicato utente, anche tramite il compimento di
+    tutti gli atti che dovessero essere richiesti dalla normativa applicabile, tutti i poteri necessari a compiere per
+    proprio conto sul Portale ogni attività e/o funzione attribuite all’utente con ruolo di Amministratore, nei limiti
+    delle funzionalità tempo per tempo disponibili. Ogni attività compiuta tramite il Portale da tale soggetto si
+    intende effettuata sotto l’esclusiva responsabilità del Partner Aderente. PagoPA rende disponibile il Portale e non
+    verifica né attesta i poteri di firma, rappresentanza e delega del soggetto indicato dal Partner Aderente.</p>
+
+  <p>Il Partner Aderente si impegna a mantenere costantemente aggiornato l’elenco degli utenti con ruolo di
+    Amministratore nominati.</p>
+
+  <div class="signature-block">
+    <p>F.to digitalmente dal Partner Aderente</p>
+    <div class="signature-box"></div>
+  </div>
+
+</body>
+
+</html>
