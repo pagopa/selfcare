@@ -158,6 +158,12 @@ public class OnboardingFunctionStep extends CucumberQuarkusTest {
         rememberOnboardingStatus();
     }
 
+    @Given("the request token has no tenant_id claim")
+    public void useTokenWithoutTenantClaim() {
+        authorizationHeader = "Bearer " + testBearerToken(null);
+        rememberOnboardingStatus();
+    }
+
     @Given("the request has no tenant header")
     public void removeTenantHeader() {
         tenantHeader = null;
@@ -172,7 +178,11 @@ public class OnboardingFunctionStep extends CucumberQuarkusTest {
 
     private static String testBearerToken(String tenant) {
         Map<String, String> payload = new HashMap<>(IntegrationFunctionProfile.buildJwtPayload());
-        payload.put(TenantContext.TENANT_CLAIM, tenant);
+        if (tenant == null) {
+            payload.remove(TenantContext.TENANT_CLAIM);
+        } else {
+            payload.put(TenantContext.TENANT_CLAIM, tenant);
+        }
         payload.put("uid", "fake-onboarding-functions-it-user");
         payload.put("fiscal_number", "FAKE-FISCAL-NUMBER");
         payload.put("name", "Test");
