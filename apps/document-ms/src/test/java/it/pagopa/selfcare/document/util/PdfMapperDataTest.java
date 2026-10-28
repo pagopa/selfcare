@@ -634,6 +634,30 @@ class PdfMapperDataTest {
         assertEquals("_______________", map.get(PdfMapperData.INSTITUTION_BUSINESS_REGISTER_PLACE));
     }
 
+    // ---- setupProdCEDData ----
+
+    @Test
+    void setupProdCEDData_shouldMapRegisterFieldsAndFallbackToUnderscores() {
+        InstitutionPdfData company = InstitutionPdfData.builder()
+                .rea("RM-123456")
+                .shareCapital("100000")
+                .businessRegisterPlace("Roma")
+                .build();
+        Map<String, Object> companyMap = new java.util.HashMap<>();
+        PdfMapperData.setupProdCEDData(companyMap, company);
+
+        assertEquals("RM-123456", companyMap.get(PdfMapperData.INSTITUTION_REA));
+        assertEquals("100000", companyMap.get(PdfMapperData.INSTITUTION_SHARE_CAPITAL));
+        assertEquals("Roma", companyMap.get(PdfMapperData.INSTITUTION_BUSINESS_REGISTER_PLACE));
+
+        Map<String, Object> paMap = new java.util.HashMap<>();
+        PdfMapperData.setupProdCEDData(paMap, InstitutionPdfData.builder().build());
+
+        assertEquals("_______________", paMap.get(PdfMapperData.INSTITUTION_REA));
+        assertEquals("_______________", paMap.get(PdfMapperData.INSTITUTION_SHARE_CAPITAL));
+        assertEquals("_______________", paMap.get(PdfMapperData.INSTITUTION_BUSINESS_REGISTER_PLACE));
+    }
+
     // ---- setupPRVData ----
 
     @Test

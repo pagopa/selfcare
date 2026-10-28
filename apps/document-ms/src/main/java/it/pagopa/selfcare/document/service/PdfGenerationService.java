@@ -66,7 +66,7 @@ public class PdfGenerationService {
         } else if (PROD_INTEROP.getValue().equalsIgnoreCase(productId)) {
             PdfMapperData.setupSAProdInteropData(data, institution);
         } else if (PROD_CED.getValue().equalsIgnoreCase(productId)) {
-            PdfMapperData.setECData(data, institution);
+            PdfMapperData.setupProdCEDData(data, institution);
         }
     }
 
