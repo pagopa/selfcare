@@ -27,4 +27,6 @@ public interface MailTemplatePathConfig {
     String registrationApprovePath();
 
     String deletePath();
+
+    String contractUpdateCompletePath();
 }

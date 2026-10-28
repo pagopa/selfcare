@@ -66,6 +66,7 @@ locals {
       "MAIL_TEMPLATE_REJECT_PATH"                          = "contracts/template/mail/onboarding-refused/1.0.0.json",
       "MAIL_TEMPLATE_REGISTRATION_USER_PATH"               = "contracts/template/mail/onboarding-request-admin/1.0.1.json",
       "MAIL_TEMPLATE_USER_COMPLETE_NOTIFICATION_PATH"      = "contracts/template/mail/onboarding-complete-user/1.0.0.json",
+      "MAIL_TEMPLATE_CONTRACT_UPDATE_COMPLETE_PATH"        = "contracts/template/mail/contract-update-complete/1.0.0.json",
       "MAIL_TEMPLATE_REGISTRATION_USER_NEW_MANAGER_PATH"   = "contracts/template/mail/onboarding-request-manager/1.0.1.json",
       "SELFCARE_ADMIN_NOTIFICATION_URL"                    = "https://uat.selfcare.pagopa.it/dashboard/admin/onboarding/",
       "SELFCARE_URL"                                       = "https://selfcare.pagopa.it",
