@@ -1855,6 +1855,9 @@
           "allowSameUserManagerAndDelegate": {
             "type": "boolean"
           },
+          "contractEnabled": {
+            "type": "boolean"
+          },
           "expirationDays": {
             "format": "int32",
             "type": "integer"
@@ -1982,7 +1985,7 @@
           "workflowType": {
             "type": "array",
             "items": {
-              "$ref": "#/components/schemas/WorkflowType"
+              "$ref": "#/components/schemas/WorkflowType1"
             }
           }
         }
@@ -2003,7 +2006,7 @@
         ],
         "type": "string"
       },
-      "WorkflowType": {
+      "WorkflowType1": {
         "enum": [
           "CONTRACT_REGISTRATION",
           "CONTRACT_WITH_COUNTERSIGNATURE",
@@ -2035,6 +2038,9 @@
           },
           "labelKey": {
             "type": "string"
+          },
+          "selfOnboarding": {
+            "type": "boolean"
           }
         }
       },
@@ -2054,7 +2060,7 @@
         "type": "object",
         "properties": {
           "type": {
-            "$ref": "#/components/schemas/WorkflowType"
+            "$ref": "#/components/schemas/WorkflowType1"
           },
           "institutionType": {
             "$ref": "#/components/schemas/InstitutionType1"
@@ -2160,7 +2166,7 @@
             "$ref": "#/components/schemas/Origin1"
           },
           "workflowType": {
-            "$ref": "#/components/schemas/WorkflowType"
+            "$ref": "#/components/schemas/WorkflowType1"
           }
         }
       },
