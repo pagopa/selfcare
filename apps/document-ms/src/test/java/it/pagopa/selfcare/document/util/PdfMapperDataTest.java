@@ -1,6 +1,5 @@
 package it.pagopa.selfcare.document.util;
 
-import io.quarkus.test.junit.QuarkusTest;
 import it.pagopa.selfcare.document.exception.InvalidRequestException;
 import it.pagopa.selfcare.document.model.dto.request.*;
 import it.pagopa.selfcare.onboarding.common.InstitutionType;
@@ -16,7 +15,6 @@ import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-@QuarkusTest
 class PdfMapperDataTest {
 
     // ---- setUpCommonData ----
