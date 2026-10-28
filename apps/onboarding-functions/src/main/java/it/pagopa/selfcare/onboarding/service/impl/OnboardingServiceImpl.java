@@ -3,6 +3,7 @@ package it.pagopa.selfcare.onboarding.service.impl;
 import com.microsoft.azure.functions.ExecutionContext;
 import it.pagopa.selfcare.onboarding.common.OnboardingStatus;
 import it.pagopa.selfcare.onboarding.common.PartyRole;
+import it.pagopa.selfcare.onboarding.context.TenantContext;
 import it.pagopa.selfcare.onboarding.dto.ManagingInstitutionSendEmail;
 import it.pagopa.selfcare.onboarding.dto.NotificationCountResult;
 import it.pagopa.selfcare.onboarding.dto.ResendNotificationsFilters;
@@ -378,6 +379,8 @@ public class OnboardingServiceImpl implements OnboardingService {
         if (Objects.nonNull(productId)) {
             query.append("productId", productId);
         }
+        // $in with null also matches onboardings created before tenantId was introduced
+        query.append("tenantId", new Document("$in", Arrays.asList(TenantContext.requiredTenant(), null)));
         query.append(
                 "status", new Document("$in", status.stream().map(OnboardingStatus::name).toList()));
         if (workflowTypeExist) {

@@ -307,6 +307,7 @@ public class NotificationFunctionsTest {
         final String onboardingId = "onboardingId";
         queryParams.put("onboardingId", onboardingId);
         doReturn(queryParams).when(req).getQueryParameters();
+        doReturn(Map.of("X-Tenant-Id", "AR")).when(req).getHeaders();
 
         doAnswer((Answer<HttpResponseMessage.Builder>) invocation -> {
             HttpStatus status = (HttpStatus) invocation.getArguments()[0];
@@ -321,6 +322,26 @@ public class NotificationFunctionsTest {
         HttpResponseMessage responseMessage = function.resendNotification(req, context);
         assertEquals(HttpStatus.NOT_FOUND.value(), responseMessage.getStatusCode());
 
+    }
+
+    @Test
+    public void resendNotificationMissingTenantDoesNotReadOnboarding() {
+        @SuppressWarnings("unchecked") final HttpRequestMessage<Optional<String>> req = mock(HttpRequestMessage.class);
+
+        doReturn(new HashMap<>(Map.of("onboardingId", "onboardingId"))).when(req).getQueryParameters();
+        doReturn(Map.of()).when(req).getHeaders();
+        doAnswer((Answer<HttpResponseMessage.Builder>) invocation -> {
+            HttpStatus status = (HttpStatus) invocation.getArguments()[0];
+            return new HttpResponseMessageMock.HttpResponseMessageBuilderMock().status(status);
+        }).when(req).createResponseBuilder(any(HttpStatus.class));
+
+        final ExecutionContext context = mock(ExecutionContext.class);
+        doReturn(Logger.getGlobal()).when(context).getLogger();
+
+        HttpResponseMessage responseMessage = function.resendNotification(req, context);
+
+        assertEquals(HttpStatus.BAD_REQUEST.value(), responseMessage.getStatusCode());
+        verify(onboardingService, never()).getOnboarding(any());
     }
 
     @Test

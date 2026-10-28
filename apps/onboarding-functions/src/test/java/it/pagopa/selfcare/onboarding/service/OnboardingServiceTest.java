@@ -4,6 +4,7 @@ import com.microsoft.azure.functions.ExecutionContext;
 import io.quarkus.test.InjectMock;
 import io.quarkus.test.junit.QuarkusTest;
 import it.pagopa.selfcare.onboarding.common.*;
+import it.pagopa.selfcare.onboarding.context.TenantContext;
 import it.pagopa.selfcare.onboarding.dto.NotificationCountResult;
 import it.pagopa.selfcare.onboarding.dto.ResendNotificationsFilters;
 import it.pagopa.selfcare.onboarding.dto.SendMailInput;
@@ -753,8 +754,10 @@ class OnboardingServiceTest {
                 .thenReturn(Map.of("product1", 5L, "product2", 1L, "unknown", 9L))
                 .thenReturn(Map.of("product1", 3L));
 
-        List<NotificationCountResult> results =
-                onboardingService.countNotifications(null, from, to, context);
+        List<NotificationCountResult> results;
+        try (TenantContext.Scope ignored = TenantContext.open("AR")) {
+            results = onboardingService.countNotifications(null, from, to, context);
+        }
 
         assertEquals(2, results.size());
         assertEquals("product1", results.get(0).getProductId());
@@ -775,8 +778,10 @@ class OnboardingServiceTest {
         when(productService.getProducts(false, false)).thenReturn(List.of(product1, product2));
         when(onboardingRepositoryService.countByProduct(any())).thenReturn(Map.of());
 
-        List<NotificationCountResult> results =
-                onboardingService.countNotifications("product2", null, null, context);
+        List<NotificationCountResult> results;
+        try (TenantContext.Scope ignored = TenantContext.open("pnpg")) {
+            results = onboardingService.countNotifications("product2", null, null, context);
+        }
 
         assertEquals(1, results.size());
         assertEquals("product2", results.get(0).getProductId());
@@ -786,7 +791,11 @@ class OnboardingServiceTest {
         queries.getAllValues().forEach(query -> {
             List<Document> branches = query.getList("$or", Document.class);
             assertEquals(2, branches.size());
-            branches.forEach(branch -> assertEquals("product2", branch.getString("productId")));
+            branches.forEach(branch -> {
+                assertEquals("product2", branch.getString("productId"));
+                assertEquals(
+                        Arrays.asList("PNPG", null), branch.get("tenantId", Document.class).getList("$in", String.class));
+            });
         });
     }
 

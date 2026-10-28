@@ -140,12 +140,6 @@ public class NotificationFunctions {
     final QueueEvent queueEvent = Objects.isNull(queueEventString) ? null : QueueEvent.valueOf(queueEventString);
 
 
-    final Optional<Onboarding> onboarding = onboardingService.getOnboarding(onboardingId);
-    if (onboarding.isEmpty()) {
-      return request.createResponseBuilder(HttpStatus.NOT_FOUND)
-        .body("Onboarding with ID: " + onboardingId + " not found")
-        .build();
-    }
     TenantContext.Scope tenantScope;
     try {
       tenantScope = TenantContext.open(request, context);
@@ -153,6 +147,12 @@ public class NotificationFunctions {
       return invalidTenantResponse(request, context);
     }
     try (TenantContext.Scope ignored = tenantScope) {
+      final Optional<Onboarding> onboarding = onboardingService.getOnboarding(onboardingId);
+      if (onboarding.isEmpty()) {
+        return request.createResponseBuilder(HttpStatus.NOT_FOUND)
+          .body("Onboarding with ID: " + onboardingId + " not found")
+          .build();
+      }
       if (!matchesRequestTenant(onboarding.get())) {
         return invalidTenantResponse(request, context);
       }
