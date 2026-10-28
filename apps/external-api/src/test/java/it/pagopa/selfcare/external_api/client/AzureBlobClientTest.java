@@ -1,168 +1,144 @@
 package it.pagopa.selfcare.external_api.client;
 
-import com.microsoft.azure.storage.CloudStorageAccount;
-import com.microsoft.azure.storage.StorageException;
-import com.microsoft.azure.storage.blob.BlobProperties;
-import com.microsoft.azure.storage.blob.CloudBlobClient;
-import com.microsoft.azure.storage.blob.CloudBlobContainer;
-import com.microsoft.azure.storage.blob.CloudBlockBlob;
+import com.azure.storage.blob.BlobClient;
+import com.azure.storage.blob.BlobContainerClient;
+import com.azure.storage.blob.models.BlobProperties;
+import com.azure.storage.blob.models.BlobStorageException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import it.pagopa.selfcare.commons.tenant.TenantContext;
+import it.pagopa.selfcare.commons.tenant.TenantDefinition;
+import it.pagopa.selfcare.commons.tenant.TenantRegistry;
+import it.pagopa.selfcare.commons.tenant.UnknownStorageException;
+import it.pagopa.selfcare.commons.tenant.UnknownTenantException;
+import it.pagopa.selfcare.commons.tenant.storage.TenantBlobClientProvider;
 import it.pagopa.selfcare.external_api.exception.AzureRestClientException;
 import it.pagopa.selfcare.external_api.exception.ResourceNotFoundException;
-import it.pagopa.selfcare.external_api.model.document.ResourceResponse;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.function.Executable;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
+import org.springframework.mock.env.MockEnvironment;
 
-import java.io.ByteArrayOutputStream;
 import java.io.OutputStream;
-import java.lang.reflect.Field;
-import java.net.URISyntaxException;
-import java.security.InvalidKeyException;
+import java.nio.charset.StandardCharsets;
+import java.util.List;
+import java.util.Map;
 
 import static it.pagopa.selfcare.external_api.model.constant.GenericError.ERROR_DURING_DOWNLOAD_FILE;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
 class AzureBlobClientTest {
 
+    private final TenantContext context = new TenantContext();
+    private final BlobContainerClient arContainer = mock(BlobContainerClient.class);
+    private final BlobContainerClient pnpgContainer = mock(BlobContainerClient.class);
+    private final BlobClient arBlob = mock(BlobClient.class);
+    private final BlobClient pnpgBlob = mock(BlobClient.class);
+    private AzureBlobClient client;
+
+    @BeforeEach
+    void setUp() throws Exception {
+        MockEnvironment environment = new MockEnvironment()
+                .withProperty("tenant.mongodb.required", "false")
+                .withProperty("BLOB_AR", "UseDevelopmentStorage=true;")
+                .withProperty("BLOB_PNPG", "UseDevelopmentStorage=true;");
+        TenantRegistry registry = new TenantRegistry(new ObjectMapper(), environment, """
+                {"AR":{"storages":{"contracts":{"account":"arstorage","container":"ar-contracts","pathPrefix":"ar",
+                  "authentication":{"type":"CONNECTION_STRING","connectionStringEnvVar":"BLOB_AR"}}}},
+                 "PNPG":{"storages":{"contracts":{"account":"pnpgstorage","container":"pnpg-contracts","pathPrefix":"pnpg",
+                  "authentication":{"type":"CONNECTION_STRING","connectionStringEnvVar":"BLOB_PNPG"}}}}}
+                """, "AR,PNPG", "");
+        registry.initialize();
+        Map<String, BlobContainerClient> containers = Map.of("AR", arContainer, "PNPG", pnpgContainer);
+        client = new AzureBlobClient(new TenantBlobClientProvider(registry, context) {
+            @Override
+            protected BlobContainerClient createContainerClient(
+                    String tenant, String logicalKey, TenantDefinition.StorageDefinition storage) {
+                assertEquals("contracts", logicalKey);
+                assertEquals(tenant.equals("AR") ? "ar-contracts" : "pnpg-contracts", storage.container());
+                return containers.get(tenant);
+            }
+        });
+        when(arContainer.getBlobClient("ar/contract.pdf")).thenReturn(arBlob);
+        when(pnpgContainer.getBlobClient("pnpg/contract.pdf")).thenReturn(pnpgBlob);
+        for (BlobClient blob : List.of(arBlob, pnpgBlob)) {
+            BlobProperties properties = mock(BlobProperties.class);
+            when(properties.getContentType()).thenReturn("application/pdf");
+            when(blob.getProperties()).thenReturn(properties);
+            when(blob.getBlobName()).thenReturn("contract.pdf");
+        }
+    }
+
+    @AfterEach
+    void clearTenant() {
+        context.clear();
+    }
+
     @Test
-    void testGetFile_Success() throws Exception {
-        // given
-        String fileName = "your_file_name";
-        byte[] fileData = "your_file_data".getBytes();
-        CloudStorageAccount storageAccountMock = mock(CloudStorageAccount.class);
-        CloudBlobClient blobClientMock = mock(CloudBlobClient.class);
-        CloudBlobContainer blobContainerMock = mock(CloudBlobContainer.class);
-        CloudBlockBlob blobMock = mock(CloudBlockBlob.class);
-        BlobProperties propertiesMock = mock(BlobProperties.class);
-
-        when(storageAccountMock.createCloudBlobClient()).thenReturn(blobClientMock);
-        when(blobClientMock.getContainerReference(anyString())).thenReturn(blobContainerMock);
-        when(blobContainerMock.getBlockBlobReference(anyString())).thenReturn(blobMock);
-        when(blobMock.getProperties()).thenReturn(propertiesMock);
-        when(blobMock.getName()).thenReturn(fileName);
-
-        String connectionString = "UseDevelopmentStorage=true;";
-        String containerReference = "your_container_reference";
-        AzureBlobClient azureBlobClient = new AzureBlobClient(connectionString, containerReference);
-        mockCloudBlobClient(azureBlobClient, blobClientMock);
-
-
-        ByteArrayOutputStream outputStreamMock = new ByteArrayOutputStream();
-        when(blobMock.getProperties()).thenReturn(propertiesMock);
-        when(propertiesMock.getContentType()).thenReturn("text/plain");
+    void sameFilenameIsResolvedAgainstEachTenantsBindingAndPrefix() {
         doAnswer(invocation -> {
-            OutputStream outputStream = invocation.getArgument(0);
-            outputStream.write(fileData);
+            invocation.getArgument(0, OutputStream.class).write("AR".getBytes(StandardCharsets.UTF_8));
             return null;
-        }).when(blobMock).download(any());
+        }).when(arBlob).downloadStream(any());
+        doAnswer(invocation -> {
+            invocation.getArgument(0, OutputStream.class).write("PNPG".getBytes(StandardCharsets.UTF_8));
+            return null;
+        }).when(pnpgBlob).downloadStream(any());
+        for (String tenant : List.of("AR", "PNPG", "AR")) {
+            context.setTenantId(tenant);
+            var response = client.getFile("contract.pdf");
+            assertArrayEquals(tenant.getBytes(StandardCharsets.UTF_8), response.getData());
+            assertEquals("contract.pdf", response.getFileName());
+            assertEquals("application/pdf", response.getMimetype());
+        }
+        verify(arContainer, times(2)).getBlobClient("ar/contract.pdf");
+        verify(pnpgContainer).getBlobClient("pnpg/contract.pdf");
+    }
 
-        // when
-        ResourceResponse response = azureBlobClient.getFile(fileName);
+    @ParameterizedTest
+    @ValueSource(ints = {404, 500})
+    void preservesStorageErrorMapping(int status) {
+        context.setTenantId("AR");
+        BlobStorageException failure = mock(BlobStorageException.class);
+        when(failure.getStatusCode()).thenReturn(status);
+        doThrow(failure).when(arBlob).downloadStream(any());
 
-        // then
-        assertEquals(fileName, response.getFileName());
-        assertEquals("text/plain", response.getMimetype());
-        assertArrayEquals(fileData, response.getData());
-        verify(blobClientMock).getContainerReference(containerReference);
-        verify(blobContainerMock).getBlockBlobReference(fileName);
-        verify(blobMock).download(notNull());
+        Class<? extends RuntimeException> expected =
+                status == 404 ? ResourceNotFoundException.class : AzureRestClientException.class;
+        var exception = assertThrows(expected, () -> client.getFile("contract.pdf"));
+        assertEquals(String.format(ERROR_DURING_DOWNLOAD_FILE.getMessage(), "contract.pdf"),
+                exception.getMessage());
+        verifyNoInteractions(pnpgContainer);
     }
 
     @Test
-    void getFile_notFound() throws URISyntaxException, StorageException, InvalidKeyException, NoSuchFieldException, IllegalAccessException {
-        // given
-        String fileName = "your_file_name";
-        byte[] fileData = "your_file_data".getBytes();
-        CloudStorageAccount storageAccountMock = mock(CloudStorageAccount.class);
-        CloudBlobClient blobClientMock = mock(CloudBlobClient.class);
-        CloudBlobContainer blobContainerMock = mock(CloudBlobContainer.class);
-        CloudBlockBlob blobMock = mock(CloudBlockBlob.class);
-        BlobProperties propertiesMock = mock(BlobProperties.class);
-
-        when(storageAccountMock.createCloudBlobClient()).thenReturn(blobClientMock);
-        when(blobClientMock.getContainerReference(anyString())).thenReturn(blobContainerMock);
-        when(blobContainerMock.getBlockBlobReference(anyString())).thenReturn(blobMock);
-        when(blobMock.getProperties()).thenReturn(propertiesMock);
-        when(blobMock.getName()).thenReturn(fileName);
-
-        String connectionString = "UseDevelopmentStorage=true;";
-        String containerReference = "your_container_reference";
-        AzureBlobClient azureBlobClient = new AzureBlobClient(connectionString, containerReference);
-        mockCloudBlobClient(azureBlobClient, blobClientMock);
-        doThrow(new StorageException("1000" ,"Not found", 404, null, null))
-                .when(blobMock).download(any(ByteArrayOutputStream.class));
-
-        //when
-        Executable executable = () -> azureBlobClient.getFile(fileName);
-        //then
-        ResourceNotFoundException e = assertThrows(ResourceNotFoundException.class, executable);
-        assertEquals(String.format(ERROR_DURING_DOWNLOAD_FILE.getMessage(), fileName), e.getMessage());
-    }
-    @Test
-    void getFile_otherException() throws URISyntaxException, StorageException, InvalidKeyException, NoSuchFieldException, IllegalAccessException {
-        // given
-        String fileName = "your_file_name";
-        byte[] fileData = "your_file_data".getBytes();
-        CloudStorageAccount storageAccountMock = mock(CloudStorageAccount.class);
-        CloudBlobClient blobClientMock = mock(CloudBlobClient.class);
-        CloudBlobContainer blobContainerMock = mock(CloudBlobContainer.class);
-        CloudBlockBlob blobMock = mock(CloudBlockBlob.class);
-        BlobProperties propertiesMock = mock(BlobProperties.class);
-
-        when(storageAccountMock.createCloudBlobClient()).thenReturn(blobClientMock);
-        when(blobClientMock.getContainerReference(anyString())).thenReturn(blobContainerMock);
-        when(blobContainerMock.getBlockBlobReference(anyString())).thenReturn(blobMock);
-        when(blobMock.getProperties()).thenReturn(propertiesMock);
-        when(blobMock.getName()).thenReturn(fileName);
-
-        String connectionString = "UseDevelopmentStorage=true;";
-        String containerReference = "your_container_reference";
-        AzureBlobClient azureBlobClient = new AzureBlobClient(connectionString, containerReference);
-        mockCloudBlobClient(azureBlobClient, blobClientMock);
-        doThrow(new StorageException("1000" ,"InternalError", 500, null, null))
-                .when(blobMock).download(any(ByteArrayOutputStream.class));
-
-        //when
-        Executable executable = () -> azureBlobClient.getFile(fileName);
-        //then
-        AzureRestClientException e = assertThrows(AzureRestClientException.class, executable);
-        assertEquals(String.format(ERROR_DURING_DOWNLOAD_FILE.getMessage(), fileName), e.getMessage());
+    void missingOrUnknownTenantCannotFallBackToAnotherStorage() {
+        assertThrows(IllegalStateException.class, () -> client.getFile("contract.pdf"));
+        context.setTenantId("UNKNOWN");
+        assertThrows(UnknownTenantException.class, () -> client.getFile("contract.pdf"));
+        verifyNoInteractions(arContainer, pnpgContainer);
     }
 
     @Test
-    void getFile_uriException() throws URISyntaxException, StorageException, InvalidKeyException, NoSuchFieldException, IllegalAccessException {
-        // given
-        String fileName = "your_file_name";
-        byte[] fileData = "your_file_data".getBytes();
-        CloudStorageAccount storageAccountMock = mock(CloudStorageAccount.class);
-        CloudBlobClient blobClientMock = mock(CloudBlobClient.class);
-        CloudBlobContainer blobContainerMock = mock(CloudBlobContainer.class);
-        CloudBlockBlob blobMock = mock(CloudBlockBlob.class);
-        BlobProperties propertiesMock = mock(BlobProperties.class);
-
-        when(storageAccountMock.createCloudBlobClient()).thenReturn(blobClientMock);
-        doThrow(URISyntaxException.class).when(blobClientMock).getContainerReference(anyString());
-        when(blobContainerMock.getBlockBlobReference(anyString())).thenReturn(blobMock);
-        when(blobMock.getProperties()).thenReturn(propertiesMock);
-        when(blobMock.getName()).thenReturn(fileName);
-
-        String connectionString = "UseDevelopmentStorage=true;";
-        String containerReference = "your_container_reference";
-        AzureBlobClient azureBlobClient = new AzureBlobClient(connectionString, containerReference);
-        mockCloudBlobClient(azureBlobClient, blobClientMock);
-        //when
-        Executable executable = () -> azureBlobClient.getFile(fileName);
-        //then
-        AzureRestClientException e = assertThrows(AzureRestClientException.class, executable);
-        assertEquals(String.format(ERROR_DURING_DOWNLOAD_FILE.getMessage(), fileName), e.getMessage());
+    void missingBindingCannotFallBackToLegacyStorage() {
+        TenantRegistry registry = new TenantRegistry(new ObjectMapper(),
+                new MockEnvironment().withProperty("tenant.mongodb.required", "false")
+                        .withProperty("blobStorage.connectionString", "UseDevelopmentStorage=true;"),
+                "{\"PNPG\":{}}", "PNPG", "");
+        registry.initialize();
+        AzureBlobClient unconfigured = new AzureBlobClient(new TenantBlobClientProvider(registry, context));
+        context.setTenantId("PNPG");
+        assertThrows(UnknownStorageException.class, () -> unconfigured.getFile("contract.pdf"));
     }
 
-    private void mockCloudBlobClient(AzureBlobClient blobClient, CloudBlobClient blobClientMock) throws NoSuchFieldException, IllegalAccessException {
-        Field field = AzureBlobClient.class.getDeclaredField("blobClient");
-        field.setAccessible(true);
-        field.set(blobClient, blobClientMock);
+    @ParameterizedTest
+    @ValueSource(strings = {"../contract.pdf", "/contract.pdf", "folder/../../contract.pdf"})
+    void rejectsPathsOutsideTheTenantBinding(String path) {
+        context.setTenantId("AR");
+        assertThrows(IllegalArgumentException.class, () -> client.getFile(path));
+        verifyNoInteractions(arContainer, pnpgContainer);
     }
-
 }

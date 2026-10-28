@@ -102,7 +102,43 @@ locals {
   ]
 
   app_settings = [
-
+    {
+      name  = "TENANT_SUPPORTED_TENANTS"
+      value = "AR"
+    },
+    {
+      name  = "TENANT_DEFAULT"
+      value = "AR"
+    },
+    {
+      name  = "JWT_TENANT_CLAIM_REQUIRED"
+      value = "true"
+    },
+    {
+      name = "SELFCARE_TENANT_DATA_ISOLATION"
+      value = jsonencode({
+        AR = {
+          jwt = {
+            publicKeyEnvVar = "JWT_PUBLIC_KEY_AR"
+            issuers         = ["SPID", "PAGOPA"]
+            audiences       = ["api.selfcare.pagopa.it"]
+          }
+          userRegistry = {
+            apiKeyEnvVar = "USER_REGISTRY_API_KEY_AR"
+          }
+          storages = {
+            contracts = {
+              account   = "sc${module.local.config.env_short}${module.local.config.location_short}ardocumentsst01"
+              container = "sc-${module.local.config.env_short}-documents-blob"
+              authentication = {
+                type                   = "CONNECTION_STRING"
+                connectionStringEnvVar = "CONTRACTS_STORAGE_CONNECTION_STRING_AR"
+              }
+            }
+          }
+        }
+      })
+    },
     {
       name  = "APPLICATIONINSIGHTS_ROLE_NAME"
       value = "external-api"
@@ -160,10 +196,6 @@ locals {
       value = "https://selc-${module.local.config.env_short}-institution-ms-ca.${module.local.config.private_dns_name_domain}"
     },
     {
-      name  = "STORAGE_CONTAINER"
-      value = "sc-${module.local.config.env_short}-documents-blob"
-    },
-    {
       name  = "SELFCARE_USER_URL"
       value = "https://selc-${module.local.config.env_short}-user-ms-ca.${module.local.config.private_dns_name_domain}"
     },
@@ -174,20 +206,14 @@ locals {
     {
       name  = "KONECTA_RAW_CONTRACT"
       value = "true"
-    },
-    {
-      name  = "PRODUCT_STORAGE_CONTAINER"
-      value = "selc-${module.local.config.env_short}-product"
     }
   ]
 
   secrets_names = {
     "APPLICATIONINSIGHTS_CONNECTION_STRING"  = "appinsights-connection-string"
-    "BLOB_STORAGE_CONN_STRING"               = "documents-storage-connection-string"
-    "USERVICE_USER_REGISTRY_API_KEY"         = "user-registry-api-key"
-    "JWT_TOKEN_PUBLIC_KEY"                   = "jwt-public-key"
-    "BLOB_STORAGE_PRODUCT_CONNECTION_STRING" = "blob-storage-product-connection-string"
-
+    "CONTRACTS_STORAGE_CONNECTION_STRING_AR" = "documents-storage-connection-string"
+    "USER_REGISTRY_API_KEY_AR"               = "user-registry-api-key"
+    "JWT_PUBLIC_KEY_AR"                      = "jwt-public-key"
   }
 
   probes = [
