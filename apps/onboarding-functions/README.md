@@ -29,7 +29,10 @@ signed by the public key configured for the header tenant, contain an unexpired
 `exp`, an allowed `iss`, `uid`, and a matching `tenant_id`. Tokens without
 `tenant_id` (the legacy PNPG SPID hub does not emit it) are attributed to
 `JWT_DEFAULT_TENANT` (default `PNPG`), which must still match the header; set
-`JWT_TENANT_CLAIM_REQUIRED=true` to reject them. Missing or unsupported
+`JWT_TENANT_CLAIM_REQUIRED=true` to reject them. `JWT_DEFAULT_TENANT` is unrelated
+to `DEFAULT_TENANT` (tenant used when the header is absent). This fallback is
+temporary: AR tokens come from the `auth` app, which always emits `tenant_id`; once
+PNPG logins move to `auth` too, enable `JWT_TENANT_CLAIM_REQUIRED`. Missing or unsupported
 tenant context returns `400`; JWT failures return `401` with
 `WWW-Authenticate: Bearer`. Validation runs before request parsing, telemetry with
 application data, service calls, or Durable orchestration scheduling.

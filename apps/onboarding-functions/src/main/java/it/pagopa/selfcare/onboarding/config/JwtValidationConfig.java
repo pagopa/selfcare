@@ -16,8 +16,14 @@ public interface JwtValidationConfig {
   Set<String> allowedIssuers();
 
   /**
-   * Tenant attributed to tokens without the {@code tenant_id} claim, emitted by legacy issuers such
-   * as the PNPG SPID hub. It must still match the {@code X-Tenant-Id} header.
+   * Tenant attributed to tokens without the {@code tenant_id} claim; it must still match the
+   * {@code X-Tenant-Id} header. Not to be confused with {@code DEFAULT_TENANT}, used when the header
+   * is absent.
+   *
+   * <p>AR tokens are issued by the {@code auth} app and always carry the claim, while PNPG tokens
+   * are still issued by the legacy PNPG SPID hub, which does not emit it: hence the {@code PNPG}
+   * default. Once PNPG logins are issued by {@code auth} as well, enable {@link
+   * #tenantClaimRequired()} and remove this fallback.
    */
   @WithDefault("PNPG")
   String defaultTenant();
