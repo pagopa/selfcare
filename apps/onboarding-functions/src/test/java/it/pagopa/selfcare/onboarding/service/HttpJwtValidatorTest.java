@@ -54,6 +54,7 @@ class HttpJwtValidatorTest {
   void setUp() {
     config = mock(JwtValidationConfig.class);
     when(config.allowedIssuers()).thenReturn(Set.of("SPID", "PAGOPA"));
+    when(config.defaultTenant()).thenReturn("PNPG");
     JwtValidationConfig.TenantKey arKey = tenantKey(pem(arKeys));
     JwtValidationConfig.TenantKey pnpgKey = tenantKey(pem(pnpgKeys));
     when(config.tenants()).thenReturn(Map.of("AR", arKey, "PNPG", pnpgKey));
@@ -254,18 +255,69 @@ class HttpJwtValidatorTest {
   }
 
   @Test
-  void rejectsMissingUidOrTenantClaim() {
+  void rejectsMissingUid() {
     // given
     String missingUid = token(arKeys, claims("SPID", null, "AR"), 60);
-    String missingTenant = token(arKeys, claims("SPID", "user-id", null), 60);
 
     // when
-    Optional<HttpResponseMessage> missingUidResponse = validate(missingUid, "AR");
-    Optional<HttpResponseMessage> missingTenantResponse = validate(missingTenant, "AR");
+    Optional<HttpResponseMessage> response = validate(missingUid, "AR");
 
     // then
-    assertStatus(missingUidResponse, HttpStatus.UNAUTHORIZED);
-    assertStatus(missingTenantResponse, HttpStatus.UNAUTHORIZED);
+    assertStatus(response, HttpStatus.UNAUTHORIZED);
+  }
+
+  @Test
+  void acceptsPnpgTokenWithoutTenantClaim() {
+    // given
+    String jwt = token(pnpgKeys, claims("SPID", "user-id", null), 60);
+
+    // when
+    Optional<HttpResponseMessage> response = validate(jwt, "PNPG");
+
+    // then
+    assertTrue(response.isEmpty());
+  }
+
+  @Test
+  void rejectsTokenWithoutTenantClaimForNonDefaultTenant() {
+    // given
+    String jwt = token(arKeys, claims("SPID", "user-id", null), 60);
+
+    // when
+    Optional<HttpResponseMessage> response = validate(jwt, "AR");
+
+    // then
+    assertStatus(response, HttpStatus.UNAUTHORIZED);
+  }
+
+  @Test
+  void rejectsTokenWithoutTenantClaimWhenClaimIsRequired() {
+    // given
+    when(config.tenantClaimRequired()).thenReturn(true);
+    String jwt = token(pnpgKeys, claims("SPID", "user-id", null), 60);
+
+    // when
+    Optional<HttpResponseMessage> response = validate(jwt, "PNPG");
+
+    // then
+    assertStatus(response, HttpStatus.UNAUTHORIZED);
+  }
+
+  @Test
+  void rejectsBlankOrNonStringTenantClaim() {
+    // given
+    Map<String, Object> numericTenant = claims("SPID", "user-id", null);
+    numericTenant.put("tenant_id", 1);
+    String blank = token(pnpgKeys, claims("SPID", "user-id", " "), 60);
+    String numeric = token(pnpgKeys, numericTenant, 60);
+
+    // when
+    Optional<HttpResponseMessage> blankResponse = validate(blank, "PNPG");
+    Optional<HttpResponseMessage> numericResponse = validate(numeric, "PNPG");
+
+    // then
+    assertStatus(blankResponse, HttpStatus.UNAUTHORIZED);
+    assertStatus(numericResponse, HttpStatus.UNAUTHORIZED);
   }
 
   @Test
