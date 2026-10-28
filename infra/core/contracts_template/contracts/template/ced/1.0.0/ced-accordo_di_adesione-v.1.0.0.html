@@ -3,6 +3,34 @@
 <head>
   <meta content="text/html; charset=UTF-8" http-equiv="content-type" />
   <style type="text/css">
+    @font-face {
+      font-family: 'Montserrat';
+      font-style: normal;
+      font-weight: 400;
+      src: url(https://fonts.gstatic.com/s/montserrat/v31/JTUHjIg1_i6t8kCHKm4532VJOt5-QNFgpCtr6Hw5aX8.ttf) format('truetype');
+    }
+
+    @font-face {
+      font-family: 'Montserrat';
+      font-style: normal;
+      font-weight: 700;
+      src: url(https://fonts.gstatic.com/s/montserrat/v31/JTUHjIg1_i6t8kCHKm4532VJOt5-QNFgpCuM73w5aX8.ttf) format('truetype');
+    }
+
+    @font-face {
+      font-family: 'Montserrat';
+      font-style: italic;
+      font-weight: 400;
+      src: url(https://fonts.gstatic.com/s/montserrat/v31/JTUFjIg1_i6t8kCHKm459Wx7xQYXK0vOoz6jq6R9WXh0ow.ttf) format('truetype');
+    }
+
+    @font-face {
+      font-family: 'Montserrat';
+      font-style: italic;
+      font-weight: 700;
+      src: url(https://fonts.gstatic.com/s/montserrat/v31/JTUFjIg1_i6t8kCHKm459Wx7xQYXK0vOoz6jq0N6WXh0ow.ttf) format('truetype');
+    }
+
     @page {
       size: A4;
       margin: 2cm 2cm 2.2cm 2cm;
@@ -23,6 +51,7 @@
     p {
       margin: 0 0 7pt 0;
       text-align: justify;
+      page-break-inside: avoid;
     }
 
     .title {
@@ -67,11 +96,24 @@
       margin-bottom: 14pt;
     }
 
-    .signature-box {
-      width: 301px;
-      height: 52px;
-      border: solid black 1px;
-      margin-bottom: 14pt;
+    .signatures {
+      width: 100%;
+      margin: 24pt 0 18pt 0;
+    }
+
+    .signatures td {
+      width: 50%;
+      vertical-align: top;
+      padding: 0 6pt 14pt 0;
+    }
+
+
+    .referenti {
+      margin-top: 12pt;
+    }
+
+    .keep {
+      page-break-inside: avoid;
     }
 
     .signature-block {
@@ -91,18 +133,18 @@
 
   <p class="center">tra</p>
 
-  <p>LA PRESIDENZA DEL CONSIGLIO DEI MINISTRI - Dipartimento per le politiche in favore delle persone con disabilità,
+  <p><b>LA PRESIDENZA DEL CONSIGLIO DEI MINISTRI</b> - Dipartimento per le politiche in favore delle persone con disabilità,
     con sede in Roma, Via della Panetteria 18/A, in persona del Capo Dipartimento, dott.ssa Antonella Nicotra (di
-    seguito, il Dipartimento)</p>
+    seguito<b>, il Dipartimento</b>)</p>
 
   <p class="center">e</p>
 
-  <p><span class="c3">${institutionName}${parentInfo}</span>, con sede legale in ${institutionCity}, ${address}, CAP
+  <p><b>${institutionName}${parentInfo}, con sede legale in ${institutionCity}, ${address}, CAP
     ${zipCode}, codice fiscale ${institutionTaxCode}, partita IVA ${institutionVatNumber}, PEC ${institutionMail}, codice IPA ${originId}, iscrizione al Registro delle Imprese di ${institutionBusinessRegisterPlace}, n. REA ${institutionREA}, capitale sociale ${institutionShareCapital}, in
-    persona del/la legale rappresentante p.t. <span class="c3">${managerName} ${managerSurname}</span> (codice fiscale
-    ${managerTaxCode}), soggetto munito dei necessari poteri, di seguito, il “Partner Aderente” e, congiuntamente al
-    Dipartimento, le “Parti”. Ove uno o più campi non siano applicabili alla tipologia di Partner Aderente, gli stessi non dovranno essere valorizzati.</p>
+    persona del/la legale rappresentante p.t. soggetto munito dei necessari poteri,</b> di seguito, il <b>“Partner Aderente”</b> e , congiuntamente al
+    Dipartimento, le <b>“Parti”</b>. Ove uno o più campi non siano applicabili alla tipologia di Partner Aderente, gli stessi non dovranno essere valorizzati.</p>
 
+  <div class="keep">
   <p class="center heading">PREMESSE</p>
 
   <p>VISTO l’articolo 4, comma 1, lettera c), del regolamento UE 1381/2013, del Parlamento europeo e del Consiglio del
@@ -113,6 +155,7 @@
     disabilità, finalizzata all’introduzione di una tessera che permetta l’accesso alle persone con disabilità a servizi
     in coerenza e reciprocità con gli altri Paesi dell'UE, per contribuire alla piena inclusione delle persone con
     disabilità nella vita sociale delle comunità;</p>
+  </div>
 
   <p>VISTO il Regolamento Generale sulla Protezione dei dati UE 2016/679, del Parlamento Europeo e del Consiglio
     dell’UE del 27 aprile 2016;</p>
@@ -195,9 +238,8 @@
 
   <p>Tutto ciò premesso, le Parti</p>
 
+  <div class="keep">
   <p class="center heading">STIPULANO E CONVENGONO QUANTO SEGUE</p>
-
-  <p class="heading">Art. 1 - Oggetto e finalità</p>
 
   <p>La presente Convenzione ha come obiettivo di consentire ai titolari della Carta europea della disabilità di fruire
     delle agevolazioni e/o promozioni rese disponibili dal Partner Aderente per l’accesso, la fruizione e/o l’acquisto
@@ -207,18 +249,23 @@
     così configurate potranno essere pubblicate e rese disponibili per la consultazione agli utenti sul sito
     istituzionale del Dipartimento per le politiche in favore delle persone con disabilità e, ove previsto, tramite
     l’app IO, sulla base delle informazioni inserite e aggiornate dal Partner Aderente.</p>
+  </div>
+
+  <div class="keep">
+  <p class="heading">Art. 1 - Oggetto e finalità</p>
 
   <p class="item">1. I titolari della Carta europea della disabilità possono fruire dei servizi e/o agevolazioni
     mediante l’esibizione della Carta fisica o digitale, senza ulteriori formalità o richiesta da parte del Partner
     Aderente, salvo la verifica della titolarità della Carta.</p>
+  </div>
 
   <p class="item">2. Le agevolazioni possono essere ottenute anche mediante l’identificazione elettronica ai sensi
     dell’articolo 64 del decreto legislativo 7 marzo 2005, n. 82 (di seguito “CAD”), e attraverso l’app IO, quale punto
-    di accesso telematico di cui all'articolo 64-bis del medesimo decreto.</p>
+    di accesso telematico di cui all'articolo 64-bis del medesimo decreto</p>
 
   <p class="item">3. Le agevolazioni possono essere ottenute anche successivamente alla verifica della titolarità della
     Carta attraverso l'infrastruttura tecnologica e di interoperabilità istituita dall'articolo 50-ter del Decreto
-    Legislativo 7 marzo 2005, n. 82.</p>
+    Legislativo 7 marzo 2005, n. 82</p>
 
   <p class="item">4. Con la sottoscrizione della presente Convenzione, il Partner Aderente si impegna a rendere
     disponibili ai titolari della Carta (di seguito, “Titolari”), i servizi e le agevolazioni secondo le modalità
@@ -231,12 +278,14 @@
     generato nell'ambito dell'iniziativa CED e per l'assunzione degli impegni che questa comporta, ivi inclusi quelli
     derivanti dalla gestione della presente Convenzione.</p>
 
+  <div class="keep">
   <p class="heading">Art. 2 - Modalità di pubblicazione delle agevolazioni e utilizzo del Portale</p>
 
   <p class="item">1. Il Partner Aderente si obbliga a dotarsi, sotto la propria responsabilità, dei requisiti
     organizzativi, tecnici ed informatici necessari a garantire la sua registrazione, l’accesso e l’utilizzo del
-    Portale messo a disposizione da PagoPA S.p.A., nonché per il corretto riconoscimento ai titolari della Carta delle
+    Portale messo a disposizione da PagoPA S.p.A., nonch&eacute; per il corretto riconoscimento ai titolari della Carta delle
     agevolazioni e/o servizi offerti ai sensi dell’articolo 1, comma 1 della presente Convenzione.</p>
+  </div>
 
   <p class="item">2. Il Partner Aderente è esclusivamente responsabile dell’individuazione, definizione,
     aggiornamento del contenuto delle informazioni o descrizioni dei servizi e/o delle agevolazioni che rende
@@ -260,11 +309,13 @@
     alla rettifica, integrazione o rimozione di informazioni inesatte, incomplete, non aggiornate o non conformi alla
     normativa vigente.</p>
 
+  <div class="keep">
   <p class="heading">Articolo 3 - Onboarding del Partner Aderente, Area Riservata e ruolo di PagoPA S.p.A.</p>
 
   <p class="item">1. Le Parti prendono atto che l'adesione del Partner Aderente e la gestione operativa delle
     informazioni relative alle agevolazioni avvengono tramite il Portale messo a disposizione da PagoPA S.p.A.,
     mediante accesso da parte di soggetti abilitati dal Partner Aderente tramite credenziali personali.</p>
+  </div>
 
   <p class="item">2. Il Partner Aderente è responsabile dell'individuazione, dell'abilitazione e della tempestiva
     revoca dei propri referenti, delegati o altri soggetti autorizzati ad operare nell'Area Riservata. Ogni operazione
@@ -284,14 +335,16 @@
 
   <p class="item">5. Resta inteso che PagoPA S.p.A. non assume alcuna responsabilità in merito all'effettiva
     erogazione delle agevolazioni, alla qualità, disponibilità o conformità dei servizi offerti dal Partner Aderente,
-    alla correttezza sostanziale delle condizioni applicate ai Titolari, né ai rapporti eventualmente instaurati tra il
+    alla correttezza sostanziale delle condizioni applicate ai Titolari, n&eacute; ai rapporti eventualmente instaurati tra il
     Partner Aderente e i Titolari.</p>
 
+  <div class="keep">
   <p class="heading">Art. 4 - Pubblicazione nell’elenco pubblico e verifiche del Dipartimento</p>
 
   <p class="item">1. A seguito della formale approvazione delle agevolazioni e/o servizi inseriti dal Partner Aderente
     tramite il Portale, il Dipartimento provvede all'inserimento del Partner Aderente nell'elenco pubblico degli enti
     ed esercenti convenzionati con l'iniziativa CED.</p>
+  </div>
 
   <p class="item">2. Fermo restando quanto previsto all’articolo 2, comma 4, il Dipartimento provvede ad effettuare,
     secondo le modalità che riterrà più opportune, eventuali verifiche sull'adempimento degli obblighi di cui alla
@@ -310,12 +363,14 @@
     assunzione di responsabilità da parte di PagoPA S.p.A. in merito ai contenuti, alle condizioni, alla liceità, alla
     correttezza, all’aggiornamento e alla concreta applicazione delle agevolazioni inserite dal Partner Aderente.</p>
 
+  <div class="keep">
   <p class="heading">Art. 5 - Obblighi del Partner Aderente</p>
 
   <p class="item">1. Il Partner Aderente si impegna a:</p>
 
   <p class="subitem">a) riconoscere ai Titolari le agevolazioni pubblicate o comunicate nell'ambito della presente
     Convenzione, nei termini e nei limiti dichiarati;</p>
+  </div>
 
   <p class="subitem">b) garantire che le agevolazioni riservate ai Titolari siano, in ogni caso, migliorative e più
     favorevoli rispetto a quelle ordinariamente praticate al pubblico per i medesimi beni e servizi;</p>
@@ -333,7 +388,7 @@
   <p class="subitem">e) mantenere aggiornate le informazioni relative alle agevolazioni;</p>
 
   <p class="subitem">f) assicurare che le agevolazioni siano accessibili e fruibili in modo non discriminatorio e
-    coerente con le finalità di inclusione della Carta europea della disabilità;</p>
+    coerente con le finalit&agrave; di inclusione della Carta europea della disabilità;</p>
 
   <p class="subitem">g) rispettare la normativa applicabile, ivi inclusa la disciplina in materia di protezione dei
     dati personali, accessibilità, tutela dei consumatori, sicurezza, autorizzazioni amministrative e, ove
@@ -352,13 +407,14 @@
 
   <p class="item">2. Il Partner Aderente si impegna, altresì, a non utilizzare la Carta, i segni distintivi, i loghi, le
     denominazioni o i riferimenti al Dipartimento, a PagoPA S.p.A. o ad altri soggetti istituzionali per finalità
-    diverse da quelle connesse alla presente Convenzione, né con modalità idonee a generare confusione, affidamento
+    diverse da quelle connesse alla presente Convenzione, n&eacute; con modalità idonee a generare confusione, affidamento
     indebito o pregiudizio reputazionale.</p>
 
   <p class="item">3. Il Partner Aderente comunica tempestivamente al Dipartimento, anche tramite l'Area Riservata ove
     disponibile, ogni variazione rilevante relativa ai propri dati, ai referenti, alle agevolazioni offerte, alle
-    condizioni di fruizione o alla capacità di adempiere agli obblighi assunti con la presente Convenzione.</p>
+    condizioni di fruizione o alla capacit&agrave; di adempiere agli obblighi assunti con la presente Convenzione.</p>
 
+  <div class="keep">
   <p class="heading">Art. 6 - Privacy</p>
 
   <p class="item">1. Nel corso dell’esecuzione delle attività oggetto della presente Convenzione, ciascuna delle Parti
@@ -366,6 +422,7 @@
     dell’altra Parte, motivo per cui le stesse si impegnano sin d’ora a procedere al trattamento di tali dati personali
     in conformità alle disposizioni di cui al Regolamento Europeo (UE) 2016/679 in materia di protezione dei dati
     personali (GDPR) nonché di tutte le norme di legge di volta in volta applicabili.</p>
+  </div>
 
   <p class="item">2. Le Parti si impegnano a condurre le suddette attività di trattamento sulla base dei principi di
     correttezza, liceità, trasparenza e tutela della riservatezza dei soggetti interessati e per il solo ed esclusivo
@@ -386,12 +443,14 @@
     procedere a una corretta gestione delle attività di trattamento di dati personali, nel rispetto delle disposizioni
     di cui all’art. 28 GDPR.</p>
 
+  <div class="keep">
   <p class="heading">Art. 7 - Durata, efficacia, rinnovo, recesso e cessazione della Convenzione</p>
 
   <p class="item">1. La presente Convenzione acquista efficacia dalla data di ultima sottoscrizione da parte delle
     Parti e ha durata di 1 anno a decorrere da tale data. Resta inteso che la pubblicazione e la conseguente
     operatività delle agevolazioni e/o servizi offerti dal Partner Aderente è subordinata alla relativa approvazione da
     parte del Dipartimento, secondo le modalità previste dalla presente Convenzione.</p>
+  </div>
 
   <p class="item">2. Alla scadenza, la Convenzione si intende tacitamente rinnovata per la medesima durata, salvo
     disdetta comunicata con le modalità di cui ai commi che seguono almeno trenta (30) giorni prima della relativa
@@ -422,11 +481,13 @@
     istituzionale del Dipartimento e l’app IO, secondo le indicazioni del Dipartimento e/o, per i soli aspetti di
     competenza, di PagoPA S.p.A.</p>
 
+  <div class="keep">
   <p class="heading">Art. 8 - Sospensione, risoluzione e rimozione dal Portale</p>
 
   <p class="item">1. Il Dipartimento si riserva la facoltà di sospendere la presente Convenzione in qualsiasi momento,
     mediante formale richiesta inserita tramite il Portale, con decorrenza immediata dal momento di invio della
     comunicazione.</p>
+  </div>
 
   <p class="item">2. Il Dipartimento si riserva la facoltà di sospendere l'efficacia della presente Convenzione e/o di
     disporre la rimozione temporanea delle agevolazioni e/o dei servizi dai canali digitali dedicati, anche tramite
@@ -452,11 +513,13 @@
   <p class="item">5. La sospensione, la rimozione o la risoluzione non comportano alcun diritto del Partner Aderente a
     indennizzi, rimborsi, compensi o risarcimenti.</p>
 
+  <div class="keep">
   <p class="heading">Articolo 9 - Responsabilità e manleva</p>
 
   <p class="item">1. Il Dipartimento non assume alcuna responsabilità in caso di mancato o inesatto adempimento della
     prestazione oggetto della presente Convenzione ed è esente da qualsiasi responsabilità per eventuali danni
     derivanti a terzi dall’applicazione della stessa.</p>
+  </div>
 
   <p class="item">2. Il Partner Aderente è l’unico responsabile dell’effettiva erogazione delle agevolazioni e/o
     servizi, della sicurezza, conformità degli stessi, nonché della correttezza delle informazioni pubblicate,
@@ -486,6 +549,7 @@
   <p class="item">5. Gli obblighi di manleva e indennizzo sopravvivono alla cessazione, per qualsiasi causa, della
     presente Convenzione.</p>
 
+  <div class="keep">
   <p class="heading">Articolo 10 - Comunicazioni e Referenti del Portale (Amministratori)</p>
 
   <p class="item">1. Le comunicazioni formali relative alla presente Convenzione sono effettuate a mezzo PEC agli
@@ -493,7 +557,9 @@
     preveda espressamente l’utilizzo del Portale, quale, a titolo esemplificativo, la variazione dei Referenti, il cui
     aggiornamento deve avvenire mediante la compilazione e sottoscrizione dell’apposito Modulo
     seguendo le istruzioni riportate sul <a href="https://docs.pagopa.it/area-riservata/area-riservata/ruoli">Manuale di Area Riservata</a>.</p>
+  </div>
 
+  <div class="keep">
   <p class="item">2. Ciascuna Parte individua un proprio Referente per la gestione della presente Convenzione. Il
     Referente del Dipartimento è:</p>
 
@@ -501,8 +567,9 @@
   <p class="c141">Cognome: Trovato;</p>
   <p class="c141">C.F.: TRVNGL72H02A546X;</p>
   <p class="c141">e-mail: a.trovatospano@governo.it;</p>
+  </div>
 
-  <p class="item">Il Partner Aderente individua quale proprio Referente/i:</p>
+  <p class="item referenti">Il Partner Aderente individua quale proprio Referente/i:</p>
 
   ${delegates}
 
@@ -523,14 +590,16 @@
     Amministratori abilitati ad operare sul Portale, secondo le modalità descritte nel manuale di Area Riservata,
     all’interno della sezione utenti. e dichiara di aver verificato la sussistenza, in capo al soggetto/i sopra
     indicato/i dei necessari poteri, deleghe o autorizzazioni interne per lo svolgimento attribuite tramite il
-    Portale. Ogni attività compiuta tramite il Portale da tali soggetti si intende effettuata sotto l’esclusiva
+    Portale.Ogni attività compiuta tramite il Portale da tali soggetti si intende effettuata sotto l’esclusiva
     responsabilità del Partner Aderente. PagoPA rende disponibile il Portale e non verifica né attesta i poteri di
     firma, rappresentanza e delega del soggetto/i indicato/i dal Partner Aderente.</p>
 
+  <div class="keep">
   <p class="heading">Articolo 11 - Disposizioni finali</p>
 
   <p class="item">1. Il Partner Aderente non può cedere a terzi la presente Convenzione, né trasferire a terzi i
     relativi diritti e obblighi, senza il previo consenso del Dipartimento.</p>
+  </div>
 
   <p class="item">2. Eventuali modifiche e integrazioni della presente Convenzione sono valide solo se risultanti da
     atto scritto sottoscritto da entrambe le Parti, o, per i soli profili tecnici e operativi, da aggiornamenti delle
@@ -545,30 +614,33 @@
     imperative di legge e le normative vigenti in materia.</p>
 
   <div class="signature-block">
-    <p>&nbsp;</p>
-    <p><span class="c3">F.to digitalmente dal legale rappresentante p.t. del Partner Aderente</span></p>
-    <div class="signature-box"></div>
+  <table class="signatures">
+    <tr>
+      <td>LEGALE RAPPRESENTANTE P.T. DEL PARTNER ADERENTE</td>
+      <td>Il CAPO DIPARTIMENTO PER LE POLITICHE IN FAVORE DELLE PERSONE CON DISABILITÀ<br /><i>dott.ssa Antonella Nicotra</i></td>
+    </tr>
+    <tr>
+      <td class="sign-line">_____________________</td>
+      <td class="sign-line">____________________________</td>
+    </tr>
+  </table>
 
-    <p><span class="c3">F.to digitalmente dal Capo Dipartimento per le politiche in favore delle persone con
-        disabilità, dott.ssa Antonella Nicotra</span></p>
-    <div class="signature-box"></div>
-  </div>
-
-  <div class="signature-block">
+  <div>
     <p>Il Partner Aderente dichiara di approvare specificamente, ai sensi e per gli effetti degli artt. 1341 e 1342
-      c.c., le seguenti previsioni della Convenzione: Art. 2 - “Modalità di pubblicazione delle agevolazioni e utilizzo
-      del Portale” commi 2 e 4; Art. 3 - “Onboarding del Partner Aderente, Area Riservata e ruolo di PagoPA S.p.A.”,
-      commi 2, 4 e 5; Art. 4 - “Pubblicazione nell’elenco pubblico e verifiche del Dipartimento”, commi 3 e 4; Art. 5 -
-      “Obblighi del Partner Aderente”, commi 1 e 2; Art. 7 - “Durata, efficacia, rinnovo, recesso e cessazione della
-      Convenzione”, commi 2, 3, 4 e 5; Art. 8 - “Sospensione, risoluzione e rimozione dal Portale”, commi 1, 2, 3, 4 e 5;
-      Art. 9 - “Responsabilità e manleva”, commi 1, 2, 3, 4 e 5; Art. 11 - “Disposizioni finali”, comma 1.</p>
+      c.c., le seguenti previsioni della Convenzione: Art. 2 - “<i>Modalità di pubblicazione delle agevolazioni e utilizzo
+      del Portale</i>” commi 2 e 4; Art. 3 - “<i>Onboarding del Partner Aderente, Area Riservata e ruolo di PagoPA S.p.A.</i>”,
+      commi 2, 4 e 5; Art. 4- “<i>Pubblicazione nell’elenco pubblico e verifiche del Dipartimento</i>”, commi 3 e 4; Art. 5 -
+      “<i>Obblighi del Partner Aderente</i>”, commi 1 e 2; Art. 7 - “<i>Durata, efficacia, rinnovo, recesso e cessazione della
+      Convenzione</i>”, commi 2, 3, 4 e 5; Art. 8 - “<i>Sospensione, risoluzione e rimozione dal Portale</i>“, commi 1, 2, 3, 4 e 5 -
+      Art. 9 - “<i>Responsabilità e manleva</i>”, commi 1, 2, 3, 4 e 5; Art. 11 - “<i>Disposizioni finali</i>”, comma 1.</p>
 
-    <p>Luogo e data _____________</p>
+    <p><b>Luogo e data</b></p>
+    <p>_____________</p>
 
-    <p><span class="c3">F.to digitalmente dal legale rappresentante p.t. del Partner Aderente</span></p>
-    <div class="signature-box"></div>
+    <p><b>Il Partner Aderente</b></p>
+    <p>________________</p>
   </div>
-
+  </div>
 </body>
 
 </html>
