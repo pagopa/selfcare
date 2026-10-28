@@ -1093,66 +1093,6 @@
         ]
       }
     },
-    "/institutions/ipa/{taxCode}": {
-      "get": {
-        "tags": [
-          "institution"
-        ],
-        "summary": "Find IPA institution by tax code",
-        "description": "Returns the single IPA institution matching the exact tax code and optional comma-separated category filter from the Azure AI Search index",
-        "operationId": "findIpaInstitutionByTaxCodeOnSearchEngine",
-        "parameters": [
-          {
-            "name": "taxCode",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "category",
-            "in": "query",
-            "description": "Filter from origin category. Multiple comma-separated values are supported",
-            "required": false,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/InstitutionResource1"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized"
-          },
-          "404": {
-            "description": "Not Found"
-          },
-          "409": {
-            "description": "Conflict"
-          },
-          "500": {
-            "description": "Internal Server Error"
-          }
-        },
-        "security": [
-          {
-            "apiKeyHeader": [
-              "global"
-            ]
-          }
-        ]
-      }
-    },
     "/institutions/ipa": {
       "get": {
         "tags": [
@@ -1212,6 +1152,66 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/InstitutionsResource"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        },
+        "security": [
+          {
+            "apiKeyHeader": [
+              "global"
+            ]
+          }
+        ]
+      }
+    },
+    "/institutions/ipa/{taxCode}": {
+      "get": {
+        "tags": [
+          "institution"
+        ],
+        "summary": "Find IPA institution by tax code",
+        "description": "Returns the single IPA institution matching the exact tax code and optional comma-separated category filter from the Azure AI Search index",
+        "operationId": "findIpaInstitutionByTaxCodeOnSearchEngine",
+        "parameters": [
+          {
+            "name": "taxCode",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "category",
+            "in": "query",
+            "description": "Filter from origin category. Multiple comma-separated values are supported",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InstitutionResource1"
                 }
               }
             }
@@ -2212,13 +2212,19 @@
             }
           },
           {
+            "description": "Optional. Defaults to the X-Tenant-Id header, or to the JWT tenant_id claim when the header is absent.",
             "name": "tenantId",
             "in": "query",
             "schema": {
-              "pattern": "\\S",
               "type": "string"
-            },
-            "required": true
+            }
+          },
+          {
+            "name": "X-Tenant-Id",
+            "in": "header",
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -2248,11 +2254,11 @@
             }
           },
           {
+            "description": "Optional. Defaults to the X-Tenant-Id header, or to the JWT tenant_id claim when the header is absent.",
             "name": "tenantId",
             "in": "query",
             "schema": {
-              "type": "string",
-              "default": "AR"
+              "type": "string"
             }
           }
         ],
@@ -2338,11 +2344,11 @@
             }
           },
           {
+            "description": "Optional. Defaults to the X-Tenant-Id header, or to the JWT tenant_id claim when the header is absent.",
             "name": "tenantId",
             "in": "query",
             "schema": {
-              "type": "string",
-              "default": "AR"
+              "type": "string"
             }
           }
         ],
@@ -2407,11 +2413,11 @@
             }
           },
           {
+            "description": "Optional. Defaults to the X-Tenant-Id header, or to the JWT tenant_id claim when the header is absent.",
             "name": "tenantId",
             "in": "query",
             "schema": {
-              "type": "string",
-              "default": "AR"
+              "type": "string"
             }
           }
         ],
@@ -2497,11 +2503,11 @@
             }
           },
           {
+            "description": "Optional. Defaults to the X-Tenant-Id header, or to the JWT tenant_id claim when the header is absent.",
             "name": "tenantId",
             "in": "query",
             "schema": {
-              "type": "string",
-              "default": "AR"
+              "type": "string"
             }
           }
         ],
@@ -2587,11 +2593,11 @@
             }
           },
           {
+            "description": "Optional. Defaults to the X-Tenant-Id header, or to the JWT tenant_id claim when the header is absent.",
             "name": "tenantId",
             "in": "query",
             "schema": {
-              "type": "string",
-              "default": "AR"
+              "type": "string"
             }
           }
         ],
@@ -3830,6 +3836,13 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "name": "workflowType",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/WorkflowType"
+            }
           }
         ],
         "responses": {
@@ -4940,6 +4953,25 @@
           }
         }
       },
+      "InstitutionsResource": {
+        "required": [
+          "count",
+          "items"
+        ],
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/InstitutionResource1"
+            }
+          },
+          "count": {
+            "type": "integer",
+            "format": "int64"
+          }
+        }
+      },
       "InstitutionResource1": {
         "type": "object",
         "properties": {
@@ -4991,25 +5023,6 @@
           },
           "updateDate": {
             "type": "string"
-          }
-        }
-      },
-      "InstitutionsResource": {
-        "required": [
-          "count",
-          "items"
-        ],
-        "type": "object",
-        "properties": {
-          "items": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/InstitutionResource1"
-            }
-          },
-          "count": {
-            "type": "integer",
-            "format": "int64"
           }
         }
       },
@@ -5654,7 +5667,7 @@
           "workflowType": {
             "type": "array",
             "items": {
-              "$ref": "#/components/schemas/WorkflowType"
+              "$ref": "#/components/schemas/WorkflowType1"
             }
           }
         }
@@ -5675,7 +5688,7 @@
         ],
         "type": "string"
       },
-      "WorkflowType": {
+      "WorkflowType1": {
         "enum": [
           "CONTRACT_REGISTRATION",
           "CONTRACT_WITH_COUNTERSIGNATURE",
@@ -5707,6 +5720,9 @@
           },
           "labelKey": {
             "type": "string"
+          },
+          "selfOnboarding": {
+            "type": "boolean"
           }
         }
       },
@@ -5726,7 +5742,7 @@
         "type": "object",
         "properties": {
           "type": {
-            "$ref": "#/components/schemas/WorkflowType"
+            "$ref": "#/components/schemas/WorkflowType1"
           },
           "institutionType": {
             "$ref": "#/components/schemas/InstitutionType1"
@@ -5832,7 +5848,7 @@
             "$ref": "#/components/schemas/Origin1"
           },
           "workflowType": {
-            "$ref": "#/components/schemas/WorkflowType"
+            "$ref": "#/components/schemas/WorkflowType1"
           }
         }
       },
@@ -6266,8 +6282,8 @@
             "type": "string"
           },
           "status": {
-            "type": "integer",
-            "format": "int32"
+            "format": "int32",
+            "type": "integer"
           },
           "title": {
             "type": "string"
@@ -6278,14 +6294,14 @@
         }
       },
       "SaveUserRequest": {
-        "type": "object",
         "required": [
           "email"
         ],
+        "type": "object",
         "properties": {
           "email": {
-            "type": "string",
-            "minLength": 1
+            "minLength": 1,
+            "type": "string"
           },
           "uid": {
             "type": "string"
@@ -6308,12 +6324,6 @@
         "type": "object",
         "properties": {
           "userId": {
-            "type": "string"
-          },
-          "productId": {
-            "type": "string"
-          },
-          "tenantId": {
             "type": "string"
           },
           "name": {
@@ -7288,6 +7298,9 @@
             "items": {
               "type": "string"
             }
+          },
+          "contractUpdateRequired": {
+            "type": "boolean"
           }
         }
       },
@@ -7572,6 +7585,28 @@
           "REJECTED",
           "DELETED",
           "OVERRIDDEN"
+        ],
+        "type": "string"
+      },
+      "WorkflowType": {
+        "enum": [
+          "CONTRACT_REGISTRATION",
+          "CONTRACT_WITH_COUNTERSIGNATURE",
+          "CONTRACT_UPDATE",
+          "FOR_APPROVE",
+          "FOR_APPROVE_PT",
+          "FOR_APPROVE_GPU",
+          "CONFIRMATION",
+          "USERS",
+          "USERS_IMPORT",
+          "IMPORT",
+          "IMPORT_AGGREGATION",
+          "CONTRACT_REGISTRATION_AGGREGATOR",
+          "CONFIRMATION_AGGREGATE",
+          "INCREMENT_REGISTRATION_AGGREGATOR",
+          "CONFIRMATION_AGGREGATOR",
+          "USERS_PG",
+          "USERS_EA"
         ],
         "type": "string"
       },
