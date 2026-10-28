@@ -1,0 +1,30 @@
+meta {
+  name: getNotificationsCountInvalidDate
+  type: http
+  seq: 12
+}
+
+get {
+  url: {{apiBaseUrl}}/external/support/v1/api/onboardings/notifications/count?from=2024-13-45&to=2024-01-01
+  body: none
+  auth: inherit
+}
+
+params:query {
+  from: 2024-13-45
+  to: 2024-01-01
+}
+
+headers {
+  Ocp-Apim-Subscription-Key: {{apimKeySupport}}
+}
+
+script:post-response {
+  test("getNotificationsCountInvalidDate returns 400", function() {
+    expect(res.getStatus()).to.equal(400);
+  });
+}
+
+settings {
+  encodeUrl: true
+}

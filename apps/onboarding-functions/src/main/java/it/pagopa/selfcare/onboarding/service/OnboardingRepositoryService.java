@@ -3,6 +3,7 @@ package it.pagopa.selfcare.onboarding.service;
 import it.pagopa.selfcare.onboarding.entity.Onboarding;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import org.bson.Document;
 
@@ -20,6 +21,13 @@ public interface OnboardingRepositoryService {
     LocalDateTime updatedAt);
 
   long countByQuery(Document query);
+
+  /**
+   * Counts the onboardings matching the query grouped by productId with a single aggregation.
+   *
+   * @throws it.pagopa.selfcare.onboarding.exception.DatabaseThrottledException if the database is throttling requests (HTTP 429 equivalent)
+   */
+  Map<String, Long> countByProduct(Document query);
 
   List<Onboarding> findByQueryPaged(Document query, int page, int pageSize);
 
