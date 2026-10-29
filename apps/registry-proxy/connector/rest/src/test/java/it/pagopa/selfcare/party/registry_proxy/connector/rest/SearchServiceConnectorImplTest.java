@@ -2,7 +2,11 @@ package it.pagopa.selfcare.party.registry_proxy.connector.rest;
 
 import it.pagopa.selfcare.party.registry_proxy.connector.model.OnboardingIndex;
 import it.pagopa.selfcare.party.registry_proxy.connector.model.SearchServiceStatus;
-import it.pagopa.selfcare.party.registry_proxy.connector.rest.client.AzureSearchRestClient;
+import it.pagopa.selfcare.party.registry_proxy.connector.rest.client.OnboardingSearchRestClient;
+import it.pagopa.selfcare.party.registry_proxy.connector.rest.config.RegistryProxyTenantResources;
+import it.pagopa.selfcare.commons.tenant.TenantDefinition.SearchDefinition;
+import java.net.URI;
+import org.junit.jupiter.api.BeforeEach;
 import it.pagopa.selfcare.party.registry_proxy.connector.rest.model.mapper.SearchServiceMapperImpl;
 import it.pagopa.selfcare.party.registry_proxy.connector.rest.model.search.SearchServiceIndexRequest;
 import it.pagopa.selfcare.party.registry_proxy.connector.rest.model.search.SearchServiceIndexResponse;
@@ -28,11 +32,23 @@ public class SearchServiceConnectorImplTest {
   private SearchServiceConnectorImpl searchServiceConnector;
 
   @MockBean
-  private AzureSearchRestClient azureSearchRestClient;
+  private OnboardingSearchRestClient azureSearchRestClient;
+
+  @MockBean
+  private RegistryProxyTenantResources tenantResources;
+
+  private static final URI ENDPOINT = URI.create("https://search.example");
+
+  @BeforeEach
+  void configureTenant() {
+    when(tenantResources.search()).thenReturn(
+        new SearchDefinition(ENDPOINT.toString(), "onboarding-ar", "SEARCH_KEY_AR"));
+    when(tenantResources.secret("SEARCH_KEY_AR")).thenReturn("ar-key");
+  }
 
   @Test
   void testIndexOnboardingWithOverriddenStatus() {
-    when(azureSearchRestClient.indexOnboarding(any())).thenReturn(new SearchServiceStatus());
+    when(azureSearchRestClient.indexOnboarding(any(), any(), any(), any())).thenReturn(new SearchServiceStatus());
     OnboardingIndex onboardingIndex = new OnboardingIndex();
     onboardingIndex.setOnboardingId("onboarding-id");
     onboardingIndex.setStatus("OVERRIDDEN");
@@ -41,13 +57,13 @@ public class SearchServiceConnectorImplTest {
 
     ArgumentCaptor<SearchServiceIndexRequest<SearchServiceOnboardingIndex>> requestCaptor =
         ArgumentCaptor.forClass(SearchServiceIndexRequest.class);
-    verify(azureSearchRestClient).indexOnboarding(requestCaptor.capture());
+    verify(azureSearchRestClient).indexOnboarding(eq(ENDPOINT), eq("onboarding-ar"), eq("ar-key"), requestCaptor.capture());
     assertEquals("delete", requestCaptor.getValue().getValue().get(0).getAction());
   }
 
   @Test
   void testIndexOnboardingWithNonOverriddenStatus() {
-    when(azureSearchRestClient.indexOnboarding(any())).thenReturn(new SearchServiceStatus());
+    when(azureSearchRestClient.indexOnboarding(any(), any(), any(), any())).thenReturn(new SearchServiceStatus());
     OnboardingIndex onboardingIndex = new OnboardingIndex();
     onboardingIndex.setOnboardingId("onboarding-id");
     onboardingIndex.setStatus("ACTIVE");
@@ -56,17 +72,17 @@ public class SearchServiceConnectorImplTest {
 
     ArgumentCaptor<SearchServiceIndexRequest<SearchServiceOnboardingIndex>> requestCaptor =
         ArgumentCaptor.forClass(SearchServiceIndexRequest.class);
-    verify(azureSearchRestClient).indexOnboarding(requestCaptor.capture());
+    verify(azureSearchRestClient).indexOnboarding(eq(ENDPOINT), eq("onboarding-ar"), eq("ar-key"), requestCaptor.capture());
     assertEquals("mergeOrUpload", requestCaptor.getValue().getValue().get(0).getAction());
   }
 
   @Test
   void testSearchOnboarding() {
-    when(azureSearchRestClient.searchOnboarding("\\\"search\\\"", "all", "filter", true, 15L, 0L, null, "orderBy"))
+    when(azureSearchRestClient.searchOnboarding(ENDPOINT, "onboarding-ar", "ar-key", "\\\"search\\\"", "all", "filter", true, 15L, 0L, "orderBy"))
             .thenReturn(new SearchServiceIndexResponse<>());
     searchServiceConnector.searchOnboarding("search", "filter", 15L, 0L, "orderBy");
     verify(azureSearchRestClient, times(1))
-            .searchOnboarding("\\\"search\\\"", "all", "filter", true, 15L, 0L, null, "orderBy");
+            .searchOnboarding(ENDPOINT, "onboarding-ar", "ar-key", "\\\"search\\\"", "all", "filter", true, 15L, 0L, "orderBy");
   }
 
   @Test

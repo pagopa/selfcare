@@ -69,10 +69,14 @@ public class TenantRegistry {
 
         supportedTenantIds().forEach(tenantId -> {
             TenantDefinition definition = tenants.get(tenantId);
-            if (definition == null || definition.mongo() == null) {
+            boolean mongoRequired = environment.getProperty(
+                    "tenant.mongodb.required", Boolean.class, true);
+            if (definition == null || (mongoRequired && definition.mongo() == null)) {
                 throw new IllegalStateException("Missing Mongo configuration for tenant " + tenantId);
             }
-            validateMongo(tenantId, definition.mongo());
+            if (definition.mongo() != null) {
+                validateMongo(tenantId, definition.mongo());
+            }
             validateJwt(tenantId, definition.jwt());
             validateCredentials(tenantId, definition);
             validateStorages(tenantId, definition);
@@ -115,7 +119,12 @@ public class TenantRegistry {
     }
 
     public Optional<String> mongoConnectionString(String tenantId) {
-        return property(resolve(tenantId).mongo().connectionStringEnvVar());
+        TenantDefinition.MongoDefinition mongo = resolve(tenantId).mongo();
+        if (mongo == null) {
+            throw new IllegalStateException("Missing Mongo configuration for tenant "
+                    + normalizeTenantId(tenantId));
+        }
+        return property(mongo.connectionStringEnvVar());
     }
 
     public Optional<String> jwtPublicKey(String tenantId) {

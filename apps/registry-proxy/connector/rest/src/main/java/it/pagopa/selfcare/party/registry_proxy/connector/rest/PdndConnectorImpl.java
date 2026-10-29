@@ -19,7 +19,7 @@ public class PdndConnectorImpl {
         this.pdndRestClient = pdndRestClient;
     }
 
-    @Cacheable(value = PDND_TOKEN_CACHE, key = "#clientId", cacheManager = PDND_TOKEN_CACHE)
+    @Cacheable(value = PDND_TOKEN_CACHE, key = "{@tenantContext.requiredTenantId(), #clientId, #clientAssertion}", cacheManager = PDND_TOKEN_CACHE)
     public ClientCredentialsResponse createToken(String clientAssertion, String clientAssertionType, String grantType, String clientId) {
         log.debug(LogUtils.CONFIDENTIAL_MARKER, " clientAssertionType = {}, grantType = {}, clientId = {}", clientAssertionType, grantType, clientId);
         PDNDTokenForm form = PDNDTokenForm.builder()
@@ -29,7 +29,7 @@ public class PdndConnectorImpl {
                 .clientId(clientId)
                 .build();
         ClientCredentialsResponse result = pdndRestClient.createToken(form);
-        log.debug(LogUtils.CONFIDENTIAL_MARKER, "PdndClientCredentialsResponse result = {}", result);
+        log.debug("PDND token retrieved");
         return result;
     }
 

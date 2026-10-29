@@ -64,6 +64,42 @@ locals {
 
   registry_proxy_app_settings = [
     {
+      name  = "TENANT_SUPPORTED_TENANTS"
+      value = "PNPG"
+    },
+    {
+      name  = "TENANT_DEFAULT"
+      value = "PNPG"
+    },
+    {
+      name = "SELFCARE_TENANT_DATA_ISOLATION"
+      value = jsonencode({
+        PNPG = {
+          jwt = {
+            publicKeyEnvVar = "JWT_PUBLIC_KEY_PNPG"
+            issuers         = ["SPID", "PAGOPA"]
+            audiences       = ["imprese.uat.notifichedigitali.it", "api-pnpg.uat.selfcare.pagopa.it"]
+          }
+          registryProxy = {
+            search = null
+            nationalRegistries = {
+              endpoint     = "https://api-selcpg.uat.notifichedigitali.it/national-registries-private"
+              apiKeyEnvVar = "NATIONAL_REGISTRY_API_KEY_PNPG"
+            }
+            pdnd = {
+              clientIdEnvVar   = "PDND_INFOCAMERE_CLIENT_ID_PNPG"
+              privateKeyEnvVar = "PDND_INFOCAMERE_PRIVATE_KEY_PNPG"
+              kidEnvVar        = "PDND_INFOCAMERE_KID_PNPG"
+              purposeIdEnvVar  = "PDND_INFOCAMERE_PURPOSE_ID_PNPG"
+              audience         = "auth.interop.pagopa.it/client-assertion"
+            }
+            pdndInvitalia     = null
+            invitaliaProducts = []
+          }
+        }
+      })
+    },
+    {
       name  = "JAVA_TOOL_OPTIONS"
       value = "-javaagent:applicationinsights-agent.jar -Djava.net.preferIPv4Stack=true -Dnetworkaddress.cache.ttl=30 -Dnetworkaddress.cache.negative.ttl=1 -XX:MaxRAMPercentage=75.0"
     },
@@ -116,16 +152,8 @@ locals {
       value = "/ic/ce/wspa/wspa/rest/authentication"
     },
     {
-      name  = "NATIONAL_REGISTRIES_URL"
-      value = "https://api-selcpg.${module.local.config.env}.notifichedigitali.it/national-registries-private"
-    },
-    {
       name  = "PDND_BASE_URL"
       value = "https://auth.interop.pagopa.it"
-    },
-    {
-      name  = "PDND_INFOCAMERE_AUDIENCE"
-      value = "auth.interop.pagopa.it/client-assertion"
     },
     {
       name  = "IVASS_BASE_URL"
@@ -143,13 +171,13 @@ locals {
 
   secrets_names = {
     "BLOB_STORAGE_CONN_STRING"              = "web-storage-connection-string"
-    "NATIONAL_REGISTRY_API_KEY"             = "national-registry-api-key"
+    "NATIONAL_REGISTRY_API_KEY_PNPG"        = "national-registry-api-key"
     "APPLICATIONINSIGHTS_CONNECTION_STRING" = "appinsights-connection-string"
-    "JWT_TOKEN_PUBLIC_KEY"                  = "jwt-public-key"
-    "PDND_INFOCAMERE_PRIVATE_KEY"           = "infocamere-interop-certificate-client-private-key"
-    "PDND_INFOCAMERE_CLIENT_ID"             = "infocamere-interop-client-id"
-    "PDND_INFOCAMERE_KID"                   = "infocamere-interop-kid"
-    "PDND_INFOCAMERE_PURPOSE_ID"            = "infocamere-interop-purpose-id"
+    "JWT_PUBLIC_KEY_PNPG"                   = "jwt-public-key"
+    "PDND_INFOCAMERE_PRIVATE_KEY_PNPG"      = "infocamere-interop-certificate-client-private-key"
+    "PDND_INFOCAMERE_CLIENT_ID_PNPG"        = "infocamere-interop-client-id"
+    "PDND_INFOCAMERE_KID_PNPG"              = "infocamere-interop-kid"
+    "PDND_INFOCAMERE_PURPOSE_ID_PNPG"       = "infocamere-interop-purpose-id"
     "REDIS_PASSWORD"                        = "redis-primary-access-key"
   }
 
