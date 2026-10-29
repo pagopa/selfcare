@@ -189,3 +189,15 @@ jobs:
             -Dquarkus.azure-functions.region=westeurope \
             -Dquarkus.azure-functions.app-service-plan-name=${{ format('selc-{0}-onboarding-fn-plan', inputs.target == 'ar' && 'p' || 'p-pnpg') }} \
             -Dquarkus.azure-functions.runtime.java-version=17
+
+  jira_sync:
+    name: Jira sync
+    needs: [release_dev, release_uat, release_prod]
+    if: ${{ !cancelled() && !contains(needs.*.result, 'failure') && contains(needs.*.result, 'success') }}
+    uses: ./.github/workflows/call_jira_release_sync.yml
+    permissions:
+      contents: read
+    with:
+      app: ${{ inputs.app }}
+      env: ${{ inputs.env || (startsWith(github.ref_name, 'releases/') && 'uat' || 'dev') }}
+    secrets: inherit

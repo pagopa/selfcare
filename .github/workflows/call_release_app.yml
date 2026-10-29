@@ -121,3 +121,15 @@ jobs:
         || endsWith(inputs.app, '-bff') && format('./{0}/app/src/main/docs/openapi.json', inputs.APP_PATH)
         || format('./{0}/src/main/docs/openapi.json', inputs.APP_PATH) }}
       upload_openapi_enabled: ${{ inputs.target == 'ar' && !endsWith(inputs.app, '-cdc') && !endsWith(inputs.app, '-scheduler') && !endsWith(inputs.app, '-runner') }}
+
+  jira_sync:
+    name: Jira sync
+    needs: [release_dev, release_uat, release_prod]
+    if: ${{ !cancelled() && !contains(needs.*.result, 'failure') && contains(needs.*.result, 'success') }}
+    uses: ./.github/workflows/call_jira_release_sync.yml
+    permissions:
+      contents: read
+    with:
+      app: ${{ inputs.app }}
+      env: ${{ inputs.env || (startsWith(github.ref_name, 'releases/') && 'uat' || 'dev') }}
+    secrets: inherit

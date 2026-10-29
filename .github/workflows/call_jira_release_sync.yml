@@ -1,0 +1,72 @@
+name: Jira Release Sync
+
+# Sends to Jira only the SELC keys of commits touching the released app since its last release
+# on the same environment, instead of relying on GitHub deployments (which are shared by all apps).
+
+on:
+  workflow_call:
+    inputs:
+      app:
+        type: string
+        required: true
+      env:
+        type: string
+        required: true
+
+jobs:
+  sync:
+    name: Jira sync - ${{ inputs.app }} (${{ inputs.env }})
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+    # Only official refs advance the released SHA: main for dev, release branches for uat/prod
+    if: ${{ (inputs.env == 'dev' && github.ref_name == 'main') || (inputs.env != 'dev' && startsWith(github.ref_name, 'releases/')) }}
+    concurrency:
+      group: jira-sync-${{ inputs.app }}-${{ inputs.env }}
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          fetch-depth: 0
+
+      - name: Send issues to Jira and store released SHA
+        env:
+          GH_TOKEN: ${{ secrets.GH_PAT_VARIABLES }}
+          APP: ${{ inputs.app }}
+          ENVIRONMENT: ${{ inputs.env }}
+          REPO: ${{ github.repository }}
+          WEBHOOK_URL: ${{ secrets.JIRA_RELEASE_WEBHOOK_URL }}
+          WEBHOOK_TOKEN: ${{ secrets.JIRA_RELEASE_WEBHOOK_TOKEN }}
+
+        # Compare this release with the last recorded SHA for the app and environment.
+        # On the first run, record the current SHA without notifying Jira. Otherwise,
+        # collect and deduplicate SELC issue keys from commit subjects affecting the app,
+        # send them to Jira when present, and save the current SHA. Older redeploys leave
+        # the saved SHA unchanged.
+        run: |
+          VAR_NAME="JIRA_$(echo "${APP}_${ENVIRONMENT}" | tr '[:lower:]-' '[:upper:]_')_SHA"
+          PREV=$(gh variable get "$VAR_NAME" --repo "$REPO" 2>/dev/null || true)
+
+          if [ -z "$PREV" ]; then
+            echo "No previous SHA for $VAR_NAME: recording $GITHUB_SHA without notifying Jira"
+          elif ! git cat-file -e "$PREV^{commit}" 2>/dev/null; then
+            echo "::warning::Previous SHA $PREV not found in history: skipping Jira notification"
+          elif git merge-base --is-ancestor "$GITHUB_SHA" "$PREV"; then
+            echo "Rollback or redeploy of an older commit: nothing to notify, SHA left unchanged"
+            exit 0
+          else
+            # Only keys at the start of the commit subject: keys merely quoted elsewhere are ignored
+            KEYS=$(git log --format='%s' "$PREV..$GITHUB_SHA" -- "apps/$APP" "infra/resources/$APP" \
+              | { grep -oE '^\[?SELC-[0-9]+' || true; } | tr -d '[' | sort -u | jq -R . | jq -sc .)
+            echo "Issues for $APP ($ENVIRONMENT): $KEYS"
+            if [ "$KEYS" != "[]" ]; then
+              jq -n --argjson issues "$KEYS" --arg env "$ENVIRONMENT" \
+                '{issues: $issues, environment: $env}' \
+              | curl -fsS -X POST "$WEBHOOK_URL" \
+                -H "Content-Type: application/json" \
+                -H "X-Automation-Webhook-Token: $WEBHOOK_TOKEN" \
+                -d @-
+            fi
+          fi
+
+          gh variable set "$VAR_NAME" --body "$GITHUB_SHA" --repo "$REPO"
