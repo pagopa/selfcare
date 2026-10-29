@@ -3,6 +3,7 @@ package it.pagopa.selfcare.delegation.event.service;
 import com.azure.data.tables.TableClient;
 import com.azure.data.tables.models.TableEntity;
 import com.azure.data.tables.models.TableServiceException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.microsoft.applicationinsights.TelemetryClient;
 import com.microsoft.applicationinsights.extensibility.context.OperationContext;
 import com.microsoft.applicationinsights.telemetry.TelemetryContext;
@@ -26,6 +27,7 @@ import it.pagopa.selfcare.delegation.event.entity.DelegationsEntity;
 import it.pagopa.selfcare.delegation.event.entity.Institution;
 import it.pagopa.selfcare.delegation.event.entity.OnboardingEntity;
 import it.pagopa.selfcare.delegation.event.mapper.DelegationMapper;
+import it.pagopa.selfcare.delegation.event.model.DelegationNotificationToSend;
 import it.pagopa.selfcare.delegation.event.repository.DelegationRepository;
 import it.pagopa.selfcare.delegation.event.repository.InstitutionRepository;
 import jakarta.inject.Inject;
@@ -37,7 +39,10 @@ import org.junit.jupiter.api.function.Executable;
 import org.mockito.ArgumentCaptor;
 import org.mockito.ArgumentMatchers;
 import org.mockito.Mockito;
+import org.openapi.quarkus.webhook_ms_json.api.WebhookApi;
+import org.openapi.quarkus.webhook_ms_json.model.NotificationRequest;
 
+import jakarta.ws.rs.core.Response;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -81,6 +86,9 @@ class DelegationCdcServiceTest {
     @Inject
     DelegationMapper delegationMapper;
 
+    @Inject
+    ObjectMapper objectMapper;
+
     @InjectMock
     TelemetryClient telemetryClient;
 
@@ -90,6 +98,10 @@ class DelegationCdcServiceTest {
     @RestClient
     @InjectMock
     EventHubRestClient eventHubRestClient;
+
+    @RestClient
+    @InjectMock
+    WebhookApi webhookApi;
 
     @Test
     void propagateDocumentToConsumers() {
@@ -336,6 +348,66 @@ class DelegationCdcServiceTest {
         verify(telemetryClient, times(1)).trackEvent(eq("DELEGATION_CDC"), any(), metricsName.capture());
         final Set<String> allValues = metricsName.getAllValues().stream().flatMap(x -> x.keySet().stream()).collect(Collectors.toSet());
         assertTrue(allValues.contains("DelegationEvent_success"));
+    }
+
+    @Test
+    void propagateDocumentToConsumers_sendsWebhookNotification() throws Exception {
+        ChangeStreamDocument<DelegationsEntity> document = mockNotPTDocument();
+        when(eventHubRestClient.sendMessage(any())).thenReturn(Uni.createFrom().nullItem());
+        when(webhookApi.sendNotification(any())).thenReturn(Uni.createFrom().item(Response.ok().build()));
+
+        delegationCdcService.consumerDelegationRepositoryEvent(document);
+
+        ArgumentCaptor<DelegationNotificationToSend> eventCaptor = ArgumentCaptor.forClass(DelegationNotificationToSend.class);
+        verify(eventHubRestClient).sendMessage(eventCaptor.capture());
+        ArgumentCaptor<NotificationRequest> webhookCaptor = ArgumentCaptor.forClass(NotificationRequest.class);
+        verify(webhookApi).sendNotification(webhookCaptor.capture());
+        NotificationRequest request = webhookCaptor.getValue();
+        assertEquals(PROD_PAGOPA.getValue(), request.getProductId());
+        assertEquals("AR", request.getTenantId());
+        assertEquals("SC-Delegations", request.getTopic());
+        assertEquals(objectMapper.writeValueAsString(eventCaptor.getValue()), request.getPayload());
+        verify(tableClient, times(1)).upsertEntity(any());
+    }
+
+    @Test
+    void propagateDocumentToConsumers_webhookFailureDoesNotBlockCdc() {
+        ChangeStreamDocument<DelegationsEntity> document = mockNotPTDocument();
+        when(eventHubRestClient.sendMessage(any())).thenReturn(Uni.createFrom().nullItem());
+        when(webhookApi.sendNotification(any())).thenReturn(Uni.createFrom().failure(new RuntimeException("Webhook failure")));
+
+        assertDoesNotThrow(() -> delegationCdcService.consumerDelegationRepositoryEvent(document));
+
+        verify(webhookApi).sendNotification(any());
+        verify(tableClient, times(1)).upsertEntity(any());
+    }
+
+    @Test
+    void propagateDocumentToConsumers_eventHubFailureSkipsWebhook() {
+        ChangeStreamDocument<DelegationsEntity> document = mockNotPTDocument();
+        when(eventHubRestClient.sendMessage(any())).thenReturn(Uni.createFrom().failure(new RuntimeException("EventHub failure")));
+
+        delegationCdcService.consumerDelegationRepositoryEvent(document);
+
+        verify(webhookApi, never()).sendNotification(any());
+        verify(tableClient, never()).upsertEntity(any());
+    }
+
+    private ChangeStreamDocument<DelegationsEntity> mockNotPTDocument() {
+        ChangeStreamDocument<DelegationsEntity> document = mock(ChangeStreamDocument.class);
+        DelegationsEntity delegationsEntity = new DelegationsEntity();
+        delegationsEntity.setId("id");
+        delegationsEntity.setType(DelegationType.EA);
+        delegationsEntity.setProductId(PROD_PAGOPA.getValue());
+        delegationsEntity.setFrom("institutionId");
+        delegationsEntity.setTo("toInstitutionId");
+
+        BsonDocument bsonDocument = mock(BsonDocument.class);
+        when(document.getFullDocument()).thenReturn(delegationsEntity);
+        when(document.getDocumentKey()).thenReturn(bsonDocument);
+        when(document.getResumeToken()).thenReturn(new BsonDocument());
+        when(bsonDocument.toJson()).thenReturn("toJson");
+        return document;
     }
 
     @Test
