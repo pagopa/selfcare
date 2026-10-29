@@ -1,0 +1,221 @@
+{
+  "openapi" : "3.0.3",
+  "tags" : [ {
+    "name" : "Delegation Notification"
+  } ],
+  "components" : {
+    "schemas" : {
+      "ContractDelegationResponse" : {
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "string"
+          },
+          "productId" : {
+            "type" : "string"
+          },
+          "contract" : {
+            "$ref" : "#/components/schemas/InstitutionContractResponse"
+          },
+          "membership" : {
+            "$ref" : "#/components/schemas/InstitutionContractResponse"
+          },
+          "recipient" : {
+            "$ref" : "#/components/schemas/InstitutionContractResponse"
+          },
+          "createdAt" : {
+            "$ref" : "#/components/schemas/Instant"
+          },
+          "updatedAt" : {
+            "$ref" : "#/components/schemas/Instant"
+          }
+        }
+      },
+      "ContractStatus" : {
+        "enum" : [ "ACTIVE", "DELETED" ],
+        "type" : "string"
+      },
+      "DelegationNotification" : {
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "string"
+          },
+          "delegationId" : {
+            "type" : "string"
+          },
+          "from" : {
+            "type" : "string"
+          },
+          "to" : {
+            "type" : "string"
+          },
+          "productId" : {
+            "type" : "string"
+          },
+          "type" : {
+            "type" : "string"
+          },
+          "status" : {
+            "type" : "string"
+          },
+          "createdAt" : {
+            "type" : "string"
+          },
+          "updatedAt" : {
+            "type" : "string"
+          },
+          "closedAt" : {
+            "type" : "string"
+          }
+        }
+      },
+      "DelegationWebhookRequest" : {
+        "required" : [ "payload" ],
+        "type" : "object",
+        "properties" : {
+          "tenantId" : {
+            "type" : "string"
+          },
+          "productId" : {
+            "type" : "string"
+          },
+          "topic" : {
+            "type" : "string"
+          },
+          "payload" : {
+            "$ref" : "#/components/schemas/DelegationNotification"
+          }
+        }
+      },
+      "Instant" : {
+        "format" : "date-time",
+        "type" : "string",
+        "example" : "2022-03-10T16:15:50Z"
+      },
+      "InstitutionContractResponse" : {
+        "type" : "object",
+        "properties" : {
+          "institutionId" : {
+            "type" : "string"
+          },
+          "id" : {
+            "type" : "string"
+          },
+          "date" : {
+            "$ref" : "#/components/schemas/Instant"
+          },
+          "status" : {
+            "$ref" : "#/components/schemas/ContractStatus"
+          }
+        }
+      },
+      "Problem" : {
+        "type" : "object",
+        "properties" : {
+          "title" : {
+            "type" : "string"
+          },
+          "status" : {
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "detail" : {
+            "type" : "string"
+          }
+        }
+      }
+    },
+    "securitySchemes" : {
+      "SecurityScheme" : {
+        "type" : "http",
+        "scheme" : "bearer",
+        "bearerFormat" : "JWT",
+        "description" : "Authentication"
+      }
+    }
+  },
+  "paths" : {
+    "/v1/delegations/notify" : {
+      "post" : {
+        "summary" : "Receive a delegation notification",
+        "description" : "Receives an SC-Delegations notification from webhook-ms. PSP_MEMBERSHIP and PSP_RECIPIENT delegations update the contract delegation of the delegating PSP, which is published on SC-ContractsCRMDelegations once both membership and recipient are known. Other delegation types are ignored.",
+        "operationId" : "notifyDelegation",
+        "tags" : [ "Delegation Notification" ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/DelegationWebhookRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "Contract delegation updated",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ContractDelegationResponse"
+                }
+              }
+            }
+          },
+          "204" : {
+            "description" : "Delegation type not handled"
+          },
+          "400" : {
+            "description" : "Invalid delegation",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized"
+          },
+          "404" : {
+            "description" : "Active PSP contract not found for the delegation institutions",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "500" : {
+            "description" : "Internal server error",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "bearerAuth" : [ ]
+        } ]
+      }
+    }
+  },
+  "info" : {
+    "title" : "Contracts CRM API",
+    "version" : "0.1.0",
+    "description" : "Builds PSP contract delegations (membership and recipient) from SC-Delegations webhook notifications"
+  },
+  "servers" : [ {
+    "url" : "http://localhost:8080",
+    "description" : "Auto generated value"
+  }, {
+    "url" : "http://0.0.0.0:8080",
+    "description" : "Auto generated value"
+  } ]
+}

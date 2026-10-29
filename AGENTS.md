@@ -22,7 +22,7 @@ SelfCare monorepo (PagoPA): microservices, SDKs, infrastructure and release auto
 | `docs/` | Architecture diagrams and specs |
 | `.github/workflows/` | CI/CD: `pr_<app>.yml` (PR checks), `pr_<app>_infra.yml`, `trigger_release_<app>.yml`, `release_*.yml`, `integration_test*.yml` |
 
-Apps: `auth`, `iam`, `product`, `product-cdc`, `webhook`, `institution-ms`, `institution-cdc`, `institution-send-mail-scheduler`, `user-ms`, `user-cdc`, `user-group-ms`, `user-group-cdc`, `dashboard-bff`, `external-api`, `onboarding-ms`, `onboarding-bff`, `onboarding-cdc`, `onboarding-functions` (Azure Functions), `document-ms`, `delegation-cdc`, `registry-proxy`, `registry-proxy-runner`, `log-availability-runner`.
+Apps: `auth`, `iam`, `product`, `product-cdc`, `webhook`, `institution-ms`, `institution-cdc`, `institution-send-mail-scheduler`, `user-ms`, `user-cdc`, `user-group-ms`, `user-group-cdc`, `dashboard-bff`, `external-api`, `onboarding-ms`, `onboarding-bff`, `onboarding-cdc`, `onboarding-functions` (Azure Functions), `document-ms`, `delegation-cdc`, `contracts-crm-ms`, `registry-proxy`, `registry-proxy-runner`, `log-availability-runner`.
 
 ## Stack: check the app before assuming
 

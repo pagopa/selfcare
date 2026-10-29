@@ -152,6 +152,17 @@
       </modules>
     </profile>
     <profile>
+      <id>contracts-crm-ms</id>
+      <activation>
+        <file>
+          <exists>contracts-crm-ms/pom.xml</exists>
+        </file>
+      </activation>
+      <modules>
+        <module>contracts-crm-ms</module>
+      </modules>
+    </profile>
+    <profile>
       <id>user-cdc</id>
       <activation>
         <file>

@@ -26,6 +26,7 @@ on:
         options:
           - auth
           - iam
+          - contracts-crm-ms
           - dashboard-bff
           - delegation-cdc
           - institution-cdc
