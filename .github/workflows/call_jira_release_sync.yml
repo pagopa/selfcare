@@ -17,6 +17,8 @@ jobs:
   sync:
     name: Jira sync - ${{ inputs.app }} (${{ inputs.env }})
     runs-on: ubuntu-24.04
+    permissions:
+      contents: read
     # Only official refs advance the released SHA: main for dev, release branches for uat/prod
     if: ${{ (inputs.env == 'dev' && github.ref_name == 'main') || (inputs.env != 'dev' && startsWith(github.ref_name, 'releases/')) }}
     concurrency:

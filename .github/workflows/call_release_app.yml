@@ -127,6 +127,8 @@ jobs:
     needs: [release_dev, release_uat, release_prod]
     if: ${{ !cancelled() && !contains(needs.*.result, 'failure') && contains(needs.*.result, 'success') }}
     uses: ./.github/workflows/call_jira_release_sync.yml
+    permissions:
+      contents: read
     with:
       app: ${{ inputs.app }}
       env: ${{ inputs.env || (startsWith(github.ref_name, 'releases/') && 'uat' || 'dev') }}
