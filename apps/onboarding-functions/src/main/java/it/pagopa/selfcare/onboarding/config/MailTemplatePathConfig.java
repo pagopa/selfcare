@@ -29,4 +29,5 @@ public interface MailTemplatePathConfig {
     String deletePath();
 
     String contractUpdateCompletePath();
+    String contractUpdateRequestPath();
 }
