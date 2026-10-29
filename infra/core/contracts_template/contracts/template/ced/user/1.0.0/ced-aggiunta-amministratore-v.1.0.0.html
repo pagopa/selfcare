@@ -33,7 +33,7 @@
 
     @page {
       size: A4;
-      margin: 100pt 116pt 120pt 43pt;
+      margin: 100pt 43pt 120pt 43pt;
       @top-left {
         content: element(pageheader);
         vertical-align: top;
@@ -63,11 +63,13 @@
 
     body > * {
       margin-left: 41pt;
+      margin-right: 73pt;
     }
 
     .pageheader {
       position: running(pageheader);
       margin-left: 0;
+      margin-right: 0;
     }
 
     .pageheader img {
@@ -78,6 +80,7 @@
     .pagefooter {
       position: running(pagefooter);
       margin-left: 0;
+      margin-right: 0;
       font-size: 6pt;
       line-height: 1.1;
       color: #666666;
@@ -104,7 +107,7 @@
     .pagefooter img {
       position: absolute;
       right: 0;
-      top: 8pt;
+      top: 40pt;
       width: 47pt;
       height: 47pt;
     }
@@ -131,7 +134,7 @@
     }
 
     .bullets {
-      margin: 0 0 0 77pt;
+      margin: 0 73pt 0 77pt;
       padding: 0;
     }
 
