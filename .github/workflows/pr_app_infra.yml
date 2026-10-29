@@ -31,6 +31,7 @@ on:
         options:
           - auth
           - iam
+          - contracts-crm-ms
           - delegation-cdc
           - institution-cdc
           - document-ms

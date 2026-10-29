@@ -118,7 +118,7 @@ Current workflow status is available in [GitHub Actions](https://github.com/pago
 | Onboarding | `onboarding-ms`, `onboarding-bff`, `onboarding-cdc`, `onboarding-functions` |
 | Products | `product`, `product-cdc` |
 | Users | `user-ms`, `user-cdc`, `user-group-ms`, `user-group-cdc` |
-| Documents and delegation | `document-ms`, `delegation-cdc` |
+| Documents and delegation | `document-ms`, `delegation-cdc`, `contracts-crm-ms` |
 | APIs and integration | `external-api`, `webhook` |
 | Registry proxy | `registry-proxy`, `registry-proxy-runner` |
 | Shared libraries | `selfcare-cucumber-sdk`, `selfcare-onboarding-sdk-*`, `selfcare-sdk-*`, `selfcare-user-sdk-*` |

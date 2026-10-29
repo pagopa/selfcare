@@ -309,6 +309,17 @@ APP_ROWS = [
         },
     },
     {
+        "label": "contracts-crm-ms",
+        "definition_workflow": "release_app.yml",
+        "variables": ["env", "target=ar", "app=contracts-crm-ms"],
+        "combos": AR_ONLY_COLUMNS,
+        "source": {
+            "type": "release_dispatch",
+            "workflow": "release_app.yml",
+            "app": "contracts-crm-ms",
+        },
+    },
+    {
         "label": "user-cdc",
         "definition_workflow": "trigger_release_user_cdc.yml",
         "variables": ["env", "branch", "app=user-cdc", "targets=ar,pnpg"],
