@@ -39,4 +39,8 @@ public interface OnboardingRepositoryService {
     String productId);
 
   List<Onboarding> findByOnboardingUsers(String institutionId, String productId);
+
+  List<Onboarding> findByQuery(Document query);
+
+  void updateStatusByQuery(Document query, String status, LocalDateTime updatedAt);
 }

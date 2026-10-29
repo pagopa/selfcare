@@ -1,7 +1,10 @@
 package it.pagopa.selfcare.onboarding.functions;
 
 import static it.pagopa.selfcare.onboarding.functions.utils.ActivityName.DELETE_INSTITUTION_ONBOARDING_ACTIVITY_NAME;
+import static it.pagopa.selfcare.onboarding.functions.utils.ActivityName.DELETE_TOKEN_CONTRACT_ACTIVITY_NAME;
 import static it.pagopa.selfcare.onboarding.functions.utils.ActivityName.DELETE_USER_ONBOARDING_ACTIVITY_NAME;
+import static it.pagopa.selfcare.onboarding.functions.utils.ActivityName.GET_CONTRACT_UPDATE_ONBOARDING_IDS_ACTIVITY;
+import static it.pagopa.selfcare.onboarding.functions.utils.ActivityName.REJECT_PENDING_CONTRACT_UPDATES_ACTIVITY;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -186,12 +189,14 @@ public class InstitutionFunctionsTest {
     user.setId("userId");
     onboarding.setUsers(List.of(user));
     when(onboardingService.getOnboarding(onboardingId)).thenReturn(Optional.of(onboarding));
+    mockContractUpdateIds(orchestrationContext, "[]");
 
     // when
     function.deleteInstitutionAndUserOnboarding(orchestrationContext, executionContext);
 
     // then
-    Mockito.verify(orchestrationContext, times(5)).callActivity(any(), any(), any(), any());
+    Mockito.verify(orchestrationContext, times(7)).callActivity(any(), any(), any(), any());
+    Mockito.verify(orchestrationContext).callActivity(eq(REJECT_PENDING_CONTRACT_UPDATES_ACTIVITY), any(), any(), any());
     ArgumentCaptor<Object> institutionPayload = ArgumentCaptor.forClass(Object.class);
     Mockito.verify(orchestrationContext)
         .callActivity(eq(DELETE_INSTITUTION_ONBOARDING_ACTIVITY_NAME), institutionPayload.capture(), any(), any());
@@ -200,6 +205,58 @@ public class InstitutionFunctionsTest {
     Mockito.verify(orchestrationContext)
         .callActivity(eq(DELETE_USER_ONBOARDING_ACTIVITY_NAME), userPayload.capture(), any(), any());
     assertTrue(userPayload.getValue().toString().contains("\"tenantId\":\"PNPG\""));
+  }
+
+  @Test
+  void deleteInstitutionAndUser_deletesContractUpdatesTokens() throws JsonProcessingException {
+    TaskOrchestrationContext orchestrationContext = mock(TaskOrchestrationContext.class);
+    when(orchestrationContext.getInput(String.class)).thenReturn("onboardingId");
+    Task task = mock(Task.class);
+    when(orchestrationContext.callActivity(any(), any(), any(), any())).thenReturn(task);
+    Onboarding onboarding = new Onboarding();
+    onboarding.setId("onboardingId");
+    Institution institution = new Institution();
+    institution.setId("institutionId");
+    onboarding.setInstitution(institution);
+    onboarding.setProductId("productId");
+    onboarding.setTenantId("AR");
+    when(onboardingService.getOnboarding("onboardingId")).thenReturn(Optional.of(onboarding));
+    mockContractUpdateIds(orchestrationContext, "[\"update1\",\"update2\"]");
+
+    function.deleteInstitutionAndUserOnboarding(orchestrationContext, executionContext);
+
+    ArgumentCaptor<Object> tokenPayload = ArgumentCaptor.forClass(Object.class);
+    Mockito.verify(orchestrationContext, times(3))
+        .callActivity(eq(DELETE_TOKEN_CONTRACT_ACTIVITY_NAME), tokenPayload.capture(), any(), any());
+    List<Object> payloads = tokenPayload.getAllValues();
+    assertTrue(payloads.get(0).toString().contains("\"value\":\"onboardingId\""));
+    assertTrue(payloads.get(1).toString().contains("\"value\":\"update1\""));
+    assertTrue(payloads.get(2).toString().contains("\"value\":\"update2\""));
+    Mockito.verify(orchestrationContext).callActivity(eq(REJECT_PENDING_CONTRACT_UPDATES_ACTIVITY), any(), any(), any());
+  }
+
+  @Test
+  void getContractUpdateOnboardingIds() throws JsonProcessingException {
+    when(onboardingService.findContractUpdateIdsWithContract("onboardingId")).thenReturn(List.of("update1"));
+
+    String result = function.getContractUpdateOnboardingIds(
+        "{\"value\":\"onboardingId\",\"tenantId\":\"AR\"}", executionContext);
+
+    assertEquals("[\"update1\"]", result);
+  }
+
+  @Test
+  void rejectPendingContractUpdates() throws JsonProcessingException {
+    function.rejectPendingContractUpdates("{\"value\":\"onboardingId\",\"tenantId\":\"AR\"}", executionContext);
+
+    verify(onboardingService).rejectPendingContractUpdates("onboardingId");
+  }
+
+  private static void mockContractUpdateIds(TaskOrchestrationContext orchestrationContext, String ids) {
+    Task idsTask = mock(Task.class);
+    when(idsTask.await()).thenReturn(ids);
+    when(orchestrationContext.callActivity(eq(GET_CONTRACT_UPDATE_ONBOARDING_IDS_ACTIVITY), any(), any(), any()))
+        .thenReturn(idsTask);
   }
 
   @Test

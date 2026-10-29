@@ -142,4 +142,17 @@ public class OnboardingRepositoryServiceImpl implements OnboardingRepositoryServ
         log.debug("Finding onboarding users: institutionId={}, productId={}", institutionId, productId);
         return onboardingRepository.findByOnboardingUsers(institutionId, productId);
     }
+
+    @Override
+    public List<Onboarding> findByQuery(Document query) {
+        log.debug("Finding onboardings by query");
+        return onboardingRepository.find(query).list();
+    }
+
+    @Override
+    public void updateStatusByQuery(Document query, String status, LocalDateTime updatedAt) {
+        log.debug("Updating onboardings status by query: status={}, updatedAt={}", status, updatedAt);
+        onboardingRepository.mongoCollection().updateMany(query,
+                new Document("$set", new Document("status", status).append("updatedAt", updatedAt)));
+    }
 }

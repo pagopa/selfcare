@@ -271,7 +271,7 @@ class OnboardingFunctionsTest {
     Onboarding onboarding = new Onboarding();
     onboarding.setId(onboardingId);
     onboarding.setTenantId("AR");
-    onboarding.setWorkflowType(WorkflowType.CONTRACT_UPDATE);
+    onboarding.setWorkflowType(WorkflowType.USERS_IMPORT);
     when(service.getOnboarding(onboardingId)).thenReturn(Optional.of(onboarding));
 
     Logger logger = mock(Logger.class);
@@ -284,11 +284,79 @@ class OnboardingFunctionsTest {
             () -> function.onboardingsOrchestrator(orchestrationContext, functionContext));
 
     assertEquals(
-        "Workflow options not found for onboardingId onboardingId and workflowType CONTRACT_UPDATE",
+        "Workflow options not found for onboardingId onboardingId and workflowType USERS_IMPORT",
         exception.getMessage());
     verify(logger).severe(exception.getMessage());
     verify(service, never())
         .updateOnboardingStatusAndInstanceId(anyString(), any(OnboardingStatus.class), anyString());
+  }
+
+  @Test
+  void onboardingsOrchestratorContractUpdateRequest() {
+    Onboarding onboarding = contractUpdateOnboarding(OnboardingStatus.REQUEST);
+    TaskOrchestrationContext orchestrationContext = mockTaskOrchestrationContext(onboarding);
+
+    function.onboardingsOrchestrator(orchestrationContext, executionContext);
+
+    ArgumentCaptor<String> captorActivity = ArgumentCaptor.forClass(String.class);
+    verify(orchestrationContext, times(3)).callActivity(captorActivity.capture(), any(), any(), any());
+    assertEquals(
+        List.of(BUILD_CONTRACT_ACTIVITY_NAME, SAVE_TOKEN_WITH_CONTRACT_ACTIVITY_NAME, SEND_MAIL_REGISTRATION_FOR_CONTRACT),
+        captorActivity.getAllValues());
+    verify(service, times(1)).updateOnboardingStatus(onboarding.getId(), OnboardingStatus.PENDING);
+  }
+
+  @Test
+  void onboardingsOrchestratorContractUpdatePending() {
+    Onboarding onboarding = contractUpdateOnboarding(OnboardingStatus.PENDING);
+    TaskOrchestrationContext orchestrationContext = mockTaskOrchestrationContext(onboarding);
+
+    function.onboardingsOrchestrator(orchestrationContext, executionContext);
+
+    ArgumentCaptor<String> captorActivity = ArgumentCaptor.forClass(String.class);
+    verify(orchestrationContext, times(6)).callActivity(captorActivity.capture(), any(), any(), any());
+    assertEquals(
+        List.of(
+            SYNC_PRODUCT_USERS_ACTIVITY,
+            STORE_ONBOARDING_ACTIVATEDAT,
+            ACTIVATE_CONTRACT_ACTIVITY,
+            SEND_MAIL_COMPLETION_ACTIVITY,
+            OVERRIDE_PENDING_ONBOARDINGS,
+            CLEAR_CONTRACT_UPDATE_REQUIRED_ACTIVITY),
+        captorActivity.getAllValues());
+    verify(service, times(1)).updateOnboardingStatus(onboarding.getId(), OnboardingStatus.COMPLETED);
+  }
+
+  private static Onboarding contractUpdateOnboarding(OnboardingStatus status) {
+    Onboarding onboarding = new Onboarding();
+    onboarding.setId("onboardingId");
+    onboarding.setReferenceOnboardingId("adhesionId");
+    onboarding.setStatus(status);
+    onboarding.setWorkflowType(WorkflowType.CONTRACT_UPDATE);
+    onboarding.setUsers(List.of(new User()));
+    onboarding.setInstitution(new Institution());
+    return onboarding;
+  }
+
+  @Test
+  void syncProductUsers() {
+    function.syncProductUsers(onboardingStringBase, executionContext);
+
+    verify(completionService, times(1)).syncProductUsers(any());
+  }
+
+  @Test
+  void activateContract() {
+    function.activateContract(onboardingStringBase, executionContext);
+
+    verify(completionService, times(1)).activateContract(any());
+  }
+
+  @Test
+  void clearContractUpdateRequired() {
+    function.clearContractUpdateRequired(onboardingStringBase, executionContext);
+
+    verify(completionService, times(1)).clearContractUpdateRequired(any());
   }
 
   @Test

@@ -58,4 +58,9 @@ public interface OnboardingService {
   List<Onboarding> getOnboardingsToResend(ResendNotificationsFilters filters, int page, int pageSize);
 
   List<String> findByInstitutionAndProduct(String institutionId, String productId);
+
+  /** Ids of the contract updates of the given adhesion that may own a contract to delete (PENDING or COMPLETED). */
+  List<String> findContractUpdateIdsWithContract(String referenceOnboardingId);
+
+  void rejectPendingContractUpdates(String referenceOnboardingId);
 }

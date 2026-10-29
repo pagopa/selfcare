@@ -3,6 +3,7 @@ package it.pagopa.selfcare.onboarding.service.impl;
 import com.microsoft.azure.functions.ExecutionContext;
 import it.pagopa.selfcare.onboarding.common.OnboardingStatus;
 import it.pagopa.selfcare.onboarding.common.PartyRole;
+import it.pagopa.selfcare.onboarding.common.WorkflowType;
 import it.pagopa.selfcare.onboarding.context.TenantContext;
 import it.pagopa.selfcare.onboarding.dto.ManagingInstitutionSendEmail;
 import it.pagopa.selfcare.onboarding.dto.NotificationCountResult;
@@ -542,6 +543,29 @@ public class OnboardingServiceImpl implements OnboardingService {
                 .collect(Collectors.toSet())
                 .stream()
                 .toList();
+    }
+
+    @Override
+    public List<String> findContractUpdateIdsWithContract(String referenceOnboardingId) {
+        return onboardingRepositoryService.findByQuery(contractUpdatesQuery(referenceOnboardingId,
+                        OnboardingStatus.PENDING, OnboardingStatus.COMPLETED))
+                .stream()
+                .map(Onboarding::getId)
+                .toList();
+    }
+
+    @Override
+    public void rejectPendingContractUpdates(String referenceOnboardingId) {
+        onboardingRepositoryService.updateStatusByQuery(
+                contractUpdatesQuery(referenceOnboardingId, OnboardingStatus.REQUEST, OnboardingStatus.PENDING),
+                OnboardingStatus.REJECTED.name(),
+                LocalDateTime.now());
+    }
+
+    private static Document contractUpdatesQuery(String referenceOnboardingId, OnboardingStatus... statuses) {
+        return new Document("referenceOnboardingId", referenceOnboardingId)
+                .append("workflowType", WorkflowType.CONTRACT_UPDATE.name())
+                .append("status", new Document("$in", Arrays.stream(statuses).map(Enum::name).toList()));
     }
 
 }

@@ -33,7 +33,7 @@ public class Utils {
           String.format(filename, StringUtils.stripAccents(productName.replaceAll("\\s+", "_")));
 
   public static final List<WorkflowType> NOT_ALLOWED_WORKFLOWS_FOR_INSTITUTION_NOTIFICATIONS =
-      List.of(WorkflowType.USERS, WorkflowType.USERS_IMPORT);
+      List.of(WorkflowType.USERS, WorkflowType.USERS_IMPORT, WorkflowType.CONTRACT_UPDATE);
 
   public static Onboarding readOnboardingValue(ObjectMapper objectMapper, String onboardingString) {
     try {

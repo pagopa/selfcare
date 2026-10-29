@@ -30,6 +30,11 @@ public class ActivityName {
   public static final String STORE_ONBOARDING_ACTIVATEDAT = "StoreOnboardingActivatedAt";
   public static final String REJECT_OUTDATED_ONBOARDINGS = "RejectOutdatedOnboardings";
   public static final String OVERRIDE_PENDING_ONBOARDINGS = "OverridePendingOnboardings";
+  public static final String SYNC_PRODUCT_USERS_ACTIVITY = "SyncProductUsers";
+  public static final String ACTIVATE_CONTRACT_ACTIVITY = "ActivateContract";
+  public static final String CLEAR_CONTRACT_UPDATE_REQUIRED_ACTIVITY = "ClearContractUpdateRequired";
+  public static final String GET_CONTRACT_UPDATE_ONBOARDING_IDS_ACTIVITY = "GetContractUpdateOnboardingIds";
+  public static final String REJECT_PENDING_CONTRACT_UPDATES_ACTIVITY = "RejectPendingContractUpdates";
   public static final String CREATE_USERS_ACTIVITY = "CreateUsers";
   public static final String SEND_ONBOARDING_NOTIFICATION = "SendOnboardingNotification";
   public static final String CREATE_AGGREGATE_ONBOARDING_REQUEST_ACTIVITY =

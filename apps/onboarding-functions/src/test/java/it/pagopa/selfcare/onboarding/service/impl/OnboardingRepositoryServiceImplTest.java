@@ -231,4 +231,20 @@ class OnboardingRepositoryServiceImplTest {
     assertSame(expected, actual);
     verify(onboardingRepository).findByOnboardingUsers("institution-id", "product-id");
   }
+
+  @Test
+  @SuppressWarnings("unchecked")
+  void updateStatusByQuery_shouldSetStatusAndUpdatedAt() {
+    OnboardingRepository onboardingRepository = Mockito.mock(OnboardingRepository.class);
+    MongoCollection<Onboarding> collection = Mockito.mock(MongoCollection.class);
+    when(onboardingRepository.mongoCollection()).thenReturn(collection);
+    OnboardingRepositoryServiceImpl service = new OnboardingRepositoryServiceImpl(onboardingRepository);
+    Document query = new Document("referenceOnboardingId", "adhesion-id");
+    LocalDateTime now = LocalDateTime.now();
+
+    service.updateStatusByQuery(query, "REJECTED", now);
+
+    verify(collection).updateMany(query,
+        new Document("$set", new Document("status", "REJECTED").append("updatedAt", now)));
+  }
 }

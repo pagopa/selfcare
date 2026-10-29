@@ -1440,6 +1440,39 @@
         } ]
       }
     },
+    "/v1/documents/{onboardingId}/activate" : {
+      "put" : {
+        "summary" : "Activate a signed contract",
+        "description" : "Marks the signed contract for the onboarding as active. Repeated calls are safe and do not change the activation timestamp.",
+        "operationId" : "activateContract",
+        "tags" : [ "Document Controller" ],
+        "parameters" : [ {
+          "name" : "onboardingId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : { }
+            }
+          },
+          "401" : {
+            "description" : "Not Authorized"
+          },
+          "403" : {
+            "description" : "Not Allowed"
+          }
+        },
+        "security" : [ {
+          "SecurityScheme" : [ ]
+        } ]
+      }
+    },
     "/v1/documents/{onboardingId}/attachment-list" : {
       "get" : {
         "summary" : "Retrieve attachment names for a given onboarding",

@@ -116,6 +116,7 @@ public class InstitutionFunctions {
     String filtersString = objectMapper.writeValueAsString(filters);
 
     processDocumentsDeletions(ctx, onboarding);
+    processContractUpdatesDeletions(ctx, onboarding);
     processOnboardingDeletions(ctx, filtersString);
     processUserDeletions(ctx, filters);
     processSendEmailDeletions(ctx, onboarding.getId());
@@ -205,6 +206,45 @@ public class InstitutionFunctions {
       .await();
 
     logger.debug("processDocumentsDeletions completed");
+  }
+
+  private void processContractUpdatesDeletions(TaskOrchestrationContext ctx, Onboarding onboarding) throws JsonProcessingException {
+    String adhesionFilter = objectMapper.writeValueAsString(
+        EntityFilter.builder().value(onboarding.getId()).tenantId(onboarding.getTenantId()).build());
+
+    String contractUpdateIds = ctx.callActivity(
+        GET_CONTRACT_UPDATE_ONBOARDING_IDS_ACTIVITY, adhesionFilter, optionsRetry, String.class).await();
+    for (String contractUpdateId : objectMapper.readValue(contractUpdateIds, String[].class)) {
+      String contractUpdateFilter = objectMapper.writeValueAsString(
+          EntityFilter.builder().value(contractUpdateId).tenantId(onboarding.getTenantId()).build());
+      ctx.callActivity(DELETE_TOKEN_CONTRACT_ACTIVITY_NAME, contractUpdateFilter, optionsRetry, String.class).await();
+    }
+
+    ctx.callActivity(REJECT_PENDING_CONTRACT_UPDATES_ACTIVITY, adhesionFilter, optionsRetry, String.class).await();
+  }
+
+  @FunctionName(GET_CONTRACT_UPDATE_ONBOARDING_IDS_ACTIVITY)
+  public String getContractUpdateOnboardingIds(
+    @DurableActivityTrigger(name = "filtersString") String filtersString,
+    final ExecutionContext context) throws JsonProcessingException {
+    context.getLogger().info(() ->
+        String.format(FORMAT_LOGGER_INSTITUTION_STRING, GET_CONTRACT_UPDATE_ONBOARDING_IDS_ACTIVITY, filtersString));
+    EntityFilter entityFilter = objectMapper.readValue(filtersString, EntityFilter.class);
+    try (TenantContext.Scope ignored = TenantContext.open(entityFilter.getTenantId())) {
+      return objectMapper.writeValueAsString(onboardingService.findContractUpdateIdsWithContract(entityFilter.getValue()));
+    }
+  }
+
+  @FunctionName(REJECT_PENDING_CONTRACT_UPDATES_ACTIVITY)
+  public void rejectPendingContractUpdates(
+    @DurableActivityTrigger(name = "filtersString") String filtersString,
+    final ExecutionContext context) throws JsonProcessingException {
+    context.getLogger().info(() ->
+        String.format(FORMAT_LOGGER_INSTITUTION_STRING, REJECT_PENDING_CONTRACT_UPDATES_ACTIVITY, filtersString));
+    EntityFilter entityFilter = objectMapper.readValue(filtersString, EntityFilter.class);
+    try (TenantContext.Scope ignored = TenantContext.open(entityFilter.getTenantId())) {
+      onboardingService.rejectPendingContractUpdates(entityFilter.getValue());
+    }
   }
 
   private void processSendEmailDeletions(TaskOrchestrationContext ctx, String onboardingId) {

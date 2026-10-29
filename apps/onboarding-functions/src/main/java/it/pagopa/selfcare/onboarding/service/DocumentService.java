@@ -24,6 +24,8 @@ public interface DocumentService {
 
   Response deleteUserAttachments(String onboardingId);
 
+  Response activateContract(String onboardingId);
+
   DocumentResponse getDocumentByOnboardingId(String onboardingId);
 
   DocumentResponse getDocumentByOnboardingIdOrNull(String onboardingId);

@@ -400,6 +400,8 @@ public class OnboardingFunctions {
         case USERS_EA ->
             workflowExecutor =
                 new WorkflowExecutorForUsersEa(objectMapper, optionsRetry, onboardingMapper);
+        case CONTRACT_UPDATE ->
+            workflowExecutor = new WorkflowExecutorContractUpdate(objectMapper, optionsRetry);
         default -> {
           String errorMessage =
               String.format(
@@ -912,6 +914,51 @@ public class OnboardingFunctions {
             ONBOARDING_ID, onboarding.getId(),
             PRODUCT_ID, onboarding.getProductId()));
     runWithTenant(onboarding, () -> completionService.overridePendingOnboardings(onboarding));
+  }
+
+  @FunctionName(SYNC_PRODUCT_USERS_ACTIVITY)
+  public void syncProductUsers(
+      @DurableActivityTrigger(name = "onboardingString") String onboardingString,
+      final ExecutionContext context) {
+    Onboarding onboarding = readOnboardingValue(objectMapper, onboardingString);
+    telemetryService.trackFunction(
+        SYNC_PRODUCT_USERS_ACTIVITY,
+        String.format(FORMAT_LOGGER_ONBOARDING_STRING, SYNC_PRODUCT_USERS_ACTIVITY, onboardingString),
+        SeverityLevel.Information,
+        Map.of(
+            ONBOARDING_ID, onboarding.getId(),
+            PRODUCT_ID, onboarding.getProductId()));
+    runWithTenant(onboarding, () -> completionService.syncProductUsers(onboarding));
+  }
+
+  @FunctionName(ACTIVATE_CONTRACT_ACTIVITY)
+  public void activateContract(
+      @DurableActivityTrigger(name = "onboardingString") String onboardingString,
+      final ExecutionContext context) {
+    Onboarding onboarding = readOnboardingValue(objectMapper, onboardingString);
+    telemetryService.trackFunction(
+        ACTIVATE_CONTRACT_ACTIVITY,
+        String.format(FORMAT_LOGGER_ONBOARDING_STRING, ACTIVATE_CONTRACT_ACTIVITY, onboardingString),
+        SeverityLevel.Information,
+        Map.of(
+            ONBOARDING_ID, onboarding.getId(),
+            PRODUCT_ID, onboarding.getProductId()));
+    runWithTenant(onboarding, () -> completionService.activateContract(onboarding));
+  }
+
+  @FunctionName(CLEAR_CONTRACT_UPDATE_REQUIRED_ACTIVITY)
+  public void clearContractUpdateRequired(
+      @DurableActivityTrigger(name = "onboardingString") String onboardingString,
+      final ExecutionContext context) {
+    Onboarding onboarding = readOnboardingValue(objectMapper, onboardingString);
+    telemetryService.trackFunction(
+        CLEAR_CONTRACT_UPDATE_REQUIRED_ACTIVITY,
+        String.format(FORMAT_LOGGER_ONBOARDING_STRING, CLEAR_CONTRACT_UPDATE_REQUIRED_ACTIVITY, onboardingString),
+        SeverityLevel.Information,
+        Map.of(
+            ONBOARDING_ID, onboarding.getId(),
+            PRODUCT_ID, onboarding.getProductId()));
+    runWithTenant(onboarding, () -> completionService.clearContractUpdateRequired(onboarding));
   }
 
   @FunctionName(CREATE_ONBOARDING_ACTIVITY)

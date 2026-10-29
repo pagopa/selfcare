@@ -33,6 +33,7 @@ import org.openapi.quarkus.user_registry_json.model.CertifiableFieldResourceOfst
 import org.openapi.quarkus.user_registry_json.model.UserResource;
 import org.openapi.quarkus.user_registry_json.model.WorkContactResource;
 
+import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.util.*;
 import java.util.logging.Logger;
@@ -1051,6 +1052,34 @@ class OnboardingServiceTest {
         Mockito.verify(onboardingRepositoryService, times(1))
                 .findByOnboardingUsers("institutionId", productId);
 
+    }
+
+    @Test
+    void findContractUpdateIdsWithContract() {
+        Onboarding update = new Onboarding();
+        update.setId("updateId");
+        ArgumentCaptor<Document> queryCaptor = ArgumentCaptor.forClass(Document.class);
+        when(onboardingRepositoryService.findByQuery(queryCaptor.capture())).thenReturn(List.of(update));
+
+        List<String> ids = onboardingService.findContractUpdateIdsWithContract("adhesionId");
+
+        assertEquals(List.of("updateId"), ids);
+        assertEquals(new Document("referenceOnboardingId", "adhesionId")
+                        .append("workflowType", "CONTRACT_UPDATE")
+                        .append("status", new Document("$in", List.of("PENDING", "COMPLETED"))),
+                queryCaptor.getValue());
+    }
+
+    @Test
+    void rejectPendingContractUpdates() {
+        onboardingService.rejectPendingContractUpdates("adhesionId");
+
+        Mockito.verify(onboardingRepositoryService).updateStatusByQuery(
+                eq(new Document("referenceOnboardingId", "adhesionId")
+                        .append("workflowType", "CONTRACT_UPDATE")
+                        .append("status", new Document("$in", List.of("REQUEST", "PENDING")))),
+                eq("REJECTED"),
+                any(LocalDateTime.class));
     }
 
     @Test
