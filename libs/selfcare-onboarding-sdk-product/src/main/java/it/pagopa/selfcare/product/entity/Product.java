@@ -50,6 +50,7 @@ public class Product {
     private List<OriginEntry> institutionOrigins;
     private boolean allowIndividualOnboarding;
     private boolean allowCompanyOnboarding;
+    private boolean contractEnabled;
 
     /**
      * Configuration of the multistep signing flow.
@@ -578,6 +579,14 @@ public class Product {
 
     public void setAllowCompanyOnboarding(boolean allowCompanyOnboarding) {
         this.allowCompanyOnboarding = allowCompanyOnboarding;
+    }
+
+    public boolean isContractEnabled() {
+        return contractEnabled;
+    }
+
+    public void setContractEnabled(boolean contractEnabled) {
+        this.contractEnabled = contractEnabled;
     }
 
     public List<OriginEntry> getInstitutionOrigins() {
