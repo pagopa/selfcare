@@ -68,6 +68,7 @@ class ProductMapperTest {
       assertEquals(
           product.getFeatures().isRequiresParentOnboarding(),
           productEntity.isRequiresParentOnboarding());
+      assertTrue(productEntity.isContractEnabled());
       assertEquals(product.getDescription(), productEntity.getDescription());
       assertEquals("identity.it", productEntity.getIdentityTokenAudience());
       String jsonEntity =

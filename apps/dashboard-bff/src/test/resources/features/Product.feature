@@ -212,6 +212,8 @@ Feature: Product
     Given user login with username "j.doe" and password "test"
     When I send a GET request to "/v1/institutions/products" to retrieve products tree
     Then the response status should be 200
+    And The dashboard response body contains:
+      | find { it.id == 'prod-io' }.contractEnabled | true |
 
   Scenario: Successfully retrieving my permissions
     Given user login with username "b.king" and password "test"

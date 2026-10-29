@@ -19,6 +19,7 @@
     "delegable": false,
     "invoiceable": true,
     "requiresParentOnboarding": true,
+    "contractEnabled": true,
     "expirationDays": 30,
     "enabled": true
   },
