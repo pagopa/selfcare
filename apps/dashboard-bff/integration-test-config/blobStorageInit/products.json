@@ -18,6 +18,7 @@
     "description": "Offri ai cittadini i servizi del tuo ente in un unico canale",
     "enabled": true,
     "id": "prod-io",
+    "contractEnabled": true,
     "identityTokenAudience": "api.io.selfcare.pagopa.it",
     "institutionContractMappings": {
       "default": {

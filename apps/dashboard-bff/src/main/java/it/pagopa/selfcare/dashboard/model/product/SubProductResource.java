@@ -40,4 +40,7 @@ public class SubProductResource {
     @Schema(description = "${swagger.dashboard.products.model.invoiceable}")
     private boolean invoiceable;
 
+    @Schema(description = "${swagger.dashboard.products.model.contractEnabled}")
+    private boolean contractEnabled;
+
 }
