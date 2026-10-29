@@ -150,6 +150,52 @@ locals {
 
   registry_proxy_app_settings = [
     {
+      name  = "TENANT_SUPPORTED_TENANTS"
+      value = "AR"
+    },
+    {
+      name  = "TENANT_DEFAULT"
+      value = "AR"
+    },
+    {
+      name = "SELFCARE_TENANT_DATA_ISOLATION"
+      value = jsonencode({
+        AR = {
+          jwt = {
+            publicKeyEnvVar = "JWT_PUBLIC_KEY_AR"
+            issuers         = ["SPID", "PAGOPA"]
+            audiences       = ["api.uat.selfcare.pagopa.it"]
+          }
+          registryProxy = {
+            search = {
+              endpoint        = "https://selc-u-weu-ar-srch.search.windows.net"
+              onboardingIndex = "onboarding-index-ar"
+              apiKeyEnvVar    = "AZURE_SEARCH_API_KEY"
+            }
+            nationalRegistries = {
+              endpoint     = "https://api-selcpg.uat.notifichedigitali.it/national-registries-private"
+              apiKeyEnvVar = "NATIONAL_REGISTRY_API_KEY_AR"
+            }
+            pdnd = {
+              clientIdEnvVar   = "PDND_INFOCAMERE_CLIENT_ID_AR"
+              privateKeyEnvVar = "PDND_INFOCAMERE_PRIVATE_KEY_AR"
+              kidEnvVar        = "PDND_INFOCAMERE_KID_AR"
+              purposeIdEnvVar  = "PDND_INFOCAMERE_PURPOSE_ID_AR"
+              audience         = "auth.interop.pagopa.it/client-assertion"
+            }
+            pdndInvitalia = {
+              clientIdEnvVar   = "PDND_INVITALIA_INFOCAMERE_CLIENT_ID_AR"
+              privateKeyEnvVar = "PDND_INVITALIA_INFOCAMERE_PRIVATE_KEY_AR"
+              kidEnvVar        = "PDND_INVITALIA_INFOCAMERE_KID_AR"
+              purposeIdEnvVar  = "PDND_INVITALIA_INFOCAMERE_PURPOSE_ID_AR"
+              audience         = "auth.interop.pagopa.it/client-assertion"
+            }
+            invitaliaProducts = ["prod-idpay-merchant", "prod-registro-beni"]
+          }
+        }
+      })
+    },
+    {
       name  = "JAVA_TOOL_OPTIONS"
       value = "-javaagent:applicationinsights-agent.jar -XX:MaxRAMPercentage=75.0"
     },
@@ -242,10 +288,6 @@ locals {
       value = "https://auth.interop.pagopa.it"
     },
     {
-      name  = "PDND_INFOCAMERE_AUDIENCE"
-      value = "auth.interop.pagopa.it/client-assertion"
-    },
-    {
       name  = "IVASS_BASE_URL"
       value = "https://infostat-ivass.bancaditalia.it"
     },
@@ -296,35 +338,30 @@ locals {
     {
       name  = "PDND_SKIP_LOCALIZZAZIONE_NODES"
       value = "false"
-    },
-    {
-      name  = "PDND_INVITALIA_PRODUCTS"
-      value = "prod-idpay-merchant, prod-registro-beni"
     }
   ]
 
   secrets_names = {
-    "BLOB_STORAGE_CONN_STRING"              = "web-storage-connection-string"
-    "NATIONAL_REGISTRY_API_KEY"             = "national-registry-api-key"
-    "APPLICATIONINSIGHTS_CONNECTION_STRING" = "appinsights-connection-string"
-    "JWT_TOKEN_PUBLIC_KEY"                  = "jwt-public-key"
-    "GEOTAXONOMY_API_KEY"                   = "geotaxonomy-api-key"
-    "ANAC_FTP_PASSWORD"                     = "anac-ftp-password"
-    "ANAC_FTP_KNOWN_HOST"                   = "anac-ftp-known-host"
-    "PDND_INFOCAMERE_PRIVATE_KEY"           = "infocamere-interop-certificate-client-private-key"
-    "PDND_INFOCAMERE_CLIENT_ID"             = "infocamere-interop-client-id"
-    "PDND_INFOCAMERE_KID"                   = "infocamere-interop-kid"
-    "PDND_INFOCAMERE_PURPOSE_ID"            = "infocamere-interop-purpose-id"
-    "PDND_INVITALIA_INFOCAMERE_PRIVATE_KEY" = "invitalia-interop-certificate-client-private-key"
-    "PDND_INVITALIA_INFOCAMERE_CLIENT_ID"   = "invitalia-interop-client-id"
-    "PDND_INVITALIA_INFOCAMERE_KID"         = "invitalia-interop-kid"
-    "PDND_INVITALIA_INFOCAMERE_PURPOSE_ID"  = "invitalia-interop-purpose-id"
-    "JWT-BEARER-TOKEN-FUNCTIONS"            = "jwt-bearer-token-functions"
-    "AZURE_SEARCH_API_KEY"                  = "azure-search-api-key"
-    "APPINSIGHTS_CONNECTION_STRING"         = "appinsights-connection-string"
-    "ONBOARDING_DATA_ENCRIPTION_KEY"        = "onboarding-data-encryption-key"
-    "ONBOARDING_DATA_ENCRIPTION_IV"         = "onboarding-data-encryption-iv"
-    "REDIS_PASSWORD"                        = "redis-primary-access-key"
+    "BLOB_STORAGE_CONN_STRING"                 = "web-storage-connection-string"
+    "NATIONAL_REGISTRY_API_KEY_AR"             = "national-registry-api-key"
+    "APPLICATIONINSIGHTS_CONNECTION_STRING"    = "appinsights-connection-string"
+    "JWT_PUBLIC_KEY_AR"                        = "jwt-public-key"
+    "GEOTAXONOMY_API_KEY"                      = "geotaxonomy-api-key"
+    "ANAC_FTP_PASSWORD"                        = "anac-ftp-password"
+    "ANAC_FTP_KNOWN_HOST"                      = "anac-ftp-known-host"
+    "PDND_INFOCAMERE_PRIVATE_KEY_AR"           = "infocamere-interop-certificate-client-private-key"
+    "PDND_INFOCAMERE_CLIENT_ID_AR"             = "infocamere-interop-client-id"
+    "PDND_INFOCAMERE_KID_AR"                   = "infocamere-interop-kid"
+    "PDND_INFOCAMERE_PURPOSE_ID_AR"            = "infocamere-interop-purpose-id"
+    "PDND_INVITALIA_INFOCAMERE_PRIVATE_KEY_AR" = "invitalia-interop-certificate-client-private-key"
+    "PDND_INVITALIA_INFOCAMERE_CLIENT_ID_AR"   = "invitalia-interop-client-id"
+    "PDND_INVITALIA_INFOCAMERE_KID_AR"         = "invitalia-interop-kid"
+    "PDND_INVITALIA_INFOCAMERE_PURPOSE_ID_AR"  = "invitalia-interop-purpose-id"
+    "AZURE_SEARCH_API_KEY"                     = "azure-search-api-key"
+    "APPINSIGHTS_CONNECTION_STRING"            = "appinsights-connection-string"
+    "ONBOARDING_DATA_ENCRIPTION_KEY"           = "onboarding-data-encryption-key"
+    "ONBOARDING_DATA_ENCRIPTION_IV"            = "onboarding-data-encryption-iv"
+    "REDIS_PASSWORD"                           = "redis-primary-access-key"
   }
 
   app_settings = concat(local.registry_proxy_app_settings, local.dapr_settings)

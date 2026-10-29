@@ -231,12 +231,11 @@ class PDNDInfoCamereConnectorImplTest {
 
         when(DataEncryptionUtils.encrypt(any())).thenReturn(encTaxCode);
         when(pdndCacheableService.getEncryptedPDNDImpresa(any(), any())).thenReturn(encTaxCode);
+        when(DataEncryptionUtils.decrypt(encTaxCode)).thenReturn("not-json");
 
         // when
-        PDNDBusiness pdndBusiness = pdndInfoCamereConnector.retrieveInstitutionPdndByTaxCode(taxCode, "prod-test");
-
-        // then
-        assertNull(pdndBusiness);
+        assertThrows(IllegalStateException.class,
+                () -> pdndInfoCamereConnector.retrieveInstitutionPdndByTaxCode(taxCode, "prod-test"));
     }
 
     @Test
@@ -306,4 +305,3 @@ class PDNDInfoCamereConnectorImplTest {
         when(pdndSecretValueResolver.resolve(any())).thenReturn(PdndSecretValue.builder().build());
     }
 }
-

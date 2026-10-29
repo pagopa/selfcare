@@ -177,4 +177,16 @@ class TenantRegistryTest {
                         "DefaultEndpointsProtocol=https;AccountName=test;"
                                 + "AccountKey=dGVzdA==;EndpointSuffix=core.windows.net");
     }
+
+    @Test
+    void statelessServicesCanOptOutOfMongoButCannotAccessAnUnmappedDatabase() {
+        var environment = configuredEnvironment().withProperty("tenant.mongodb.required", "false");
+        var registry = new TenantRegistry(new ObjectMapper(), environment,
+                "{\"AR\":{\"jwt\":{\"publicKeyEnvVar\":\"JWT_AR\"}}}", "AR", "");
+        registry.initialize();
+        assertEquals("public-key", registry.jwtPublicKey("AR").orElseThrow());
+        assertThrows(IllegalStateException.class, () -> registry.mongoConnectionString("AR"));
+        environment.setProperty("tenant.mongodb.required", "true");
+        assertThrows(IllegalStateException.class, registry::initialize);
+    }
 }

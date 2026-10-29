@@ -18,6 +18,10 @@ The current tenants are:
 - `AR`: `selfcare.pagopa.it`
 - `PNPG`: `imprese.notifichedigitali.it`
 
+For the Spring `registry-proxy` adoption, resource classification, canonical
+registry schema and consolidation gates, see
+[`apps/registry-proxy/README.md`](../../../registry-proxy/README.md#multitenancy-step-2).
+
 ## Inherited Baseline from Step 1
 
 The following decisions are already established and are not reopened by this step:

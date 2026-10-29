@@ -4,7 +4,8 @@ import it.pagopa.selfcare.party.registry_proxy.connector.api.SearchServiceConnec
 import it.pagopa.selfcare.party.registry_proxy.connector.model.OnboardingIndex;
 import it.pagopa.selfcare.party.registry_proxy.connector.model.OnboardingIndexSearch;
 import it.pagopa.selfcare.party.registry_proxy.connector.model.SearchServiceStatus;
-import it.pagopa.selfcare.party.registry_proxy.connector.rest.client.AzureSearchRestClient;
+import it.pagopa.selfcare.party.registry_proxy.connector.rest.client.OnboardingSearchRestClient;
+import it.pagopa.selfcare.party.registry_proxy.connector.rest.config.RegistryProxyTenantResources;
 import it.pagopa.selfcare.party.registry_proxy.connector.rest.model.mapper.SearchServiceMapper;
 import it.pagopa.selfcare.party.registry_proxy.connector.rest.model.search.SearchServiceIndexRequest;
 import it.pagopa.selfcare.party.registry_proxy.connector.rest.model.search.SearchServiceIndexResponse;
@@ -25,12 +26,16 @@ public class SearchServiceConnectorImpl implements SearchServiceConnector {
   private static final int SEARCH_MIN_TOKEN_LENGTH = 3;
   private static final String ONBOARDING_STATUS_OVERRIDDEN = "OVERRIDDEN";
 
-  private final AzureSearchRestClient azureSearchRestClient;
+  private final OnboardingSearchRestClient azureSearchRestClient;
   private final SearchServiceMapper searchServiceMapper;
+  private final RegistryProxyTenantResources tenantResources;
 
-  public SearchServiceConnectorImpl(AzureSearchRestClient azureSearchRestClient, SearchServiceMapper searchServiceMapper) {
+  public SearchServiceConnectorImpl(OnboardingSearchRestClient azureSearchRestClient,
+                                   SearchServiceMapper searchServiceMapper,
+                                   RegistryProxyTenantResources tenantResources) {
     this.azureSearchRestClient = azureSearchRestClient;
     this.searchServiceMapper = searchServiceMapper;
+    this.tenantResources = tenantResources;
   }
 
   @Override
@@ -50,12 +55,20 @@ public class SearchServiceConnectorImpl implements SearchServiceConnector {
       searchServiceIndexRequest.setValue(List.of(searchServiceMapper.toSearchServiceOnboardingIndex(onboardingIndex)));
     }
 
-    return azureSearchRestClient.indexOnboarding(searchServiceIndexRequest);
+    var resource = tenantResources.search();
+    return azureSearchRestClient.indexOnboarding(
+        RegistryProxyTenantResources.endpoint(resource.endpoint()), resource.onboardingIndex(),
+        tenantResources.secret(resource.apiKeyEnvVar()), searchServiceIndexRequest);
   }
 
   @Override
   public OnboardingIndexSearch searchOnboarding(String search, String filter, Long top, Long skip, String orderBy) {
-    final SearchServiceIndexResponse<SearchServiceOnboardingIndex> response = azureSearchRestClient.searchOnboarding(optimizeSearchString(search), SEARCH_MODE_ALL, filter, true, top, skip, null, orderBy);
+    var resource = tenantResources.search();
+    final SearchServiceIndexResponse<SearchServiceOnboardingIndex> response =
+        azureSearchRestClient.searchOnboarding(
+            RegistryProxyTenantResources.endpoint(resource.endpoint()), resource.onboardingIndex(),
+            tenantResources.secret(resource.apiKeyEnvVar()), optimizeSearchString(search),
+            SEARCH_MODE_ALL, filter, true, top, skip, orderBy);
     return searchServiceMapper.toOnboardingIndexSearch(response);
   }
 

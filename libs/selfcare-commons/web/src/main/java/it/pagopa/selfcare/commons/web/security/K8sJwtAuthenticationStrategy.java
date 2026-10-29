@@ -29,6 +29,8 @@ public class K8sJwtAuthenticationStrategy implements JwtAuthenticationStrategy {
     private final TenantRegistry tenantRegistry;
     private final String defaultTenantId;
 
+    @Value("${jwt.tenant-claim-required:false}")
+    private boolean tenantClaimRequired;
 
     @Autowired
     public K8sJwtAuthenticationStrategy(
@@ -53,6 +55,9 @@ public class K8sJwtAuthenticationStrategy implements JwtAuthenticationStrategy {
     @Override
     public JwtAuthenticationToken authenticate(JwtAuthenticationToken authentication) throws AuthenticationException {
         log.trace("authenticate start");
+        if (tenantClaimRequired) {
+            throw new TenantValidationException();
+        }
         log.debug(LogUtils.CONFIDENTIAL_MARKER, "authenticate authentication = {}", authentication);
 
         ServiceAccount user;

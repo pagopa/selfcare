@@ -2,6 +2,7 @@ package it.pagopa.selfcare.commons.web.security;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.JwtException;
 import it.pagopa.selfcare.commons.tenant.TenantRegistry;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.ObjectProvider;
@@ -82,7 +83,27 @@ public class JwtService {
         if (StringUtils.hasText(expectedAudience)) {
             parser.requireAudience(expectedAudience);
         }
-        return parser.parseClaimsJws(token).getBody();
+        var parsed = parser.parseClaimsJws(token);
+        Claims claims = parsed.getBody();
+        if (tenantRegistry != null && tenantRegistry.isConfigured()) {
+            var jwt = tenantRegistry.resolve(tenantId).jwt();
+            if (jwt != null) {
+                if (!jwt.issuers().isEmpty()
+                        && (claims.getIssuer() == null || !jwt.issuers().contains(claims.getIssuer()))) {
+                    throw new JwtException("Invalid token issuer");
+                }
+                if (!jwt.audiences().isEmpty()
+                        && (claims.getAudience() == null || !jwt.audiences().contains(claims.getAudience()))) {
+                    throw new JwtException("Invalid token audience");
+                }
+                if ((!jwt.issuers().isEmpty() || !jwt.audiences().isEmpty())
+                        && (!"RS256".equals(parsed.getHeader().getAlgorithm())
+                        || claims.getExpiration() == null)) {
+                    throw new JwtException("Invalid token algorithm or expiration");
+                }
+            }
+        }
+        return claims;
     }
 
     private PublicKey resolveVerificationKey(String tenantId) {
