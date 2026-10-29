@@ -152,6 +152,17 @@
       </modules>
     </profile>
     <profile>
+      <id>webhook-consumer</id>
+      <activation>
+        <file>
+          <exists>webhook-consumer/pom.xml</exists>
+        </file>
+      </activation>
+      <modules>
+        <module>webhook-consumer</module>
+      </modules>
+    </profile>
+    <profile>
       <id>user-cdc</id>
       <activation>
         <file>
