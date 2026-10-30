@@ -43,7 +43,7 @@ on:
 jobs:
 
   plan:
-    uses: pagopa/dx/.github/workflows/infra_plan.yaml@main
+    uses: pagopa/dx/.github/workflows/infra_plan.yaml@a48a894c64c3f04404ebe274ce9a750c903c7d70 # main
     name: "${{ inputs.env }}-${{ inputs.domain }} Cert Infra Plan"
     if: ${{ !startsWith(github.ref_name, 'releases/') }}
     secrets: inherit
