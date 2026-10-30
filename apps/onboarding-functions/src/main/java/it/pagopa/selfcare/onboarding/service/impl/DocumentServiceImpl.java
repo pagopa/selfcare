@@ -6,7 +6,6 @@ import it.pagopa.selfcare.onboarding.service.DocumentService;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.ws.rs.WebApplicationException;
 import jakarta.ws.rs.core.Response;
-import lombok.extern.slf4j.Slf4j;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.openapi.quarkus.document_json.api.DocumentContentControllerApi;
 import org.openapi.quarkus.document_json.api.DocumentControllerApi;
@@ -20,7 +19,6 @@ import java.util.Collections;
 import java.util.List;
 
 @ApplicationScoped
-@Slf4j
 public class DocumentServiceImpl implements DocumentService {
 
   private final DocumentContentControllerApi documentContentControllerApi;
@@ -35,21 +33,7 @@ public class DocumentServiceImpl implements DocumentService {
 
   @Override
   public void createContractPdf(ContractPdfRequest request) {
-    try {
-      documentContentControllerApi.createContractPdf(request);
-    } catch (WebApplicationException e) {
-      Response response = e.getResponse();
-      if (response != null) {
-        String responseBody = safeReadEntity(response);
-        log.error(
-            "Document API createContractPdf failed - status: {}, responseBody: {}",
-            response.getStatus(),
-            responseBody);
-      } else {
-        log.error("Document API createContractPdf failed with null response", e);
-      }
-      throw e;
-    }
+    documentContentControllerApi.createContractPdf(request);
   }
 
   @Override
@@ -105,14 +89,6 @@ public class DocumentServiceImpl implements DocumentService {
         return Collections.emptyList();
       }
       throw e;
-    }
-  }
-
-  private String safeReadEntity(Response response) {
-    try {
-      return response.readEntity(String.class);
-    } catch (Exception ex) {
-      return "unavailable";
     }
   }
 }

@@ -47,33 +47,6 @@ class DocumentServiceImplTest {
     verify(contentApi).createContractPdf(req);
   }
 
-  @Test
-  void createContractPdf_shouldLogAndRethrowOnWebApplicationException() {
-    ContractPdfRequest req = new ContractPdfRequest();
-    Response errorResponse = Response.status(500).entity("boom").build();
-    WebApplicationException wae = new WebApplicationException(errorResponse);
-    doThrow(wae).when(contentApi).createContractPdf(req);
-
-    WebApplicationException thrown =
-        assertThrows(WebApplicationException.class, () -> service.createContractPdf(req));
-    assertSame(wae, thrown);
-  }
-
-  @Test
-  void createContractPdf_shouldLogAndRethrowOnWebApplicationExceptionWithNullResponse() {
-    ContractPdfRequest req = new ContractPdfRequest();
-    WebApplicationException nullResponseException =
-        new WebApplicationException("null-response") {
-          @Override
-          public Response getResponse() {
-            return null;
-          }
-        };
-    doThrow(nullResponseException).when(contentApi).createContractPdf(req);
-
-    assertThrows(WebApplicationException.class, () -> service.createContractPdf(req));
-  }
-
   // ---------------------------------------------------------------------------
   // createAttachmentPdf
   // ---------------------------------------------------------------------------
