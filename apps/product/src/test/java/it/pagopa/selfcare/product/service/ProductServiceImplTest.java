@@ -1613,6 +1613,32 @@ class ProductServiceImplTest {
   }
 
   @Test
+  void getValidProductById_ok_whenProductStatusIsNull() {
+    Product product = Product.builder().productId("prod-test").build();
+    when(productRepository.findProductById("prod-test")).thenReturn(Uni.createFrom().item(product));
+    mockToProductResponseEcho();
+
+    ProductResponse out = productService.getValidProduct("AR", "prod-test").await().indefinitely();
+
+    assertEquals("prod-test", out.getProductId());
+  }
+
+  @Test
+  void getProducts_keepsProductWithNullStatus_whenValidTrue() {
+    Product noStatus = Product.builder().productId("prod-a").build();
+    Product inactive = Product.builder().productId("prod-b").status(ProductStatus.INACTIVE).build();
+    when(productRepository.findLatestVersionForEachProduct())
+        .thenReturn(Uni.createFrom().item(List.of(noStatus, inactive)));
+    mockToProductResponseEcho();
+
+    List<ProductResponse> out =
+        productService.getProducts("AR", false, true).await().indefinitely();
+
+    assertEquals(1, out.size());
+    assertEquals("prod-a", out.get(0).getProductId());
+  }
+
+  @Test
   void getProducts_excludesNotValid_whenValidTrue() {
     // given
     Product root = Product.builder().productId("prod-a").status(ProductStatus.ACTIVE).build();
