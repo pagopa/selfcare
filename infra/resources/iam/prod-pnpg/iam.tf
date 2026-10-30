@@ -22,27 +22,6 @@ module "local" {
 
 
 ###############################################################################
-# APIM
-###############################################################################
-
-module "apim_api" {
-  source              = "../../_modules/apim_api"
-  apim_name           = module.local.config.apim_name
-  apim_rg             = module.local.config.apim_rg
-  api_name            = "selc-${module.local.config.env_short}-${module.local.config.domain}-api-iam"
-  display_name        = "IAM PNPG API"
-  base_path           = "imprese/iam"
-  private_dns_name    = "selc-${module.local.config.env_short}-${module.local.config.domain}-iam-ms-ca.${module.local.config.private_dns_name_domain}"
-  dns_zone_prefix     = module.local.config.dns_zone_prefix
-  api_dns_zone_prefix = module.local.config.api_dns_zone_prefix
-  openapi_path        = "../../../../apps/iam/src/main/docs/openapi.json"
-  tenant_ids          = module.local.config.tenant_ids
-  tenant_hosts        = module.local.config.tenant_hosts
-
-  api_operation_policies = []
-}
-
-###############################################################################
 # CosmosDB
 ###############################################################################
 
@@ -135,7 +114,7 @@ locals {
       value = local.tenant_id_iam_ms
     },
     {
-      # APIM strips X-Tenant-Id and not every internal caller sends it yet:
+      # Not every internal caller sends X-Tenant-Id yet:
       # requests without tenant fall back to TENANT_DEFAULT.
       name  = "TENANT_ENFORCEMENT_ENABLED"
       value = "false"
