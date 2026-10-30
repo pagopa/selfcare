@@ -384,7 +384,7 @@ public class NotificationServiceImpl implements NotificationService {
                         try {
                             return Files.readAllBytes(path);
                         } catch (IOException e) {
-                            throw new GenericOnboardingException(e.getMessage());
+                            throw new GenericOnboardingException(e.getMessage(), e);
                         }
                     })
                     .orElse(null));

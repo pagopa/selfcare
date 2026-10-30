@@ -21,10 +21,12 @@ import it.pagopa.selfcare.onboarding.dto.OnboardingAggregateOrchestratorInput;
 import it.pagopa.selfcare.onboarding.dto.ManagingInstitutionGetEmailRequest;
 import it.pagopa.selfcare.onboarding.dto.OnboardingOrchestrationInput;
 import it.pagopa.selfcare.onboarding.dto.UserMail;
+import it.pagopa.selfcare.onboarding.entity.Institution;
 import it.pagopa.selfcare.onboarding.entity.Onboarding;
 import it.pagopa.selfcare.onboarding.entity.OnboardingAttachment;
 import it.pagopa.selfcare.onboarding.entity.OnboardingWorkflow;
 import it.pagopa.selfcare.onboarding.exception.GenericOnboardingException;
+import it.pagopa.selfcare.onboarding.exception.NonRetryableRestClientException;
 import it.pagopa.selfcare.onboarding.exception.ResourceNotFoundException;
 import it.pagopa.selfcare.onboarding.service.TelemetryService;
 import it.pagopa.selfcare.onboarding.mapper.OnboardingMapper;
@@ -40,6 +42,7 @@ import it.pagopa.selfcare.onboarding.utils.InstitutionUtils;
 import it.pagopa.selfcare.onboarding.utils.ProductConfigUtils;
 import it.pagopa.selfcare.onboarding.workflow.*;
 import jakarta.ws.rs.core.Response;
+import org.apache.commons.lang3.StringUtils;
 import org.openapi.quarkus.core_json.model.DelegationResponse;
 import org.openapi.quarkus.document_json.api.DocumentContentControllerApi;
 import org.openapi.quarkus.product_json.model.ManagingInstitution;
@@ -66,6 +69,7 @@ public class OnboardingFunctions {
 
   public static final String CREATED_NEW_ONBOARDING_ORCHESTRATION_WITH_INSTANCE_ID_MSG =
       "Created new Onboarding orchestration with instance ID = ";
+  private static final String UNKNOWN = "unknown";
   private static final String CREATED_NEW_BUILD_ATTACHMENTS_ORCHESTRATION_WITH_INSTANCE_ID_MSG =
       "Created new Build Attachments orchestration with instance ID = ";
   public static final String PRODUCT_ID = "productId";
@@ -116,11 +120,35 @@ public class OnboardingFunctions {
     this.userService = userService;
     this.functionInvocationLogger = functionInvocationLogger;
     this.httpJwtValidator = httpJwtValidator;
-    final int maxAttempts = retryPolicyConfig.maxAttempts();
-    final Duration firstRetryInterval = Duration.ofSeconds(retryPolicyConfig.firstRetryInterval());
-    RetryPolicy retryPolicy = new RetryPolicy(maxAttempts, firstRetryInterval);
-    retryPolicy.setBackoffCoefficient(retryPolicyConfig.backoffCoefficient());
-    optionsRetry = new TaskOptions(retryPolicy);
+    optionsRetry = new TaskOptions(retryHandler(retryPolicyConfig));
+  }
+
+  /**
+   * Same attempts and backoff as the durabletask {@link RetryPolicy} (identical durable timers, so
+   * in-flight instances replay unchanged), but stops immediately on definitive client errors.
+   */
+  static RetryHandler retryHandler(RetryPolicyConfig config) {
+    final long firstRetryMillis = Duration.ofSeconds(config.firstRetryInterval()).toMillis();
+    return retryContext -> {
+      int attempt = retryContext.getLastAttemptNumber();
+      if (attempt >= config.maxAttempts() || isNonRetryable(retryContext.getLastFailure())) {
+        return false;
+      }
+      long delayMillis =
+          Math.multiplyExact(firstRetryMillis, (long) Math.pow(config.backoffCoefficient(), attempt));
+      if (delayMillis > 0) {
+        retryContext.getOrchestrationContext().createTimer(Duration.ofMillis(delayMillis)).await();
+      }
+      return true;
+    };
+  }
+
+  private static boolean isNonRetryable(FailureDetails failure) {
+    String marker = NonRetryableRestClientException.class.getSimpleName();
+    return failure != null
+        && (StringUtils.contains(failure.getErrorType(), marker)
+            || StringUtils.contains(failure.getErrorMessage(), marker)
+            || StringUtils.contains(failure.getStackTrace(), marker));
   }
 
   /**
@@ -204,30 +232,41 @@ public class OnboardingFunctions {
     }
   }
 
+  /**
+   * Best-effort processing of a single aggregate: any failure is logged and rethrown to the batch
+   * orchestrator, which records it without blocking the other aggregates. The aggregator onboarding
+   * (input id) is never marked FAILED here: only the aggregate onboarding, once created.
+   */
   @FunctionName(ONBOARDINGS_AGGREGATE_ORCHESTRATOR)
   public void onboardingsAggregateOrchestrator(
       @DurableOrchestrationTrigger(name = "taskOrchestrationContext") TaskOrchestrationContext ctx,
       ExecutionContext functionContext) {
-    String onboardingId = null;
     String onboardingAggregate = ctx.getInput(String.class);
     OnboardingAggregateOrchestratorInput aggregateInput =
         readOnboardingAggregateOrchestratorInputValue(objectMapper, onboardingAggregate);
+    String aggregatorId = Objects.requireNonNullElse(aggregateInput.getId(), UNKNOWN);
+    String aggregateTaxCode =
+        Optional.ofNullable(aggregateInput.getAggregate()).map(Institution::getTaxCode).orElse(UNKNOWN);
     boolean existsDelegation;
     try (TenantContext.Scope ignored = TenantContext.open(aggregateInput.getTenantId())) {
-      onboardingId = aggregateInput.getId();
       existsDelegation =
           Boolean.parseBoolean(
               ctx.callActivity(
                       EXISTS_DELEGATION_ACTIVITY, onboardingAggregate, optionsRetry, String.class)
                   .await());
     } catch (TaskFailedException | GenericOnboardingException e) {
-      telemetryService.trackFunction(
-          functionContext.getFunctionName(),
-          "Error checking delegation, proceeding as if it exist: " + e.getMessage(),
-          SeverityLevel.Warning,
-          Map.of(ONBOARDING_ID, onboardingId == null ? "unknown" : onboardingId));
+      // Conservative choice: skip the aggregate rather than risk a duplicate delegation.
+      log(
+          ctx,
+          functionContext,
+          SeverityLevel.Error,
+          String.format(
+              "Error checking delegation for aggregate %s of aggregator %s, aggregate skipped: %s",
+              aggregateTaxCode, aggregatorId, e.getMessage()),
+          Map.of(ONBOARDING_ID, aggregatorId, "aggregateTaxCode", aggregateTaxCode));
       existsDelegation = true;
     }
+    String onboardingId = null;
     try (TenantContext.Scope ignored = TenantContext.open(aggregateInput.getTenantId())) {
       if (!existsDelegation) {
         onboardingId =
@@ -245,7 +284,9 @@ public class OnboardingFunctions {
             .await();
       }
     } catch (TaskFailedException | ResourceNotFoundException ex) {
-      handleOrchestratorException(ctx, functionContext, onboardingId, ex);
+      if (onboardingId != null) {
+        handleOrchestratorException(ctx, functionContext, onboardingId, ex);
+      }
       throw ex;
     }
   }
@@ -302,6 +343,7 @@ public class OnboardingFunctions {
         try {
           batchTasks.get(i).await();
         } catch (TaskFailedException e) {
+          batchInput.setFailedCount(batchInput.getFailedCount() + 1);
           String failedInput = currentBatch.get(i);
           log(
               ctx,
@@ -330,8 +372,10 @@ public class OnboardingFunctions {
       String nextInput = getAggregatesBatchInputString(objectMapper, batchInput);
       ctx.continueAsNew(nextInput);
     } else {
-      log(ctx, functionContext, SeverityLevel.Information,() -> String.format(
-          "Completed all aggregate batches for onboarding %s", batchInput.getOnboardingId()), Map.of(ONBOARDING_ID, batchInput.getOnboardingId()));
+      int failed = batchInput.getFailedCount();
+      log(ctx, functionContext, failed == 0 ? SeverityLevel.Information : SeverityLevel.Warning, () -> String.format(
+          "Completed all aggregate batches for onboarding %s: %d/%d aggregates failed (see previous errors)",
+          batchInput.getOnboardingId(), failed, allInputs.size()), Map.of(ONBOARDING_ID, batchInput.getOnboardingId()));
     }
   }
 
@@ -429,7 +473,7 @@ public class OnboardingFunctions {
               phantomApprovalMessage,
               SeverityLevel.Warning,
               Map.of(ONBOARDING_ID, onboardingId, PRODUCT_ID,
-                  onboarding.getProductId() != null ? onboarding.getProductId() : "unknown"));
+                  onboarding.getProductId() != null ? onboarding.getProductId() : UNKNOWN));
         }
         return;
       }
@@ -1176,7 +1220,7 @@ public class OnboardingFunctions {
           callWithTenant(
               onboarding,
               () -> productService.getValidProduct(onboarding.getProductId()).getManagingInstitutions());
-      context.getLogger().info(String.format("Found %d managing institution(s) for product %s", managingInstitutions.size(), onboarding.getProductId()));
+      context.getLogger().info(() -> String.format("Found %d managing institution(s) for product %s", managingInstitutions.size(), onboarding.getProductId()));
       return managingInstitutions;
   }
 
