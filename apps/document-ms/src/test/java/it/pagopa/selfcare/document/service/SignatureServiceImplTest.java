@@ -1067,6 +1067,22 @@ class SignatureServiceImplTest {
     }
 
     @Test
+    void signDocument_shouldSignWhenInstitutionDescriptionIsNull() throws Exception {
+        when(tenantPadesSignServiceResolver.resolve("AR"))
+                .thenReturn(signature("namirial", "Firma per ${institutionName} - ${productName}"));
+
+        File pdf = createTempFile("content");
+
+        ArgumentCaptor<SignatureInformation> captor = ArgumentCaptor.forClass(SignatureInformation.class);
+        doNothing().when(padesSignService).padesSign(any(), any(), captor.capture());
+
+        File result = service.signDocument(pdf, null, "TestProduct").await().indefinitely();
+
+        assertThat(result).isNotNull();
+        assertThat(captor.getValue().getReason()).isEqualTo("Firma per  - TestProduct");
+    }
+
+    @Test
     void signDocument_shouldThrowWhenPadesSignServiceFails() throws Exception {
         File pdf = createTempFile("content");
         doThrow(new RuntimeException("Signing failed")).when(padesSignService)

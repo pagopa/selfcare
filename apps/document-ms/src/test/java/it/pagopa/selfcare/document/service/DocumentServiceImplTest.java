@@ -10,6 +10,7 @@ import it.pagopa.selfcare.azurestorage.AzureBlobClient;
 import it.pagopa.selfcare.azurestorage.error.SelfcareAzureStorageException;
 import it.pagopa.selfcare.document.config.DocumentMsConfig;
 import it.pagopa.selfcare.document.storage.TenantBlobClientProvider;
+import it.pagopa.selfcare.document.exception.InvalidRequestException;
 import it.pagopa.selfcare.document.exception.ResourceNotFoundException;
 import it.pagopa.selfcare.document.model.StorageOrigin;
 import it.pagopa.selfcare.document.model.dto.request.DocumentBuilderRequest;
@@ -633,6 +634,43 @@ class DocumentServiceImplTest {
         Document saved = documentService.saveDocument(request).await().indefinitely();
 
         assertEquals("update-onboarding", saved.getRootOnboardingId());
+    }
+
+    @Test
+    void saveDocument_shouldThrowInvalidRequest_whenProductTitleIsBlankOnNewDocument() {
+        DocumentBuilderRequest request = DocumentBuilderRequest.builder()
+                .onboardingId(ONBOARDING_ID)
+                .productId("prod-io")
+                .documentType(DocumentType.INSTITUTION)
+                .templatePath("templates/template.pdf")
+                .productTitle(" ")
+                .build();
+        when(documentRepository.findByOnboardingId(ONBOARDING_ID)).thenReturn(Uni.createFrom().nullItem());
+
+        InvalidRequestException ex = assertThrows(InvalidRequestException.class,
+                () -> documentService.saveDocument(request).await().indefinitely());
+
+        assertEquals("002-1010", ex.getCode());
+        verify(documentRepository, never()).persist(any(Document.class));
+    }
+
+    @Test
+    void saveDocument_shouldThrowInvalidRequest_whenAttachmentNameIsMissingOnNewAttachment() {
+        DocumentBuilderRequest request = DocumentBuilderRequest.builder()
+                .onboardingId(ONBOARDING_ID)
+                .productId("prod-io")
+                .documentType(DocumentType.ATTACHMENT)
+                .templatePath("templates/template.pdf")
+                .productTitle("Product IO")
+                .build();
+        when(documentRepository.findAttachment(ONBOARDING_ID, DocumentType.ATTACHMENT.name(), null))
+                .thenReturn(Uni.createFrom().nullItem());
+
+        InvalidRequestException ex = assertThrows(InvalidRequestException.class,
+                () -> documentService.saveDocument(request).await().indefinitely());
+
+        assertEquals("002-1011", ex.getCode());
+        verify(documentRepository, never()).persist(any(Document.class));
     }
 
     @Test
