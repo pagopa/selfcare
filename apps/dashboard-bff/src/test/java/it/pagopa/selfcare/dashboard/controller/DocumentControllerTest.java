@@ -1,6 +1,9 @@
 package it.pagopa.selfcare.dashboard.controller;
 
+import it.pagopa.selfcare.dashboard.model.document.DocumentResource;
 import it.pagopa.selfcare.dashboard.model.document.DocumentStatusResource;
+import it.pagopa.selfcare.dashboard.model.document.DocumentType;
+import it.pagopa.selfcare.dashboard.model.document.DocumentsResource;
 import it.pagopa.selfcare.dashboard.model.document.ProductDocumentStatusResource;
 import it.pagopa.selfcare.dashboard.service.DocumentService;
 import org.junit.jupiter.api.BeforeEach;
@@ -72,6 +75,31 @@ class DocumentControllerTest extends BaseControllerTest {
                 .andExpect(status().isBadRequest());
 
         verifyNoInteractions(documentServiceMock);
+    }
+
+    @Test
+    void getDocuments() throws Exception {
+        // given
+        final String institutionId = "institutionId";
+        final String productId = "prod-pagopa";
+        when(documentServiceMock.getDocuments(institutionId, productId))
+                .thenReturn(new DocumentsResource(List.of(
+                        new DocumentResource("contract.pdf", DocumentType.INSTITUTION),
+                        new DocumentResource("Addendum", DocumentType.ATTACHMENT))));
+
+        // when
+        mockMvc.perform(MockMvcRequestBuilders
+                        .get(BASE_URL + "/institutions/{institutionId}/products/{productId}", institutionId, productId)
+                        .accept(APPLICATION_JSON_VALUE))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.documents[0].name", is("contract.pdf")))
+                .andExpect(jsonPath("$.documents[0].type", is("INSTITUTION")))
+                .andExpect(jsonPath("$.documents[1].name", is("Addendum")))
+                .andExpect(jsonPath("$.documents[1].type", is("ATTACHMENT")));
+
+        // then
+        verify(documentServiceMock, times(1)).getDocuments(institutionId, productId);
+        verifyNoMoreInteractions(documentServiceMock);
     }
 
 }

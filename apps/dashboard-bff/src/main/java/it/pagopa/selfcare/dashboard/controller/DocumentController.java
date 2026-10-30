@@ -5,6 +5,7 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import it.pagopa.selfcare.commons.base.logging.LogUtils;
 import it.pagopa.selfcare.dashboard.model.document.DocumentStatusResource;
+import it.pagopa.selfcare.dashboard.model.document.DocumentsResource;
 import it.pagopa.selfcare.dashboard.service.DocumentService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -38,6 +39,22 @@ public class DocumentController {
         DocumentStatusResource result = documentService.getDocumentStatus(institutionId, productIds);
         log.debug(LogUtils.CONFIDENTIAL_MARKER, "getDocumentStatus result = {}", result);
         log.trace("getDocumentStatus end");
+        return result;
+    }
+
+    @GetMapping(value = "/institutions/{institutionId}/products/{productId}", produces = MediaType.APPLICATION_JSON_VALUE)
+    @ResponseStatus(HttpStatus.OK)
+    @Operation(summary = "getDocuments", description = "${swagger.dashboard.documents.api.getDocuments}")
+    @PreAuthorize("hasPermission(new it.pagopa.selfcare.dashboard.security.FilterAuthorityDomain(#institutionId, #productId, null), 'Selc:ViewContract')")
+    public DocumentsResource getDocuments(@Parameter(description = "${swagger.dashboard.institutions.model.id}")
+                                          @PathVariable("institutionId") String institutionId,
+                                          @Parameter(description = "${swagger.dashboard.products.model.id}")
+                                          @PathVariable("productId") String productId) {
+        log.trace("getDocuments start");
+        log.debug("getDocuments institutionId = {}, productId = {}", Encode.forJava(institutionId), Encode.forJava(productId));
+        DocumentsResource result = documentService.getDocuments(institutionId, productId);
+        log.debug(LogUtils.CONFIDENTIAL_MARKER, "getDocuments result = {}", result);
+        log.trace("getDocuments end");
         return result;
     }
 

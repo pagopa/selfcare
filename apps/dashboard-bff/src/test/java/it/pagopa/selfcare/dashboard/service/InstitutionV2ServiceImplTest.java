@@ -686,7 +686,7 @@ class InstitutionV2ServiceImplTest extends BaseServiceTest {
 
         when(coreInstitutionApiRestClient._getOnboardingsInstitutionUsingGET(institutionId, null))
                 .thenReturn(ResponseEntity.ok(onboardingsResponse));
-        when(documentContentRestClient._getContractSigned(tokenId))
+        when(documentContentRestClient._getContractSigned(tokenId, null))
                 .thenReturn(ResponseEntity.ok(expectedContract));
 
         Resource result = institutionV2Service.getContract(institutionId, productId);
@@ -744,7 +744,7 @@ class InstitutionV2ServiceImplTest extends BaseServiceTest {
 
         when(coreInstitutionApiRestClient._getOnboardingsInstitutionUsingGET(institutionId, null))
                 .thenReturn(ResponseEntity.ok(onboardingsResponse));
-        when(documentContentRestClient._getContractSigned(tokenId))
+        when(documentContentRestClient._getContractSigned(tokenId, null))
                 .thenReturn(ResponseEntity.ok(expectedContract));
 
         Resource result = institutionV2Service.getContract(institutionId, productId);
@@ -816,7 +816,7 @@ class InstitutionV2ServiceImplTest extends BaseServiceTest {
 
         when(coreInstitutionApiRestClient._getOnboardingsInstitutionUsingGET(institutionId, null))
                 .thenReturn(ResponseEntity.ok(onboardingsResponse));
-        when(documentContentRestClient._getContractSigned(tokenId))
+        when(documentContentRestClient._getContractSigned(tokenId, null))
                 .thenReturn(ResponseEntity.ok(expectedContract));
 
         Resource result = institutionV2Service.getContract(institutionId, productId);

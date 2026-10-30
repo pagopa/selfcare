@@ -10,6 +10,8 @@
     "name" : "Signature Controller",
     "description" : "Endpoints for verifying contract signatures"
   }, {
+    "name" : "external-v2"
+  }, {
     "name" : "internal-v1"
   } ],
   "components" : {
@@ -43,6 +45,42 @@
           },
           "manager" : {
             "$ref" : "#/components/schemas/UserPdfData"
+          }
+        }
+      },
+      "AvailableDocumentResponse" : {
+        "type" : "object",
+        "properties" : {
+          "name" : {
+            "description" : "Document name: contractFilename for INSTITUTION/USER documents, attachmentName for ATTACHMENT documents.",
+            "type" : "string"
+          },
+          "type" : {
+            "description" : "Document type.",
+            "type" : "string",
+            "allOf" : [ {
+              "$ref" : "#/components/schemas/DocumentType"
+            } ]
+          },
+          "onboardingId" : {
+            "description" : "Identifier of the onboarding the document belongs to.",
+            "type" : "string"
+          },
+          "rootOnboardingId" : {
+            "description" : "Identifier of the root onboarding (institution adhesion) of the document dossier.",
+            "type" : "string"
+          }
+        }
+      },
+      "AvailableDocumentsResponse" : {
+        "type" : "object",
+        "properties" : {
+          "documents" : {
+            "description" : "Documents of the dossier available for download. For an institution onboarding: its signed contract, the signed contracts of the update onboardings, the attachments and the signed USER contracts linked to it. For a USER onboarding: only its signed contract. Empty list if none.",
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/AvailableDocumentResponse"
+            }
           }
         }
       },
@@ -106,9 +144,6 @@
           },
           "billing" : {
             "$ref" : "#/components/schemas/BillingPdfData"
-          },
-          "payment" : {
-            "$ref" : "#/components/schemas/PaymentPdfData"
           }
         }
       },
@@ -152,6 +187,9 @@
             "description" : "Chiave surrogata (Surrogate Key) generata come UUID randomico. Sostituisce l'onboardingId come Primary Key per prevenire anomalie.",
             "type" : "string"
           },
+          "tenantId" : {
+            "type" : "string"
+          },
           "type" : {
             "description" : "Discriminante polimorfica che indica la natura del documento (INSTITUTION, USER, ATTACHMENT).",
             "type" : "string",
@@ -167,6 +205,12 @@
             "type" : "string"
           },
           "attachmentName" : {
+            "type" : "string"
+          },
+          "attachmentPath" : {
+            "type" : "string"
+          },
+          "attachmentDescription" : {
             "type" : "string"
           },
           "checksum" : {
@@ -185,7 +229,7 @@
             "type" : "string"
           },
           "rootOnboardingId" : {
-            "description" : "Identificativo della radice del Fascicolo Documentale. Corrisponde all'onboardingId dell'INSTITUTION.",
+            "description" : "Root dossier onboarding ID. For INSTITUTION contract updates, it matches the onboardingId of the adhesion onboarding.",
             "type" : "string"
           },
           "createdAt" : {
@@ -198,7 +242,18 @@
             "$ref" : "#/components/schemas/LocalDateTime"
           },
           "activatedAt" : {
-            "$ref" : "#/components/schemas/LocalDateTime"
+            "description" : "Contract activation timestamp, set after the orchestration has completed successfully.",
+            "type" : "string",
+            "allOf" : [ {
+              "$ref" : "#/components/schemas/LocalDateTime"
+            } ]
+          },
+          "storageOrigin" : {
+            "$ref" : "#/components/schemas/StorageOrigin"
+          },
+          "signingStep" : {
+            "format" : "int32",
+            "type" : "integer"
           }
         }
       },
@@ -207,11 +262,9 @@
         "type" : "object",
         "properties" : {
           "onboardingId" : {
-            "pattern" : "\\S",
             "type" : "string"
           },
           "productId" : {
-            "pattern" : "\\S",
             "type" : "string"
           },
           "documentType" : {
@@ -221,6 +274,7 @@
             "type" : "string"
           },
           "rootOnboardingId" : {
+            "description" : "Root dossier onboarding ID. For INSTITUTION contract updates, identifies the adhesion onboarding linked to this update.",
             "type" : "string"
           },
           "templatePath" : {
@@ -252,7 +306,19 @@
           "type" : {
             "$ref" : "#/components/schemas/DocumentType"
           },
+          "onboardingId" : {
+            "type" : "string"
+          },
           "productId" : {
+            "type" : "string"
+          },
+          "attachmentName" : {
+            "type" : "string"
+          },
+          "attachmentDescription" : {
+            "type" : "string"
+          },
+          "attachmentPath" : {
             "type" : "string"
           },
           "checksum" : {
@@ -267,17 +333,30 @@
           "contractSigned" : {
             "type" : "string"
           },
+          "contractFilename" : {
+            "type" : "string"
+          },
+          "rootOnboardingId" : {
+            "type" : "string"
+          },
           "createdAt" : {
             "$ref" : "#/components/schemas/LocalDateTime"
           },
           "updatedAt" : {
             "$ref" : "#/components/schemas/LocalDateTime"
           },
-          "closedAt" : {
-            "$ref" : "#/components/schemas/LocalDateTime"
-          },
           "deletedAt" : {
             "$ref" : "#/components/schemas/LocalDateTime"
+          },
+          "activatedAt" : {
+            "$ref" : "#/components/schemas/LocalDateTime"
+          },
+          "signingStep" : {
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "storageOrigin" : {
+            "$ref" : "#/components/schemas/StorageOrigin"
           }
         }
       },
@@ -461,17 +540,6 @@
         "enum" : [ "MANAGER", "DELEGATE", "SUB_DELEGATE", "OPERATOR", "ADMIN_EA" ],
         "type" : "string"
       },
-      "PaymentPdfData" : {
-        "type" : "object",
-        "properties" : {
-          "holder" : {
-            "type" : "string"
-          },
-          "iban" : {
-            "type" : "string"
-          }
-        }
-      },
       "PaymentServiceProviderPdfData" : {
         "type" : "object",
         "properties" : {
@@ -507,6 +575,41 @@
           }
         }
       },
+      "RelatedDocumentResponse" : {
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "description" : "Unique identifier of the document.",
+            "type" : "string"
+          },
+          "fileName" : {
+            "description" : "Physical filename of the document as stored.",
+            "type" : "string"
+          },
+          "type" : {
+            "description" : "Document type.",
+            "type" : "string",
+            "allOf" : [ {
+              "$ref" : "#/components/schemas/DocumentType"
+            } ]
+          },
+          "mimeType" : {
+            "description" : "MIME type derived from the file extension.",
+            "type" : "string"
+          },
+          "createdAt" : {
+            "description" : "Timestamp when the document was first created.",
+            "type" : "string",
+            "allOf" : [ {
+              "$ref" : "#/components/schemas/LocalDateTime"
+            } ]
+          },
+          "filePath" : {
+            "description" : "Full storage path of the document.",
+            "type" : "string"
+          }
+        }
+      },
       "SignatureRequest" : {
         "required" : [ "onboardingId", "file", "fiscalCodes", "skipSignatureVerification" ],
         "type" : "object",
@@ -530,6 +633,10 @@
           }
         }
       },
+      "StorageOrigin" : {
+        "enum" : [ "SYSTEM", "USER" ],
+        "type" : "string"
+      },
       "UploadAggregateCsvRequest" : {
         "required" : [ "onboardingId", "productId", "csv" ],
         "type" : "object",
@@ -548,20 +655,27 @@
           }
         }
       },
-      "UploadVisuraRequest" : {
-        "required" : [ "onboardingId", "filename", "fileContent" ],
+      "UserAttachmentRequest" : {
+        "required" : [ "onboardingId", "productId", "attachmentName", "attachmentId", "maxDocumentsRequired" ],
         "type" : "object",
         "properties" : {
           "onboardingId" : {
-            "pattern" : "\\S",
             "type" : "string"
           },
-          "filename" : {
-            "pattern" : "\\S",
+          "productId" : {
             "type" : "string"
           },
-          "fileContent" : {
-            "format" : "binary",
+          "attachmentName" : {
+            "type" : "string"
+          },
+          "attachmentId" : {
+            "type" : "string"
+          },
+          "maxDocumentsRequired" : {
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "attachmentDescription" : {
             "type" : "string"
           }
         }
@@ -627,6 +741,51 @@
             "description" : "OK",
             "content" : {
               "application/json" : { }
+            }
+          },
+          "401" : {
+            "description" : "Not Authorized"
+          },
+          "403" : {
+            "description" : "Not Allowed"
+          }
+        },
+        "security" : [ {
+          "SecurityScheme" : [ ]
+        } ]
+      }
+    },
+    "/v1/document-content/aggregates-csv/{onboardingId}/products/{productId}" : {
+      "get" : {
+        "summary" : "Retrieve aggregates csv for a given onboarding and product",
+        "description" : "Downloads the aggregates csv associated with the specified onboarding ID and product.",
+        "operationId" : "getAggregatesCsv",
+        "tags" : [ "Document Content Controller" ],
+        "parameters" : [ {
+          "name" : "onboardingId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "productId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/octet-stream" : {
+                "schema" : {
+                  "format" : "binary",
+                  "type" : "string"
+                }
+              }
             }
           },
           "401" : {
@@ -813,17 +972,32 @@
         } ]
       }
     },
-    "/v1/document-content/visura" : {
+    "/v1/document-content/upload-user-attachment" : {
       "post" : {
-        "summary" : "Store the Visura in Azure Blob Storage",
-        "description" : "Receives the Visura data (filename and content) and stores it in Azure Blob Storage.",
-        "operationId" : "saveVisuraForMerchant",
+        "summary" : "Upload a user-driven attachment (PDF only) to the USER storage.",
+        "description" : "Persists a user-uploaded attachment. Skips signature verification and template digest checks: the file is only validated to be a well-formed PDF. Target storage is implicitly USER",
+        "operationId" : "uploadUserAttachment",
         "tags" : [ "Document Content Controller" ],
         "requestBody" : {
           "content" : {
             "multipart/form-data" : {
               "schema" : {
-                "$ref" : "#/components/schemas/UploadVisuraRequest"
+                "required" : [ "file" ],
+                "type" : "object",
+                "properties" : {
+                  "file" : {
+                    "format" : "binary",
+                    "type" : "string"
+                  },
+                  "request" : {
+                    "$ref" : "#/components/schemas/UserAttachmentRequest"
+                  }
+                }
+              },
+              "encoding" : {
+                "request" : {
+                  "contentType" : "application/json"
+                }
               }
             }
           },
@@ -936,13 +1110,20 @@
         "summary" : "Retrieve contract signed for a given onboarding",
         "description" : "Downloads the contract file associated with the specified onboarding ID.",
         "operationId" : "getContractSigned",
-        "tags" : [ "Document Content Controller" ],
+        "tags" : [ "Document Content Controller", "external-v2" ],
         "parameters" : [ {
           "name" : "onboardingId",
           "in" : "path",
           "required" : true,
           "schema" : {
             "type" : "string"
+          }
+        }, {
+          "name" : "downloadP7MFile",
+          "in" : "query",
+          "schema" : {
+            "default" : false,
+            "type" : "boolean"
           }
         } ],
         "responses" : {
@@ -956,6 +1137,43 @@
                 }
               }
             }
+          },
+          "401" : {
+            "description" : "Not Authorized"
+          },
+          "403" : {
+            "description" : "Not Allowed"
+          }
+        },
+        "security" : [ {
+          "SecurityScheme" : [ ]
+        } ]
+      }
+    },
+    "/v1/document-content/{onboardingId}/related-documents/{documentId}" : {
+      "get" : {
+        "summary" : "Retrieve a related document for a given onboarding",
+        "description" : "Downloads a related document identified by its unique document ID within the onboarding.",
+        "operationId" : "getRelatedDocument",
+        "tags" : [ "Document Content Controller" ],
+        "parameters" : [ {
+          "name" : "documentId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "onboardingId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "404" : {
+            "description" : "Related document not found for onboarding"
           },
           "401" : {
             "description" : "Not Authorized"
@@ -1062,6 +1280,14 @@
                     "default" : false,
                     "type" : "boolean"
                   },
+                  "skipSignerIdentityCheck" : {
+                    "default" : false,
+                    "type" : "boolean"
+                  },
+                  "signingStep" : {
+                    "format" : "int32",
+                    "type" : "integer"
+                  },
                   "file" : {
                     "format" : "binary",
                     "type" : "string"
@@ -1086,6 +1312,43 @@
             "content" : {
               "application/json" : { }
             }
+          },
+          "401" : {
+            "description" : "Not Authorized"
+          },
+          "403" : {
+            "description" : "Not Allowed"
+          }
+        },
+        "security" : [ {
+          "SecurityScheme" : [ ]
+        } ]
+      }
+    },
+    "/v1/document-content/{onboardingId}/user-attachments" : {
+      "delete" : {
+        "summary" : "Delete user attachments from Azure Blob Storage",
+        "description" : "Delete every user-uploaded attachment associated with the specified onboarding ID from Azure Blob Storage.",
+        "operationId" : "deleteUserAttachments",
+        "tags" : [ "Document Content Controller" ],
+        "parameters" : [ {
+          "name" : "onboardingId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "pattern" : "\\S",
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "User attachments soft-deletion completed",
+            "content" : {
+              "application/json" : { }
+            }
+          },
+          "500" : {
+            "description" : "Internal server error during deletion"
           },
           "401" : {
             "description" : "Not Authorized"
@@ -1252,8 +1515,8 @@
     },
     "/v1/documents/onboarding/{onboardingId}" : {
       "get" : {
-        "summary" : "Retrieves the documents for a given onboarding",
-        "description" : "Fetches a list of documents associated with the specified onboarding ID.",
+        "summary" : "Retrieves the current contract for a given onboarding",
+        "description" : "Returns the latest own INSTITUTION/USER document or, for a root onboarding, its latest signed and activated INSTITUTION update contract.",
         "operationId" : "getDocumentByOnboardingId",
         "tags" : [ "Document Controller" ],
         "parameters" : [ {
@@ -1270,10 +1533,7 @@
             "content" : {
               "application/json" : {
                 "schema" : {
-                  "type" : "array",
-                  "items" : {
-                    "$ref" : "#/components/schemas/DocumentResponse"
-                  }
+                  "$ref" : "#/components/schemas/DocumentResponse"
                 }
               }
             }
@@ -1313,6 +1573,39 @@
                   "$ref" : "#/components/schemas/DocumentResponse"
                 }
               }
+            }
+          },
+          "401" : {
+            "description" : "Not Authorized"
+          },
+          "403" : {
+            "description" : "Not Allowed"
+          }
+        },
+        "security" : [ {
+          "SecurityScheme" : [ ]
+        } ]
+      }
+    },
+    "/v1/documents/{onboardingId}/activate" : {
+      "put" : {
+        "summary" : "Activate a signed contract",
+        "description" : "Marks the signed contract for the onboarding as active. Repeated calls are safe and do not change the activation timestamp.",
+        "operationId" : "activateContract",
+        "tags" : [ "internal-v1" ],
+        "parameters" : [ {
+          "name" : "onboardingId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : { }
             }
           },
           "401" : {
@@ -1393,6 +1686,83 @@
             "description" : "OK",
             "content" : {
               "application/json" : { }
+            }
+          },
+          "401" : {
+            "description" : "Not Authorized"
+          },
+          "403" : {
+            "description" : "Not Allowed"
+          }
+        },
+        "security" : [ {
+          "SecurityScheme" : [ ]
+        } ]
+      }
+    },
+    "/v1/documents/{onboardingId}/attachments-detail" : {
+      "get" : {
+        "summary" : "Retrieve all related documents for a given onboarding",
+        "description" : "Returns the full metadata (id, name, fileName, filePath, mimeType, type, createdAt) for all ATTACHMENT and USER documents linked to the root onboarding. Intended for downstream integrations that need the complete document manifest (e.g. SAP gestionale di conservazione).",
+        "operationId" : "getRelatedDocuments",
+        "tags" : [ "Document Controller" ],
+        "parameters" : [ {
+          "name" : "onboardingId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/RelatedDocumentResponse"
+                  }
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Not Authorized"
+          },
+          "403" : {
+            "description" : "Not Allowed"
+          }
+        },
+        "security" : [ {
+          "SecurityScheme" : [ ]
+        } ]
+      }
+    },
+    "/v1/documents/{onboardingId}/available-documents" : {
+      "get" : {
+        "summary" : "Retrieve the list of documents available for download for a given onboarding",
+        "description" : "Returns the documents of the dossier available for download: for an institution onboarding its signed contract, the signed contracts of the update onboardings, the attachments and the signed USER contracts linked to it; for a USER onboarding only its signed contract.",
+        "operationId" : "getAvailableDocuments",
+        "tags" : [ "Document Controller" ],
+        "parameters" : [ {
+          "name" : "onboardingId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/AvailableDocumentsResponse"
+                }
+              }
             }
           },
           "401" : {
