@@ -867,7 +867,7 @@ paths:
         required: true
         schema:
           type: string
-      - name: downloadP7MFile
+      - name: downloadP7mFile
         in: query
         schema:
           default: false
