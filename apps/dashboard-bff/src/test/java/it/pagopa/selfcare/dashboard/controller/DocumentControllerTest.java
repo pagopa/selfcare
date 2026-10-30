@@ -22,7 +22,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @ExtendWith(MockitoExtension.class)
 class DocumentControllerTest extends BaseControllerTest {
 
-    private static final String BASE_URL = "/v2/documents";
+    private static final String BASE_URL = "/v1/documents";
 
     @InjectMocks
     private DocumentController documentController;

@@ -18,7 +18,7 @@ import java.util.List;
 
 @Slf4j
 @RestController
-@RequestMapping(value = "/v2/documents", produces = MediaType.APPLICATION_JSON_VALUE)
+@RequestMapping(value = "/v1/documents", produces = MediaType.APPLICATION_JSON_VALUE)
 @Tag(name = "documents")
 @RequiredArgsConstructor
 public class DocumentController {
@@ -27,7 +27,7 @@ public class DocumentController {
 
     @GetMapping(value = "/status", produces = MediaType.APPLICATION_JSON_VALUE)
     @ResponseStatus(HttpStatus.OK)
-    @Operation(summary = "getDocumentStatus", description = "${swagger.dashboard.documents.api.getDocumentStatus}", operationId = "#v2GetDocumentStatus")
+    @Operation(summary = "getDocumentStatus", description = "${swagger.dashboard.documents.api.getDocumentStatus}")
     @PreAuthorize("hasPermission(new it.pagopa.selfcare.dashboard.security.FilterAuthorityDomain(#institutionId, null, null), 'Selc:ViewContract')")
     public DocumentStatusResource getDocumentStatus(@Parameter(description = "${swagger.dashboard.institutions.model.id}")
                                                     @RequestParam("institutionId") String institutionId,
