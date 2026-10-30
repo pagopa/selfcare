@@ -41,4 +41,27 @@ public class DocumentApiSteps {
         }
     }
 
+    @When("I send a GET request to {string} to get documents list")
+    public void iSendAGetRequestToGetDocumentsList(String url) {
+        RequestSpecification requestSpecification = RestAssured.given()
+                .contentType("application/json");
+
+        dashboardStepsUtil.setHeader(requestSpecification);
+
+        ExtractableResponse<?> response = requestSpecification
+                .when()
+                .pathParam("institutionId", dashboardStepsUtil.filter.getInstitutionId())
+                .pathParam("productId", dashboardStepsUtil.filter.getProductId())
+                .get(url)
+                .then()
+                .extract();
+
+        dashboardStepsUtil.status = response.statusCode();
+        if (dashboardStepsUtil.status == 200) {
+            dashboardStepsUtil.setResponse(response);
+        } else {
+            dashboardStepsUtil.errorMessage = response.body().asString();
+        }
+    }
+
 }
