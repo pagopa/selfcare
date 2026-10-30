@@ -12,6 +12,7 @@ import com.azure.storage.blob.models.BlobStorageException;
 import com.azure.storage.blob.models.ListBlobsOptions;
 import it.pagopa.selfcare.azurestorage.error.SelfcareAzureStorageError;
 import it.pagopa.selfcare.azurestorage.error.SelfcareAzureStorageException;
+import it.pagopa.selfcare.azurestorage.error.SelfcareAzureStorageNotFoundException;
 import org.apache.commons.lang3.StringUtils;
 import org.owasp.encoder.Encode;
 import org.slf4j.Logger;
@@ -104,12 +105,7 @@ public class AzureBlobClientDefault implements AzureBlobClient {
 
       return outputStream.toByteArray();
     } catch (BlobStorageException e) {
-      if (e.getStatusCode() == 404) {
-        throw new SelfcareAzureStorageException(String.format(SelfcareAzureStorageError.ERROR_DURING_DOWNLOAD_FILE.getMessage(), filePath),
-          SelfcareAzureStorageError.ERROR_DURING_DOWNLOAD_FILE.getCode());
-      }
-      throw new SelfcareAzureStorageException(String.format(SelfcareAzureStorageError.ERROR_DURING_DOWNLOAD_FILE.getMessage(), filePath),
-        SelfcareAzureStorageError.ERROR_DURING_DOWNLOAD_FILE.getCode());
+      throw downloadError(filePath, e);
     }
   }
 
@@ -127,9 +123,7 @@ public class AzureBlobClientDefault implements AzureBlobClient {
     } catch (BlobStorageException e) {
       String safePath = Encode.forJava(String.valueOf(filePath));
       log.error(String.format(SelfcareAzureStorageError.ERROR_DURING_DOWNLOAD_FILE.getMessage(), safePath), e);
-      throw new SelfcareAzureStorageException(
-        String.format(SelfcareAzureStorageError.ERROR_DURING_DOWNLOAD_FILE.getMessage(), safePath),
-        SelfcareAzureStorageError.ERROR_DURING_DOWNLOAD_FILE.getCode());
+      throw downloadError(safePath, e);
     }
   }
 
@@ -150,9 +144,7 @@ public class AzureBlobClientDefault implements AzureBlobClient {
     } catch (BlobStorageException | IOException e) {
       String safeTemplate = Encode.forJava(String.valueOf(contractTemplate));
       log.error(String.format(SelfcareAzureStorageError.ERROR_DURING_DOWNLOAD_FILE.getMessage(), safeTemplate), e);
-      throw new SelfcareAzureStorageException(
-        String.format(SelfcareAzureStorageError.ERROR_DURING_DOWNLOAD_FILE.getMessage(), safeTemplate),
-        SelfcareAzureStorageError.ERROR_DURING_DOWNLOAD_FILE.getCode());
+      throw downloadError(safeTemplate, e);
     }
 
     log.info("END - getFileAsPdf");
@@ -185,9 +177,7 @@ public class AzureBlobClientDefault implements AzureBlobClient {
     } catch (BlobStorageException | IOException e) {
       String safePath = Encode.forJava(String.valueOf(filePath));
       log.error(String.format(SelfcareAzureStorageError.ERROR_DURING_DOWNLOAD_FILE.getMessage(), safePath), e);
-      throw new SelfcareAzureStorageException(
-        String.format(SelfcareAzureStorageError.ERROR_DURING_DOWNLOAD_FILE.getMessage(), safePath),
-        SelfcareAzureStorageError.ERROR_DURING_DOWNLOAD_FILE.getCode());
+      throw downloadError(safePath, e);
     }
 
     log.info("END - retrieveFile");
@@ -257,12 +247,7 @@ public class AzureBlobClientDefault implements AzureBlobClient {
 
       return blob.getProperties();
     } catch (BlobStorageException e) {
-      if (e.getStatusCode() == 404) {
-        throw new SelfcareAzureStorageException(String.format(SelfcareAzureStorageError.ERROR_DURING_DOWNLOAD_FILE.getMessage(), filePath),
-          SelfcareAzureStorageError.ERROR_DURING_DOWNLOAD_FILE.getCode());
-      }
-      throw new SelfcareAzureStorageException(String.format(SelfcareAzureStorageError.ERROR_DURING_DOWNLOAD_FILE.getMessage(), filePath),
-        SelfcareAzureStorageError.ERROR_DURING_DOWNLOAD_FILE.getCode());
+      throw downloadError(filePath, e);
     }
   }
 
@@ -302,4 +287,12 @@ public class AzureBlobClientDefault implements AzureBlobClient {
     return listOfResource;
   }
 
+  private static SelfcareAzureStorageException downloadError(String filePath, Exception e) {
+    String message = String.format(SelfcareAzureStorageError.ERROR_DURING_DOWNLOAD_FILE.getMessage(), filePath);
+    String code = SelfcareAzureStorageError.ERROR_DURING_DOWNLOAD_FILE.getCode();
+    if (e instanceof BlobStorageException blobException && blobException.getStatusCode() == 404) {
+      return new SelfcareAzureStorageNotFoundException(message, code, e);
+    }
+    return new SelfcareAzureStorageException(message, code, e);
+  }
 }
