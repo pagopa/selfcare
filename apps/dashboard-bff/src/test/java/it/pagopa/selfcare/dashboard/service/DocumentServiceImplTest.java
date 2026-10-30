@@ -117,7 +117,7 @@ class DocumentServiceImplTest {
     }
 
     @Test
-    void getDocuments_returnsContractsAndAllowedAttachmentsOfTheActiveOnboarding() {
+    void getDocumentsList_returnsContractsAndAllowedAttachmentsOfTheActiveOnboarding() {
         // given
         OnboardingsResponse onboardings = new OnboardingsResponse();
         onboardings.setOnboardings(List.of(
@@ -138,7 +138,7 @@ class DocumentServiceImplTest {
         when(documentRestClient._getAvailableDocuments("tokenId")).thenReturn(ResponseEntity.ok(available));
 
         // when
-        DocumentsResource result = documentService.getDocuments(INSTITUTION_ID, PRODUCT_ID);
+        DocumentsResource result = documentService.getDocumentsList(INSTITUTION_ID, PRODUCT_ID);
 
         // then
         assertEquals(List.of(
@@ -150,19 +150,19 @@ class DocumentServiceImplTest {
     }
 
     @Test
-    void getDocuments_withoutActiveOnboarding_throwsResourceNotFound() {
+    void getDocumentsList_withoutActiveOnboarding_throwsResourceNotFound() {
         OnboardingsResponse onboardings = new OnboardingsResponse();
         onboardings.setOnboardings(List.of(
                 institutionOnboarding(PRODUCT_ID, OnboardingResponse.StatusEnum.SUSPENDED, "tokenId", OffsetDateTime.now())));
         when(coreInstitutionApiRestClient._getOnboardingsInstitutionUsingGET(INSTITUTION_ID, null))
                 .thenReturn(ResponseEntity.ok(onboardings));
 
-        assertThrows(ResourceNotFoundException.class, () -> documentService.getDocuments(INSTITUTION_ID, PRODUCT_ID));
+        assertThrows(ResourceNotFoundException.class, () -> documentService.getDocumentsList(INSTITUTION_ID, PRODUCT_ID));
         verifyNoInteractions(documentRestClient);
     }
 
     @Test
-    void getDocuments_withoutAvailableDocuments_returnsEmptyList() {
+    void getDocumentsList_withoutAvailableDocuments_returnsEmptyList() {
         OnboardingsResponse onboardings = new OnboardingsResponse();
         onboardings.setOnboardings(List.of(
                 institutionOnboarding(PRODUCT_ID, OnboardingResponse.StatusEnum.ACTIVE, "tokenId", OffsetDateTime.now())));
@@ -170,13 +170,13 @@ class DocumentServiceImplTest {
                 .thenReturn(ResponseEntity.ok(onboardings));
         when(documentRestClient._getAvailableDocuments("tokenId")).thenReturn(ResponseEntity.ok().build());
 
-        DocumentsResource result = documentService.getDocuments(INSTITUTION_ID, PRODUCT_ID);
+        DocumentsResource result = documentService.getDocumentsList(INSTITUTION_ID, PRODUCT_ID);
 
         assertEquals(List.of(), result.getDocuments());
     }
 
     @Test
-    void getDocuments_keepsAttachmentNameAsStoredForDownload() {
+    void getDocumentsList_keepsAttachmentNameAsStoredForDownload() {
         documentService = new DocumentServiceImpl(onboardingRestClient, coreInstitutionApiRestClient, documentRestClient, List.of("Addendum.pdf"));
         OnboardingsResponse onboardings = new OnboardingsResponse();
         onboardings.setOnboardings(List.of(
@@ -189,7 +189,7 @@ class DocumentServiceImplTest {
                 availableDocument("Addendum.pdf", it.pagopa.selfcare.document.generated.openapi.v1.dto.DocumentType.ATTACHMENT)));
         when(documentRestClient._getAvailableDocuments("tokenId")).thenReturn(ResponseEntity.ok(available));
 
-        DocumentsResource result = documentService.getDocuments(INSTITUTION_ID, PRODUCT_ID);
+        DocumentsResource result = documentService.getDocumentsList(INSTITUTION_ID, PRODUCT_ID);
 
         assertEquals(List.of(
                 new DocumentResource("contract", DocumentType.INSTITUTION),

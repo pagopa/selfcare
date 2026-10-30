@@ -9,6 +9,6 @@ public interface DocumentService {
 
     DocumentStatusResource getDocumentStatus(String institutionId, List<String> productIds);
 
-    DocumentsResource getDocuments(String institutionId, String productId);
+    DocumentsResource getDocumentsList(String institutionId, String productId);
 
 }

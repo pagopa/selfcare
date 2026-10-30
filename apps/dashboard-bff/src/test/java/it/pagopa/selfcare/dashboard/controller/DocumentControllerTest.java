@@ -78,11 +78,11 @@ class DocumentControllerTest extends BaseControllerTest {
     }
 
     @Test
-    void getDocuments() throws Exception {
+    void getDocumentsList() throws Exception {
         // given
         final String institutionId = "institutionId";
         final String productId = "prod-pagopa";
-        when(documentServiceMock.getDocuments(institutionId, productId))
+        when(documentServiceMock.getDocumentsList(institutionId, productId))
                 .thenReturn(new DocumentsResource(List.of(
                         new DocumentResource("contract.pdf", DocumentType.INSTITUTION),
                         new DocumentResource("Addendum", DocumentType.ATTACHMENT))));
@@ -98,7 +98,7 @@ class DocumentControllerTest extends BaseControllerTest {
                 .andExpect(jsonPath("$.documents[1].type", is("ATTACHMENT")));
 
         // then
-        verify(documentServiceMock, times(1)).getDocuments(institutionId, productId);
+        verify(documentServiceMock, times(1)).getDocumentsList(institutionId, productId);
         verifyNoMoreInteractions(documentServiceMock);
     }
 

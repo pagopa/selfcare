@@ -44,17 +44,17 @@ public class DocumentController {
 
     @GetMapping(value = "/institutions/{institutionId}/products/{productId}", produces = MediaType.APPLICATION_JSON_VALUE)
     @ResponseStatus(HttpStatus.OK)
-    @Operation(summary = "getDocuments", description = "${swagger.dashboard.documents.api.getDocuments}")
+    @Operation(summary = "getDocumentsList", description = "${swagger.dashboard.documents.api.getDocumentsList}")
     @PreAuthorize("hasPermission(new it.pagopa.selfcare.dashboard.security.FilterAuthorityDomain(#institutionId, #productId, null), 'Selc:ViewContract')")
-    public DocumentsResource getDocuments(@Parameter(description = "${swagger.dashboard.institutions.model.id}")
+    public DocumentsResource getDocumentsList(@Parameter(description = "${swagger.dashboard.institutions.model.id}")
                                           @PathVariable("institutionId") String institutionId,
                                           @Parameter(description = "${swagger.dashboard.products.model.id}")
                                           @PathVariable("productId") String productId) {
-        log.trace("getDocuments start");
-        log.debug("getDocuments institutionId = {}, productId = {}", Encode.forJava(institutionId), Encode.forJava(productId));
-        DocumentsResource result = documentService.getDocuments(institutionId, productId);
-        log.debug(LogUtils.CONFIDENTIAL_MARKER, "getDocuments result = {}", result);
-        log.trace("getDocuments end");
+        log.trace("getDocumentsList start");
+        log.debug("getDocumentsList institutionId = {}, productId = {}", Encode.forJava(institutionId), Encode.forJava(productId));
+        DocumentsResource result = documentService.getDocumentsList(institutionId, productId);
+        log.debug(LogUtils.CONFIDENTIAL_MARKER, "getDocumentsList result = {}", result);
+        log.trace("getDocumentsList end");
         return result;
     }
 

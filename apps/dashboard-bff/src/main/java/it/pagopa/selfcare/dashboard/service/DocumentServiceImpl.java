@@ -105,9 +105,9 @@ public class DocumentServiceImpl implements DocumentService {
     }
 
     @Override
-    public DocumentsResource getDocuments(String institutionId, String productId) {
-        log.trace("getDocuments start");
-        log.debug("getDocuments institutionId = {}, productId = {}", Encode.forJava(institutionId), Encode.forJava(productId));
+    public DocumentsResource getDocumentsList(String institutionId, String productId) {
+        log.trace("getDocumentsList start");
+        log.debug("getDocumentsList institutionId = {}, productId = {}", Encode.forJava(institutionId), Encode.forJava(productId));
         Assert.hasText(institutionId, REQUIRED_INSTITUTION_MESSAGE);
         Assert.hasText(productId, REQUIRED_PRODUCT_MESSAGE);
 
@@ -121,7 +121,7 @@ public class DocumentServiceImpl implements DocumentService {
                 .flatMap(Optional::stream)
                 .toList();
 
-        log.trace("getDocuments end");
+        log.trace("getDocumentsList end");
         return new DocumentsResource(documents);
     }
 

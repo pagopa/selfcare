@@ -4050,9 +4050,9 @@
     "/v1/documents/institutions/{institutionId}/products/{productId}" : {
       "get" : {
         "tags" : [ "documents" ],
-        "summary" : "getDocuments",
+        "summary" : "getDocumentsList",
         "description" : "Service to get the documents available for download for a specific pair of institution-product: the institution contracts and the allowed attachments",
-        "operationId" : "getDocumentsUsingGET",
+        "operationId" : "getDocumentsListUsingGET",
         "parameters" : [ {
           "name" : "institutionId",
           "in" : "path",

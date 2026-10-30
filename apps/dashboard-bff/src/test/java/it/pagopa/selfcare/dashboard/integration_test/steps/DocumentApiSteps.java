@@ -41,8 +41,8 @@ public class DocumentApiSteps {
         }
     }
 
-    @When("I send a GET request to {string} to get documents")
-    public void iSendAGetRequestToGetDocuments(String url) {
+    @When("I send a GET request to {string} to get documents list")
+    public void iSendAGetRequestToGetDocumentsList(String url) {
         RequestSpecification requestSpecification = RestAssured.given()
                 .contentType("application/json");
 
