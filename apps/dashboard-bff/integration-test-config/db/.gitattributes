@@ -1,0 +1,4 @@
+# Mongo init runs in a Linux container: keep LF so the shell script and
+# imported data are not broken by CRLF on Windows checkouts.
+init-db.sh text eol=lf
+*.json text eol=lf
