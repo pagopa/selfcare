@@ -11,9 +11,17 @@
     </parent>
     <groupId>it.pagopa.selfcare</groupId>
     <artifactId>selc-starter-parent</artifactId>
-    <version>0.3.2-SNAPSHOT</version>
+    <version>0.3.3</version>
     <name>selc-starter-parent</name>
     <description>Self Care Starter Parent</description>
+
+    <distributionManagement>
+        <repository>
+            <id>selfcare</id>
+            <name>Selfcare</name>
+            <url>https://maven.pkg.github.com/pagopa/selfcare</url>
+        </repository>
+    </distributionManagement>
 
     <properties>
         <java.version>17</java.version>
@@ -22,6 +30,7 @@
         <spring-cloud.version>2023.0.3</spring-cloud.version>
         <lombok.version>1.18.22</lombok.version>
         <mapstruct.version>1.5.5.Final</mapstruct.version>
+        <sonar.skip>true</sonar.skip>
     </properties>
 
     <dependencyManagement>
