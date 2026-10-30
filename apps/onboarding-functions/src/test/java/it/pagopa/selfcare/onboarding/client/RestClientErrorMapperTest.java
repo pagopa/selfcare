@@ -1,7 +1,6 @@
 package it.pagopa.selfcare.onboarding.client;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -11,11 +10,14 @@ import static org.mockito.Mockito.when;
 
 import it.pagopa.selfcare.onboarding.exception.NonRetryableRestClientException;
 import it.pagopa.selfcare.onboarding.exception.RestClientException;
+import io.quarkus.test.junit.QuarkusTest;
+import jakarta.ws.rs.WebApplicationException;
 import jakarta.ws.rs.core.Response;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
+@QuarkusTest
 class RestClientErrorMapperTest {
 
   private final RestClientErrorMapper mapper = new RestClientErrorMapper();
@@ -25,7 +27,7 @@ class RestClientErrorMapperTest {
   void toThrowable_shouldBeNonRetryableOnDefinitiveClientErrors(int status) {
     Response response = response(status, "{\"detail\":\"institution.description is required\"}");
 
-    RestClientException ex = mapper.toThrowable(response);
+    WebApplicationException ex = mapper.toThrowable(response);
 
     assertInstanceOf(NonRetryableRestClientException.class, ex);
     assertEquals("HTTP " + status + " - {\"detail\":\"institution.description is required\"}", ex.getMessage());
@@ -38,9 +40,9 @@ class RestClientErrorMapperTest {
   void toThrowable_shouldStayRetryableOnOtherErrors(int status) {
     Response response = response(status, "boom");
 
-    RestClientException ex = mapper.toThrowable(response);
+    WebApplicationException ex = mapper.toThrowable(response);
 
-    assertFalse(ex instanceof NonRetryableRestClientException);
+    assertInstanceOf(RestClientException.class, ex);
     assertEquals(status, ex.getResponse().getStatus());
     assertEquals("HTTP " + status + " - boom", ex.getMessage());
   }

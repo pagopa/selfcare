@@ -2454,7 +2454,8 @@ class OnboardingFunctionsTest {
   @Test
   void retryHandler_shouldReplicateRetryPolicyBackoff() {
     TaskOrchestrationContext orchestrationContext = mock(TaskOrchestrationContext.class);
-    when(orchestrationContext.createTimer(any(Duration.class))).thenReturn(mock(Task.class));
+    Task<Void> timer = mock(Task.class);
+    when(orchestrationContext.createTimer(any(Duration.class))).thenReturn(timer);
     RetryContext retryContext = retryContext(orchestrationContext, 2, "java.lang.RuntimeException", "boom", null);
 
     assertTrue(OnboardingFunctions.retryHandler(retryConfig()).handle(retryContext));

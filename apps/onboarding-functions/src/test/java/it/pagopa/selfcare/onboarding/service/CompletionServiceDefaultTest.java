@@ -868,7 +868,7 @@ public class CompletionServiceDefaultTest {
 
         completionServiceDefault.sendCompletedEmail(new OnboardingWorkflowInstitution(onboarding, "INSTITUTION"));
 
-        Mockito.verify(notificationService).sendCompletedEmail(eq(List.of("test@pec.it")), any(), any());
+        verify(notificationService).sendCompletedEmail(eq(List.of("test@pec.it")), any(), any());
     }
 
     @Test

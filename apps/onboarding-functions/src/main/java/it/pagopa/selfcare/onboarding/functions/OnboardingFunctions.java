@@ -69,6 +69,7 @@ public class OnboardingFunctions {
 
   public static final String CREATED_NEW_ONBOARDING_ORCHESTRATION_WITH_INSTANCE_ID_MSG =
       "Created new Onboarding orchestration with instance ID = ";
+  private static final String UNKNOWN = "unknown";
   private static final String CREATED_NEW_BUILD_ATTACHMENTS_ORCHESTRATION_WITH_INSTANCE_ID_MSG =
       "Created new Build Attachments orchestration with instance ID = ";
   public static final String PRODUCT_ID = "productId";
@@ -243,9 +244,9 @@ public class OnboardingFunctions {
     String onboardingAggregate = ctx.getInput(String.class);
     OnboardingAggregateOrchestratorInput aggregateInput =
         readOnboardingAggregateOrchestratorInputValue(objectMapper, onboardingAggregate);
-    String aggregatorId = Objects.requireNonNullElse(aggregateInput.getId(), "unknown");
+    String aggregatorId = Objects.requireNonNullElse(aggregateInput.getId(), UNKNOWN);
     String aggregateTaxCode =
-        Optional.ofNullable(aggregateInput.getAggregate()).map(Institution::getTaxCode).orElse("unknown");
+        Optional.ofNullable(aggregateInput.getAggregate()).map(Institution::getTaxCode).orElse(UNKNOWN);
     boolean existsDelegation;
     try (TenantContext.Scope ignored = TenantContext.open(aggregateInput.getTenantId())) {
       existsDelegation =
@@ -472,7 +473,7 @@ public class OnboardingFunctions {
               phantomApprovalMessage,
               SeverityLevel.Warning,
               Map.of(ONBOARDING_ID, onboardingId, PRODUCT_ID,
-                  onboarding.getProductId() != null ? onboarding.getProductId() : "unknown"));
+                  onboarding.getProductId() != null ? onboarding.getProductId() : UNKNOWN));
         }
         return;
       }
@@ -1219,7 +1220,7 @@ public class OnboardingFunctions {
           callWithTenant(
               onboarding,
               () -> productService.getValidProduct(onboarding.getProductId()).getManagingInstitutions());
-      context.getLogger().info(String.format("Found %d managing institution(s) for product %s", managingInstitutions.size(), onboarding.getProductId()));
+      context.getLogger().info(() -> String.format("Found %d managing institution(s) for product %s", managingInstitutions.size(), onboarding.getProductId()));
       return managingInstitutions;
   }
 

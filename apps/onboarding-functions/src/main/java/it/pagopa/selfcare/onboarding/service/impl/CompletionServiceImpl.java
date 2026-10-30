@@ -582,7 +582,7 @@ public class CompletionServiceImpl implements CompletionService {
                 .map(Optional::get)
                 .map(workContract -> Optional.ofNullable(workContract.getEmail()).map(email -> email.getValue()).orElse(null))
                 .filter(StringUtils::isNotBlank)
-                .collect(Collectors.toList());
+                .collect(Collectors.toCollection(ArrayList::new));
     }
 
     @Override
