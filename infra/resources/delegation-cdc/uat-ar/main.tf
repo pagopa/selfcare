@@ -76,6 +76,14 @@ locals {
     {
       name  = "EVENTHUB_SENDER_MANAGED_IDENTITY_CLIENT_ID"
       value = data.azurerm_user_assigned_identity.delegations_eventhub_sender_identity.client_id
+    },
+    {
+      name  = "WEBHOOK_URL"
+      value = "https://selc-${module.local.config.env_short}-webhook-ms-ca.${module.local.config.private_dns_name_domain}"
+    },
+    {
+      name  = "DELEGATION_CDC_WEBHOOK_ENABLED"
+      value = "true"
     }
   ]
 
