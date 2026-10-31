@@ -1,5 +1,7 @@
 package it.pagopa.selfcare.onboarding.service;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.microsoft.azure.functions.ExecutionContext;
 import io.quarkus.test.InjectMock;
 import io.quarkus.test.junit.QuarkusTest;
@@ -17,6 +19,8 @@ import jakarta.inject.Inject;
 import org.bson.Document;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 import org.openapi.quarkus.document_json.model.AttachmentPdfRequest;
@@ -33,12 +37,15 @@ import org.openapi.quarkus.user_registry_json.model.CertifiableFieldResourceOfst
 import org.openapi.quarkus.user_registry_json.model.UserResource;
 import org.openapi.quarkus.user_registry_json.model.WorkContactResource;
 
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.time.OffsetDateTime;
 import java.util.*;
 import java.util.logging.Logger;
 
 import static it.pagopa.selfcare.onboarding.service.OnboardingService.USERS_FIELD_LIST;
 import static it.pagopa.selfcare.onboarding.service.OnboardingService.USERS_WORKS_FIELD_LIST;
+import static it.pagopa.selfcare.onboarding.utils.Utils.readOnboardingValue;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
@@ -152,6 +159,39 @@ class OnboardingServiceTest {
         assertThrows(
                 GenericOnboardingException.class,
                 () -> onboardingService.createContract(onboardingWorkflow));
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {
+            "success_confirmation_request.json",
+            "success_for_approve_request.json",
+            "success_users_request.json"
+    })
+    void createContract_cucumberFixturesProvideRequiredInstitutionDescription(String fixture)
+            throws IOException {
+        Onboarding onboarding;
+        try (var input = getClass().getClassLoader().getResourceAsStream(
+                "integration_data/onboarding/selc/" + fixture)) {
+            assertNotNull(input, "Missing Cucumber fixture: " + fixture);
+            onboarding = readOnboardingValue(
+                    new ObjectMapper().registerModule(new JavaTimeModule()),
+                    new String(input.readAllBytes(), StandardCharsets.UTF_8));
+        }
+        User manager = onboarding.getUsers().stream()
+                .filter(user -> user.getRole() == PartyRole.MANAGER)
+                .findFirst().orElseThrow();
+        UserResource userResource = createUserResource();
+        userResource.setId(UUID.fromString(manager.getId()));
+        when(pdvUserRegistryService.getUserById(USERS_WORKS_FIELD_LIST, manager.getId()))
+                .thenReturn(userResource);
+        when(productService.getValidProduct(onboarding.getProductId())).thenReturn(createDummyProduct());
+
+        onboardingService.createContract(getOnboardingWorkflowInstitution(onboarding));
+
+        ArgumentCaptor<ContractPdfRequest> request = ArgumentCaptor.forClass(ContractPdfRequest.class);
+        verify(documentService).createContractPdf(request.capture());
+        assertNotNull(request.getValue().getInstitution().getDescription(), fixture);
+        assertFalse(request.getValue().getInstitution().getDescription().isBlank(), fixture);
     }
 
     @Test

@@ -6,6 +6,7 @@
   },
   "createdAt": "2025-05-13T12:37:49.054Z",
   "institution": {
+    "description": "test",
     "imported": false,
     "institutionType": "PSP",
     "taxCode": "13234472821",
