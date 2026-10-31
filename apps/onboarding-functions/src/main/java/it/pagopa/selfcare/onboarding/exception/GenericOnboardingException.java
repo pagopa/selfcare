@@ -9,6 +9,11 @@ public class GenericOnboardingException extends RuntimeException {
         this.code = code;
     }
 
+    public GenericOnboardingException(String message, Throwable cause) {
+        super(message, cause);
+        this.code = "0000";
+    }
+
     public GenericOnboardingException(String message) {
         super(message);
         this.code = "0000";

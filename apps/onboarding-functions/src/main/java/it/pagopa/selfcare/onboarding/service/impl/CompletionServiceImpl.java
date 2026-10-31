@@ -423,7 +423,7 @@ public class CompletionServiceImpl implements CompletionService {
                     existsDelegation = delegationWithPaginationResponse.getDelegations().stream().anyMatch(delegation -> ACTIVE.equals(delegation.getStatus()));
                 }
             } catch (WebApplicationException e) {
-                throw new GenericOnboardingException(String.format("Error during retrieve delegation %s", e.getMessage()));
+                throw new GenericOnboardingException(String.format("Error during retrieve delegation %s", e.getMessage()), e);
             }
         }
         return Boolean.toString(existsDelegation);
@@ -503,7 +503,7 @@ public class CompletionServiceImpl implements CompletionService {
                 String identifier = institution.getSubunitCode() != null ? institution.getSubunitCode() : institution.getTaxCode();
                 throw new ResourceNotFoundException(String.format("Institution with code '%s' not found in the IPA registry", identifier));
             }
-            throw new GenericOnboardingException(e.getMessage());
+            throw new GenericOnboardingException(e.getMessage(), e);
         }
     }
 
@@ -580,9 +580,9 @@ public class CompletionServiceImpl implements CompletionService {
                 )
                 .filter(Optional::isPresent)
                 .map(Optional::get)
-                .filter(workContract -> StringUtils.isNotBlank(workContract.getEmail().getValue()))
-                .map(workContract -> workContract.getEmail().getValue())
-                .collect(Collectors.toList());
+                .map(workContract -> Optional.ofNullable(workContract.getEmail()).map(email -> email.getValue()).orElse(null))
+                .filter(StringUtils::isNotBlank)
+                .collect(Collectors.toCollection(ArrayList::new));
     }
 
     @Override

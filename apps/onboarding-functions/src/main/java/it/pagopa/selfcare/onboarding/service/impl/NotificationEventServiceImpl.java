@@ -272,7 +272,7 @@ public class NotificationEventServiceImpl implements NotificationEventService {
         try {
             message = mapper.writeValueAsString(notificationToSend);
         } catch (JsonProcessingException e) {
-            throw new NotificationException("Notification cannot be serialized");
+            throw new NotificationException("Notification cannot be serialized", e);
         } finally {
             String finalMessage = message;
             context.getLogger().info(
@@ -291,7 +291,7 @@ public class NotificationEventServiceImpl implements NotificationEventService {
         try {
             message = mapper.writeValueAsString(notificationToSend);
         } catch (JsonProcessingException e) {
-            throw new NotificationException("Notification cannot be serialized");
+            throw new NotificationException("Notification cannot be serialized", e);
         } finally {
             String finalMessage = message;
             context.getLogger()

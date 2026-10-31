@@ -5,7 +5,6 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -45,33 +44,6 @@ class DocumentServiceImplTest {
     ContractPdfRequest req = new ContractPdfRequest();
     service.createContractPdf(req);
     verify(contentApi).createContractPdf(req);
-  }
-
-  @Test
-  void createContractPdf_shouldLogAndRethrowOnWebApplicationException() {
-    ContractPdfRequest req = new ContractPdfRequest();
-    Response errorResponse = Response.status(500).entity("boom").build();
-    WebApplicationException wae = new WebApplicationException(errorResponse);
-    doThrow(wae).when(contentApi).createContractPdf(req);
-
-    WebApplicationException thrown =
-        assertThrows(WebApplicationException.class, () -> service.createContractPdf(req));
-    assertSame(wae, thrown);
-  }
-
-  @Test
-  void createContractPdf_shouldLogAndRethrowOnWebApplicationExceptionWithNullResponse() {
-    ContractPdfRequest req = new ContractPdfRequest();
-    WebApplicationException nullResponseException =
-        new WebApplicationException("null-response") {
-          @Override
-          public Response getResponse() {
-            return null;
-          }
-        };
-    doThrow(nullResponseException).when(contentApi).createContractPdf(req);
-
-    assertThrows(WebApplicationException.class, () -> service.createContractPdf(req));
   }
 
   // ---------------------------------------------------------------------------

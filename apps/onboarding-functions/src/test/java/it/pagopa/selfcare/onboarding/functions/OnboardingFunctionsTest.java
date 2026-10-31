@@ -8,6 +8,8 @@ import com.microsoft.azure.functions.HttpRequestMessage;
 import com.microsoft.azure.functions.HttpResponseMessage;
 import com.microsoft.azure.functions.HttpStatus;
 import com.microsoft.durabletask.DurableTaskClient;
+import com.microsoft.durabletask.FailureDetails;
+import com.microsoft.durabletask.RetryContext;
 import com.microsoft.durabletask.Task;
 import com.microsoft.durabletask.TaskFailedException;
 import com.microsoft.durabletask.TaskOrchestrationContext;
@@ -23,7 +25,9 @@ import it.pagopa.selfcare.onboarding.dto.ManagingInstitutionSendEmail;
 import it.pagopa.selfcare.onboarding.dto.AttachmentTemplate;
 import it.pagopa.selfcare.onboarding.dto.UserMail;
 import it.pagopa.selfcare.onboarding.entity.*;
+import it.pagopa.selfcare.onboarding.config.RetryPolicyConfig;
 import it.pagopa.selfcare.onboarding.exception.GenericOnboardingException;
+import it.pagopa.selfcare.onboarding.exception.NonRetryableRestClientException;
 import it.pagopa.selfcare.onboarding.exception.ResourceNotFoundException;
 import it.pagopa.selfcare.onboarding.service.ContractService;
 import it.pagopa.selfcare.onboarding.service.CompletionService;
@@ -904,9 +908,36 @@ class OnboardingFunctionsTest {
         .callActivity(captorActivity.capture(), any(), any(), any());
 
     assertEquals(EXISTS_DELEGATION_ACTIVITY, captorActivity.getAllValues().get(0));
-    verify(service, times(1))
+    // the aggregator onboarding ("id") must not be marked FAILED when the aggregate cannot be created
+    verify(service, never()).updateOnboardingStatusAndInstanceId(any(), any(), any());
+  }
+
+  @Test
+  void onboardingsAggregateOrchestrator_subOrchestratorFailed_marksAggregateFailed() {
+    TaskOrchestrationContext orchestrationContext = mock(TaskOrchestrationContext.class);
+    when(orchestrationContext.getInput(String.class)).thenReturn(onboardingString);
+    when(orchestrationContext.getInstanceId()).thenReturn("instance-id");
+    Task delegationTask = mock(Task.class);
+    when(delegationTask.await()).thenReturn("false");
+    when(orchestrationContext.callActivity(eq(EXISTS_DELEGATION_ACTIVITY), any(), any(), any()))
+        .thenReturn(delegationTask);
+    Task createTask = mock(Task.class);
+    when(createTask.await()).thenReturn("aggregate-onboarding-id");
+    when(orchestrationContext.callActivity(
+            eq(CREATE_AGGREGATE_ONBOARDING_REQUEST_ACTIVITY), any(), any(), any()))
+        .thenReturn(createTask);
+    Task subTask = mock(Task.class);
+    when(subTask.await()).thenThrow(mock(TaskFailedException.class));
+    when(orchestrationContext.callSubOrchestrator(eq("Onboardings"), any(), any())).thenReturn(subTask);
+
+    assertThrows(
+        TaskFailedException.class,
+        () -> function.onboardingsAggregateOrchestrator(orchestrationContext, executionContext));
+
+    verify(service)
         .updateOnboardingStatusAndInstanceId(
-            "id", OnboardingStatus.FAILED, orchestrationContext.getInstanceId());
+            "aggregate-onboarding-id", OnboardingStatus.FAILED, "instance-id");
+    verify(service, never()).updateOnboardingStatusAndInstanceId(eq("id"), any(), any());
   }
 
   @Test
@@ -1022,6 +1053,8 @@ class OnboardingFunctionsTest {
 
     // Verify severe log was called for the failure
     verify(telemetryService).trackFunction(any(), contains("failed during batch processing"), eq(SeverityLevel.Error), any());
+    // Final summary reports the failed aggregates without blocking the flow
+    verify(telemetryService).trackFunction(any(), contains("1/3 aggregates failed"), eq(SeverityLevel.Warning), any());
 
     // Verify all 3 aggregates were attempted
     verify(orchestrationContext, times(3))
@@ -2417,4 +2450,65 @@ class OnboardingFunctionsTest {
       return managingInstitution;
   }
 
+
+  @Test
+  void retryHandler_shouldReplicateRetryPolicyBackoff() {
+    TaskOrchestrationContext orchestrationContext = mock(TaskOrchestrationContext.class);
+    Task<Void> timer = mock(Task.class);
+    when(orchestrationContext.createTimer(any(Duration.class))).thenReturn(timer);
+    RetryContext retryContext = retryContext(orchestrationContext, 2, "java.lang.RuntimeException", "boom", null);
+
+    assertTrue(OnboardingFunctions.retryHandler(retryConfig()).handle(retryContext));
+    // same delay as RetryPolicy: firstRetryInterval * backoffCoefficient ^ attempt
+    verify(orchestrationContext).createTimer(Duration.ofSeconds(5 * 5 * 5));
+  }
+
+  @Test
+  void retryHandler_shouldStopAfterMaxAttempts() {
+    TaskOrchestrationContext orchestrationContext = mock(TaskOrchestrationContext.class);
+    RetryContext retryContext = retryContext(orchestrationContext, 5, "java.lang.RuntimeException", "boom", null);
+
+    assertFalse(OnboardingFunctions.retryHandler(retryConfig()).handle(retryContext));
+    verify(orchestrationContext, never()).createTimer(any(Duration.class));
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = {"errorType", "errorMessage", "stackTrace"})
+  void retryHandler_shouldNotRetryNonRetryableRestClientErrors(String markerPosition) {
+    TaskOrchestrationContext orchestrationContext = mock(TaskOrchestrationContext.class);
+    String type = NonRetryableRestClientException.class.getName();
+    RetryContext retryContext =
+        retryContext(
+            orchestrationContext,
+            1,
+            "errorType".equals(markerPosition) ? type : "Microsoft.Azure.WebJobs.Host.FunctionInvocationException",
+            "errorMessage".equals(markerPosition) ? "Exception: NonRetryableRestClientException: HTTP 400" : "failed",
+            "stackTrace".equals(markerPosition) ? "Caused by: " + type + ": HTTP 400" : null);
+
+    assertFalse(OnboardingFunctions.retryHandler(retryConfig()).handle(retryContext));
+    verify(orchestrationContext, never()).createTimer(any(Duration.class));
+  }
+
+  private static RetryPolicyConfig retryConfig() {
+    RetryPolicyConfig config = mock(RetryPolicyConfig.class);
+    when(config.maxAttempts()).thenReturn(5);
+    when(config.firstRetryInterval()).thenReturn(5L);
+    when(config.backoffCoefficient()).thenReturn(5.0);
+    return config;
+  }
+
+  private static RetryContext retryContext(
+      TaskOrchestrationContext orchestrationContext, int attempt, String errorType, String errorMessage, String stackTrace) {
+    try {
+      var failureCtor = FailureDetails.class.getDeclaredConstructor(String.class, String.class, String.class, boolean.class);
+      failureCtor.setAccessible(true);
+      var retryCtor = RetryContext.class.getDeclaredConstructor(
+          TaskOrchestrationContext.class, int.class, FailureDetails.class, Duration.class);
+      retryCtor.setAccessible(true);
+      return retryCtor.newInstance(
+          orchestrationContext, attempt, failureCtor.newInstance(errorType, errorMessage, stackTrace, false), Duration.ZERO);
+    } catch (ReflectiveOperationException e) {
+      throw new IllegalStateException(e);
+    }
+  }
 }
