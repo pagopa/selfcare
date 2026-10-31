@@ -18,6 +18,22 @@ class AuthenticationPropagationHeadersFactoryTest {
     AuthenticationPropagationHeadersFactory authenticationPropagationHeadersFactory;
 
     @Test
+    void machineModeRemovesLegacyAuthorizationWithoutRequiringStaticToken() {
+        AuthenticationPropagationHeadersFactory factory = new AuthenticationPropagationHeadersFactory();
+        factory.machineTokensEnabled = true;
+        factory.bearerToken = "";
+        MultivaluedHashMap<String, String> incoming = new MultivaluedHashMap<>();
+        incoming.putSingle("X-Tenant-Id", "AR");
+        MultivaluedHashMap<String, String> outgoing = new MultivaluedHashMap<>();
+        outgoing.putSingle("Authorization", "Bearer stale-token");
+
+        factory.update(incoming, outgoing);
+
+        assertTrue(!outgoing.containsKey("Authorization"));
+        assertEquals(List.of("AR"), outgoing.get("X-Tenant-Id"));
+    }
+
+    @Test
     void propagatesIncomingTenantHeader() {
         // given
         MultivaluedHashMap<String, String> incomingHeaders = new MultivaluedHashMap<>();

@@ -33,6 +33,9 @@ public class TenantHeaderClientRequestFilter implements ClientRequestFilter {
     private final Optional<String> technicalToken;
     private final String functionKey;
 
+    @ConfigProperty(name = "selfcare.m2m.enabled", defaultValue = "false")
+    boolean machineTokensEnabled;
+
     @Inject
     public TenantHeaderClientRequestFilter(
             AuthenticationPropagationHeadersFactory headersFactory,
@@ -55,8 +58,11 @@ public class TenantHeaderClientRequestFilter implements ClientRequestFilter {
         if (tenant != null) {
             requestContext.getHeaders().put(TENANT_HEADER, new ArrayList<>(tenant));
         }
-        requestContext.getHeaders().putSingle(
-                AUTHORIZATION_HEADER, "Bearer " + resolveBearerToken());
+        String bearer = resolveBearerToken();
+        requestContext.getHeaders().remove(AUTHORIZATION_HEADER);
+        if (bearer != null) {
+            requestContext.getHeaders().putSingle(AUTHORIZATION_HEADER, "Bearer " + bearer);
+        }
         requestContext.getHeaders().putSingle(FUNCTION_KEY_HEADER, functionKey);
     }
 
@@ -70,6 +76,10 @@ public class TenantHeaderClientRequestFilter implements ClientRequestFilter {
             }
         } catch (RuntimeException ignored) {
             // There is no active HTTP security context: use the technical token below.
+        }
+        if (machineTokensEnabled) {
+            // The asynchronous M2M filter acquires the token without blocking the event loop.
+            return null;
         }
         return technicalToken
                 .filter(configuredToken -> !configuredToken.isBlank())

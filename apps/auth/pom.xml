@@ -46,6 +46,10 @@
   </dependencyManagement>
   <dependencies>
     <dependency>
+      <groupId>org.bitbucket.b_c</groupId>
+      <artifactId>jose4j</artifactId>
+    </dependency>
+    <dependency>
       <groupId>jakarta.validation</groupId>
       <artifactId>jakarta.validation-api</artifactId>
       <version>3.0.2</version>
@@ -374,6 +378,70 @@
     </plugins>
   </build>
   <profiles>
+    <profile>
+      <id>m2m-integration</id>
+      <dependencies>
+        <dependency>
+          <groupId>it.pagopa.selfcare</groupId>
+          <artifactId>onboarding-functions</artifactId>
+          <version>1.0.0-SNAPSHOT</version>
+          <classifier>m2m-contract</classifier>
+          <scope>test</scope>
+          <exclusions>
+            <exclusion><groupId>*</groupId><artifactId>*</artifactId></exclusion>
+          </exclusions>
+        </dependency>
+        <dependency>
+          <groupId>com.microsoft.azure.functions</groupId>
+          <artifactId>azure-functions-java-library</artifactId>
+          <scope>test</scope>
+        </dependency>
+        <dependency>
+          <groupId>io.jsonwebtoken</groupId>
+          <artifactId>jjwt</artifactId>
+          <version>0.9.1</version>
+          <scope>test</scope>
+        </dependency>
+        <dependency>
+          <groupId>javax.xml.bind</groupId>
+          <artifactId>jaxb-api</artifactId>
+          <version>2.3.1</version>
+          <scope>test</scope>
+        </dependency>
+      </dependencies>
+      <build>
+        <directory>${project.basedir}/target/m2m</directory>
+        <plugins>
+          <plugin>
+            <groupId>org.codehaus.mojo</groupId>
+            <artifactId>build-helper-maven-plugin</artifactId>
+            <version>3.6.1</version>
+            <executions>
+              <execution>
+                <id>m2m-integration-tests</id>
+                <phase>generate-test-sources</phase>
+                <goals><goal>add-test-source</goal></goals>
+                <configuration>
+                  <sources>
+                    <source>${project.basedir}/../onboarding-functions/src/m2m-test/issuer</source>
+                  </sources>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
+          <plugin>
+            <artifactId>maven-surefire-plugin</artifactId>
+            <configuration>
+              <systemPropertyVariables>
+                <maven.home>${maven.home}</maven.home>
+                <m2m.repository>${settings.localRepository}</m2m.repository>
+                <m2m.workspace>${project.basedir}/../..</m2m.workspace>
+              </systemPropertyVariables>
+            </configuration>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
     <profile>
       <id>native</id>
       <activation>

@@ -11,6 +11,9 @@ import java.util.Set;
 @ConfigMapping(prefix = "onboarding-functions.jwt.validation")
 public interface JwtValidationConfig {
 
+  @WithDefault("false")
+  boolean machineTokensEnabled();
+
   /** Accepted values for the JWT {@code iss} claim. */
   @WithDefault("SPID,PAGOPA")
   Set<String> allowedIssuers();

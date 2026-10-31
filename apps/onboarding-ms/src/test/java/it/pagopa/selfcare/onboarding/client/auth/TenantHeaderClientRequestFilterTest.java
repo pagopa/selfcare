@@ -39,6 +39,20 @@ class TenantHeaderClientRequestFilterTest {
   }
 
   @Test
+  void machineModeDoesNotFallBackToTheConfiguredTechnicalToken() {
+    TenantHeaderClientRequestFilter filter =
+        new TenantHeaderClientRequestFilter(
+            headersFactory, tokenInstance, Optional.of(technicalJwt("AR")), "function-key");
+    filter.machineTokensEnabled = true;
+    MultivaluedMap<String, Object> outgoing = new MultivaluedHashMap<>();
+    outgoing.putSingle("Authorization", "Bearer stale-token");
+    filter.filter(requestContext(outgoing));
+    org.junit.jupiter.api.Assertions.assertFalse(outgoing.containsKey("Authorization"));
+    assertEquals(List.of("AR"), outgoing.get("X-Tenant-Id"));
+    assertEquals(List.of("function-key"), outgoing.get("x-functions-key"));
+  }
+
+  @Test
   void propagatesSessionTokenAndValidatedTenant() {
     // given
     when(tokenInstance.isResolvable()).thenReturn(true);
