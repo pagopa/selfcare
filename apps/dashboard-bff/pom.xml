@@ -472,6 +472,10 @@
                             <modelNameSuffix/>
                             <generateApiTests>false</generateApiTests>
                             <generateModelTests>false</generateModelTests>
+                            <!-- generator 6.3.0 skips models used only in multipart forms (e.g. UserAttachmentRequest) but still references them in the API -->
+                            <globalProperties>
+                                <skipFormModel>false</skipFormModel>
+                            </globalProperties>
                             <configOptions>
                                 <generateForOpenFeign>true</generateForOpenFeign>
                                 <basePackage>${project.groupId}.document.generated.openapi.v1</basePackage>
