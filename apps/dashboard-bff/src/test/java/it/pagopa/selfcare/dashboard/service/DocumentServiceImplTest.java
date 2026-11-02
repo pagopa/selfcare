@@ -129,23 +129,48 @@ class DocumentServiceImplTest {
 
         AvailableDocumentsResponse available = new AvailableDocumentsResponse();
         available.setDocuments(List.of(
-                availableDocument("Piattaforma_pagoPA_accordo_adesione.pdf", it.pagopa.selfcare.document.generated.openapi.v1.dto.DocumentType.INSTITUTION),
-                availableDocument("Accordo di Adesione IO v. 2.3_20 gennaio 2021.pdf.0000010072.p7m", it.pagopa.selfcare.document.generated.openapi.v1.dto.DocumentType.INSTITUTION),
+                availableDocument("Piattaforma_pagoPA_accordo_adesione.pdf", it.pagopa.selfcare.document.generated.openapi.v1.dto.DocumentType.INSTITUTION, "tokenId"),
+                availableDocument("Accordo di Adesione IO v. 2.3_20 gennaio 2021.pdf.0000010072.p7m", it.pagopa.selfcare.document.generated.openapi.v1.dto.DocumentType.INSTITUTION, "completedUpdateId"),
+                availableDocument("pending-update-contract.pdf", it.pagopa.selfcare.document.generated.openapi.v1.dto.DocumentType.INSTITUTION, "pendingUpdateId"),
                 availableDocument("Addendum", it.pagopa.selfcare.document.generated.openapi.v1.dto.DocumentType.ATTACHMENT),
                 availableDocument("Dichiarazione_sostitutiva_certificazione", it.pagopa.selfcare.document.generated.openapi.v1.dto.DocumentType.ATTACHMENT),
                 availableDocument("user-contract.pdf", it.pagopa.selfcare.document.generated.openapi.v1.dto.DocumentType.USER)));
         when(documentRestClient._getAvailableDocuments("tokenId")).thenReturn(ResponseEntity.ok(available));
 
+        OnboardingGetResponse productOnboardings = new OnboardingGetResponse();
+        productOnboardings.setItems(List.of(
+                onboardingWithId("completedUpdateId", "COMPLETED"),
+                onboardingWithId("pendingUpdateId", "PENDING")));
+        when(onboardingRestClient._getOnboardingWithFilter(null, INSTITUTION_ID, null, null, null, List.of(PRODUCT_ID), null, true, null, null, null, null, null, null))
+                .thenReturn(ResponseEntity.ok(productOnboardings));
+
         // when
         DocumentsResource result = documentService.getDocumentsList(INSTITUTION_ID, PRODUCT_ID);
 
-        // then
+        // then only the contract of the most recent completed onboarding is exposed
         assertEquals(List.of(
-                new DocumentResource("Piattaforma_pagoPA_accordo_adesione", DocumentType.INSTITUTION),
                 new DocumentResource("Accordo di Adesione IO v. 2.3_20 gennaio 2021", DocumentType.INSTITUTION),
                 new DocumentResource("Addendum", DocumentType.ATTACHMENT)), result.getDocuments());
         verify(documentRestClient, times(1))._getAvailableDocuments("tokenId");
         verifyNoMoreInteractions(documentRestClient);
+    }
+
+    @Test
+    void getDocumentsList_onlyContractOfActiveOnboarding_doesNotCallOnboardingMs() {
+        OnboardingsResponse onboardings = new OnboardingsResponse();
+        onboardings.setOnboardings(List.of(
+                institutionOnboarding(PRODUCT_ID, OnboardingResponse.StatusEnum.ACTIVE, "tokenId", OffsetDateTime.now())));
+        when(coreInstitutionApiRestClient._getOnboardingsInstitutionUsingGET(INSTITUTION_ID, null))
+                .thenReturn(ResponseEntity.ok(onboardings));
+        AvailableDocumentsResponse available = new AvailableDocumentsResponse();
+        available.setDocuments(List.of(
+                availableDocument("contract.pdf", it.pagopa.selfcare.document.generated.openapi.v1.dto.DocumentType.INSTITUTION, "tokenId")));
+        when(documentRestClient._getAvailableDocuments("tokenId")).thenReturn(ResponseEntity.ok(available));
+
+        DocumentsResource result = documentService.getDocumentsList(INSTITUTION_ID, PRODUCT_ID);
+
+        assertEquals(List.of(new DocumentResource("contract", DocumentType.INSTITUTION)), result.getDocuments());
+        verifyNoInteractions(onboardingRestClient);
     }
 
     @Test
@@ -221,10 +246,26 @@ class DocumentServiceImplTest {
 
     private static AvailableDocumentResponse availableDocument(String name,
                                                                it.pagopa.selfcare.document.generated.openapi.v1.dto.DocumentType type) {
+        return availableDocument(name, type, "tokenId");
+    }
+
+    private static AvailableDocumentResponse availableDocument(String name,
+                                                               it.pagopa.selfcare.document.generated.openapi.v1.dto.DocumentType type,
+                                                               String onboardingId) {
         AvailableDocumentResponse document = new AvailableDocumentResponse();
         document.setName(name);
         document.setType(type);
+        document.setOnboardingId(onboardingId);
         return document;
+    }
+
+    private static OnboardingGet onboardingWithId(String id, String status) {
+        OnboardingGet onboarding = new OnboardingGet();
+        onboarding.setId(id);
+        onboarding.setProductId(PRODUCT_ID);
+        onboarding.setWorkflowType("CONTRACT_UPDATE");
+        onboarding.setStatus(status);
+        return onboarding;
     }
 
     private static OnboardingGet onboarding(String productId, String workflowType, String status,

@@ -65,5 +65,22 @@
     "updatedAt": {
       "$date": "2022-10-26T16:34:39.908Z"
     }
+  },
+  {
+    "_id": "9f6a3b2c-5d4e-4f70-8b8c-2d3e4f5a6b72",
+    "onboardingId": "9f6a3b2c-5d4e-4f70-8b8c-2d3e4f5a6b71",
+    "rootOnboardingId": "21f73488-d0df-4a3d-9b6f-9adf634780b5",
+    "type": "INSTITUTION",
+    "productId": "prod-pagopa",
+    "contractVersion": "1.0.1",
+    "contractTemplate": "contracts/dummy-accordo_di_adesione.html",
+    "contractSigned": "parties/docs/9f6a3b2c-5d4e-4f70-8b8c-2d3e4f5a6b71/signed_PAGOPA_accordo_adesione_update.pdf",
+    "contractFilename": "signed_PAGOPA_accordo_adesione_update.pdf",
+    "createdAt": {
+      "$date": "2026-10-20T10:00:00.000Z"
+    },
+    "updatedAt": {
+      "$date": "2026-10-20T10:00:00.000Z"
+    }
   }
 ]

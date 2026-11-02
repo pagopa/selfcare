@@ -26,10 +26,13 @@ import org.springframework.util.Assert;
 import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -118,17 +121,56 @@ public class DocumentServiceImpl implements DocumentService {
         }
 
         final String tokenId = activeTokenId.get();
-        final List<DocumentResource> documents = Optional.ofNullable(documentRestClient._getAvailableDocuments(tokenId))
+        final List<AvailableDocumentResponse> availableDocuments = Optional.ofNullable(documentRestClient._getAvailableDocuments(tokenId))
                 .map(ResponseEntity::getBody)
                 .map(AvailableDocumentsResponse::getDocuments)
-                .orElse(Collections.emptyList())
-                .stream()
+                .orElse(Collections.emptyList());
+        final Optional<AvailableDocumentResponse> currentContract = getLatestCompletedContract(availableDocuments, tokenId, institutionId, productId);
+
+        final List<DocumentResource> documents = availableDocuments.stream()
+                .filter(document -> !isInstitutionContract(document) || currentContract.filter(contract -> contract == document).isPresent())
                 .map(this::toDocumentResource)
                 .flatMap(Optional::stream)
                 .toList();
 
         log.trace("getDocumentsList end");
         return new DocumentsResource(documents);
+    }
+
+    /**
+     * The dossier contains the contract of the institution adhesion and the ones of its contract updates (ordered by creation date):
+     * only the contract of the most recent completed onboarding is exposed. The active onboarding of institution-ms is completed by
+     * definition, the others are checked on onboarding-ms only when needed.
+     */
+    private Optional<AvailableDocumentResponse> getLatestCompletedContract(List<AvailableDocumentResponse> documents, String tokenId,
+                                                                           String institutionId, String productId) {
+        final List<AvailableDocumentResponse> contracts = documents.stream()
+                .filter(DocumentServiceImpl::isInstitutionContract)
+                .toList();
+        final Set<String> completedOnboardingIds = new HashSet<>(Set.of(tokenId));
+        if (contracts.stream().anyMatch(contract -> !tokenId.equals(contract.getOnboardingId()))) {
+            completedOnboardingIds.addAll(getCompletedOnboardingIds(institutionId, productId));
+        }
+        return contracts.stream()
+                .filter(contract -> completedOnboardingIds.contains(contract.getOnboardingId()))
+                .reduce((previous, next) -> next);
+    }
+
+    private Set<String> getCompletedOnboardingIds(String institutionId, String productId) {
+        return Optional.ofNullable(onboardingRestClient._getOnboardingWithFilter(
+                        null, institutionId, null, null, null, List.of(productId), null, true, null, null, null, null, null, null))
+                .map(ResponseEntity::getBody)
+                .map(OnboardingGetResponse::getItems)
+                .orElse(Collections.emptyList())
+                .stream()
+                .filter(onboarding -> OnboardingStatus.COMPLETED.getValue().equals(onboarding.getStatus()))
+                .map(OnboardingGet::getId)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toSet());
+    }
+
+    private static boolean isInstitutionContract(AvailableDocumentResponse document) {
+        return it.pagopa.selfcare.document.generated.openapi.v1.dto.DocumentType.INSTITUTION.equals(document.getType());
     }
 
     // The tokenId is read from institution-ms so that the document dossier always belongs to the institution and product checked by the permission
