@@ -309,6 +309,17 @@ APP_ROWS = [
         },
     },
     {
+        "label": "webhook-consumer",
+        "definition_workflow": "release_app.yml",
+        "variables": ["env", "target=ar", "app=webhook-consumer"],
+        "combos": AR_ONLY_COLUMNS,
+        "source": {
+            "type": "release_dispatch",
+            "workflow": "release_app.yml",
+            "app": "webhook-consumer",
+        },
+    },
+    {
         "label": "user-cdc",
         "definition_workflow": "trigger_release_user_cdc.yml",
         "variables": ["env", "branch", "app=user-cdc", "targets=ar,pnpg"],

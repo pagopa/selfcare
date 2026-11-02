@@ -119,7 +119,7 @@ Current workflow status is available in [GitHub Actions](https://github.com/pago
 | Products | `product`, `product-cdc` |
 | Users | `user-ms`, `user-cdc`, `user-group-ms`, `user-group-cdc` |
 | Documents and delegation | `document-ms`, `delegation-cdc` |
-| APIs and integration | `external-api`, `webhook` |
+| APIs and integration | `external-api`, `webhook`, `webhook-consumer` |
 | Registry proxy | `registry-proxy`, `registry-proxy-runner` |
 | Shared libraries | `selfcare-cucumber-sdk`, `selfcare-onboarding-sdk-*`, `selfcare-sdk-*`, `selfcare-user-sdk-*` |
 

@@ -497,8 +497,8 @@ public class SignatureServiceImpl implements SignatureService {
 
                 String signReason =
                         signature.reason()
-                                .replace("${institutionName}", institutionDescription)
-                                .replace("${productName}", productId);
+                                .replace("${institutionName}", StringUtils.defaultString(institutionDescription))
+                                .replace("${productName}", StringUtils.defaultString(productId));
 
                 log.info("Signing input file {} for tenant {} using reason {}",
                         sanitize(pdf.getName()), signature.tenantId(), sanitize(signReason));

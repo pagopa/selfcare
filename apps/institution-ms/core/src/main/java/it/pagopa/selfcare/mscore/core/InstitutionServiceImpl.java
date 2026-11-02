@@ -358,7 +358,7 @@ public class InstitutionServiceImpl implements InstitutionService {
             return institutionUpdate.getGeographicTaxonomies()
                     .stream()
                     .map(geoTaxonomy -> retrieveGeoTaxonomies(geoTaxonomy.getCode())
-                            .orElseThrow(() -> new MsCoreException(String.format(CustomError.GEO_TAXONOMY_CODE_NOT_FOUND.getMessage(), geoTaxonomy.getCode()), geoTaxonomy.getCode())))
+                            .orElseThrow(() -> new InvalidRequestException(String.format(CustomError.GEO_TAXONOMY_CODE_NOT_FOUND.getMessage(), geoTaxonomy.getCode()), CustomError.GEO_TAXONOMY_CODE_NOT_FOUND.getCode())))
                     .map(geo -> new InstitutionGeographicTaxonomies(geo.getGeotaxId(), geo.getDescription()))
                     .toList();
         }
