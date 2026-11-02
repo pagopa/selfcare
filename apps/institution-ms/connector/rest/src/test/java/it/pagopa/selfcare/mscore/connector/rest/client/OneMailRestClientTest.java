@@ -2,6 +2,9 @@ package it.pagopa.selfcare.mscore.connector.rest.client;
 
 import com.github.tomakehurst.wiremock.junit5.WireMockExtension;
 import it.pagopa.selfcare.commons.connector.rest.BaseFeignRestClientTest;
+import it.pagopa.selfcare.commons.tenant.TenantConfiguration;
+import it.pagopa.selfcare.commons.tenant.TenantContext;
+import it.pagopa.selfcare.commons.tenant.UnresolvedTenantException;
 import it.pagopa.selfcare.one_mail.generated.openapi.v1.dto.EmailAddress;
 import it.pagopa.selfcare.one_mail.generated.openapi.v1.dto.EmailHighPriorityBodyDTO;
 import it.pagopa.selfcare.one_mail.generated.openapi.v1.dto.EmailSuccessResponseDTO;
@@ -14,6 +17,7 @@ import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.cloud.openfeign.EnableFeignClients;
 import org.springframework.context.ApplicationContextInitializer;
 import org.springframework.context.ConfigurableApplicationContext;
+import org.springframework.context.annotation.Import;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
@@ -25,11 +29,14 @@ import java.util.Objects;
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @TestPropertySource(
         locations = "classpath:config/one-mail-rest-client.properties",
         properties = {
-                "ONE_MAIL_API_KEY=test-api-key",
+                "MAIL_AR=test-api-key",
+                "MAIL_PNPG=pnpg-api-key",
+                "tenant.mongodb.required=false",
                 "ONE_MAIL_REST_CLIENT_READ_TIMEOUT=5000"
         }
 )
@@ -44,8 +51,14 @@ class OneMailRestClientTest extends BaseFeignRestClientTest {
             .options(wireMockConfig().dynamicPort())
             .build();
 
+    @Order(1)
+    @RegisterExtension
+    static WireMockExtension wmPnpg = WireMockExtension.newInstance()
+            .options(wireMockConfig().dynamicPort()).build();
+
     @TestConfiguration
     @EnableFeignClients(clients = OneMailRestClient.class)
+    @Import(TenantConfiguration.class)
     static class OneMailRestClientTestConfig {
     }
 
@@ -53,13 +66,24 @@ class OneMailRestClientTest extends BaseFeignRestClientTest {
         @SneakyThrows
         @Override
         public void initialize(ConfigurableApplicationContext applicationContext) {
-            TestPropertySourceUtils.addInlinedPropertiesToEnvironment(applicationContext,
-                    String.format("ONE_MAIL_URL=%s", wm.getRuntimeInfo().getHttpBaseUrl()));
+            configureRegistry(applicationContext, wm.getRuntimeInfo().getHttpBaseUrl(),
+                    wmPnpg.getRuntimeInfo().getHttpBaseUrl());
         }
+    }
+
+    static void configureRegistry(ConfigurableApplicationContext context, String arUrl, String pnpgUrl) {
+        TestPropertySourceUtils.addInlinedPropertiesToEnvironment(context,
+                "tenant.registry.json=" + """
+                {"AR":{"oneMail":{"url":"%s","sender":"ar@test.it","apiKeyEnvVar":"MAIL_AR"}},
+                 "PNPG":{"oneMail":{"url":"%s","sender":"pnpg@test.it","apiKeyEnvVar":"MAIL_PNPG"}}}
+                """.formatted(arUrl, pnpgUrl).replace("\n", ""));
     }
 
     @Autowired
     private OneMailRestClient restClient;
+
+    @Autowired
+    private TenantContext tenantContext;
 
     @Test
     void sendHighPriorityEmail() {
@@ -77,7 +101,8 @@ class OneMailRestClientTest extends BaseFeignRestClientTest {
                         "templateAttributes", Map.of("productName", "product")))
                 .build();
 
-        ResponseEntity<EmailSuccessResponseDTO> response = restClient._v1EmailsSendHighPost(false, body);
+        ResponseEntity<EmailSuccessResponseDTO> response = tenantContext.withTenant("AR",
+                () -> restClient._v1EmailsSendHighPost(false, body));
 
         assertEquals("request-id", Objects.requireNonNull(response.getBody()).getRequestId());
         wm.verify(postRequestedFor(urlPathEqualTo("/v1/emails/send/high"))
@@ -93,5 +118,21 @@ class OneMailRestClientTest extends BaseFeignRestClientTest {
                           }
                         }
                         """)));
+        wmPnpg.stubFor(post(urlPathEqualTo("/v1/emails/send/high"))
+                .willReturn(aResponse().withStatus(202).withHeader("Content-Type", "application/json")
+                        .withBody("{\"requestId\":\"pnpg-request-id\"}")));
+        assertEquals("pnpg-request-id", tenantContext.withTenant("PNPG",
+                () -> restClient._v1EmailsSendHighPost(false, body)).getBody().getRequestId());
+        wmPnpg.verify(postRequestedFor(urlPathEqualTo("/v1/emails/send/high"))
+                .withHeader("x-api-key", equalTo("pnpg-api-key")));
+        wm.verify(1, postRequestedFor(urlPathEqualTo("/v1/emails/send/high")));
+    }
+
+    @Test
+    void missingTenantDoesNotSend() {
+        assertThrows(UnresolvedTenantException.class,
+                () -> restClient._v1EmailsSendHighPost(false, EmailHighPriorityBodyDTO.builder().build()));
+        wm.verify(0, postRequestedFor(urlPathEqualTo("/v1/emails/send/high")));
+        wmPnpg.verify(0, postRequestedFor(urlPathEqualTo("/v1/emails/send/high")));
     }
 }

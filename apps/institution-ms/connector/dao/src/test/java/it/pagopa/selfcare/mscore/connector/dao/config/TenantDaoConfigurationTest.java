@@ -25,6 +25,10 @@ class TenantDaoConfigurationTest {
                 .withProperty("MONGODB_APPNAME", "institution")
                 .withProperty("MONGODB_NAME_SELC_MSCORE", "existing-institution-db")
                 .withProperty("jwt.signingKey", "test-public-key")
+                .withProperty("USER_REGISTRY_API_KEY_AR", "registry-key")
+                .withProperty("ONE_MAIL_API_KEY_AR", "mail-key")
+                .withProperty("SMTP_USR_AR", "smtp-user")
+                .withProperty("SMTP_PSW_AR", "smtp-password")
                 .withProperty("INSTITUTION_PRODUCTS_STORAGE_CONNECTION_STRING", "products-connection")
                 .withProperty(
                         "INSTITUTION_MAIL_TEMPLATES_STORAGE_CONNECTION_STRING",

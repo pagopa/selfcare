@@ -7,7 +7,8 @@ import it.pagopa.selfcare.one_mail.generated.openapi.v1.dto.EmailAddress;
 import it.pagopa.selfcare.one_mail.generated.openapi.v1.dto.EmailHighPriorityBodyDTO;
 import it.pagopa.selfcare.one_mail.generated.openapi.v1.dto.EmailSuccessResponseDTO;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
+import it.pagopa.selfcare.commons.tenant.TenantContext;
+import it.pagopa.selfcare.commons.tenant.TenantRegistry;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
@@ -20,12 +21,14 @@ import java.util.Optional;
 public class OneMailConnectorImpl implements OneMailConnector {
 
     private final OneMailRestClient restClient;
-    private final String senderMail;
+    private final TenantRegistry tenantRegistry;
+    private final TenantContext tenantContext;
 
     public OneMailConnectorImpl(OneMailRestClient restClient,
-                                @Value("${rest-client.one-mail.sender}") String senderMail) {
+                                TenantRegistry tenantRegistry, TenantContext tenantContext) {
         this.restClient = restClient;
-        this.senderMail = senderMail;
+        this.tenantRegistry = tenantRegistry;
+        this.tenantContext = tenantContext;
     }
 
     @Override
@@ -35,8 +38,9 @@ public class OneMailConnectorImpl implements OneMailConnector {
         Assert.hasText(templateId, "A templateId is required");
         log.debug("sendMail templateId = {}", templateId);
 
+        String sender = tenantRegistry.oneMailCredentials(tenantContext.requiredTenantId()).sender();
         EmailHighPriorityBodyDTO request = EmailHighPriorityBodyDTO.builder()
-                .from(new EmailAddress().email(senderMail))
+                .from(new EmailAddress().email(sender))
                 .to(new EmailAddress().email(email))
                 .templateContent(Map.of(
                         "templateId", templateId,

@@ -28,7 +28,8 @@ For the existing single-tenant setup, `TENANT_SUPPORTED_TENANTS` and
 `TENANT_DEFAULT` default to `AR`. The default registry keeps the existing
 institution database and connection settings. The MongoDB/JWT examples below
 must also include the required bindings described under
-[Tenant-aware blob storage](#tenant-aware-blob-storage):
+[Tenant-aware blob storage](#tenant-aware-blob-storage) and
+[Tenant-aware integrations](#tenant-aware-integrations):
 
 ```json
 {
@@ -180,8 +181,11 @@ Those environment variables reference the existing
 root's current vault. The registry selects the existing Cosmos DB account and
 `selcMsCore` database; these settings do not provision databases or add a
 second tenant to a deployment. Mongo routing is enabled in the Terraform
-baseline, while `TENANT_STRICT_DATA_ISOLATION=false` preserves access to legacy
-untagged documents within each deployment's single-tenant database.
+baseline, and `TENANT_STRICT_DATA_ISOLATION=true` is now the deployed baseline.
+Untagged documents are not visible in strict mode. The external `tenantId`
+backfill of `selcMsCore` must be completed and verified for each deployment
+before releasing this application and configuration. Backfill is not part of
+this change.
 
 Before enabling another tenant, coordinate every producer and consumer of the
 institution, delegation, notification, and graph-source collections so new
@@ -192,8 +196,8 @@ identifiers and existing indexes are database-wide.
 Inventory untagged records and identify their owner before cutover. If a
 backfill is needed, run a reviewed, tenant-specific operational procedure; the
 service does not migrate production data automatically. Keep the compatibility
-setting only while there is one known owner of the selected database. Backfill
-and coordinate producers before setting `TENANT_STRICT_DATA_ISOLATION=true`.
+setting only while there is one known owner of the selected database. Coordinate
+all producers and verify the completed backfill before release.
 Release the matching application and deployment
 configuration together, then restart and verify `/actuator/health/readiness`
 and tenant-scoped CRUD/join smoke tests.
@@ -203,6 +207,84 @@ single-database application and its Terraform environment names
 `MONGODB_CONNECTION_URI` and `JWT_TOKEN_PUBLIC_KEY`. Do not direct the previous
 application at mixed-tenant data; keep additive ownership metadata and do not
 drop data or indexes.
+
+### Tenant-aware integrations
+
+The shared `selc-commons-tenant` registry also selects User Registry credentials,
+OneMail, PEC, and optional EventHub configuration. Merge the following dimensions
+into the existing AR entry in `SELFCARE_TENANT_DATA_ISOLATION` (keep its MongoDB,
+JWT, and storage bindings):
+
+```json
+{
+  "AR": {
+    "userRegistry": {
+      "apiKeyEnvVar": "USER_REGISTRY_API_KEY_AR"
+    },
+    "oneMail": {
+      "url": "https://uat.onemail.pagopa.it",
+      "sender": "noreply@selfcare.pagopa.it",
+      "apiKeyEnvVar": "ONE_MAIL_API_KEY_AR"
+    },
+    "pec": {
+      "host": "smtps.pec.aruba.it",
+      "port": 465,
+      "sender": "noreply@areariservata.pagopa.it",
+      "usernameEnvVar": "SMTP_USR_AR",
+      "passwordEnvVar": "SMTP_PSW_AR"
+    },
+    "eventHub": {
+      "namespaceUrl": "https://selc-d-eventhub-ns.servicebus.windows.net/",
+      "topic": "sc-delegations",
+      "authentication": {
+        "type": "MANAGED_IDENTITY",
+        "managedIdentityClientIdEnvVar": "EVENTHUB_SENDER_MANAGED_IDENTITY_CLIENT_ID"
+      }
+    }
+  }
+}
+```
+
+Only non-secret values and environment-variable names belong in the registry.
+Supply `USER_REGISTRY_API_KEY_AR`, `ONE_MAIL_API_KEY_AR`, `SMTP_USR_AR`, and
+`SMTP_PSW_AR` from the existing Key Vault secrets. PNPG uses the corresponding
+`_PNPG` names and its own vault, retaining its current OneMail and PEC endpoints
+and senders. `USERVICE_USER_REGISTRY_URL` remains global; its API key is resolved
+from the current request tenant, including tax-code serialization and lookup.
+
+`tenant.user-registry.mandatory-tenants`, `tenant.one-mail.mandatory-tenants`,
+and `tenant.pec.mandatory-tenants` are set to the supported-tenant allowlist.
+Missing definitions or missing/blank referenced credentials prevent startup.
+The default local registry requires the AR-suffixed credentials as well; it
+does not fall back to legacy credential names.
+
+OneMail URL, API key, and sender are selected on every request. Its timeout and
+logger settings are unchanged. PEC mail senders are cached per tenant and use
+that tenant's SMTP host, port, username, password, and `from` address.
+`SMTP_AUTH`, `SMTP_SSL`, and `MAIL_SERVER_PROTOCOL` remain global. Existing
+notification enablement and delegation mail-failure handling are unchanged.
+
+EventHub has no mandatory list. When it is absent (as in every PNPG root),
+delegation event sending is skipped before fetching delegations or making HTTP
+calls, with an informational log and zero errors. AR retains its assigned
+managed identity. Alternatively, configure
+`authentication = {"type":"SHARED_ACCESS_KEY","keyName":"sender","keyEnvVar":"EVENTHUB_KEY_AR"}`.
+The namespace and topic determine both the HTTP target and SAS resource URI;
+credentials and tokens are cached separately per tenant. Registry or credential
+changes require an application restart to rebuild cached clients/tokens.
+
+Removed legacy variables are `USER_REGISTRY_API_KEY`, `ONE_MAIL_URL`,
+`ONE_MAIL_API_KEY`, `ONE_MAIL_SENDER_ADDRESS`, `SMTP_HOST`, `SMTP_PORT`,
+`SMTP_USR`, `SMTP_PSW`, `MAIL_SENDER_ADDRESS`, `EVENT_HUB_BASE_PATH`,
+`EVENT_HUB_SC_DELEGATIONS_TOPIC`, `SHARED_ACCESS_KEY_NAME`, and
+`EVENTHUB-SC-DELEGATIONS-SELFCARE-WO-KEY-LC`.
+Rollback must restore the previous application **together with** its legacy
+environment-variable names and values, in addition to the MongoDB/JWT rollback
+requirements above. Do not mix old binaries with the new integration settings.
+
+This application uses `selc-commons` version `2.24.0`. Publish that library
+version before releasing institution-ms; the other consumers remain on their
+existing pinned versions.
 
 ## Installation and Local Startup
 To run the microservice locally, follow these steps:
