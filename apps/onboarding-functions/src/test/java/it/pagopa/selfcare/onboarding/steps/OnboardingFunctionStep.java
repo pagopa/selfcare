@@ -212,6 +212,9 @@ public class OnboardingFunctionStep extends CucumberQuarkusTest {
     }
 
     private MongoCollection<Document> contractDocumentsCollection() {
+        if (mongoClient == null) {
+            mongoClient = IntegrationFunctionProfile.getMongoClientConnection();
+        }
         return IntegrationFunctionProfile.getDocumentDatabase(mongoClient).getCollection("documents");
     }
 
