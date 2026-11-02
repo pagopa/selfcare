@@ -564,7 +564,7 @@ public class OnboardingServiceImpl implements OnboardingService {
 
     private static Document contractUpdatesQuery(String referenceOnboardingId, OnboardingStatus... statuses) {
         return new Document("referenceOnboardingId", referenceOnboardingId)
-                .append("workflowType", WorkflowType.CONTRACT_UPDATE.name())
+                .append(WORKFLOW_TYPE, WorkflowType.CONTRACT_UPDATE.name())
                 .append("status", new Document("$in", Arrays.stream(statuses).map(Enum::name).toList()));
     }
 

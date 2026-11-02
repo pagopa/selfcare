@@ -195,14 +195,14 @@ public class InstitutionFunctionsTest {
     function.deleteInstitutionAndUserOnboarding(orchestrationContext, executionContext);
 
     // then
-    Mockito.verify(orchestrationContext, times(7)).callActivity(any(), any(), any(), any());
-    Mockito.verify(orchestrationContext).callActivity(eq(REJECT_PENDING_CONTRACT_UPDATES_ACTIVITY), any(), any(), any());
+    verify(orchestrationContext, times(7)).callActivity(any(), any(), any(), any());
+    verify(orchestrationContext).callActivity(eq(REJECT_PENDING_CONTRACT_UPDATES_ACTIVITY), any(), any(), any());
     ArgumentCaptor<Object> institutionPayload = ArgumentCaptor.forClass(Object.class);
-    Mockito.verify(orchestrationContext)
+    verify(orchestrationContext)
         .callActivity(eq(DELETE_INSTITUTION_ONBOARDING_ACTIVITY_NAME), institutionPayload.capture(), any(), any());
     assertTrue(institutionPayload.getValue().toString().contains("\"tenantId\":\"PNPG\""));
     ArgumentCaptor<Object> userPayload = ArgumentCaptor.forClass(Object.class);
-    Mockito.verify(orchestrationContext)
+    verify(orchestrationContext)
         .callActivity(eq(DELETE_USER_ONBOARDING_ACTIVITY_NAME), userPayload.capture(), any(), any());
     assertTrue(userPayload.getValue().toString().contains("\"tenantId\":\"PNPG\""));
   }

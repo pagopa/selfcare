@@ -1074,7 +1074,7 @@ class OnboardingServiceTest {
     void rejectPendingContractUpdates() {
         onboardingService.rejectPendingContractUpdates("adhesionId");
 
-        Mockito.verify(onboardingRepositoryService).updateStatusByQuery(
+        verify(onboardingRepositoryService).updateStatusByQuery(
                 eq(new Document("referenceOnboardingId", "adhesionId")
                         .append("workflowType", "CONTRACT_UPDATE")
                         .append("status", new Document("$in", List.of("REQUEST", "PENDING")))),
