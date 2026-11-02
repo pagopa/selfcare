@@ -580,7 +580,7 @@ locals {
       name              = "SC-Delegations"
       partitions        = 10
       message_retention = 7
-      consumers         = ["datalake"]
+      consumers         = ["datalake", "pn-kafka-bridge-prod"]
       keys = [
         {
           name   = "selfcare-wo"
@@ -590,6 +590,12 @@ locals {
         },
         {
           name   = "datalake"
+          listen = true
+          send   = false
+          manage = false
+        },
+        {
+          name   = "pn"
           listen = true
           send   = false
           manage = false
