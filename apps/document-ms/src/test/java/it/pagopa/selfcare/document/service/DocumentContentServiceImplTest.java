@@ -34,6 +34,9 @@ import org.jboss.resteasy.reactive.RestResponse;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.NullAndEmptySource;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
@@ -1331,6 +1334,20 @@ class DocumentContentServiceImplTest {
     // ============================================
     // createContractPdf - Error scenarios
     // ============================================
+
+    @ParameterizedTest
+    @NullAndEmptySource
+    @ValueSource(strings = {"   "})
+    void createContractPdf_shouldThrowInvalidRequest_whenInstitutionDescriptionIsBlank(String description) {
+        ContractPdfRequest request = buildValidContractRequest();
+        request.getInstitution().setDescription(description);
+
+        var awaiter = documentContentService.createContractPdf(request).await();
+        InvalidRequestException ex = assertThrows(InvalidRequestException.class, awaiter::indefinitely);
+        assertEquals("002-1009", ex.getCode());
+        assertTrue(ex.getMessage().contains(ONBOARDING_ID));
+        verifyNoInteractions(azureBlobClient, signatureService);
+    }
 
     @Test
     void createContractPdf_shouldThrowInternalException_whenTemplateLoadFails() {

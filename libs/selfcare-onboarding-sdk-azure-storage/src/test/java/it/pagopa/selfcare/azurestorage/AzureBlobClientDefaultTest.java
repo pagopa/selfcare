@@ -11,6 +11,7 @@ import com.azure.storage.blob.models.BlobProperties;
 import com.azure.storage.blob.models.BlobStorageException;
 import com.azure.storage.blob.models.ListBlobsOptions;
 import it.pagopa.selfcare.azurestorage.error.SelfcareAzureStorageException;
+import it.pagopa.selfcare.azurestorage.error.SelfcareAzureStorageNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -25,6 +26,7 @@ import java.util.function.Consumer;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -174,7 +176,7 @@ class AzureBlobClientDefaultTest {
         // given
         doThrow(blobStorageException(404)).when(blobClient).downloadStream(any(OutputStream.class));
         // when / then
-        assertThrows(SelfcareAzureStorageException.class, () -> client.getFile(FILE_PATH));
+        assertThrows(SelfcareAzureStorageNotFoundException.class, () -> client.getFile(FILE_PATH));
     }
 
     @Test
@@ -182,7 +184,8 @@ class AzureBlobClientDefaultTest {
         // given
         doThrow(blobStorageException(500)).when(blobClient).downloadStream(any(OutputStream.class));
         // when / then
-        assertThrows(SelfcareAzureStorageException.class, () -> client.getFile(FILE_PATH));
+        SelfcareAzureStorageException ex = assertThrows(SelfcareAzureStorageException.class, () -> client.getFile(FILE_PATH));
+        assertFalse(ex instanceof SelfcareAzureStorageNotFoundException);
     }
 
     // ---------------- getFileAsText ----------------
@@ -226,6 +229,23 @@ class AzureBlobClientDefaultTest {
         doThrow(blobStorageException(500)).when(blobClient).downloadToFile(anyString(), anyBoolean());
         // when / then
         assertThrows(SelfcareAzureStorageException.class, () -> client.getFileAsPdf(FILE_PATH));
+    }
+
+    @Test
+    void getFileAsPdf_whenNotFound_throwsNotFound() {
+        // given
+        doThrow(blobStorageException(404)).when(blobClient).downloadToFile(anyString(), anyBoolean());
+        // when / then
+        assertThrows(SelfcareAzureStorageNotFoundException.class, () -> client.getFileAsPdf(FILE_PATH));
+    }
+
+    @Test
+    void getFileAsText_whenNotFound_throwsNotFound() {
+        // given
+        BlobStorageException ex = blobStorageException(404);
+        when(blobClient.downloadContent()).thenThrow(ex);
+        // when / then
+        assertThrows(SelfcareAzureStorageNotFoundException.class, () -> client.getFileAsText(FILE_PATH));
     }
 
     // ---------------- retrieveFile ----------------
@@ -341,7 +361,7 @@ class AzureBlobClientDefaultTest {
         BlobStorageException ex = blobStorageException(404);
         when(blobClient.getProperties()).thenThrow(ex);
         // when / then
-        assertThrows(SelfcareAzureStorageException.class, () -> client.getProperties(FILE_PATH));
+        assertThrows(SelfcareAzureStorageNotFoundException.class, () -> client.getProperties(FILE_PATH));
     }
 
     @Test

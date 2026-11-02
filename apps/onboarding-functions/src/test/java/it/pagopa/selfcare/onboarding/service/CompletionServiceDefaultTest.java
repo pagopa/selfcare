@@ -857,6 +857,21 @@ public class CompletionServiceDefaultTest {
     }
 
     @Test
+    void sendCompletedEmail_shouldSkipWorkContactWithoutEmail() {
+        Onboarding onboarding = createOnboarding();
+        onboarding.getInstitution().setDigitalAddress("test@pec.it");
+        User user = createDummyUser(onboarding);
+        user.setUserMailUuid("mail-id");
+        UserResource userWithoutEmail = new UserResource();
+        userWithoutEmail.setWorkContacts(Map.of("mail-id", new WorkContactResource()));
+        when(userRegistryApi.findByIdUsingGET(USERS_FIELD_LIST, user.getId())).thenReturn(userWithoutEmail);
+
+        completionServiceDefault.sendCompletedEmail(new OnboardingWorkflowInstitution(onboarding, "INSTITUTION"));
+
+        verify(notificationService).sendCompletedEmail(eq(List.of("test@pec.it")), any(), any());
+    }
+
+    @Test
     void sendCompletedEmail_shouldSkipWhenDigitalAddressIsNull() {
 
         Onboarding onboarding = createOnboarding();

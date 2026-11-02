@@ -18,6 +18,9 @@ public enum ErrorMessage {
     TAX_CODE_NOT_FOUND_IN_SIGNATURE("002-1006", "No tax code has been found in digital signature"),
     INVALID_SIGNATURE_TAX_CODE("002-1004", "The tax code related to signature does not match anyone contained in the relationships"),
     SIGNATURE_NOT_FOUND("002-1007", "No signature found"),
+    INSTITUTION_DESCRIPTION_REQUIRED("002-1009", "institution.description is required to create the contract for onboarding %s"),
+    PRODUCT_TITLE_REQUIRED("002-1010", "productTitle is required to save the document for onboarding %s"),
+    ATTACHMENT_NAME_REQUIRED("002-1011", "attachmentName is required to save the attachment for onboarding %s"),
 
     GENERIC_ERROR("0000", "Generic Error");
 
