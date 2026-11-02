@@ -5,7 +5,6 @@ import it.pagopa.selfcare.core.generated.openapi.v1.dto.OnboardingsResponse;
 import it.pagopa.selfcare.dashboard.client.CoreInstitutionApiRestClient;
 import it.pagopa.selfcare.dashboard.client.DocumentRestClient;
 import it.pagopa.selfcare.dashboard.client.OnboardingRestClient;
-import it.pagopa.selfcare.dashboard.exception.ResourceNotFoundException;
 import it.pagopa.selfcare.dashboard.model.document.DocumentResource;
 import it.pagopa.selfcare.dashboard.model.document.DocumentStatusResource;
 import it.pagopa.selfcare.dashboard.model.document.DocumentType;
@@ -111,7 +110,14 @@ public class DocumentServiceImpl implements DocumentService {
         Assert.hasText(institutionId, REQUIRED_INSTITUTION_MESSAGE);
         Assert.hasText(productId, REQUIRED_PRODUCT_MESSAGE);
 
-        final String tokenId = getActiveOnboardingTokenId(institutionId, productId);
+        final Optional<String> activeTokenId = getActiveOnboardingTokenId(institutionId, productId);
+        if (activeTokenId.isEmpty()) {
+            log.warn("getDocumentsList no active onboarding found for institutionId = {}, productId = {}",
+                    Encode.forJava(institutionId), Encode.forJava(productId));
+            return new DocumentsResource(Collections.emptyList());
+        }
+
+        final String tokenId = activeTokenId.get();
         final List<DocumentResource> documents = Optional.ofNullable(documentRestClient._getAvailableDocuments(tokenId))
                 .map(ResponseEntity::getBody)
                 .map(AvailableDocumentsResponse::getDocuments)
@@ -126,7 +132,7 @@ public class DocumentServiceImpl implements DocumentService {
     }
 
     // The tokenId is read from institution-ms so that the document dossier always belongs to the institution and product checked by the permission
-    private String getActiveOnboardingTokenId(String institutionId, String productId) {
+    private Optional<String> getActiveOnboardingTokenId(String institutionId, String productId) {
         return Optional.ofNullable(coreInstitutionApiRestClient._getOnboardingsInstitutionUsingGET(institutionId, null))
                 .map(ResponseEntity::getBody)
                 .map(OnboardingsResponse::getOnboardings)
@@ -136,9 +142,7 @@ public class DocumentServiceImpl implements DocumentService {
                 .filter(onboarding -> OnboardingResponse.StatusEnum.ACTIVE.equals(onboarding.getStatus()))
                 .filter(onboarding -> Objects.nonNull(onboarding.getTokenId()))
                 .max(Comparator.comparing(OnboardingResponse::getCreatedAt, Comparator.nullsFirst(Comparator.naturalOrder())))
-                .map(OnboardingResponse::getTokenId)
-                .orElseThrow(() -> new ResourceNotFoundException(
-                        "No active onboarding found for institution " + institutionId + " and product " + productId));
+                .map(OnboardingResponse::getTokenId);
     }
 
     // Only institution contracts and the allowed attachments (e.g. DORA addendum) are exposed: USER contracts are excluded

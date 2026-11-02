@@ -5,7 +5,6 @@ import it.pagopa.selfcare.core.generated.openapi.v1.dto.OnboardingsResponse;
 import it.pagopa.selfcare.dashboard.client.CoreInstitutionApiRestClient;
 import it.pagopa.selfcare.dashboard.client.DocumentRestClient;
 import it.pagopa.selfcare.dashboard.client.OnboardingRestClient;
-import it.pagopa.selfcare.dashboard.exception.ResourceNotFoundException;
 import it.pagopa.selfcare.dashboard.model.document.DocumentResource;
 import it.pagopa.selfcare.dashboard.model.document.DocumentStatusResource;
 import it.pagopa.selfcare.dashboard.model.document.DocumentType;
@@ -150,14 +149,16 @@ class DocumentServiceImplTest {
     }
 
     @Test
-    void getDocumentsList_withoutActiveOnboarding_throwsResourceNotFound() {
+    void getDocumentsList_withoutActiveOnboarding_returnsEmptyList() {
         OnboardingsResponse onboardings = new OnboardingsResponse();
         onboardings.setOnboardings(List.of(
                 institutionOnboarding(PRODUCT_ID, OnboardingResponse.StatusEnum.SUSPENDED, "tokenId", OffsetDateTime.now())));
         when(coreInstitutionApiRestClient._getOnboardingsInstitutionUsingGET(INSTITUTION_ID, null))
                 .thenReturn(ResponseEntity.ok(onboardings));
 
-        assertThrows(ResourceNotFoundException.class, () -> documentService.getDocumentsList(INSTITUTION_ID, PRODUCT_ID));
+        DocumentsResource result = documentService.getDocumentsList(INSTITUTION_ID, PRODUCT_ID);
+
+        assertEquals(List.of(), result.getDocuments());
         verifyNoInteractions(documentRestClient);
     }
 

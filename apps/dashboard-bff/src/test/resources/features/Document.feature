@@ -43,11 +43,12 @@ Feature: Document
       | Piattaforma_pagoPA_accordo_adesione | INSTITUTION |
       | Addendum                            | ATTACHMENT  |
 
-  Scenario: Attempt to get the documents of a product without an active onboarding
+  Scenario: Successfully get an empty documents list of a product without an active onboarding
     Given user login with username "j.doe" and password "test"
     And the institution ID is "b4705659-3a01-430a-a19b-7bdb4e340223" and the product ID is "prod-pagopa"
     When I send a GET request to "/v1/documents/institutions/{institutionId}/products/{productId}" to get documents list
-    Then the response status should be 404
+    Then the response status should be 200
+    And The dashboard response body contains the list "documents" of size 0
 
   Scenario: Attempt to get the documents without permission
     Given user login with username "r.balboa" and password "test"
