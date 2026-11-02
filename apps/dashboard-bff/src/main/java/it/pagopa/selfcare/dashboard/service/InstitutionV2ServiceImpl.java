@@ -263,7 +263,7 @@ public class InstitutionV2ServiceImpl implements InstitutionV2Service {
             );
         }
 
-        return documentContentRestClient._getContractSigned(onboarding.getTokenId()).getBody();
+        return documentContentRestClient._getContractSigned(onboarding.getTokenId(), null).getBody();
     }
 
 
