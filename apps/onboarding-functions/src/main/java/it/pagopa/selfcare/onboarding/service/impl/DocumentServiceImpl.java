@@ -62,6 +62,11 @@ public class DocumentServiceImpl implements DocumentService {
   }
 
   @Override
+  public Response activateContract(String onboardingId) {
+    return documentControllerApi.activateContract(onboardingId);
+  }
+
+  @Override
   public DocumentResponse getDocumentByOnboardingId(String onboardingId) {
     return documentControllerApi.getDocumentByOnboardingId(onboardingId);
   }

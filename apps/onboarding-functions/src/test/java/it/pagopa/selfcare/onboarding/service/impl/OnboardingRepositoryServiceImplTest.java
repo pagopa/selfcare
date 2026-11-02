@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -25,7 +26,6 @@ import java.util.Optional;
 import org.bson.Document;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
-import org.mockito.Mockito;
 
 @QuarkusTest
 class OnboardingRepositoryServiceImplTest {
@@ -33,7 +33,7 @@ class OnboardingRepositoryServiceImplTest {
   @Test
   void findById_shouldDelegateToRepository() {
     // given
-    OnboardingRepository onboardingRepository = Mockito.mock(OnboardingRepository.class);
+    OnboardingRepository onboardingRepository = mock(OnboardingRepository.class);
     OnboardingRepositoryServiceImpl service = new OnboardingRepositoryServiceImpl(onboardingRepository);
     Onboarding expected = new Onboarding();
     when(onboardingRepository.findByIdOptional("onb-id")).thenReturn(Optional.of(expected));
@@ -49,7 +49,7 @@ class OnboardingRepositoryServiceImplTest {
   @Test
   void update_shouldDelegateToRepository() {
     // given
-    OnboardingRepository onboardingRepository = Mockito.mock(OnboardingRepository.class);
+    OnboardingRepository onboardingRepository = mock(OnboardingRepository.class);
     OnboardingRepositoryServiceImpl service = new OnboardingRepositoryServiceImpl(onboardingRepository);
     Onboarding onboarding = new Onboarding();
 
@@ -63,8 +63,8 @@ class OnboardingRepositoryServiceImplTest {
   @Test
   void updateStatus_shouldExecuteUpdateWhere() {
     // given
-    OnboardingRepository onboardingRepository = Mockito.mock(OnboardingRepository.class);
-    PanacheUpdate panacheUpdate = Mockito.mock(PanacheUpdate.class);
+    OnboardingRepository onboardingRepository = mock(OnboardingRepository.class);
+    PanacheUpdate panacheUpdate = mock(PanacheUpdate.class);
     OnboardingRepositoryServiceImpl service = new OnboardingRepositoryServiceImpl(onboardingRepository);
     LocalDateTime updatedAt = LocalDateTime.now();
     when(onboardingRepository.update("status = ?1 and updatedAt = ?2", "COMPLETED", updatedAt))
@@ -80,8 +80,8 @@ class OnboardingRepositoryServiceImplTest {
   @Test
   void updateStatusAndInstanceId_shouldExecuteUpdateWhere() {
     // given
-    OnboardingRepository onboardingRepository = Mockito.mock(OnboardingRepository.class);
-    PanacheUpdate panacheUpdate = Mockito.mock(PanacheUpdate.class);
+    OnboardingRepository onboardingRepository = mock(OnboardingRepository.class);
+    PanacheUpdate panacheUpdate = mock(PanacheUpdate.class);
     OnboardingRepositoryServiceImpl service = new OnboardingRepositoryServiceImpl(onboardingRepository);
     LocalDateTime updatedAt = LocalDateTime.now();
     when(
@@ -102,8 +102,8 @@ class OnboardingRepositoryServiceImplTest {
   @Test
   void countByQuery_shouldDelegateToRepositoryFindCount() {
     // given
-    OnboardingRepository onboardingRepository = Mockito.mock(OnboardingRepository.class);
-    PanacheQuery<Onboarding> panacheQuery = Mockito.mock(PanacheQuery.class);
+    OnboardingRepository onboardingRepository = mock(OnboardingRepository.class);
+    PanacheQuery<Onboarding> panacheQuery = mock(PanacheQuery.class);
     OnboardingRepositoryServiceImpl service = new OnboardingRepositoryServiceImpl(onboardingRepository);
     Document query = new Document("status", "COMPLETED");
     when(onboardingRepository.find(query)).thenReturn(panacheQuery);
@@ -121,9 +121,9 @@ class OnboardingRepositoryServiceImplTest {
   @Test
   void countByProduct_shouldGroupCountsByProductId() {
     // given
-    OnboardingRepository onboardingRepository = Mockito.mock(OnboardingRepository.class);
-    MongoCollection<Onboarding> collection = Mockito.mock(MongoCollection.class);
-    AggregateIterable<Document> aggregate = Mockito.mock(AggregateIterable.class);
+    OnboardingRepository onboardingRepository = mock(OnboardingRepository.class);
+    MongoCollection<Onboarding> collection = mock(MongoCollection.class);
+    AggregateIterable<Document> aggregate = mock(AggregateIterable.class);
     OnboardingRepositoryServiceImpl service = new OnboardingRepositoryServiceImpl(onboardingRepository);
     Document query = new Document("status", "COMPLETED");
     when(onboardingRepository.mongoCollection()).thenReturn(collection);
@@ -148,8 +148,8 @@ class OnboardingRepositoryServiceImplTest {
   @Test
   void countByProduct_shouldMapCosmosTooManyRequestsToThrottledException() {
     // given
-    OnboardingRepository onboardingRepository = Mockito.mock(OnboardingRepository.class);
-    MongoCollection<Onboarding> collection = Mockito.mock(MongoCollection.class);
+    OnboardingRepository onboardingRepository = mock(OnboardingRepository.class);
+    MongoCollection<Onboarding> collection = mock(MongoCollection.class);
     OnboardingRepositoryServiceImpl service = new OnboardingRepositoryServiceImpl(onboardingRepository);
     when(onboardingRepository.mongoCollection()).thenReturn(collection);
     when(collection.aggregate(anyList(), eq(Document.class)))
@@ -166,8 +166,8 @@ class OnboardingRepositoryServiceImplTest {
   @Test
   void countByProduct_shouldRethrowOtherMongoExceptions() {
     // given
-    OnboardingRepository onboardingRepository = Mockito.mock(OnboardingRepository.class);
-    MongoCollection<Onboarding> collection = Mockito.mock(MongoCollection.class);
+    OnboardingRepository onboardingRepository = mock(OnboardingRepository.class);
+    MongoCollection<Onboarding> collection = mock(MongoCollection.class);
     OnboardingRepositoryServiceImpl service = new OnboardingRepositoryServiceImpl(onboardingRepository);
     when(onboardingRepository.mongoCollection()).thenReturn(collection);
     when(collection.aggregate(anyList(), eq(Document.class)))
@@ -180,8 +180,8 @@ class OnboardingRepositoryServiceImplTest {
   @Test
   void findByQueryPaged_shouldDelegateToRepositoryPagination() {
     // given
-    OnboardingRepository onboardingRepository = Mockito.mock(OnboardingRepository.class);
-    PanacheQuery<Onboarding> panacheQuery = Mockito.mock(PanacheQuery.class);
+    OnboardingRepository onboardingRepository = mock(OnboardingRepository.class);
+    PanacheQuery<Onboarding> panacheQuery = mock(PanacheQuery.class);
     OnboardingRepositoryServiceImpl service = new OnboardingRepositoryServiceImpl(onboardingRepository);
     Document query = new Document("status", "COMPLETED");
     List<Onboarding> expected = List.of(new Onboarding());
@@ -202,7 +202,7 @@ class OnboardingRepositoryServiceImplTest {
   @Test
   void findByFilters_shouldDelegateToRepository() {
     // given
-    OnboardingRepository onboardingRepository = Mockito.mock(OnboardingRepository.class);
+    OnboardingRepository onboardingRepository = mock(OnboardingRepository.class);
     OnboardingRepositoryServiceImpl service = new OnboardingRepositoryServiceImpl(onboardingRepository);
     List<Onboarding> expected = List.of(new Onboarding());
     when(onboardingRepository.findByFilters("tax", "sub", "origin", "originId", "product"))
@@ -219,7 +219,7 @@ class OnboardingRepositoryServiceImplTest {
   @Test
   void findByOnboardingUsers_shouldDelegateToRepository() {
     // given
-    OnboardingRepository onboardingRepository = Mockito.mock(OnboardingRepository.class);
+    OnboardingRepository onboardingRepository = mock(OnboardingRepository.class);
     OnboardingRepositoryServiceImpl service = new OnboardingRepositoryServiceImpl(onboardingRepository);
     List<Onboarding> expected = List.of(new Onboarding());
     when(onboardingRepository.findByOnboardingUsers("institution-id", "product-id")).thenReturn(expected);
@@ -230,5 +230,21 @@ class OnboardingRepositoryServiceImplTest {
     // then
     assertSame(expected, actual);
     verify(onboardingRepository).findByOnboardingUsers("institution-id", "product-id");
+  }
+
+  @Test
+  @SuppressWarnings("unchecked")
+  void updateStatusByQuery_shouldSetStatusAndUpdatedAt() {
+    OnboardingRepository onboardingRepository = mock(OnboardingRepository.class);
+    MongoCollection<Onboarding> collection = mock(MongoCollection.class);
+    when(onboardingRepository.mongoCollection()).thenReturn(collection);
+    OnboardingRepositoryServiceImpl service = new OnboardingRepositoryServiceImpl(onboardingRepository);
+    Document query = new Document("referenceOnboardingId", "adhesion-id");
+    LocalDateTime now = LocalDateTime.now();
+
+    service.updateStatusByQuery(query, "REJECTED", now);
+
+    verify(collection).updateMany(query,
+        new Document("$set", new Document("status", "REJECTED").append("updatedAt", now)));
   }
 }
