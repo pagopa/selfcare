@@ -44,6 +44,7 @@ public class TenantHeaderClientRequestFilter implements ClientRequestFilter {
             requestContext.getHeaders().put(TenantContext.TENANT_HEADER, new ArrayList<>(tenant));
         }
         List<String> authorization = headers.get("Authorization");
+        requestContext.getHeaders().remove("Authorization");
         if (authorization != null) {
             requestContext.getHeaders().put("Authorization", new ArrayList<>(authorization));
         }

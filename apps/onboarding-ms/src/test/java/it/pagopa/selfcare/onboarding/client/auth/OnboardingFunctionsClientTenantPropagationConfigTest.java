@@ -41,6 +41,8 @@ class OnboardingFunctionsClientTenantPropagationConfigTest {
                     .toList();
             assertTrue(providers.contains(TenantHeaderClientRequestFilter.class),
                     client.getName() + " does not register the tenant propagating filter");
+            assertTrue(providers.contains(it.pagopa.selfcare.m2m.MachineTokenRequestFilter.class),
+                    client.getName() + " does not register the machine token filter");
         }
     }
 
@@ -50,7 +52,9 @@ class OnboardingFunctionsClientTenantPropagationConfigTest {
 
         assertEquals(
                 "@org.eclipse.microprofile.rest.client.annotation.RegisterProvider("
-                        + TenantHeaderClientRequestFilter.class.getName() + ".class)",
+                        + TenantHeaderClientRequestFilter.class.getName() + ".class)"
+                        + " @org.eclipse.microprofile.rest.client.annotation.RegisterProvider("
+                        + "it.pagopa.selfcare.m2m.MachineTokenRequestFilter.class)",
                 properties.getProperty(
                         "quarkus.openapi-generator.codegen.spec.onboarding_functions_json.additional-api-type-annotations"));
     }

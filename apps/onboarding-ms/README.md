@@ -24,7 +24,11 @@ orchestration.
 
 Calls also propagate `Authorization`, `X-Tenant-Id`, and the Azure Function key.
 Within an authenticated HTTP request the original session JWT is forwarded. A
-background call uses `JWT_BEARER_TOKEN` as a fallback. The client does not inspect
+background call uses `JWT_BEARER_TOKEN` in legacy mode. With
+`M2M_CLIENT_ENABLED=true`, it instead acquires a short-lived machine token from
+`auth` using Managed Identity, with no automatic fallback to the static token.
+See the [M2M rollout guide](../../libs/selfcare-sdk-m2m/README.md).
+The client does not inspect
 the token: onboarding-functions (`HttpJwtValidator`) is the only place that
 verifies signature, `exp`, issuer, `uid` and `tenant_id` against `X-Tenant-Id`.
 

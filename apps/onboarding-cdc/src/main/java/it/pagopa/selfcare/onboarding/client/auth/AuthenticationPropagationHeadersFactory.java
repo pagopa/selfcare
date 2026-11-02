@@ -17,11 +17,19 @@ public class AuthenticationPropagationHeadersFactory implements ClientHeadersFac
     @ConfigProperty(name = "onboarding-cdc.jwt-bearer-token", defaultValue = "")
     String bearerToken;
 
+    @ConfigProperty(name = "selfcare.m2m.enabled", defaultValue = "false")
+    boolean machineTokensEnabled;
+
     public MultivaluedMap<String, String> update(MultivaluedMap<String, String> incomingHeaders, MultivaluedMap<String, String> clientOutgoingHeaders) {
         log.trace("AuthenticationPropagationHeadersFactory - incomingHeaders: {}", incomingHeaders.keySet());
         log.trace("AuthenticationPropagationHeadersFactory - clientOutgoingHeaders: {}", clientOutgoingHeaders.keySet());
 
         propagateTenant(incomingHeaders, clientOutgoingHeaders);
+
+        if (machineTokensEnabled) {
+            clientOutgoingHeaders.remove("Authorization");
+            return clientOutgoingHeaders;
+        }
 
         if (Objects.isNull(bearerToken) || bearerToken.isBlank()) {
             throw new IllegalStateException("JWT_BEARER_TOKEN is required to call onboarding-functions");
@@ -50,5 +58,4 @@ public class AuthenticationPropagationHeadersFactory implements ClientHeadersFac
         }
     }
 }
-
 

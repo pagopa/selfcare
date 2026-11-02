@@ -18,6 +18,7 @@ import java.security.KeyFactory;
 import java.security.PublicKey;
 import java.security.spec.X509EncodedKeySpec;
 import java.util.Base64;
+import java.util.Collection;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
@@ -87,7 +88,10 @@ public class HttpJwtValidator {
     if (claims.getExpiration() == null) {
       throw new JwtException("Missing exp claim");
     }
-    if (isBlank(claims.getIssuer()) || !allowedIssuers().contains(claims.getIssuer())) {
+    boolean machineToken = "SELFCARE-M2M".equals(claims.getIssuer());
+    if (machineToken) {
+      validateMachineToken(claims);
+    } else if (isBlank(claims.getIssuer()) || !allowedIssuers().contains(claims.getIssuer())) {
       throw new JwtException("Unexpected issuer");
     }
     if (isBlank(claims.get(UID_CLAIM, String.class))) {
@@ -96,6 +100,27 @@ public class HttpJwtValidator {
 
     if (!resolveTokenTenant(claims).equals(headerTenant)) {
       throw new JwtException("Tenant claim does not match tenant header");
+    }
+  }
+
+  private void validateMachineToken(Claims claims) {
+    Object audience = claims.get("aud");
+    boolean expectedAudience = "onboarding-functions".equals(audience)
+        || (audience instanceof Collection<?> values
+            && values.size() == 1 && values.contains("onboarding-functions"));
+    if (!config.machineTokensEnabled()
+        || !expectedAudience
+        || !"service".equals(claims.get("token_use"))
+        || !"onboarding-functions.invoke".equals(claims.get("scope"))
+        || isBlank(claims.getSubject())
+        || !claims.getSubject().equals(claims.get(UID_CLAIM, String.class))
+        || claims.get(TenantContext.TENANT_CLAIM) == null
+        || isBlank(claims.getId())
+        || claims.getIssuedAt() == null
+        || claims.getIssuedAt().getTime() > System.currentTimeMillis() + 30_000
+        || claims.getExpiration().getTime() <= claims.getIssuedAt().getTime()
+        || claims.getExpiration().getTime() - claims.getIssuedAt().getTime() > 900_000) {
+      throw new JwtException("Invalid machine token");
     }
   }
 

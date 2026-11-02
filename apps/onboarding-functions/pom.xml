@@ -292,4 +292,31 @@
             </plugin>
         </plugins>
     </build>
+    <profiles>
+        <profile>
+            <id>m2m-integration</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <artifactId>maven-jar-plugin</artifactId>
+                        <version>3.4.2</version>
+                        <executions>
+                            <execution>
+                                <id>m2m-validation-contract</id>
+                                <goals><goal>jar</goal></goals>
+                                <configuration>
+                                    <classifier>m2m-contract</classifier>
+                                    <includes>
+                                        <include>it/pagopa/selfcare/onboarding/service/HttpJwtValidator.class</include>
+                                        <include>it/pagopa/selfcare/onboarding/config/JwtValidationConfig*.class</include>
+                                        <include>it/pagopa/selfcare/onboarding/context/TenantContext*.class</include>
+                                    </includes>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
 </project>

@@ -64,6 +64,43 @@ class HttpJwtValidatorTest {
   }
 
   @Test
+  void acceptsMachineTokenOnlyWhenEnabled() {
+    Map<String, Object> machine = machineClaims();
+    assertStatus(validate(token(arKeys, machine, 300), "AR"), HttpStatus.UNAUTHORIZED);
+    when(config.machineTokensEnabled()).thenReturn(true);
+    assertTrue(validate(token(arKeys, machine, 300), "AR").isEmpty());
+    machine.put("aud", java.util.List.of("onboarding-functions"));
+    assertTrue(validate(token(arKeys, machine, 300), "AR").isEmpty());
+  }
+
+  @Test
+  void rejectsMachineTokensWithWrongAudienceScopeTenantOrLifetime() {
+    when(config.machineTokensEnabled()).thenReturn(true);
+    for (Map.Entry<String, Object> invalid : Map.<String, Object>of(
+        "aud", "user-ms", "scope", "admin", "token_use", "user",
+        "tenant_id", "PNPG", "sub", "other-service").entrySet()) {
+      Map<String, Object> claims = machineClaims();
+      claims.put(invalid.getKey(), invalid.getValue());
+      assertStatus(validate(token(arKeys, claims, 300), "AR"), HttpStatus.UNAUTHORIZED);
+    }
+    assertStatus(validate(token(arKeys, machineClaims(), 3600), "AR"), HttpStatus.UNAUTHORIZED);
+    Map<String, Object> missingTenant = machineClaims();
+    missingTenant.remove("tenant_id");
+    assertStatus(validate(token(pnpgKeys, missingTenant, 300), "PNPG"), HttpStatus.UNAUTHORIZED);
+  }
+
+  private Map<String, Object> machineClaims() {
+    Map<String, Object> claims = claims("SELFCARE-M2M", "onboarding-cdc", "AR");
+    claims.put("sub", "onboarding-cdc");
+    claims.put("aud", "onboarding-functions");
+    claims.put("scope", "onboarding-functions.invoke");
+    claims.put("token_use", "service");
+    claims.put("iat", System.currentTimeMillis() / 1000);
+    claims.put("jti", "test-token-id");
+    return claims;
+  }
+
+  @Test
   void acceptsValidTokenForHeaderTenant() {
     // given
     String jwt = token(arKeys, claims("SPID", "user-id", "AR"), 60);
