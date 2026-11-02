@@ -8,6 +8,7 @@ import io.smallrye.mutiny.infrastructure.Infrastructure;
 import it.pagopa.selfcare.azurestorage.AzureBlobClient;
 import it.pagopa.selfcare.document.config.DocumentMsConfig;
 import it.pagopa.selfcare.document.exception.InternalException;
+import it.pagopa.selfcare.document.exception.InvalidRequestException;
 import it.pagopa.selfcare.document.exception.ResourceNotFoundException;
 import it.pagopa.selfcare.document.exception.UpdateNotAllowedException;
 import it.pagopa.selfcare.document.model.FormItem;
@@ -29,6 +30,7 @@ import jakarta.inject.Inject;
 import jakarta.ws.rs.core.HttpHeaders;
 import jakarta.ws.rs.core.MediaType;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.jboss.resteasy.reactive.RestResponse;
 
@@ -50,6 +52,7 @@ import java.util.concurrent.Executors;
 import static it.pagopa.selfcare.document.config.DocumentMsConfig.PDF_FORMAT_FILENAME;
 import static it.pagopa.selfcare.document.util.ErrorMessage.ATTACHMENT_UPLOAD_ERROR;
 import static it.pagopa.selfcare.document.util.ErrorMessage.GENERIC_ERROR;
+import static it.pagopa.selfcare.document.util.ErrorMessage.INSTITUTION_DESCRIPTION_REQUIRED;
 import static it.pagopa.selfcare.document.util.LogSanitizer.sanitize;
 import static it.pagopa.selfcare.document.util.Utils.*;
 import static it.pagopa.selfcare.onboarding.common.DocumentType.ATTACHMENT;
@@ -111,6 +114,13 @@ public class DocumentContentServiceImpl implements DocumentContentService {
     public Uni<CreatePdfResponse> createContractPdf(ContractPdfRequest request) {
         log.info("START - createContractPdf for template: {} with onboardingId: {}",
                 sanitize(request.getContractTemplatePath()), sanitize(request.getOnboardingId()));
+        if (StringUtils.isBlank(request.getInstitution().getDescription())) {
+            log.warn("createContractPdf rejected - institution.description is blank for onboardingId: {}",
+                    sanitize(request.getOnboardingId()));
+            return Uni.createFrom().failure(new InvalidRequestException(
+                    INSTITUTION_DESCRIPTION_REQUIRED.getMessage().formatted(sanitize(request.getOnboardingId())),
+                    INSTITUTION_DESCRIPTION_REQUIRED.getCode()));
+        }
         long start = System.currentTimeMillis();
 
         return buildContractContextAsync(request)
