@@ -28,7 +28,13 @@ public class TenantConfiguration {
                     String mandatoryOneIdentityTenants,
             @org.springframework.beans.factory.annotation.Value(
                             "${tenant.user-registry.mandatory-tenants:}")
-                    String mandatoryUserRegistryTenants) {
+                    String mandatoryUserRegistryTenants,
+            @org.springframework.beans.factory.annotation.Value(
+                            "${tenant.one-mail.mandatory-tenants:}")
+                    String mandatoryOneMailTenants,
+            @org.springframework.beans.factory.annotation.Value(
+                            "${tenant.pec.mandatory-tenants:}")
+                    String mandatoryPecTenants) {
         return new TenantRegistry(
                 objectMapper,
                 environment,
@@ -36,6 +42,8 @@ public class TenantConfiguration {
                 supportedTenants,
                 mandatoryStorageKeys,
                 mandatoryOneIdentityTenants,
-                mandatoryUserRegistryTenants);
+                mandatoryUserRegistryTenants,
+                mandatoryOneMailTenants,
+                mandatoryPecTenants);
     }
 }

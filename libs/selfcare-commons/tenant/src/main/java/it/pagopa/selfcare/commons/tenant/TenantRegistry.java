@@ -27,6 +27,8 @@ public class TenantRegistry {
     private final String mandatoryStorageKeys;
     private final String mandatoryOneIdentityTenants;
     private final String mandatoryUserRegistryTenants;
+    private final String mandatoryOneMailTenants;
+    private final String mandatoryPecTenants;
     private Map<String, TenantDefinition> tenants = Collections.emptyMap();
 
     public TenantRegistry(
@@ -46,6 +48,15 @@ public class TenantRegistry {
             String mandatoryStorageKeys,
             String mandatoryOneIdentityTenants,
             String mandatoryUserRegistryTenants) {
+        this(objectMapper, environment, registryJson, supportedTenants, mandatoryStorageKeys,
+                mandatoryOneIdentityTenants, mandatoryUserRegistryTenants, "", "");
+    }
+
+    public TenantRegistry(
+            ObjectMapper objectMapper, Environment environment, String registryJson,
+            String supportedTenants, String mandatoryStorageKeys,
+            String mandatoryOneIdentityTenants, String mandatoryUserRegistryTenants,
+            String mandatoryOneMailTenants, String mandatoryPecTenants) {
         this.objectMapper = objectMapper;
         this.environment = environment;
         this.registryJson = registryJson;
@@ -53,6 +64,8 @@ public class TenantRegistry {
         this.mandatoryStorageKeys = mandatoryStorageKeys;
         this.mandatoryOneIdentityTenants = mandatoryOneIdentityTenants;
         this.mandatoryUserRegistryTenants = mandatoryUserRegistryTenants;
+        this.mandatoryOneMailTenants = mandatoryOneMailTenants;
+        this.mandatoryPecTenants = mandatoryPecTenants;
     }
 
     @PostConstruct
@@ -80,9 +93,18 @@ public class TenantRegistry {
             validateJwt(tenantId, definition.jwt());
             validateCredentials(tenantId, definition);
             validateStorages(tenantId, definition);
+            if (definition.oneMail() != null) {
+                oneMailCredentials(tenantId);
+            }
+            if (definition.pec() != null) {
+                pecCredentials(tenantId);
+            }
+            eventHubCredentials(tenantId);
         });
         validateMandatoryCredentials(supportedTenantIds(), mandatoryOneIdentityTenants, true);
         validateMandatoryCredentials(supportedTenantIds(), mandatoryUserRegistryTenants, false);
+        validateMandatoryIntegration(mandatoryOneMailTenants, true);
+        validateMandatoryIntegration(mandatoryPecTenants, false);
     }
 
     public boolean isConfigured() {
@@ -170,6 +192,74 @@ public class TenantRegistry {
                                         "User Registry is not configured for tenant "
                                                 + normalizeTenantId(tenantId)))
                 .apiKey();
+    }
+
+    public TenantDefinition.OneMailCredentials oneMailCredentials(String tenantId) {
+        TenantDefinition.OneMailDefinition definition = resolve(tenantId).oneMail();
+        if (definition == null || isBlank(definition.url()) || isBlank(definition.sender())) {
+            throw new IllegalStateException("Missing or incomplete OneMail configuration for tenant "
+                    + normalizeTenantId(tenantId));
+        }
+        return new TenantDefinition.OneMailCredentials(definition.url(), definition.sender(),
+                requiredSecret(definition.apiKeyEnvVar(), tenantId, "OneMail API key"));
+    }
+
+    public TenantDefinition.PecCredentials pecCredentials(String tenantId) {
+        TenantDefinition.PecDefinition definition = resolve(tenantId).pec();
+        if (definition == null || isBlank(definition.host()) || isBlank(definition.sender())
+                || definition.port() == null || definition.port() < 1 || definition.port() > 65535) {
+            throw new IllegalStateException("Missing or incomplete PEC configuration for tenant "
+                    + normalizeTenantId(tenantId));
+        }
+        return new TenantDefinition.PecCredentials(
+                definition.host(), definition.port(), definition.sender(),
+                requiredSecret(definition.usernameEnvVar(), tenantId, "PEC username"),
+                requiredSecret(definition.passwordEnvVar(), tenantId, "PEC password"));
+    }
+
+    public Optional<TenantDefinition.EventHubCredentials> eventHubCredentials(String tenantId) {
+        TenantDefinition.EventHubDefinition definition = resolve(tenantId).eventHub();
+        if (definition == null) {
+            return Optional.empty();
+        }
+        if (isBlank(definition.namespaceUrl()) || isBlank(definition.topic())
+                || definition.authentication() == null || definition.authentication().type() == null) {
+            throw new IllegalStateException("Incomplete EventHub configuration for tenant "
+                    + normalizeTenantId(tenantId));
+        }
+        TenantDefinition.EventHubAuthentication authentication = definition.authentication();
+        String clientId = null;
+        String key = null;
+        switch (authentication.type()) {
+            case MANAGED_IDENTITY -> clientId = requiredSecret(
+                    authentication.managedIdentityClientIdEnvVar(), tenantId, "EventHub client ID");
+            case SHARED_ACCESS_KEY -> {
+                if (isBlank(authentication.keyName())) {
+                    throw new IllegalStateException("Missing EventHub key name for tenant "
+                            + normalizeTenantId(tenantId));
+                }
+                key = requiredSecret(authentication.keyEnvVar(), tenantId, "EventHub key");
+            }
+        }
+        return Optional.of(new TenantDefinition.EventHubCredentials(
+                definition.namespaceUrl(), definition.topic(), authentication.type(),
+                clientId, authentication.keyName(), key));
+    }
+
+    private void validateMandatoryIntegration(String configuredTenants, boolean oneMail) {
+        if (configuredTenants == null || configuredTenants.isBlank()) {
+            return;
+        }
+        Arrays.stream(configuredTenants.split(","))
+                .filter(value -> !value.isBlank())
+                .map(this::normalizeAndValidate)
+                .forEach(tenantId -> {
+                    if (oneMail) {
+                        oneMailCredentials(tenantId);
+                    } else {
+                        pecCredentials(tenantId);
+                    }
+                });
     }
 
     public TenantDefinition.StorageDefinition storage(String tenantId, String logicalKey) {
