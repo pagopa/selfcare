@@ -43,4 +43,7 @@ public interface OnboardingRepositoryService {
   List<Onboarding> findByQuery(Document query);
 
   void updateStatusByQuery(Document query, String status, LocalDateTime updatedAt);
+
+  /** Sets the contract update flag without touching updatedAt, so that onboarding-cdc skips the event. */
+  void setContractUpdateRequired(List<String> onboardingIds, LocalDateTime requiredAt);
 }

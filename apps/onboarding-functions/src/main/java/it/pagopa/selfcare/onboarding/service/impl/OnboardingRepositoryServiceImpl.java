@@ -155,4 +155,13 @@ public class OnboardingRepositoryServiceImpl implements OnboardingRepositoryServ
         onboardingRepository.mongoCollection().updateMany(query,
                 new Document("$set", new Document("status", status).append("updatedAt", updatedAt)));
     }
+
+    @Override
+    public void setContractUpdateRequired(List<String> onboardingIds, LocalDateTime requiredAt) {
+        log.debug("Setting contract update required: onboardingIds={}", onboardingIds);
+        onboardingRepository.mongoCollection().updateMany(
+                new Document("_id", new Document("$in", onboardingIds)),
+                new Document("$set", new Document("contractUpdateRequired", true)
+                        .append("contractUpdateRequiredAt", requiredAt)));
+    }
 }

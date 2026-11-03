@@ -30,4 +30,5 @@ public interface MailTemplatePathConfig {
 
     String contractUpdateCompletePath();
     String contractUpdateRequestPath();
+    String contractUpdateCampaignPath();
 }

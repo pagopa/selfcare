@@ -174,7 +174,7 @@ public class OnboardingFunctions {
     }
     String userId = functionInvocationLogger.logInvocation(START_ONBOARDING_ORCHESTRATION, request);
     if (FunctionInvocationLogger.isMissingUserId(userId)) {
-      return missingRequesterResponse(request);
+      return FunctionInvocationLogger.missingUserIdResponse(request);
     }
 
     final String onboardingId = request.getQueryParameters().get(ONBOARDING_ID);
@@ -523,7 +523,7 @@ public class OnboardingFunctions {
     String userId =
         functionInvocationLogger.logInvocation(TRIGGER_BUILD_ATTACHMENTS_AND_SAVE_TOKENS, request);
     if (FunctionInvocationLogger.isMissingUserId(userId)) {
-      return missingRequesterResponse(request);
+      return FunctionInvocationLogger.missingUserIdResponse(request);
     }
     Optional<String> onboardingString = request.getBody();
 
@@ -548,14 +548,6 @@ public class OnboardingFunctions {
             FunctionInvocationLogger.USER_ID_PROPERTY, userId));
 
     return durableContext.createCheckStatusResponse(request, instanceId);
-  }
-
-  private HttpResponseMessage missingRequesterResponse(
-      HttpRequestMessage<Optional<String>> request) {
-    return request
-        .createResponseBuilder(HttpStatus.BAD_REQUEST)
-        .body(FunctionInvocationLogger.USER_ID_HEADER + " header cannot be null or blank")
-        .build();
   }
 
   /**
