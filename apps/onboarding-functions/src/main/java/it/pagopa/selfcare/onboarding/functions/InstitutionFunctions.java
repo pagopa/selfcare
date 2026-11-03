@@ -77,10 +77,7 @@ public class InstitutionFunctions {
     }
     String userId = functionInvocationLogger.logInvocation("TriggerDeleteInstitutionAndUser", request);
     if (FunctionInvocationLogger.isMissingUserId(userId)) {
-      return request
-        .createResponseBuilder(HttpStatus.BAD_REQUEST)
-        .body(FunctionInvocationLogger.USER_ID_HEADER + " header cannot be null or blank")
-        .build();
+      return FunctionInvocationLogger.missingUserIdResponse(request);
     }
 
     final String onboardingId = request.getQueryParameters().get("onboardingId");

@@ -269,10 +269,7 @@ public class NotificationFunctions {
     }
     String userId = functionInvocationLogger.logInvocation("ResendNotifications", request);
     if (FunctionInvocationLogger.isMissingUserId(userId)) {
-      return request
-          .createResponseBuilder(HttpStatus.BAD_REQUEST)
-          .body(FunctionInvocationLogger.USER_ID_HEADER + " header cannot be null or blank")
-          .build();
+      return FunctionInvocationLogger.missingUserIdResponse(request);
     }
 
     ResendNotificationsFilters filters = getResendNotificationsFilters(request);
