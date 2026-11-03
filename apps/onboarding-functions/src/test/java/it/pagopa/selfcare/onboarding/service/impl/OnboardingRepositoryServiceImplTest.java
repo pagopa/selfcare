@@ -247,4 +247,19 @@ class OnboardingRepositoryServiceImplTest {
     verify(collection).updateMany(query,
         new Document("$set", new Document("status", "REJECTED").append("updatedAt", now)));
   }
+
+  @Test
+  void setContractUpdateRequired_shouldSetFlagAndDateWithoutUpdatedAt() {
+    OnboardingRepository onboardingRepository = mock(OnboardingRepository.class);
+    MongoCollection<Onboarding> collection = mock(MongoCollection.class);
+    when(onboardingRepository.mongoCollection()).thenReturn(collection);
+    OnboardingRepositoryServiceImpl service = new OnboardingRepositoryServiceImpl(onboardingRepository);
+    LocalDateTime now = LocalDateTime.now();
+
+    service.setContractUpdateRequired(List.of("io-id", "pagopa-id"), now);
+
+    verify(collection).updateMany(
+        new Document("_id", new Document("$in", List.of("io-id", "pagopa-id"))),
+        new Document("$set", new Document("contractUpdateRequired", true).append("contractUpdateRequiredAt", now)));
+  }
 }
