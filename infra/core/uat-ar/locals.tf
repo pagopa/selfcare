@@ -188,6 +188,18 @@ locals {
       ip_mask = "52.29.74.207",
       action  = "Allow"
     },
+    { // DATALAKE NEW
+      ip_mask = "63.184.191.90",
+      action  = "Allow"
+    },
+    { // DATALAKE NEW
+      ip_mask = "63.184.95.69",
+      action  = "Allow"
+    },
+    { // DATALAKE NEW
+      ip_mask = "93.189.21.104",
+      action  = "Allow"
+    },
     { // PN - DEV
       ip_mask = "15.160.101.29",
       action  = "Allow"
