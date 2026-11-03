@@ -1,0 +1,42 @@
+name: Build Starter Parent
+
+permissions:
+  contents: read
+
+on:
+  workflow_dispatch:
+
+  pull_request:
+    branches:
+      - main
+    types:
+      - opened
+      - synchronize
+      - reopened
+      - ready_for_review
+    paths:
+      - 'libs/selfcare-starter-parent/**'
+      - 'libs/pom.xml'
+      - '.github/workflows/pr_starter_parent.yml'
+      - '.github/workflows/release_starter_parent.yml'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Verify parent POM
+    runs-on: ubuntu-24.04
+
+    steps:
+      - name: Set up Maven and JDK 17
+        uses: s4u/setup-maven-action@fa2c7e4517ed008b1f73e7e0195a9eecf5582cd4
+        with:
+          java-version: 17
+          java-distribution: 'temurin'
+          maven-version: '3.9.5'
+          cache-enabled: true
+
+      - name: Verify with Maven
+        run: mvn -B -ntp -f libs/selfcare-starter-parent/pom.xml clean verify
