@@ -3,8 +3,10 @@ package it.pagopa.selfcare.dashboard.service;
 import it.pagopa.selfcare.core.generated.openapi.v1.dto.OnboardingResponse;
 import it.pagopa.selfcare.core.generated.openapi.v1.dto.OnboardingsResponse;
 import it.pagopa.selfcare.dashboard.client.CoreInstitutionApiRestClient;
+import it.pagopa.selfcare.dashboard.client.DocumentContentRestClient;
 import it.pagopa.selfcare.dashboard.client.DocumentRestClient;
 import it.pagopa.selfcare.dashboard.client.OnboardingRestClient;
+import it.pagopa.selfcare.dashboard.exception.ResourceNotFoundException;
 import it.pagopa.selfcare.dashboard.model.document.DocumentResource;
 import it.pagopa.selfcare.dashboard.model.document.DocumentStatusResource;
 import it.pagopa.selfcare.dashboard.model.document.DocumentType;
@@ -14,6 +16,7 @@ import it.pagopa.selfcare.document.generated.openapi.v1.dto.AvailableDocumentRes
 import it.pagopa.selfcare.document.generated.openapi.v1.dto.AvailableDocumentsResponse;
 import it.pagopa.selfcare.onboarding.generated.openapi.v1.dto.OnboardingGet;
 import it.pagopa.selfcare.onboarding.generated.openapi.v1.dto.OnboardingGetResponse;
+import jakarta.validation.ValidationException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -21,6 +24,8 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.core.io.ByteArrayResource;
+import org.springframework.core.io.Resource;
 import org.springframework.http.ResponseEntity;
 
 import java.time.LocalDateTime;
@@ -49,9 +54,12 @@ class DocumentServiceImplTest {
     @Mock
     private DocumentRestClient documentRestClient;
 
+    @Mock
+    private DocumentContentRestClient documentContentRestClient;
+
     @BeforeEach
     void setUp() {
-        documentService = new DocumentServiceImpl(onboardingRestClient, coreInstitutionApiRestClient, documentRestClient, List.of("Addendum"));
+        documentService = new DocumentServiceImpl(onboardingRestClient, coreInstitutionApiRestClient, documentRestClient, documentContentRestClient, List.of("Addendum"));
     }
 
     @Test
@@ -203,7 +211,7 @@ class DocumentServiceImplTest {
 
     @Test
     void getDocumentsList_keepsAttachmentNameAsStoredForDownload() {
-        documentService = new DocumentServiceImpl(onboardingRestClient, coreInstitutionApiRestClient, documentRestClient, List.of("Addendum.pdf"));
+        documentService = new DocumentServiceImpl(onboardingRestClient, coreInstitutionApiRestClient, documentRestClient, documentContentRestClient, List.of("Addendum.pdf"));
         OnboardingsResponse onboardings = new OnboardingsResponse();
         onboardings.setOnboardings(List.of(
                 institutionOnboarding(PRODUCT_ID, OnboardingResponse.StatusEnum.ACTIVE, "tokenId", OffsetDateTime.now())));
@@ -220,6 +228,67 @@ class DocumentServiceImplTest {
         assertEquals(List.of(
                 new DocumentResource("contract", DocumentType.INSTITUTION),
                 new DocumentResource("Addendum.pdf", DocumentType.ATTACHMENT)), result.getDocuments());
+    }
+
+    @Test
+    void getDocument_institutionType_returnsSignedContractOfTheActiveOnboarding() {
+        mockActiveOnboarding();
+        Resource contract = new ByteArrayResource("contract".getBytes());
+        when(documentContentRestClient._getContractSigned("tokenId", null)).thenReturn(ResponseEntity.ok(contract));
+
+        Resource result = documentService.getDocument(INSTITUTION_ID, PRODUCT_ID, null, DocumentType.INSTITUTION);
+
+        assertEquals(contract, result);
+        verify(documentContentRestClient, never())._getAttachment(any(), any());
+    }
+
+    @Test
+    void getDocument_attachmentWithoutName_throwsValidationException() {
+        assertThrows(ValidationException.class, () ->
+                documentService.getDocument(INSTITUTION_ID, PRODUCT_ID, " ", DocumentType.ATTACHMENT));
+        verifyNoInteractions(coreInstitutionApiRestClient, documentContentRestClient);
+    }
+
+    @Test
+    void getDocument_allowedAttachment_returnsAttachmentByName() {
+        mockActiveOnboarding();
+        Resource attachment = new ByteArrayResource("addendum".getBytes());
+        when(documentContentRestClient._getAttachment("tokenId", "Addendum")).thenReturn(ResponseEntity.ok(attachment));
+
+        Resource result = documentService.getDocument(INSTITUTION_ID, PRODUCT_ID, "Addendum", DocumentType.ATTACHMENT);
+
+        assertEquals(attachment, result);
+        verify(documentContentRestClient, never())._getContractSigned(any(), any());
+    }
+
+    @Test
+    void getDocument_attachmentNotAllowed_throwsResourceNotFound() {
+        mockActiveOnboarding();
+
+        assertThrows(ResourceNotFoundException.class, () ->
+                documentService.getDocument(INSTITUTION_ID, PRODUCT_ID, "Dichiarazione_sostitutiva_certificazione", DocumentType.ATTACHMENT));
+        verifyNoInteractions(documentContentRestClient);
+    }
+
+    @Test
+    void getDocument_withoutActiveOnboarding_throwsResourceNotFound() {
+        OnboardingsResponse onboardings = new OnboardingsResponse();
+        onboardings.setOnboardings(List.of(
+                institutionOnboarding(PRODUCT_ID, OnboardingResponse.StatusEnum.SUSPENDED, "tokenId", OffsetDateTime.now())));
+        when(coreInstitutionApiRestClient._getOnboardingsInstitutionUsingGET(INSTITUTION_ID, null))
+                .thenReturn(ResponseEntity.ok(onboardings));
+
+        assertThrows(ResourceNotFoundException.class, () ->
+                documentService.getDocument(INSTITUTION_ID, PRODUCT_ID, "Addendum", DocumentType.ATTACHMENT));
+        verifyNoInteractions(documentContentRestClient);
+    }
+
+    private void mockActiveOnboarding() {
+        OnboardingResponse onboarding = institutionOnboarding(PRODUCT_ID, OnboardingResponse.StatusEnum.ACTIVE, "tokenId", OffsetDateTime.now());
+        OnboardingsResponse onboardings = new OnboardingsResponse();
+        onboardings.setOnboardings(List.of(onboarding));
+        when(coreInstitutionApiRestClient._getOnboardingsInstitutionUsingGET(INSTITUTION_ID, null))
+                .thenReturn(ResponseEntity.ok(onboardings));
     }
 
     @ParameterizedTest
