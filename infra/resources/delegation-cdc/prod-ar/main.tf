@@ -83,7 +83,7 @@ locals {
     },
     {
       name  = "DELEGATION_CDC_WEBHOOK_ENABLED"
-      value = "false"
+      value = "true"
     }
   ]
 

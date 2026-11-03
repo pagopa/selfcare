@@ -5323,6 +5323,126 @@ Feature: User
       | Selc:ListActiveProducts           |
 
   @RemoveUserInstitutionAfterScenario
+  Scenario: Successfully retrieves userInstitution data with list of actions permitted for each user's product (with role MANAGER and prod-ced)
+    Given User login with username "j.doe" and password "test"
+    And A mock userInstitution with id "65a4b6c7d8e9f01234567890" and onboardedProductState "ACTIVE" and role "MANAGER" and productId "prod-ced"
+    And The following path params:
+      | userId                            | 35a78332-d038-4bfa-8e85-2cba7f6b7bf7        |
+      | institutionId                     | d0d28367-1695-4c50-a260-6fda526e9aab        |
+    When I send a GET request to "users/{userId}/institutions/{institutionId}"
+    Then The status code is 200
+    And The response body contains:
+      | userId                            | 35a78332-d038-4bfa-8e85-2cba7f6b7bf7        |
+      | institutionId                     | d0d28367-1695-4c50-a260-6fda526e9aab        |
+      | institutionDescription            | Comune di Milano                            |
+      | products[0].productId             | prod-ced                                    |
+      | products[0].tokenId               | asda8312-3311-5642-gsds-gfr2252341          |
+      | products[0].status                | ACTIVE                                      |
+      | products[0].role                  | MANAGER                                     |
+      | products[0].env                   | ROOT                                        |
+    And The response body contains the list "products" of size 1
+    And The response body doesn't contain field "products[0].roleId"
+    And The response body contains the list "products[0].userProductActions" of size 17
+    And The response body contains at path "products[0].userProductActions" the following list of values in any order:
+      | Selc:UploadLogo                   |
+      | Selc:ViewBilling                  |
+      | Selc:RequestProductAccess         |
+      | Selc:ListAvailableProducts        |
+      | Selc:ListActiveProducts           |
+      | Selc:AccessProductBackoffice      |
+      | Selc:ViewManagedInstitutions      |
+      | Selc:ViewDelegations              |
+      | Selc:UpdateProductUsers           |
+      | Selc:DeleteProductUsers           |
+      | Selc:ListProductUsers             |
+      | Selc:ManageProductGroups          |
+      | Selc:ListAllProductGroups         |
+      | Selc:ListProductGroups            |
+      | Selc:CreateDelegation             |
+      | Selc:ViewInstitutionData          |
+      | Selc:UpdateGeoTaxonomy            |
+
+  @RemoveUserInstitutionAfterScenario
+  Scenario: Successfully retrieves userInstitution data with list of actions permitted for each user's product (with role DELEGATE and prod-ced)
+    Given User login with username "j.doe" and password "test"
+    And A mock userInstitution with id "65a4b6c7d8e9f01234567890" and onboardedProductState "ACTIVE" and role "DELEGATE" and productId "prod-ced"
+    And The following path params:
+      | userId                            | 35a78332-d038-4bfa-8e85-2cba7f6b7bf7        |
+      | institutionId                     | d0d28367-1695-4c50-a260-6fda526e9aab        |
+    When I send a GET request to "users/{userId}/institutions/{institutionId}"
+    Then The status code is 200
+    And The response body contains:
+      | userId                            | 35a78332-d038-4bfa-8e85-2cba7f6b7bf7        |
+      | institutionId                     | d0d28367-1695-4c50-a260-6fda526e9aab        |
+      | institutionDescription            | Comune di Milano                            |
+      | products[0].productId             | prod-ced                                    |
+      | products[0].tokenId               | asda8312-3311-5642-gsds-gfr2252341          |
+      | products[0].status                | ACTIVE                                      |
+      | products[0].role                  | DELEGATE                                    |
+      | products[0].env                   | ROOT                                        |
+    And The response body contains the list "products" of size 1
+    And The response body doesn't contain field "products[0].roleId"
+    And The response body contains the list "products[0].userProductActions" of size 17
+    And The response body contains at path "products[0].userProductActions" the following list of values in any order:
+      | Selc:UploadLogo                   |
+      | Selc:ViewBilling                  |
+      | Selc:RequestProductAccess         |
+      | Selc:ListAvailableProducts        |
+      | Selc:ListActiveProducts           |
+      | Selc:AccessProductBackoffice      |
+      | Selc:ViewManagedInstitutions      |
+      | Selc:ViewDelegations              |
+      | Selc:UpdateProductUsers           |
+      | Selc:DeleteProductUsers           |
+      | Selc:ListProductUsers             |
+      | Selc:ManageProductGroups          |
+      | Selc:ListAllProductGroups         |
+      | Selc:ListProductGroups            |
+      | Selc:CreateDelegation             |
+      | Selc:ViewInstitutionData          |
+      | Selc:UpdateGeoTaxonomy            |
+
+  @RemoveUserInstitutionAfterScenario
+  Scenario: Successfully retrieves userInstitution data with list of actions permitted for each user's product (with role SUB_DELEGATE and prod-ced)
+    Given User login with username "j.doe" and password "test"
+    And A mock userInstitution with id "65a4b6c7d8e9f01234567890" and onboardedProductState "ACTIVE" and role "SUB_DELEGATE" and productId "prod-ced"
+    And The following path params:
+      | userId                            | 35a78332-d038-4bfa-8e85-2cba7f6b7bf7        |
+      | institutionId                     | d0d28367-1695-4c50-a260-6fda526e9aab        |
+    When I send a GET request to "users/{userId}/institutions/{institutionId}"
+    Then The status code is 200
+    And The response body contains:
+      | userId                            | 35a78332-d038-4bfa-8e85-2cba7f6b7bf7        |
+      | institutionId                     | d0d28367-1695-4c50-a260-6fda526e9aab        |
+      | institutionDescription            | Comune di Milano                            |
+      | products[0].productId             | prod-ced                                    |
+      | products[0].tokenId               | asda8312-3311-5642-gsds-gfr2252341          |
+      | products[0].status                | ACTIVE                                      |
+      | products[0].role                  | SUB_DELEGATE                                |
+      | products[0].env                   | ROOT                                        |
+    And The response body contains the list "products" of size 1
+    And The response body doesn't contain field "products[0].roleId"
+    And The response body contains the list "products[0].userProductActions" of size 17
+    And The response body contains at path "products[0].userProductActions" the following list of values in any order:
+      | Selc:UploadLogo                   |
+      | Selc:ViewBilling                  |
+      | Selc:RequestProductAccess         |
+      | Selc:ListAvailableProducts        |
+      | Selc:ListActiveProducts           |
+      | Selc:AccessProductBackoffice      |
+      | Selc:ViewManagedInstitutions      |
+      | Selc:ViewDelegations              |
+      | Selc:UpdateProductUsers           |
+      | Selc:DeleteProductUsers           |
+      | Selc:ListProductUsers             |
+      | Selc:ManageProductGroups          |
+      | Selc:ListAllProductGroups         |
+      | Selc:ListProductGroups            |
+      | Selc:CreateDelegation             |
+      | Selc:ViewInstitutionData          |
+      | Selc:UpdateGeoTaxonomy            |
+
+  @RemoveUserInstitutionAfterScenario
   Scenario: Successfully retrieves userInstitution data with list of actions permitted for each user's product (with role MANAGER and prod-registro-beni)
     Given User login with username "j.doe" and password "test"
     And A mock userInstitution with id "65a4b6c7d8e9f01234567890" and onboardedProductState "ACTIVE" and role "MANAGER" and productId "prod-registro-beni"
