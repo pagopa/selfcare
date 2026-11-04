@@ -132,6 +132,7 @@ locals {
       "JWT_TOKEN_KID"                                      = "@Microsoft.KeyVault(SecretUri=https://selc-p-kv.vault.azure.net/secrets/jwt-kid/)"
       "WEBHOOK_BASE_PATH"                                  = "https://selc-p-webhook-ms-ca.lemonpond-bb0b750e.westeurope.azurecontainerapps.io"
       "DEFAULT_TENANT"                                     = "AR"
+      "JWT_DEFAULT_TENANT"                                 = "AR"
       "SUPPORTED_TENANTS"                                  = "AR"
     }
   }

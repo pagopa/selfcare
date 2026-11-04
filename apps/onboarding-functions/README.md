@@ -27,12 +27,15 @@ All twelve HTTP triggers require three independent credentials: the Azure Functi
 key, `X-Tenant-Id`, and `Authorization: Bearer <jwt>`. The JWT must use RS256, be
 signed by the public key configured for the header tenant, contain an unexpired
 `exp`, an allowed `iss`, `uid`, and a matching `tenant_id`. Tokens without
-`tenant_id` (the legacy PNPG SPID hub does not emit it) are attributed to
-`JWT_DEFAULT_TENANT` (default `PNPG`), which must still match the header; set
-`JWT_TENANT_CLAIM_REQUIRED=true` to reject them. `JWT_DEFAULT_TENANT` is unrelated
-to `DEFAULT_TENANT` (tenant used when the header is absent). This fallback is
-temporary: AR tokens come from the `auth` app, which always emits `tenant_id`; once
-PNPG logins move to `auth` too, enable `JWT_TENANT_CLAIM_REQUIRED`. Missing or unsupported
+`tenant_id` are attributed to `JWT_DEFAULT_TENANT`, which must still match the
+header; set `JWT_TENANT_CLAIM_REQUIRED=true` to reject them. The legacy PNPG SPID hub
+does not emit the claim (code default `PNPG`), and neither do the Area Riservata
+backstage tokens (`iss=PAGOPA`) used to approve onboardings, so the AR stacks set
+`JWT_DEFAULT_TENANT=AR`. This is safe because each stack only loads the public key
+of its own tenant, so a token without the claim must still be signed by that
+tenant's key. `JWT_DEFAULT_TENANT` is unrelated to `DEFAULT_TENANT` (tenant used
+when the header is absent). This fallback is temporary: once every issuer emits
+`tenant_id`, enable `JWT_TENANT_CLAIM_REQUIRED`. Missing or unsupported
 tenant context returns `400`; JWT failures return `401` with
 `WWW-Authenticate: Bearer`. Validation runs before request parsing, telemetry with
 application data, service calls, or Durable orchestration scheduling.
@@ -67,7 +70,7 @@ Before running you must set these properties as environment variables.
 | onboarding-functions.jwt.validation.tenants.AR.public-key<br/>        | JWT_PUBLIC_KEY_AR          |             | for AR       |
 | onboarding-functions.jwt.validation.tenants.PNPG.public-key<br/>      | JWT_PUBLIC_KEY_PNPG        |             | for PNPG     |
 | onboarding-functions.jwt.validation.allowed-issuers<br/>              | JWT_ALLOWED_ISSUERS        | SPID,PAGOPA | yes          |
-| onboarding-functions.jwt.validation.default-tenant<br/>               | JWT_DEFAULT_TENANT         | PNPG        | no           |
+| onboarding-functions.jwt.validation.default-tenant<br/>               | JWT_DEFAULT_TENANT         | PNPG (AR stacks: AR) | no           |
 | onboarding-functions.jwt.validation.tenant-claim-required<br/>        | JWT_TENANT_CLAIM_REQUIRED  | false       | no           |
 
 ### Blob storage authentication
