@@ -127,6 +127,8 @@ locals {
       "NAMIRIAL_SIGN_SERVICE_IDENTITY_PASSWORD"            = "@Microsoft.KeyVault(SecretUri=https://selc-p-kv.vault.azure.net/secrets/namirial-sign-service-psw/)"
       "EMAIL_SERVICE_AVAILABLE"                            = "true"
       "JWT_TOKEN_ISSUER"                                   = "SPID"
+      "JWT_TOKEN_AUDIENCE_AR"                              = "api.selfcare.pagopa.it"
+      "JWT_TOKEN_AUDIENCE_PNPG"                            = "api-pnpg.selfcare.pagopa.it"
       "JWT_TOKEN_PRIVATE_KEY"                              = "@Microsoft.KeyVault(SecretUri=https://selc-p-kv.vault.azure.net/secrets/jwt-private-key/)"
       "JWT_PUBLIC_KEY_AR"                                  = "@Microsoft.KeyVault(SecretUri=https://selc-p-kv.vault.azure.net/secrets/jwt-public-key/)"
       "JWT_TOKEN_KID"                                      = "@Microsoft.KeyVault(SecretUri=https://selc-p-kv.vault.azure.net/secrets/jwt-kid/)"
