@@ -45,7 +45,11 @@ public class ContractUpdateCampaignFunctions {
      */
     @FunctionName(SEND_CONTRACT_UPDATE_MAIL)
     public HttpResponseMessage sendContractUpdateMail(
-            @HttpTrigger(name = "req", methods = {HttpMethod.POST}, authLevel = AuthorizationLevel.FUNCTION) HttpRequestMessage<Optional<String>> request,
+            @HttpTrigger(
+              name = "req",
+              methods = {HttpMethod.POST},
+              authLevel = AuthorizationLevel.FUNCTION)
+            HttpRequestMessage<Optional<String>> request,
             final ExecutionContext context) {
         HttpAuthorization authorization =
             httpFunctionGuard.authorize(SEND_CONTRACT_UPDATE_MAIL, request, context);
