@@ -9,6 +9,7 @@
     "imported": false,
     "institutionType": "PSP",
     "taxCode": "13234472821",
+    "description": "test",
     "digitalAddress": "test@test.it",
     "origin": "SELC",
     "originId": "13234472821"

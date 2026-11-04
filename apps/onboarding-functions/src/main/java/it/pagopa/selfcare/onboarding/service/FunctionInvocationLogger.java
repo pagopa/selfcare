@@ -2,6 +2,8 @@ package it.pagopa.selfcare.onboarding.service;
 
 import com.microsoft.applicationinsights.telemetry.SeverityLevel;
 import com.microsoft.azure.functions.HttpRequestMessage;
+import com.microsoft.azure.functions.HttpResponseMessage;
+import com.microsoft.azure.functions.HttpStatus;
 import jakarta.enterprise.context.ApplicationScoped;
 import java.util.Map;
 import java.util.Objects;
@@ -37,6 +39,13 @@ public class FunctionInvocationLogger {
 
   public static boolean isMissingUserId(String userId) {
     return Objects.isNull(userId) || userId.isBlank() || UNKNOWN_USER_ID.equals(userId);
+  }
+
+  public static HttpResponseMessage missingUserIdResponse(HttpRequestMessage<?> request) {
+    return request
+        .createResponseBuilder(HttpStatus.BAD_REQUEST)
+        .body(USER_ID_HEADER + " header cannot be null or blank")
+        .build();
   }
 
   public void logOrchestrationStarted(String functionName, String userId, String instanceId) {

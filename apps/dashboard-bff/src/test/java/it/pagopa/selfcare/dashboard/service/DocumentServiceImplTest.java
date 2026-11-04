@@ -1,18 +1,35 @@
 package it.pagopa.selfcare.dashboard.service;
 
+import it.pagopa.selfcare.core.generated.openapi.v1.dto.OnboardingResponse;
+import it.pagopa.selfcare.core.generated.openapi.v1.dto.OnboardingsResponse;
+import it.pagopa.selfcare.dashboard.client.CoreInstitutionApiRestClient;
+import it.pagopa.selfcare.dashboard.client.DocumentContentRestClient;
+import it.pagopa.selfcare.dashboard.client.DocumentRestClient;
 import it.pagopa.selfcare.dashboard.client.OnboardingRestClient;
+import it.pagopa.selfcare.dashboard.exception.ResourceNotFoundException;
+import it.pagopa.selfcare.dashboard.model.document.DocumentResource;
 import it.pagopa.selfcare.dashboard.model.document.DocumentStatusResource;
+import it.pagopa.selfcare.dashboard.model.document.DocumentType;
+import it.pagopa.selfcare.dashboard.model.document.DocumentsResource;
 import it.pagopa.selfcare.dashboard.model.document.ProductDocumentStatusResource;
+import it.pagopa.selfcare.document.generated.openapi.v1.dto.AvailableDocumentResponse;
+import it.pagopa.selfcare.document.generated.openapi.v1.dto.AvailableDocumentsResponse;
 import it.pagopa.selfcare.onboarding.generated.openapi.v1.dto.OnboardingGet;
 import it.pagopa.selfcare.onboarding.generated.openapi.v1.dto.OnboardingGetResponse;
+import jakarta.validation.ValidationException;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.core.io.ByteArrayResource;
+import org.springframework.core.io.Resource;
 import org.springframework.http.ResponseEntity;
 
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -23,13 +40,27 @@ import static org.mockito.Mockito.*;
 class DocumentServiceImplTest {
 
     private static final String INSTITUTION_ID = "institutionId";
+    private static final String PRODUCT_ID = "prod-pagopa";
     private static final List<String> REQUESTED_PRODUCTS = List.of("prod-io", "prod-pagopa", "prod-pn", "prod-interop", "prod-fd");
 
-    @InjectMocks
     private DocumentServiceImpl documentService;
 
     @Mock
     private OnboardingRestClient onboardingRestClient;
+
+    @Mock
+    private CoreInstitutionApiRestClient coreInstitutionApiRestClient;
+
+    @Mock
+    private DocumentRestClient documentRestClient;
+
+    @Mock
+    private DocumentContentRestClient documentContentRestClient;
+
+    @BeforeEach
+    void setUp() {
+        documentService = new DocumentServiceImpl(onboardingRestClient, coreInstitutionApiRestClient, documentRestClient, documentContentRestClient, List.of("Addendum"));
+    }
 
     @Test
     void getDocumentStatus_computesStatusForEachRequestedProduct() {
@@ -90,6 +121,220 @@ class DocumentServiceImplTest {
         List<String> productIds = List.of("prod-io");
         assertThrows(IllegalArgumentException.class, () -> documentService.getDocumentStatus(null, productIds));
         verifyNoInteractions(onboardingRestClient);
+    }
+
+    @Test
+    void getDocumentsList_returnsContractsAndAllowedAttachmentsOfTheActiveOnboarding() {
+        // given
+        OnboardingsResponse onboardings = new OnboardingsResponse();
+        onboardings.setOnboardings(List.of(
+                institutionOnboarding(PRODUCT_ID, OnboardingResponse.StatusEnum.DELETED, "deletedToken", OffsetDateTime.now()),
+                institutionOnboarding(PRODUCT_ID, OnboardingResponse.StatusEnum.ACTIVE, "oldToken", OffsetDateTime.now().minusYears(2)),
+                institutionOnboarding(PRODUCT_ID, OnboardingResponse.StatusEnum.ACTIVE, "tokenId", OffsetDateTime.now().minusYears(1)),
+                institutionOnboarding("prod-io", OnboardingResponse.StatusEnum.ACTIVE, "otherProductToken", OffsetDateTime.now())));
+        when(coreInstitutionApiRestClient._getOnboardingsInstitutionUsingGET(INSTITUTION_ID, null))
+                .thenReturn(ResponseEntity.ok(onboardings));
+
+        AvailableDocumentsResponse available = new AvailableDocumentsResponse();
+        available.setDocuments(List.of(
+                availableDocument("Piattaforma_pagoPA_accordo_adesione.pdf", it.pagopa.selfcare.document.generated.openapi.v1.dto.DocumentType.INSTITUTION, "tokenId"),
+                availableDocument("Accordo di Adesione IO v. 2.3_20 gennaio 2021.pdf.0000010072.p7m", it.pagopa.selfcare.document.generated.openapi.v1.dto.DocumentType.INSTITUTION, "completedUpdateId"),
+                availableDocument("pending-update-contract.pdf", it.pagopa.selfcare.document.generated.openapi.v1.dto.DocumentType.INSTITUTION, "pendingUpdateId"),
+                availableDocument("Addendum", it.pagopa.selfcare.document.generated.openapi.v1.dto.DocumentType.ATTACHMENT),
+                availableDocument("Dichiarazione_sostitutiva_certificazione", it.pagopa.selfcare.document.generated.openapi.v1.dto.DocumentType.ATTACHMENT),
+                availableDocument("user-contract.pdf", it.pagopa.selfcare.document.generated.openapi.v1.dto.DocumentType.USER)));
+        when(documentRestClient._getAvailableDocuments("tokenId")).thenReturn(ResponseEntity.ok(available));
+
+        OnboardingGetResponse productOnboardings = new OnboardingGetResponse();
+        productOnboardings.setItems(List.of(
+                onboardingWithId("completedUpdateId", "COMPLETED"),
+                onboardingWithId("pendingUpdateId", "PENDING")));
+        when(onboardingRestClient._getOnboardingWithFilter(null, INSTITUTION_ID, null, null, null, List.of(PRODUCT_ID), null, true, null, null, null, null, null, null))
+                .thenReturn(ResponseEntity.ok(productOnboardings));
+
+        // when
+        DocumentsResource result = documentService.getDocumentsList(INSTITUTION_ID, PRODUCT_ID);
+
+        // then only the contract of the most recent completed onboarding is exposed
+        assertEquals(List.of(
+                new DocumentResource("Accordo di Adesione IO v. 2.3_20 gennaio 2021", DocumentType.INSTITUTION),
+                new DocumentResource("Addendum", DocumentType.ATTACHMENT)), result.getDocuments());
+        verify(documentRestClient, times(1))._getAvailableDocuments("tokenId");
+        verifyNoMoreInteractions(documentRestClient);
+    }
+
+    @Test
+    void getDocumentsList_onlyContractOfActiveOnboarding_doesNotCallOnboardingMs() {
+        OnboardingsResponse onboardings = new OnboardingsResponse();
+        onboardings.setOnboardings(List.of(
+                institutionOnboarding(PRODUCT_ID, OnboardingResponse.StatusEnum.ACTIVE, "tokenId", OffsetDateTime.now())));
+        when(coreInstitutionApiRestClient._getOnboardingsInstitutionUsingGET(INSTITUTION_ID, null))
+                .thenReturn(ResponseEntity.ok(onboardings));
+        AvailableDocumentsResponse available = new AvailableDocumentsResponse();
+        available.setDocuments(List.of(
+                availableDocument("contract.pdf", it.pagopa.selfcare.document.generated.openapi.v1.dto.DocumentType.INSTITUTION, "tokenId")));
+        when(documentRestClient._getAvailableDocuments("tokenId")).thenReturn(ResponseEntity.ok(available));
+
+        DocumentsResource result = documentService.getDocumentsList(INSTITUTION_ID, PRODUCT_ID);
+
+        assertEquals(List.of(new DocumentResource("contract", DocumentType.INSTITUTION)), result.getDocuments());
+        verifyNoInteractions(onboardingRestClient);
+    }
+
+    @Test
+    void getDocumentsList_withoutActiveOnboarding_returnsEmptyList() {
+        OnboardingsResponse onboardings = new OnboardingsResponse();
+        onboardings.setOnboardings(List.of(
+                institutionOnboarding(PRODUCT_ID, OnboardingResponse.StatusEnum.SUSPENDED, "tokenId", OffsetDateTime.now())));
+        when(coreInstitutionApiRestClient._getOnboardingsInstitutionUsingGET(INSTITUTION_ID, null))
+                .thenReturn(ResponseEntity.ok(onboardings));
+
+        DocumentsResource result = documentService.getDocumentsList(INSTITUTION_ID, PRODUCT_ID);
+
+        assertEquals(List.of(), result.getDocuments());
+        verifyNoInteractions(documentRestClient);
+    }
+
+    @Test
+    void getDocumentsList_withoutAvailableDocuments_returnsEmptyList() {
+        OnboardingsResponse onboardings = new OnboardingsResponse();
+        onboardings.setOnboardings(List.of(
+                institutionOnboarding(PRODUCT_ID, OnboardingResponse.StatusEnum.ACTIVE, "tokenId", OffsetDateTime.now())));
+        when(coreInstitutionApiRestClient._getOnboardingsInstitutionUsingGET(INSTITUTION_ID, null))
+                .thenReturn(ResponseEntity.ok(onboardings));
+        when(documentRestClient._getAvailableDocuments("tokenId")).thenReturn(ResponseEntity.ok().build());
+
+        DocumentsResource result = documentService.getDocumentsList(INSTITUTION_ID, PRODUCT_ID);
+
+        assertEquals(List.of(), result.getDocuments());
+    }
+
+    @Test
+    void getDocumentsList_keepsAttachmentNameAsStoredForDownload() {
+        documentService = new DocumentServiceImpl(onboardingRestClient, coreInstitutionApiRestClient, documentRestClient, documentContentRestClient, List.of("Addendum.pdf"));
+        OnboardingsResponse onboardings = new OnboardingsResponse();
+        onboardings.setOnboardings(List.of(
+                institutionOnboarding(PRODUCT_ID, OnboardingResponse.StatusEnum.ACTIVE, "tokenId", OffsetDateTime.now())));
+        when(coreInstitutionApiRestClient._getOnboardingsInstitutionUsingGET(INSTITUTION_ID, null))
+                .thenReturn(ResponseEntity.ok(onboardings));
+        AvailableDocumentsResponse available = new AvailableDocumentsResponse();
+        available.setDocuments(List.of(
+                availableDocument("contract.pdf", it.pagopa.selfcare.document.generated.openapi.v1.dto.DocumentType.INSTITUTION),
+                availableDocument("Addendum.pdf", it.pagopa.selfcare.document.generated.openapi.v1.dto.DocumentType.ATTACHMENT)));
+        when(documentRestClient._getAvailableDocuments("tokenId")).thenReturn(ResponseEntity.ok(available));
+
+        DocumentsResource result = documentService.getDocumentsList(INSTITUTION_ID, PRODUCT_ID);
+
+        assertEquals(List.of(
+                new DocumentResource("contract", DocumentType.INSTITUTION),
+                new DocumentResource("Addendum.pdf", DocumentType.ATTACHMENT)), result.getDocuments());
+    }
+
+    @Test
+    void getDocument_institutionType_returnsSignedContractOfTheActiveOnboarding() {
+        mockActiveOnboarding();
+        Resource contract = new ByteArrayResource("contract".getBytes());
+        when(documentContentRestClient._getContractSigned("tokenId", null)).thenReturn(ResponseEntity.ok(contract));
+
+        Resource result = documentService.getDocument(INSTITUTION_ID, PRODUCT_ID, null, DocumentType.INSTITUTION);
+
+        assertEquals(contract, result);
+        verify(documentContentRestClient, never())._getAttachment(any(), any());
+    }
+
+    @Test
+    void getDocument_attachmentWithoutName_throwsValidationException() {
+        assertThrows(ValidationException.class, () ->
+                documentService.getDocument(INSTITUTION_ID, PRODUCT_ID, " ", DocumentType.ATTACHMENT));
+        verifyNoInteractions(coreInstitutionApiRestClient, documentContentRestClient);
+    }
+
+    @Test
+    void getDocument_allowedAttachment_returnsAttachmentByName() {
+        mockActiveOnboarding();
+        Resource attachment = new ByteArrayResource("addendum".getBytes());
+        when(documentContentRestClient._getAttachment("tokenId", "Addendum")).thenReturn(ResponseEntity.ok(attachment));
+
+        Resource result = documentService.getDocument(INSTITUTION_ID, PRODUCT_ID, "Addendum", DocumentType.ATTACHMENT);
+
+        assertEquals(attachment, result);
+        verify(documentContentRestClient, never())._getContractSigned(any(), any());
+    }
+
+    @Test
+    void getDocument_attachmentNotAllowed_throwsResourceNotFound() {
+        mockActiveOnboarding();
+
+        assertThrows(ResourceNotFoundException.class, () ->
+                documentService.getDocument(INSTITUTION_ID, PRODUCT_ID, "Dichiarazione_sostitutiva_certificazione", DocumentType.ATTACHMENT));
+        verifyNoInteractions(documentContentRestClient);
+    }
+
+    @Test
+    void getDocument_withoutActiveOnboarding_throwsResourceNotFound() {
+        OnboardingsResponse onboardings = new OnboardingsResponse();
+        onboardings.setOnboardings(List.of(
+                institutionOnboarding(PRODUCT_ID, OnboardingResponse.StatusEnum.SUSPENDED, "tokenId", OffsetDateTime.now())));
+        when(coreInstitutionApiRestClient._getOnboardingsInstitutionUsingGET(INSTITUTION_ID, null))
+                .thenReturn(ResponseEntity.ok(onboardings));
+
+        assertThrows(ResourceNotFoundException.class, () ->
+                documentService.getDocument(INSTITUTION_ID, PRODUCT_ID, "Addendum", DocumentType.ATTACHMENT));
+        verifyNoInteractions(documentContentRestClient);
+    }
+
+    private void mockActiveOnboarding() {
+        OnboardingResponse onboarding = institutionOnboarding(PRODUCT_ID, OnboardingResponse.StatusEnum.ACTIVE, "tokenId", OffsetDateTime.now());
+        OnboardingsResponse onboardings = new OnboardingsResponse();
+        onboardings.setOnboardings(List.of(onboarding));
+        when(coreInstitutionApiRestClient._getOnboardingsInstitutionUsingGET(INSTITUTION_ID, null))
+                .thenReturn(ResponseEntity.ok(onboardings));
+    }
+
+    @ParameterizedTest
+    @CsvSource(delimiter = '|', value = {
+            "Accordo di Adesione IO v. 2.3_20 gennaio 2021.pdf.0000010072.p7m | Accordo di Adesione IO v. 2.3_20 gennaio 2021",
+            "Piattaforma_pagoPA_accordo_adesione.PDF                          | Piattaforma_pagoPA_accordo_adesione",
+            "signed_contract.pdf.p7m                                          | signed_contract",
+            "Addendum                                                         | Addendum",
+            "report.pdfx                                                      | report.pdfx"
+    })
+    void toDisplayName_stripsFileExtensions(String fileName, String expected) {
+        assertEquals(expected, DocumentServiceImpl.toDisplayName(fileName));
+    }
+
+    private static OnboardingResponse institutionOnboarding(String productId, OnboardingResponse.StatusEnum status,
+                                                            String tokenId, OffsetDateTime createdAt) {
+        OnboardingResponse onboarding = new OnboardingResponse();
+        onboarding.setProductId(productId);
+        onboarding.setStatus(status);
+        onboarding.setTokenId(tokenId);
+        onboarding.setCreatedAt(createdAt);
+        return onboarding;
+    }
+
+    private static AvailableDocumentResponse availableDocument(String name,
+                                                               it.pagopa.selfcare.document.generated.openapi.v1.dto.DocumentType type) {
+        return availableDocument(name, type, "tokenId");
+    }
+
+    private static AvailableDocumentResponse availableDocument(String name,
+                                                               it.pagopa.selfcare.document.generated.openapi.v1.dto.DocumentType type,
+                                                               String onboardingId) {
+        AvailableDocumentResponse document = new AvailableDocumentResponse();
+        document.setName(name);
+        document.setType(type);
+        document.setOnboardingId(onboardingId);
+        return document;
+    }
+
+    private static OnboardingGet onboardingWithId(String id, String status) {
+        OnboardingGet onboarding = new OnboardingGet();
+        onboarding.setId(id);
+        onboarding.setProductId(PRODUCT_ID);
+        onboarding.setWorkflowType("CONTRACT_UPDATE");
+        onboarding.setStatus(status);
+        return onboarding;
     }
 
     private static OnboardingGet onboarding(String productId, String workflowType, String status,

@@ -375,11 +375,12 @@ public class InstitutionApiSteps {
         final Set<String> institutionIds = dashboardStepsUtil.responses.getInstitutionBaseResourceList().stream()
             .map(InstitutionBaseResource::getId)
             .collect(Collectors.toSet());
-        Assertions.assertEquals(4, institutionIds.size());
+        Assertions.assertEquals(5, institutionIds.size());
         Assertions.assertTrue(institutionIds.contains("467ac77d-7faa-47bf-a60e-38ea74bd5fd2"));
         Assertions.assertTrue(institutionIds.contains("2a4c94f1-5d11-41f1-89e9-9fef0de4fbfe"));
         Assertions.assertTrue(institutionIds.contains("067327d3-bdd6-408d-8655-87e8f1960046"));
         Assertions.assertTrue(institutionIds.contains("c9a50656-f345-4c81-84be-5b2474470544"));
+        Assertions.assertTrue(institutionIds.contains("b4705659-3a01-430a-a19b-7bdb4e340223"));
     }
 
     @When("I send a POST request to {string} to create a new user related to a product for institutions")
