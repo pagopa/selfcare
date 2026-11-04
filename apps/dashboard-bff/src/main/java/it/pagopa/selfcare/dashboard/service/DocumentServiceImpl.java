@@ -3,8 +3,10 @@ package it.pagopa.selfcare.dashboard.service;
 import it.pagopa.selfcare.core.generated.openapi.v1.dto.OnboardingResponse;
 import it.pagopa.selfcare.core.generated.openapi.v1.dto.OnboardingsResponse;
 import it.pagopa.selfcare.dashboard.client.CoreInstitutionApiRestClient;
+import it.pagopa.selfcare.dashboard.client.DocumentContentRestClient;
 import it.pagopa.selfcare.dashboard.client.DocumentRestClient;
 import it.pagopa.selfcare.dashboard.client.OnboardingRestClient;
+import it.pagopa.selfcare.dashboard.exception.ResourceNotFoundException;
 import it.pagopa.selfcare.dashboard.model.document.DocumentResource;
 import it.pagopa.selfcare.dashboard.model.document.DocumentStatusResource;
 import it.pagopa.selfcare.dashboard.model.document.DocumentType;
@@ -16,12 +18,15 @@ import it.pagopa.selfcare.onboarding.generated.openapi.v1.dto.OnboardingGet;
 import it.pagopa.selfcare.onboarding.generated.openapi.v1.dto.OnboardingGetResponse;
 import it.pagopa.selfcare.onboarding.generated.openapi.v1.dto.OnboardingStatus;
 import it.pagopa.selfcare.onboarding.generated.openapi.v1.dto.WorkflowType;
+import jakarta.validation.ValidationException;
 import lombok.extern.slf4j.Slf4j;
 import org.owasp.encoder.Encode;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.Resource;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
+import org.springframework.util.StringUtils;
 
 import java.time.LocalDateTime;
 import java.util.Collections;
@@ -40,20 +45,25 @@ public class DocumentServiceImpl implements DocumentService {
 
     private static final String REQUIRED_INSTITUTION_MESSAGE = "An Institution id is required";
     private static final String REQUIRED_PRODUCT_MESSAGE = "A Product id is required";
+    private static final String REQUIRED_TYPE_MESSAGE = "A document type is required";
+    private static final String REQUIRED_NAME_MESSAGE = "A document name is required";
     private static final Pattern FILE_EXTENSIONS_PATTERN = Pattern.compile("\\.(pdf|p7m)(\\..*)?$", Pattern.CASE_INSENSITIVE);
 
     private final OnboardingRestClient onboardingRestClient;
     private final CoreInstitutionApiRestClient coreInstitutionApiRestClient;
     private final DocumentRestClient documentRestClient;
+    private final DocumentContentRestClient documentContentRestClient;
     private final List<String> allowedAttachments;
 
     public DocumentServiceImpl(OnboardingRestClient onboardingRestClient,
                                CoreInstitutionApiRestClient coreInstitutionApiRestClient,
                                DocumentRestClient documentRestClient,
+                               DocumentContentRestClient documentContentRestClient,
                                @Value("${dashboard.documents.allowed-attachments}") List<String> allowedAttachments) {
         this.onboardingRestClient = onboardingRestClient;
         this.coreInstitutionApiRestClient = coreInstitutionApiRestClient;
         this.documentRestClient = documentRestClient;
+        this.documentContentRestClient = documentContentRestClient;
         this.allowedAttachments = Optional.ofNullable(allowedAttachments).orElse(Collections.emptyList());
     }
 
@@ -113,7 +123,7 @@ public class DocumentServiceImpl implements DocumentService {
         Assert.hasText(institutionId, REQUIRED_INSTITUTION_MESSAGE);
         Assert.hasText(productId, REQUIRED_PRODUCT_MESSAGE);
 
-        final Optional<String> activeTokenId = getActiveOnboardingTokenId(institutionId, productId);
+        final Optional<String> activeTokenId = getActiveOnboarding(institutionId, productId).map(OnboardingResponse::getTokenId);
         if (activeTokenId.isEmpty()) {
             log.warn("getDocumentsList no active onboarding found for institutionId = {}, productId = {}",
                     Encode.forJava(institutionId), Encode.forJava(productId));
@@ -173,8 +183,39 @@ public class DocumentServiceImpl implements DocumentService {
         return it.pagopa.selfcare.document.generated.openapi.v1.dto.DocumentType.INSTITUTION.equals(document.getType());
     }
 
-    // The tokenId is read from institution-ms so that the document dossier always belongs to the institution and product checked by the permission
-    private Optional<String> getActiveOnboardingTokenId(String institutionId, String productId) {
+    @Override
+    public Resource getDocument(String institutionId, String productId, String name, DocumentType type) {
+        log.trace("getDocument start");
+        log.debug("getDocument institutionId = {}, productId = {}, name = {}, type = {}",
+                Encode.forJava(institutionId), Encode.forJava(productId), Encode.forJava(name), type);
+        Assert.hasText(institutionId, REQUIRED_INSTITUTION_MESSAGE);
+        Assert.hasText(productId, REQUIRED_PRODUCT_MESSAGE);
+        Assert.notNull(type, REQUIRED_TYPE_MESSAGE);
+        // The name identifies the attachment only: the contract is resolved by the onboarding, so the name is optional for it
+        if (DocumentType.ATTACHMENT.equals(type) && !StringUtils.hasText(name)) {
+            throw new ValidationException(REQUIRED_NAME_MESSAGE);
+        }
+
+        final OnboardingResponse onboarding = getActiveOnboarding(institutionId, productId)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "No active onboarding found for institution " + institutionId + " and product " + productId));
+
+        final Resource document = switch (type) {
+            case INSTITUTION -> documentContentRestClient._getContractSigned(onboarding.getTokenId(), null).getBody();
+            case ATTACHMENT -> {
+                if (!allowedAttachments.contains(name)) {
+                    throw new ResourceNotFoundException("Attachment " + name + " not available for download");
+                }
+                yield documentContentRestClient._getAttachment(onboarding.getTokenId(), name).getBody();
+            }
+        };
+
+        log.trace("getDocument end");
+        return document;
+    }
+
+    // The onboarding is read from institution-ms so that the document dossier always belongs to the institution and product checked by the permission
+    private Optional<OnboardingResponse> getActiveOnboarding(String institutionId, String productId) {
         return Optional.ofNullable(coreInstitutionApiRestClient._getOnboardingsInstitutionUsingGET(institutionId, null))
                 .map(ResponseEntity::getBody)
                 .map(OnboardingsResponse::getOnboardings)
@@ -183,8 +224,7 @@ public class DocumentServiceImpl implements DocumentService {
                 .filter(onboarding -> productId.equals(onboarding.getProductId()))
                 .filter(onboarding -> OnboardingResponse.StatusEnum.ACTIVE.equals(onboarding.getStatus()))
                 .filter(onboarding -> Objects.nonNull(onboarding.getTokenId()))
-                .max(Comparator.comparing(OnboardingResponse::getCreatedAt, Comparator.nullsFirst(Comparator.naturalOrder())))
-                .map(OnboardingResponse::getTokenId);
+                .max(Comparator.comparing(OnboardingResponse::getCreatedAt, Comparator.nullsFirst(Comparator.naturalOrder())));
     }
 
     // Only institution contracts and the allowed attachments (e.g. DORA addendum) are exposed: USER contracts are excluded
