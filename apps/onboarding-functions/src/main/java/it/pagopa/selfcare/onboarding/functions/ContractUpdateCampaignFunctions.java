@@ -12,7 +12,8 @@ import it.pagopa.selfcare.onboarding.dto.ContractUpdateCampaignRequest;
 import it.pagopa.selfcare.onboarding.dto.ContractUpdateCampaignResponse;
 import it.pagopa.selfcare.onboarding.service.ContractUpdateCampaignService;
 import it.pagopa.selfcare.onboarding.service.FunctionInvocationLogger;
-import it.pagopa.selfcare.onboarding.service.HttpJwtValidator;
+import it.pagopa.selfcare.onboarding.service.HttpAuthorization;
+import it.pagopa.selfcare.onboarding.service.HttpFunctionGuard;
 import it.pagopa.selfcare.onboarding.service.TelemetryService;
 import java.util.Map;
 import java.util.Objects;
@@ -25,19 +26,16 @@ public class ContractUpdateCampaignFunctions {
 
     private final ContractUpdateCampaignService contractUpdateCampaignService;
     private final ObjectMapper objectMapper;
-    private final FunctionInvocationLogger functionInvocationLogger;
-    private final HttpJwtValidator httpJwtValidator;
+    private final HttpFunctionGuard httpFunctionGuard;
     private final TelemetryService telemetryService;
 
     public ContractUpdateCampaignFunctions(ContractUpdateCampaignService contractUpdateCampaignService,
                                            ObjectMapper objectMapper,
-                                           FunctionInvocationLogger functionInvocationLogger,
-                                           HttpJwtValidator httpJwtValidator,
+                                           HttpFunctionGuard httpFunctionGuard,
                                            TelemetryService telemetryService) {
         this.contractUpdateCampaignService = contractUpdateCampaignService;
         this.objectMapper = objectMapper;
-        this.functionInvocationLogger = functionInvocationLogger;
-        this.httpJwtValidator = httpJwtValidator;
+        this.httpFunctionGuard = httpFunctionGuard;
         this.telemetryService = telemetryService;
     }
 
@@ -49,14 +47,12 @@ public class ContractUpdateCampaignFunctions {
     public HttpResponseMessage sendContractUpdateMail(
             @HttpTrigger(name = "req", methods = {HttpMethod.POST}, authLevel = AuthorizationLevel.FUNCTION) HttpRequestMessage<Optional<String>> request,
             final ExecutionContext context) {
-        Optional<HttpResponseMessage> authenticationError = httpJwtValidator.validate(request, context);
-        if (authenticationError.isPresent()) {
-            return authenticationError.get();
+        HttpAuthorization authorization =
+            httpFunctionGuard.authorize(SEND_CONTRACT_UPDATE_MAIL, request, context);
+        if (authorization.isRejected()) {
+            return authorization.rejection();
         }
-        String userId = functionInvocationLogger.logInvocation(SEND_CONTRACT_UPDATE_MAIL, request);
-        if (FunctionInvocationLogger.isMissingUserId(userId)) {
-            return FunctionInvocationLogger.missingUserIdResponse(request);
-        }
+        String userId = authorization.caller().userId();
 
         ContractUpdateCampaignRequest campaignRequest;
         try {
