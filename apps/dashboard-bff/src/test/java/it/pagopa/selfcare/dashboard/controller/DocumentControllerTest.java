@@ -12,6 +12,9 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.core.io.ByteArrayResource;
+import org.springframework.core.io.Resource;
+import org.springframework.http.HttpHeaders;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 
 import java.util.List;
@@ -19,6 +22,9 @@ import java.util.List;
 import static org.hamcrest.Matchers.is;
 import static org.mockito.Mockito.*;
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
+import static org.springframework.http.MediaType.APPLICATION_OCTET_STREAM_VALUE;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -100,6 +106,65 @@ class DocumentControllerTest extends BaseControllerTest {
         // then
         verify(documentServiceMock, times(1)).getDocumentsList(institutionId, productId);
         verifyNoMoreInteractions(documentServiceMock);
+    }
+
+    @Test
+    void getDocument() throws Exception {
+        // given
+        final String institutionId = "institutionId";
+        final String productId = "prod-pagopa";
+        Resource attachment = new ByteArrayResource("addendum".getBytes()) {
+            @Override
+            public String getFilename() {
+                return "Addendum.pdf";
+            }
+        };
+        when(documentServiceMock.getDocument(institutionId, productId, "Addendum", DocumentType.ATTACHMENT))
+                .thenReturn(attachment);
+
+        // when
+        mockMvc.perform(MockMvcRequestBuilders
+                        .get(BASE_URL + "/institutions/{institutionId}/products/{productId}/document", institutionId, productId)
+                        .param("name", "Addendum")
+                        .param("type", "ATTACHMENT")
+                        .accept(APPLICATION_OCTET_STREAM_VALUE))
+                .andExpect(status().isOk())
+                .andExpect(header().string(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=Addendum.pdf"))
+                .andExpect(content().bytes("addendum".getBytes()));
+
+        // then
+        verify(documentServiceMock, times(1)).getDocument(institutionId, productId, "Addendum", DocumentType.ATTACHMENT);
+        verifyNoMoreInteractions(documentServiceMock);
+    }
+
+    @Test
+    void getDocument_institutionWithoutName() throws Exception {
+        final String institutionId = "institutionId";
+        final String productId = "prod-pagopa";
+        when(documentServiceMock.getDocument(institutionId, productId, null, DocumentType.INSTITUTION))
+                .thenReturn(new ByteArrayResource("contract".getBytes()));
+
+        mockMvc.perform(MockMvcRequestBuilders
+                        .get(BASE_URL + "/institutions/{institutionId}/products/{productId}/document", institutionId, productId)
+                        .param("type", "INSTITUTION")
+                        .accept(APPLICATION_OCTET_STREAM_VALUE))
+                .andExpect(status().isOk())
+                .andExpect(content().bytes("contract".getBytes()));
+
+        verify(documentServiceMock, times(1)).getDocument(institutionId, productId, null, DocumentType.INSTITUTION);
+        verifyNoMoreInteractions(documentServiceMock);
+    }
+
+    @Test
+    void getDocument_withUnknownType_returnsBadRequest() throws Exception {
+        mockMvc.perform(MockMvcRequestBuilders
+                        .get(BASE_URL + "/institutions/{institutionId}/products/{productId}/document", "institutionId", "prod-pagopa")
+                        .param("name", "user-contract.pdf")
+                        .param("type", "USER")
+                        .accept(APPLICATION_OCTET_STREAM_VALUE))
+                .andExpect(status().isBadRequest());
+
+        verifyNoInteractions(documentServiceMock);
     }
 
 }

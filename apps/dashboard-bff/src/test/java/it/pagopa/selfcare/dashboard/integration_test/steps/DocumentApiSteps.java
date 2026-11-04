@@ -64,4 +64,37 @@ public class DocumentApiSteps {
         }
     }
 
+    @When("I send a GET request to {string} to get the document with name {string} and type {string}")
+    public void iSendAGetRequestToGetTheDocument(String url, String name, String type) {
+        getDocument(url, name, type);
+    }
+
+    @When("I send a GET request to {string} to get the document with type {string}")
+    public void iSendAGetRequestToGetTheDocumentWithoutName(String url, String type) {
+        getDocument(url, null, type);
+    }
+
+    private void getDocument(String url, String name, String type) {
+        RequestSpecification requestSpecification = RestAssured.given();
+
+        dashboardStepsUtil.setHeader(requestSpecification);
+        if (Objects.nonNull(name)) {
+            requestSpecification.queryParam("name", name);
+        }
+
+        ExtractableResponse<?> response = requestSpecification
+                .when()
+                .pathParam("institutionId", dashboardStepsUtil.filter.getInstitutionId())
+                .pathParam("productId", dashboardStepsUtil.filter.getProductId())
+                .queryParam("type", type)
+                .get(url)
+                .then()
+                .extract();
+
+        dashboardStepsUtil.status = response.statusCode();
+        if (dashboardStepsUtil.status != 200) {
+            dashboardStepsUtil.errorMessage = response.body().asString();
+        }
+    }
+
 }
