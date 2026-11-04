@@ -9,17 +9,49 @@ It is triggered by http request at GET or POST `/api/StartOnboardingOrchestratio
 
 ### HTTP requester traceability
 
-Every HTTP-triggered function reads the requester identity from the
-`x-selfcare-uid` header and writes it to Application Insights as the structured
-`userId` property. Missing or blank values are recorded as `unknown` with warning
-severity, so invocations can still be diagnosed without losing the function name.
+Every HTTP trigger calls `HttpFunctionGuard.authorize(...)` first: it validates the
+bearer JWT (see below) and writes an Application Insights trace whose caller
+identity comes **only from signed JWT claims**, never from client-controlled
+headers.
 
-The HTTP triggers that start Durable orchestrations require a non-blank requester:
-`StartOnboardingOrchestration`, `TriggerBuildAttachmentsAndSaveTokens`,
-`ResendNotifications` and `TriggerDeleteInstitutionAndUser`. They return `400 Bad
-Request` and do not schedule an orchestration when the header is absent or blank.
-Human requests use the authenticated user identifier; service-to-service callers
-use a stable identity such as `m2m:onboarding-ms` or `m2m:onboarding-cdc`.
+| `customDimensions` | Source | Notes |
+|--------------------|--------|-------|
+| `userId` | `uid` claim | Same property name as before, existing queries keep working |
+| `issuer` | `iss` claim | `SPID`, `PAGOPA` |
+| `clientId` | `client_id` claim | Entry channel: `selfcare-fe` (SPID/CIE login), `selfcare-saml` (internal SAML login), `apim` (APIM-minted token); absent for legacy tokens |
+| `subscriptionId`, `productId` | `subscription_id`, `product_id` claims | APIM subscription and product that originated the call |
+| `declaredUserId`, `declaredUserIdMismatch` | `x-selfcare-uid` header | Legacy, untrusted header: tracked only for auditing when present |
+
+The `x-selfcare-uid` header is no longer required nor used as identity: a request
+with `x-selfcare-uid: pippo` is attributed to the `uid` of its token and flagged
+with `declaredUserIdMismatch=true`. To follow a call across services (FE ->
+APIM -> BFF/onboarding-ms -> functions) use the distributed tracing that the
+Application Insights agent already propagates (`operation_Id`, W3C `traceparent`).
+
+```kusto
+// Who called the HTTP triggers, through which channel
+traces
+| where cloud_RoleName contains "onboarding-fn" and message endswith "HTTP trigger processed a request"
+| extend functionName = tostring(customDimensions.functionName),
+         userId = tostring(customDimensions.userId),
+         clientId = tostring(customDimensions.clientId),
+         subscriptionId = tostring(customDimensions.subscriptionId)
+| summarize calls = count() by functionName, clientId, subscriptionId, userId
+| order by calls desc
+
+// Requests whose declared header differs from the verified identity
+traces
+| where customDimensions.declaredUserIdMismatch == "true"
+| project timestamp, operation_Id, functionName = tostring(customDimensions.functionName),
+          userId = tostring(customDimensions.userId),
+          declaredUserId = tostring(customDimensions.declaredUserId)
+
+// Full call chain of a single invocation
+union requests, dependencies, traces, exceptions
+| where operation_Id == "<operation_Id>"
+| project timestamp, itemType, cloud_RoleName, name, message, resultCode
+| order by timestamp asc
+```
 
 ### HTTP trigger authentication
 
