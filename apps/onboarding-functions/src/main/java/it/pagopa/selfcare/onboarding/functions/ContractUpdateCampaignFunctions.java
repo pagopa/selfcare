@@ -47,8 +47,13 @@ public class ContractUpdateCampaignFunctions {
      */
     @FunctionName(SEND_CONTRACT_UPDATE_MAIL)
     public HttpResponseMessage sendContractUpdateMail(
-            @HttpTrigger(name = "req", methods = {HttpMethod.POST}, authLevel = AuthorizationLevel.FUNCTION) HttpRequestMessage<Optional<String>> request,
+            @HttpTrigger(
+              name = "req",
+              methods = {HttpMethod.POST},
+              authLevel = AuthorizationLevel.FUNCTION)
+            HttpRequestMessage<Optional<String>> request,
             final ExecutionContext context) {
+
         Optional<HttpResponseMessage> authenticationError = httpJwtValidator.validate(request, context);
         if (authenticationError.isPresent()) {
             return authenticationError.get();

@@ -8,6 +8,7 @@ import it.pagopa.selfcare.onboarding.config.MailTemplatePlaceholdersConfig;
 import it.pagopa.selfcare.onboarding.dto.ContractUpdateCampaignRequest;
 import it.pagopa.selfcare.onboarding.dto.ContractUpdateCampaignResponse;
 import it.pagopa.selfcare.onboarding.dto.NotificationMailRequest;
+import it.pagopa.selfcare.onboarding.dto.NotificationMailType;
 import it.pagopa.selfcare.onboarding.entity.Onboarding;
 import it.pagopa.selfcare.onboarding.service.ContractUpdateCampaignService;
 import it.pagopa.selfcare.onboarding.service.NotificationService;
@@ -91,6 +92,7 @@ public class ContractUpdateCampaignServiceImpl implements ContractUpdateCampaign
                 .collect(Collectors.joining(" e "));
 
         notificationService.sendMail(NotificationMailRequest.builder()
+                .type(NotificationMailType.CONTRACT_UPDATE_CAMPAIGN)
                 .destinationMails(List.of(digitalAddress))
                 .templatePath(templatePathConfig.contractUpdateCampaignPath())
                 .mailParameters(Map.of(
