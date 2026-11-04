@@ -117,6 +117,8 @@ locals {
       "ARUBA_SIGN_SERVICE_CONNECT_TIMEOUT_MS"          = "60000",
       "EMAIL_SERVICE_AVAILABLE"                        = "true",
       "JWT_TOKEN_ISSUER"                               = "SPID"
+      "JWT_TOKEN_AUDIENCE_AR"                          = "api.uat.selfcare.pagopa.it"
+      "JWT_TOKEN_AUDIENCE_PNPG"                        = "api-pnpg.uat.selfcare.pagopa.it"
       "JWT_TOKEN_PRIVATE_KEY"                          = "@Microsoft.KeyVault(SecretUri=https://selc-u-kv.vault.azure.net/secrets/jwt-private-key/)"
       "JWT_PUBLIC_KEY_AR"                              = "@Microsoft.KeyVault(SecretUri=https://selc-u-kv.vault.azure.net/secrets/jwt-public-key/)"
       "JWT_TOKEN_KID"                                  = "@Microsoft.KeyVault(SecretUri=https://selc-u-kv.vault.azure.net/secrets/jwt-kid/)"

@@ -105,6 +105,8 @@ locals {
       "STANDARD_NOTIFICATION_RELATED_DOCUMENTS_ENABLED"    = "false"
       "MINUTES_THRESHOLD_FOR_UPDATE_NOTIFICATION"          = "5"
       "JWT_TOKEN_ISSUER"                                   = "SPID"
+      "JWT_TOKEN_AUDIENCE_AR"                              = "api.uat.selfcare.pagopa.it"
+      "JWT_TOKEN_AUDIENCE_PNPG"                            = "api-pnpg.uat.selfcare.pagopa.it"
       "JWT_TOKEN_PRIVATE_KEY"                              = "@Microsoft.KeyVault(SecretUri=https://selc-u-pnpg-kv.vault.azure.net/secrets/jwt-private-key/)"
       "JWT_PUBLIC_KEY_PNPG"                                = "@Microsoft.KeyVault(SecretUri=https://selc-u-pnpg-kv.vault.azure.net/secrets/jwt-public-key/)"
       "JWT_TOKEN_KID"                                      = "@Microsoft.KeyVault(SecretUri=https://selc-u-pnpg-kv.vault.azure.net/secrets/jwt-kid/)"
