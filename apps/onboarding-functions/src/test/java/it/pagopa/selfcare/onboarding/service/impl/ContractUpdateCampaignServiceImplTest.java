@@ -15,6 +15,7 @@ import it.pagopa.selfcare.onboarding.config.MailTemplatePlaceholdersConfig;
 import it.pagopa.selfcare.onboarding.dto.ContractUpdateCampaignRequest;
 import it.pagopa.selfcare.onboarding.dto.ContractUpdateCampaignResponse;
 import it.pagopa.selfcare.onboarding.dto.NotificationMailRequest;
+import it.pagopa.selfcare.onboarding.dto.NotificationMailType;
 import it.pagopa.selfcare.onboarding.entity.Onboarding;
 import it.pagopa.selfcare.onboarding.exception.GenericOnboardingException;
 import it.pagopa.selfcare.onboarding.service.NotificationService;
@@ -70,6 +71,7 @@ class ContractUpdateCampaignServiceImplTest {
                 .append("status", "COMPLETED")
                 .append("referenceOnboardingId", new Document("$exists", false)), queryCaptor.getValue());
         NotificationMailRequest mail = captureMail();
+        assertEquals(NotificationMailType.CONTRACT_UPDATE_CAMPAIGN, mail.getType());
         assertEquals(List.of(PEC), mail.getDestinationMails());
         assertEquals(templatePathConfig.contractUpdateCampaignPath(), mail.getTemplatePath());
         assertEquals("App IO", mail.getMailParameters().get(templatePlaceholdersConfig.productName()));
