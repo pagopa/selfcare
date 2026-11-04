@@ -4,7 +4,6 @@ import io.smallrye.mutiny.TimeoutException;
 import io.smallrye.mutiny.Uni;
 import it.pagopa.selfcare.onboarding.service.OrchestrationService;
 import jakarta.enterprise.context.ApplicationScoped;
-import java.util.Objects;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
@@ -53,19 +52,13 @@ public class OrchestrationServiceDefault implements OrchestrationService {
      */
     @Override
     public Uni<OrchestrationResponse> triggerOrchestrationIfEnabled(
-            String currentOnboardingId, String timeout, String requesterUserId) {
-        if (Objects.isNull(requesterUserId) || requesterUserId.isBlank()) {
-            log.warn("Orchestration not started for onboardingId {} because requester userId is missing",
-                    currentOnboardingId);
-            return Uni.createFrom().nullItem();
-        }
+            String currentOnboardingId, String timeout) {
         if (!Boolean.TRUE.equals(onboardingOrchestrationEnabled)) {
             log.info("Orchestration disabled by configuration, skipping trigger for onboardingId {}", currentOnboardingId);
             return Uni.createFrom().nullItem();
         }
         log.info(STARTING_ONBOARDING_ORCHESTRATION_FOR + "current onboardingId {}", currentOnboardingId);
-        return orchestrationApi.apiStartOnboardingOrchestrationGet(
-                currentOnboardingId, requesterUserId, timeout);
+        return orchestrationApi.apiStartOnboardingOrchestrationGet(currentOnboardingId, timeout);
     }
 
     /**
@@ -77,15 +70,9 @@ public class OrchestrationServiceDefault implements OrchestrationService {
      */
     @Override
     public Uni<OrchestrationResponse> triggerOrchestrationDeleteInstitutionAndUser(
-            String currentOnboardingId, String requesterUserId) {
-        if (Objects.isNull(requesterUserId) || requesterUserId.isBlank()) {
-            log.warn("Delete institution and user orchestration not started for onboardingId {} "
-                    + "because requester userId is missing", currentOnboardingId);
-            return Uni.createFrom().nullItem();
-        }
+            String currentOnboardingId) {
         log.info(STARTING_ONBOARDING_ORCHESTRATION_FOR + " delete Institution and User {}", currentOnboardingId);
-        return orchestrationApi
-                .apiTriggerDeleteInstitutionAndUserGet(currentOnboardingId, requesterUserId);
+        return orchestrationApi.apiTriggerDeleteInstitutionAndUserGet(currentOnboardingId);
     }
 
 }
