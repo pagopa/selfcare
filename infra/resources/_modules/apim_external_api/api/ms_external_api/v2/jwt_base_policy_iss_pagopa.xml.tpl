@@ -15,7 +15,10 @@
                 var aud = "${API_DOMAIN}";
                 var iss = "PAGOPA";
                 var name = "apim";
-                var payload = new { name, exp, uid, aud, iss , iat};
+                var client_id = "apim";
+                var subscription_id = context.Subscription?.Id;
+                var product_id = context.Product?.Id;
+                var payload = new { name, exp, uid, aud, iss , iat, client_id, subscription_id, product_id };
                 var jwtPayloadBase64UrlEncoded = Convert.ToBase64String(Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(payload))).Replace("/", "_").Replace("+", "-"). Replace("=", "");
 
                 // 3) Construct the Base64Url-encoded signature

@@ -20,7 +20,8 @@ import it.pagopa.selfcare.onboarding.exception.DatabaseThrottledException;
 import it.pagopa.selfcare.onboarding.exception.NotificationException;
 import it.pagopa.selfcare.onboarding.service.CompletionService;
 import it.pagopa.selfcare.onboarding.service.FunctionInvocationLogger;
-import it.pagopa.selfcare.onboarding.service.HttpJwtValidator;
+import it.pagopa.selfcare.onboarding.service.HttpAuthorization;
+import it.pagopa.selfcare.onboarding.service.HttpFunctionGuard;
 import it.pagopa.selfcare.onboarding.service.NotificationEventResenderService;
 import it.pagopa.selfcare.onboarding.service.NotificationEventService;
 import it.pagopa.selfcare.onboarding.service.OnboardingService;
@@ -51,7 +52,7 @@ public class NotificationFunctions {
   private final TelemetryService telemetryService;
   private final CompletionService completionService;
   private final FunctionInvocationLogger functionInvocationLogger;
-  private final HttpJwtValidator httpJwtValidator;
+  private final HttpFunctionGuard httpFunctionGuard;
 
   public NotificationFunctions(ObjectMapper objectMapper,
                                NotificationEventService notificationEventService,
@@ -60,7 +61,7 @@ public class NotificationFunctions {
                                TelemetryService telemetryService,
                                CompletionService completionService,
                                FunctionInvocationLogger functionInvocationLogger,
-                               HttpJwtValidator httpJwtValidator) {
+                               HttpFunctionGuard httpFunctionGuard) {
     this.objectMapper = objectMapper;
     this.notificationEventService = notificationEventService;
     this.onboardingService = onboardingService;
@@ -68,7 +69,7 @@ public class NotificationFunctions {
     this.telemetryService = telemetryService;
     this.completionService = completionService;
     this.functionInvocationLogger = functionInvocationLogger;
-    this.httpJwtValidator = httpJwtValidator;
+    this.httpFunctionGuard = httpFunctionGuard;
   }
 
   /**
@@ -79,11 +80,11 @@ public class NotificationFunctions {
   public HttpResponseMessage sendNotification(
     @HttpTrigger(name = "req", methods = {HttpMethod.POST}, authLevel = AuthorizationLevel.FUNCTION) HttpRequestMessage<Optional<String>> request,
     final ExecutionContext context) {
-    Optional<HttpResponseMessage> authenticationError = httpJwtValidator.validate(request, context);
-    if (authenticationError.isPresent()) {
-      return authenticationError.get();
+    HttpAuthorization authorization =
+        httpFunctionGuard.authorize("Notification", request, context);
+    if (authorization.isRejected()) {
+      return authorization.rejection();
     }
-    functionInvocationLogger.logInvocation("Notification", request);
 
     String onboardingString = request.getBody().orElseThrow(() -> new IllegalArgumentException("Request body cannot be empty."));
     final String queueEventString = request.getQueryParameters().get("queueEvent");
@@ -123,11 +124,11 @@ public class NotificationFunctions {
   public HttpResponseMessage resendNotification(
     @HttpTrigger(name = "req", methods = {HttpMethod.POST}, authLevel = AuthorizationLevel.FUNCTION) HttpRequestMessage<Optional<String>> request,
     final ExecutionContext context) {
-    Optional<HttpResponseMessage> authenticationError = httpJwtValidator.validate(request, context);
-    if (authenticationError.isPresent()) {
-      return authenticationError.get();
+    HttpAuthorization authorization =
+        httpFunctionGuard.authorize("ResendNotification", request, context);
+    if (authorization.isRejected()) {
+      return authorization.rejection();
     }
-    functionInvocationLogger.logInvocation("ResendNotification", request);
 
     final String onboardingId = request.getQueryParameters().get("onboardingId");
     if (Objects.isNull(onboardingId)) {
@@ -194,11 +195,11 @@ public class NotificationFunctions {
   public HttpResponseMessage countNotifications(
     @HttpTrigger(name = "req", route = "onboardings/notifications/count", methods = {HttpMethod.GET}, authLevel = AuthorizationLevel.FUNCTION) HttpRequestMessage<Optional<String>> request,
     final ExecutionContext context) {
-    Optional<HttpResponseMessage> authenticationError = httpJwtValidator.validate(request, context);
-    if (authenticationError.isPresent()) {
-      return authenticationError.get();
+    HttpAuthorization authorization =
+        httpFunctionGuard.authorize("CountNotifications", request, context);
+    if (authorization.isRejected()) {
+      return authorization.rejection();
     }
-    functionInvocationLogger.logInvocation("CountNotifications", request);
 
     String from = request.getQueryParameters().get("from");
     String to = request.getQueryParameters().get("to");
@@ -263,14 +264,12 @@ public class NotificationFunctions {
     @HttpTrigger(name = "req", methods = {HttpMethod.POST}, authLevel = AuthorizationLevel.FUNCTION) HttpRequestMessage<Optional<String>> request,
     @DurableClientInput(name = "durableContext") DurableClientContext durableContext,
     final ExecutionContext context) throws JsonProcessingException {
-    Optional<HttpResponseMessage> authenticationError = httpJwtValidator.validate(request, context);
-    if (authenticationError.isPresent()) {
-      return authenticationError.get();
+    HttpAuthorization authorization =
+        httpFunctionGuard.authorize("ResendNotifications", request, context);
+    if (authorization.isRejected()) {
+      return authorization.rejection();
     }
-    String userId = functionInvocationLogger.logInvocation("ResendNotifications", request);
-    if (FunctionInvocationLogger.isMissingUserId(userId)) {
-      return FunctionInvocationLogger.missingUserIdResponse(request);
-    }
+    String userId = authorization.caller().userId();
 
     ResendNotificationsFilters filters = getResendNotificationsFilters(request);
     try {
