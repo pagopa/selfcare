@@ -132,8 +132,9 @@ locals {
       "NAMIRIAL_SIGN_SERVICE_IDENTITY_USER"     = "@Microsoft.KeyVault(SecretUri=https://selc-u-kv.vault.azure.net/secrets/namirial-sign-service-user/)",
       "NAMIRIAL_SIGN_SERVICE_IDENTITY_PASSWORD" = "@Microsoft.KeyVault(SecretUri=https://selc-u-kv.vault.azure.net/secrets/namirial-sign-service-psw/)",
 
-      "DEFAULT_TENANT"    = "AR"
-      "SUPPORTED_TENANTS" = "AR"
+      "DEFAULT_TENANT"     = "AR"
+      "JWT_DEFAULT_TENANT" = "AR"
+      "SUPPORTED_TENANTS"  = "AR"
     }
   }
 }
