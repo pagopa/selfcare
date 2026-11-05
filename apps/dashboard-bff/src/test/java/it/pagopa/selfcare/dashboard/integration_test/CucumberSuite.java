@@ -74,6 +74,8 @@ public class CucumberSuite {
                         Wait.forLogMessage(".*user-ms.*started in.*Listening on.*", 1)
                                 .withStartupTimeout(Duration.ofMinutes(5)))
                 .waitingFor("iamms", Wait.forLogMessage(".*iam.*started in.*Listening on.*", 1)
+                        .withStartupTimeout(Duration.ofMinutes(5)))
+                .waitingFor("productms", Wait.forLogMessage(".*product.*started in.*Listening on.*", 1)
                         .withStartupTimeout(Duration.ofMinutes(5)));
         composeContainer.start();
         Runtime.getRuntime().addShutdownHook(new Thread(composeContainer::stop));

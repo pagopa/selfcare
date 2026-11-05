@@ -4,6 +4,7 @@ import com.microsoft.azure.functions.ExecutionContext;
 import io.quarkus.test.InjectMock;
 import io.quarkus.test.junit.QuarkusTest;
 import it.pagopa.selfcare.onboarding.common.*;
+import it.pagopa.selfcare.onboarding.context.TenantContext;
 import it.pagopa.selfcare.onboarding.dto.NotificationCountResult;
 import it.pagopa.selfcare.onboarding.dto.ResendNotificationsFilters;
 import it.pagopa.selfcare.onboarding.dto.SendMailInput;
@@ -13,6 +14,7 @@ import it.pagopa.selfcare.onboarding.exception.GenericOnboardingException;
 import it.pagopa.selfcare.onboarding.mapper.UserMapper;
 import it.pagopa.selfcare.onboarding.dto.AttachmentTemplate;
 import jakarta.inject.Inject;
+import org.bson.Document;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -31,6 +33,7 @@ import org.openapi.quarkus.user_registry_json.model.CertifiableFieldResourceOfst
 import org.openapi.quarkus.user_registry_json.model.UserResource;
 import org.openapi.quarkus.user_registry_json.model.WorkContactResource;
 
+import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.util.*;
 import java.util.logging.Logger;
@@ -744,25 +747,68 @@ class OnboardingServiceTest {
 
         ProductResponse product1 = new ProductResponse();
         product1.setProductId("product1");
-        when(productService.getProducts(false, false)).thenReturn(List.of(product1));
+        ProductResponse product2 = new ProductResponse();
+        product2.setProductId("product2");
+        when(productService.getProducts(false, false)).thenReturn(List.of(product1, product2));
 
-        when(onboardingRepositoryService.countByQuery(any())).thenReturn(5L).thenReturn(3L);
+        when(onboardingRepositoryService.countByProduct(any()))
+                .thenReturn(Map.of("product1", 5L, "product2", 1L, "unknown", 9L))
+                .thenReturn(Map.of("product1", 3L));
 
-        List<NotificationCountResult> results =
-                onboardingService.countNotifications(product1.getProductId(), from, to, context);
+        List<NotificationCountResult> results;
+        try (TenantContext.Scope ignored = TenantContext.open("AR")) {
+            results = onboardingService.countNotifications(null, from, to, context);
+        }
+
+        assertEquals(2, results.size());
+        assertEquals("product1", results.get(0).getProductId());
+        assertEquals(8, results.get(0).getNotificationCount());
+        assertEquals("product2", results.get(1).getProductId());
+        assertEquals(1, results.get(1).getNotificationCount());
+        verify(onboardingRepositoryService, times(2)).countByProduct(any());
+    }
+
+    @Test
+    void countOnboardingShouldFilterByProductIdInQuery() {
+        ExecutionContext context = getExecutionContext();
+
+        ProductResponse product1 = new ProductResponse();
+        product1.setProductId("product1");
+        ProductResponse product2 = new ProductResponse();
+        product2.setProductId("product2");
+        when(productService.getProducts(false, false)).thenReturn(List.of(product1, product2));
+        when(onboardingRepositoryService.countByProduct(any())).thenReturn(Map.of());
+
+        List<NotificationCountResult> results;
+        try (TenantContext.Scope ignored = TenantContext.open("pnpg")) {
+            results = onboardingService.countNotifications("product2", null, null, context);
+        }
 
         assertEquals(1, results.size());
-        assertEquals(8, results.get(0).getNotificationCount());
+        assertEquals("product2", results.get(0).getProductId());
+        assertEquals(0, results.get(0).getNotificationCount());
+        ArgumentCaptor<Document> queries = ArgumentCaptor.forClass(Document.class);
+        verify(onboardingRepositoryService, times(2)).countByProduct(queries.capture());
+        queries.getAllValues().forEach(query -> {
+            List<Document> branches = query.getList("$or", Document.class);
+            assertEquals(2, branches.size());
+            branches.forEach(branch -> {
+                assertEquals("product2", branch.getString("productId"));
+                assertEquals(
+                        Arrays.asList("PNPG", null), branch.get("tenantId", Document.class).getList("$in", String.class));
+            });
+        });
     }
 
     @Test
     void countOnboardingShouldReturnEmptyListWhenNoProductsExist() {
         ExecutionContext context = getExecutionContext();
 
-        when(productService.getProducts(true, false)).thenReturn(List.of());
+        when(productService.getProducts(false, false)).thenReturn(List.of());
         List<NotificationCountResult> results =
                 onboardingService.countNotifications(null, null, null, context);
         assertTrue(results.isEmpty());
+        verify(onboardingRepositoryService, never()).countByProduct(any());
     }
 
     @Test
@@ -1006,6 +1052,34 @@ class OnboardingServiceTest {
         Mockito.verify(onboardingRepositoryService, times(1))
                 .findByOnboardingUsers("institutionId", productId);
 
+    }
+
+    @Test
+    void findContractUpdateIdsWithContract() {
+        Onboarding update = new Onboarding();
+        update.setId("updateId");
+        ArgumentCaptor<Document> queryCaptor = ArgumentCaptor.forClass(Document.class);
+        when(onboardingRepositoryService.findByQuery(queryCaptor.capture())).thenReturn(List.of(update));
+
+        List<String> ids = onboardingService.findContractUpdateIdsWithContract("adhesionId");
+
+        assertEquals(List.of("updateId"), ids);
+        assertEquals(new Document("referenceOnboardingId", "adhesionId")
+                        .append("workflowType", "CONTRACT_UPDATE")
+                        .append("status", new Document("$in", List.of("PENDING", "COMPLETED"))),
+                queryCaptor.getValue());
+    }
+
+    @Test
+    void rejectPendingContractUpdates() {
+        onboardingService.rejectPendingContractUpdates("adhesionId");
+
+        verify(onboardingRepositoryService).updateStatusByQuery(
+                eq(new Document("referenceOnboardingId", "adhesionId")
+                        .append("workflowType", "CONTRACT_UPDATE")
+                        .append("status", new Document("$in", List.of("REQUEST", "PENDING")))),
+                eq("REJECTED"),
+                any(LocalDateTime.class));
     }
 
     @Test

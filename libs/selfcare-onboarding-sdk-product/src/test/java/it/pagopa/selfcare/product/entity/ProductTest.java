@@ -294,6 +294,7 @@ public class ProductTest {
                     .get("contractTemplatePath")
                     .asText());
     assertEquals(product.getStatus().toString(), jsonNode.get("status").asText());
+    assertEquals(product.isContractEnabled(), jsonNode.get("contractEnabled").asBoolean());
   }
 
   @Test

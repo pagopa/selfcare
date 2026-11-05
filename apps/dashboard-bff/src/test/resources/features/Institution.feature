@@ -376,6 +376,71 @@ Feature: Institution
     Then the response status should be 400
     And the response should contain an error message "taxCode,must not be blank"
 
+  Scenario: Successfully request a contract update by institutionId and productId
+    Given user login with username "j.doe" and password "test"
+    And the institutionId is "067327d3-bdd6-408d-8655-87e8f1960046"
+    And the productId is "prod-io"
+    And the following contract update institution details:
+      | institutionType | origin | originId | taxCode     |
+      | PT              | IPA    | c_d277   | 99000870064 |
+    And the following contract update users:
+      | name  | surname | taxCode          | email      | role     |
+      | Rocky | Balboa  | blbrki80A41H401T | rb@test.it | MANAGER  |
+      | Carlo | Pietro  | PTRCRT80A41H401T | cp@test.it | DELEGATE |
+    When I send a POST request to "/v2/institutions/{institutionId}/products/{productId}/contract-update" to request a contract update
+    Then the response status should be 201
+
+  Scenario: Attempt to request a contract update without permissions (OPERATOR)
+    Given user login with username "j.doe" and password "test"
+    And the institutionId is "467ac77d-7faa-47bf-a60e-38ea74bd5fd2"
+    And the productId is "prod-interop"
+    And the following contract update institution details:
+      | institutionType | origin | originId | taxCode     |
+      | PA              | IPA    | c_d277   | 99000870064 |
+    And the following contract update users:
+      | name  | surname | taxCode          | email      | role    |
+      | Rocky | Balboa  | blbrki80A41H401T | rb@test.it | MANAGER |
+    When I send a POST request to "/v2/institutions/{institutionId}/products/{productId}/contract-update" to request a contract update
+    Then the response status should be 403
+
+  Scenario: Attempt to request a contract update for a product without a completed onboarding
+    Given user login with username "j.doe" and password "test"
+    And the institutionId is "067327d3-bdd6-408d-8655-87e8f1960046"
+    And the productId is "prod-pn"
+    And the following contract update institution details:
+      | institutionType | origin | originId | taxCode     |
+      | PT              | IPA    | c_d277   | 99000870064 |
+    And the following contract update users:
+      | name  | surname | taxCode          | email      | role    |
+      | Rocky | Balboa  | blbrki80A41H401T | rb@test.it | MANAGER |
+    When I send a POST request to "/v2/institutions/{institutionId}/products/{productId}/contract-update" to request a contract update
+    Then the response status should be 404
+
+  Scenario: Attempt to request a contract update without users
+    Given user login with username "j.doe" and password "test"
+    And the institutionId is "067327d3-bdd6-408d-8655-87e8f1960046"
+    And the productId is "prod-io"
+    And the following contract update institution details:
+      | institutionType | origin | originId | taxCode     |
+      | PT              | IPA    | c_d277   | 99000870064 |
+    When I send a POST request to "/v2/institutions/{institutionId}/products/{productId}/contract-update" to request a contract update
+    Then the response status should be 400
+    And the response should contain an error message "users,must not be empty"
+
+  Scenario: Attempt to request a contract update without origin
+    Given user login with username "j.doe" and password "test"
+    And the institutionId is "067327d3-bdd6-408d-8655-87e8f1960046"
+    And the productId is "prod-io"
+    And the following contract update institution details:
+      | institutionType | origin | originId | taxCode     |
+      | PT              |        | c_d277   | 99000870064 |
+    And the following contract update users:
+      | name  | surname | taxCode          | email      | role    |
+      | Rocky | Balboa  | blbrki80A41H401T | rb@test.it | MANAGER |
+    When I send a POST request to "/v2/institutions/{institutionId}/products/{productId}/contract-update" to request a contract update
+    Then the response status should be 400
+    And the response should contain an error message "origin,must not be blank"
+
   Scenario: Successfully add user by institutionId, productId and userId
     Given user login with username "j.doe" and password "test"
     And the institutionId is "c9a50656-f345-4c81-84be-5b2474470544"

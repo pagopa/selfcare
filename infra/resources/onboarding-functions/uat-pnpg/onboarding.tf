@@ -34,6 +34,7 @@ locals {
     nat_gateway_name          = module.local.config.nat_gw_name
     app_settings = {
       "APPLICATIONINSIGHTS_CONNECTION_STRING"            = "@Microsoft.KeyVault(SecretUri=https://selc-u-pnpg-kv.vault.azure.net/secrets/appinsights-connection-string/)"
+      "APPLICATIONINSIGHTS_ENABLE_AGENT"                 = "true"
       "USER_REGISTRY_URL"                                = "https://api.uat.pdv.pagopa.it/user-registry/v1"
       "MONGODB_CONNECTION_URI"                           = "@Microsoft.KeyVault(SecretUri=https://selc-u-pnpg-kv.vault.azure.net/secrets/mongodb-connection-string/)"
       "USER_REGISTRY_API_KEY"                            = "@Microsoft.KeyVault(SecretUri=https://selc-u-pnpg-kv.vault.azure.net/secrets/user-registry-api-key/)"
@@ -105,6 +106,8 @@ locals {
       "STANDARD_NOTIFICATION_RELATED_DOCUMENTS_ENABLED"    = "false"
       "MINUTES_THRESHOLD_FOR_UPDATE_NOTIFICATION"          = "5"
       "JWT_TOKEN_ISSUER"                                   = "SPID"
+      "JWT_TOKEN_AUDIENCE_AR"                              = "api.uat.selfcare.pagopa.it"
+      "JWT_TOKEN_AUDIENCE_PNPG"                            = "api-pnpg.uat.selfcare.pagopa.it"
       "JWT_TOKEN_PRIVATE_KEY"                              = "@Microsoft.KeyVault(SecretUri=https://selc-u-pnpg-kv.vault.azure.net/secrets/jwt-private-key/)"
       "JWT_PUBLIC_KEY_PNPG"                                = "@Microsoft.KeyVault(SecretUri=https://selc-u-pnpg-kv.vault.azure.net/secrets/jwt-public-key/)"
       "JWT_TOKEN_KID"                                      = "@Microsoft.KeyVault(SecretUri=https://selc-u-pnpg-kv.vault.azure.net/secrets/jwt-kid/)"

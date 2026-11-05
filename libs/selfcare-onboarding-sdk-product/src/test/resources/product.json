@@ -9,6 +9,7 @@
   "consumers": [
     "Standard"
   ],
+  "contractEnabled": true,
   "createdAt": "2021-12-15T15:54:55.190Z",
   "createdBy": "example",
   "delegable": false,

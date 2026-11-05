@@ -44,6 +44,8 @@ import org.openapi.quarkus.party_registry_proxy_json.api.InfocamereApi;
 import org.openapi.quarkus.party_registry_proxy_json.api.NationalRegistriesApi;
 import org.openapi.quarkus.party_registry_proxy_json.api.UoApi;
 import org.openapi.quarkus.user_json.model.AddUserRoleDto;
+import org.openapi.quarkus.user_json.model.ProductUser;
+import org.openapi.quarkus.user_json.model.UpdateProductUsersDto;
 import org.openapi.quarkus.user_registry_json.api.UserApi;
 
 import java.time.LocalDateTime;
@@ -216,7 +218,9 @@ public class CompletionServiceImpl implements CompletionService {
             log.warn("Digital address is null for onboarding {}, skipping completed email notification", onboarding.getId());
             return;
         }
-        List<String> destinationMails = getDestinationMails(onboarding);
+        List<String> destinationMails = CONTRACT_UPDATE.equals(onboarding.getWorkflowType())
+                ? new ArrayList<>()
+                : getDestinationMails(onboarding);
         destinationMails.add(onboarding.getInstitution().getDigitalAddress());
         ProductResponse product = productService.getValidProduct(onboarding.getProductId());
         notificationService.sendCompletedEmail(destinationMails, product, onboardingWorkflow);
@@ -361,6 +365,21 @@ public class CompletionServiceImpl implements CompletionService {
     @Override
     public void overridePendingOnboardings(Onboarding onboarding) {
         LocalDateTime now = LocalDateTime.now();
+        Document update = new Document("$set", new Document()
+                .append("status", OnboardingStatus.OVERRIDDEN.name())
+                .append("updatedAt", now));
+
+        if (CONTRACT_UPDATE.equals(onboarding.getWorkflowType())) {
+            Document contractUpdateQuery = new Document()
+                    .append("referenceOnboardingId", onboarding.getReferenceOnboardingId())
+                    .append("workflowType", CONTRACT_UPDATE.name())
+                    .append("_id", new Document("$ne", onboarding.getId()))
+                    .append("status", new Document("$in", List.of(
+                            OnboardingStatus.REQUEST.name(), OnboardingStatus.PENDING.name())));
+            onboardingRepository.mongoCollection().updateMany(contractUpdateQuery, update);
+            return;
+        }
+
         Institution institution = onboarding.getInstitution();
 
         Set<String> excludedStatuses = Set.of(
@@ -380,11 +399,51 @@ public class CompletionServiceImpl implements CompletionService {
             query.append("institution.subunitCode", institution.getSubunitCode());
         }
 
-        Document update = new Document("$set", new Document()
-                .append("status", OnboardingStatus.OVERRIDDEN.name())
-                .append("updatedAt", now));
-
         onboardingRepository.mongoCollection().updateMany(query, update);
+    }
+
+    @Override
+    public void syncProductUsers(Onboarding onboarding) {
+        UpdateProductUsersDto request = new UpdateProductUsersDto()
+                .institutionDescription(onboarding.getInstitution().getDescription())
+                .institutionRootName(onboarding.getInstitution().getParentDescription())
+                .tokenId(onboarding.getId())
+                .users(onboarding.getUsers().stream()
+                        .map(user -> new ProductUser()
+                                .userId(user.getId())
+                                .role(productMapper.setRole(user))
+                                .productRoles(productMapper.setProductRoles(user))
+                                .userMailUuid(user.getUserMailUuid()))
+                        .toList());
+        try (Response response = userInstitutionApi.updateProductUsers(
+                onboarding.getInstitution().getId(), onboarding.getProductId(), request)) {
+            if (!SUCCESSFUL.equals(response.getStatusInfo().getFamily())) {
+                throw new GenericOnboardingException("Impossible to update product users for onboarding: " + onboarding.getId());
+            }
+        }
+    }
+
+    @Override
+    public void activateContract(Onboarding onboarding) {
+        try (Response response = documentService.activateContract(onboarding.getId())) {
+            if (!SUCCESSFUL.equals(response.getStatusInfo().getFamily())) {
+                throw new GenericOnboardingException("Impossible to activate contract for onboarding: " + onboarding.getId());
+            }
+        }
+    }
+
+    @Override
+    public void clearContractUpdateRequired(Onboarding onboarding) {
+        // activatedAt is persisted by a previous activity and is not available on the orchestrator input
+        LocalDateTime activatedAt = onboardingRepository.findByIdOptional(onboarding.getId())
+                .map(Onboarding::getActivatedAt)
+                .orElseThrow(() -> new GenericOnboardingException("ActivatedAt not found for onboarding: " + onboarding.getId()));
+        // single write so that the CDC emits exactly one event for the adhesion
+        onboardingRepository.mongoCollection().updateOne(
+                new Document("_id", onboarding.getReferenceOnboardingId()),
+                new Document("$set", new Document()
+                        .append("contractUpdateRequired", false)
+                        .append("updatedAt", activatedAt)));
     }
 
     @Override
@@ -423,7 +482,7 @@ public class CompletionServiceImpl implements CompletionService {
                     existsDelegation = delegationWithPaginationResponse.getDelegations().stream().anyMatch(delegation -> ACTIVE.equals(delegation.getStatus()));
                 }
             } catch (WebApplicationException e) {
-                throw new GenericOnboardingException(String.format("Error during retrieve delegation %s", e.getMessage()));
+                throw new GenericOnboardingException(String.format("Error during retrieve delegation %s", e.getMessage()), e);
             }
         }
         return Boolean.toString(existsDelegation);
@@ -503,7 +562,7 @@ public class CompletionServiceImpl implements CompletionService {
                 String identifier = institution.getSubunitCode() != null ? institution.getSubunitCode() : institution.getTaxCode();
                 throw new ResourceNotFoundException(String.format("Institution with code '%s' not found in the IPA registry", identifier));
             }
-            throw new GenericOnboardingException(e.getMessage());
+            throw new GenericOnboardingException(e.getMessage(), e);
         }
     }
 
@@ -580,9 +639,9 @@ public class CompletionServiceImpl implements CompletionService {
                 )
                 .filter(Optional::isPresent)
                 .map(Optional::get)
-                .filter(workContract -> StringUtils.isNotBlank(workContract.getEmail().getValue()))
-                .map(workContract -> workContract.getEmail().getValue())
-                .collect(Collectors.toList());
+                .map(workContract -> Optional.ofNullable(workContract.getEmail()).map(email -> email.getValue()).orElse(null))
+                .filter(StringUtils::isNotBlank)
+                .collect(Collectors.toCollection(ArrayList::new));
     }
 
     @Override

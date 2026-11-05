@@ -1,5 +1,6 @@
 package it.pagopa.selfcare.document.exception.handler;
 
+import it.pagopa.selfcare.azurestorage.error.SelfcareAzureStorageNotFoundException;
 import it.pagopa.selfcare.document.exception.*;
 import it.pagopa.selfcare.document.model.dto.response.Problem;
 import it.pagopa.selfcare.tenant.UnknownTenantException;
@@ -58,6 +59,15 @@ public class ExceptionHandler {
     Problem problem =
         new Problem(
             exception.getMessage(), null, HttpStatus.SC_NOT_FOUND, exception.getMessage(), null);
+    return Response.status(Response.Status.NOT_FOUND).entity(problem).build();
+  }
+
+  @ServerExceptionMapper
+  public Response toResponse(SelfcareAzureStorageNotFoundException exception) {
+    LOGGER.warn(PREFIX_LOGGER, "File not found in storage", exception.getMessage());
+    Problem problem =
+        new Problem(
+            exception.getMessage(), null, HttpStatus.SC_NOT_FOUND, exception.getCode(), null);
     return Response.status(Response.Status.NOT_FOUND).entity(problem).build();
   }
 

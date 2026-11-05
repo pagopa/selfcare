@@ -40,7 +40,9 @@ module "collection_onboardings" {
     { keys = ["taxCode"], unique = false },
     { keys = ["subunitCode"], unique = false },
     { keys = ["productId"], unique = false },
-    { keys = ["status"], unique = false }
+    { keys = ["status"], unique = false },
+    { keys = ["activatedAt"], unique = false },
+    { keys = ["deletedAt"], unique = false }
   ]
 }
 

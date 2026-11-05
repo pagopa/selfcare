@@ -14,8 +14,6 @@
   "tags" : [ {
     "name" : "Aggregates Controller"
   }, {
-    "name" : "Document Controller"
-  }, {
     "name" : "Institution Controller"
   }, {
     "name" : "Onboarding"
@@ -33,51 +31,6 @@
     "name" : "support"
   } ],
   "paths" : {
-    "/v1/aggregates/csv/{onboardingId}/products/{productId}" : {
-      "get" : {
-        "tags" : [ "Aggregates Controller" ],
-        "summary" : "Retrieve aggregates csv for a given onboarding and product",
-        "description" : "Downloads the aggregates csv associated with the specified onboarding ID and product.",
-        "operationId" : "getAggregatesCsv",
-        "parameters" : [ {
-          "name" : "onboardingId",
-          "in" : "path",
-          "required" : true,
-          "schema" : {
-            "type" : "string"
-          }
-        }, {
-          "name" : "productId",
-          "in" : "path",
-          "required" : true,
-          "schema" : {
-            "type" : "string"
-          }
-        } ],
-        "responses" : {
-          "200" : {
-            "description" : "OK",
-            "content" : {
-              "application/octet-stream" : {
-                "schema" : {
-                  "format" : "binary",
-                  "type" : "string"
-                }
-              }
-            }
-          },
-          "401" : {
-            "description" : "Not Authorized"
-          },
-          "403" : {
-            "description" : "Not Allowed"
-          }
-        },
-        "security" : [ {
-          "SecurityScheme" : [ ]
-        } ]
-      }
-    },
     "/v1/aggregates/verification/prod-io" : {
       "post" : {
         "tags" : [ "Aggregates Controller" ],
@@ -213,78 +166,6 @@
         } ]
       }
     },
-    "/v1/documents" : {
-      "get" : {
-        "tags" : [ "internal-v1" ],
-        "summary" : "Retrieves the list of files on the azure storage on the given path",
-        "description" : "Fetches a list of files associated with the specified path on the storage.",
-        "operationId" : "getFiles",
-        "responses" : {
-          "200" : {
-            "description" : "OK",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "type" : "array",
-                  "items" : {
-                    "type" : "string"
-                  }
-                }
-              }
-            }
-          },
-          "401" : {
-            "description" : "Not Authorized"
-          },
-          "403" : {
-            "description" : "Not Allowed"
-          }
-        },
-        "security" : [ {
-          "SecurityScheme" : [ ]
-        } ]
-      }
-    },
-    "/v1/documents/{path}" : {
-      "get" : {
-        "tags" : [ "internal-v1" ],
-        "summary" : "Retrieves the list of files on the azure storage on the given path",
-        "description" : "Fetches a list of files associated with the specified path on the storage.",
-        "operationId" : "getFilesFromPath",
-        "parameters" : [ {
-          "name" : "path",
-          "in" : "path",
-          "required" : true,
-          "schema" : {
-            "type" : "string"
-          }
-        } ],
-        "responses" : {
-          "200" : {
-            "description" : "OK",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "type" : "array",
-                  "items" : {
-                    "type" : "string"
-                  }
-                }
-              }
-            }
-          },
-          "401" : {
-            "description" : "Not Authorized"
-          },
-          "403" : {
-            "description" : "Not Allowed"
-          }
-        },
-        "security" : [ {
-          "SecurityScheme" : [ ]
-        } ]
-      }
-    },
     "/v1/institutions" : {
       "post" : {
         "tags" : [ "Institution Controller" ],
@@ -328,7 +209,7 @@
     },
     "/v1/onboarding" : {
       "get" : {
-        "tags" : [ "Onboarding Controller" ],
+        "tags" : [ "Onboarding Controller", "external-v2" ],
         "summary" : "Retrieve paged onboardings with optional filters and sorting.",
         "description" : "The API retrieves paged onboarding using optional filter, order by descending creation date",
         "operationId" : "getOnboardingWithFilter",
@@ -391,7 +272,7 @@
           "name" : "status",
           "in" : "query",
           "schema" : {
-            "type" : "string"
+            "$ref" : "#/components/schemas/OnboardingStatus"
           }
         }, {
           "name" : "subunitCode",
@@ -416,6 +297,12 @@
           "in" : "query",
           "schema" : {
             "type" : "string"
+          }
+        }, {
+          "name" : "workflowType",
+          "in" : "query",
+          "schema" : {
+            "$ref" : "#/components/schemas/WorkflowType"
           }
         } ],
         "responses" : {
@@ -721,6 +608,44 @@
             "application/json" : {
               "schema" : {
                 "$ref" : "#/components/schemas/OnboardingDefaultRequest"
+              }
+            }
+          }
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/OnboardingResponse"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Not Authorized"
+          },
+          "403" : {
+            "description" : "Not Allowed"
+          }
+        },
+        "security" : [ {
+          "SecurityScheme" : [ ]
+        } ]
+      }
+    },
+    "/v1/onboarding/contract-update" : {
+      "post" : {
+        "tags" : [ "Onboarding Controller" ],
+        "summary" : "Create a contract update request for an institution.",
+        "description" : "Creates a contract update onboarding linked to the institution's active onboarding.",
+        "operationId" : "onboardingContractUpdate",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/OnboardingContractUpdateRequest"
               }
             }
           }
@@ -1409,8 +1334,66 @@
           "SecurityScheme" : [ ]
         } ]
       },
+      "put" : {
+        "tags" : [ "internal-v1", "Onboarding Controller" ],
+        "summary" : "Idempotent trigger to verify mandatory documents and advance onboarding.",
+        "description" : "Idempotent trigger invoked after each document upload. Recalculates required documents for the onboarding context (productId, institutionType, origin) and verifies presence of all mandatory attachments. If all mandatory documents are present, triggers orchestration to advance the onboarding from REQUEST to PENDING. If documents are incomplete or onboarding is already past REQUEST status, no action is taken (idempotent).",
+        "operationId" : "triggerDocumentGate",
+        "parameters" : [ {
+          "name" : "onboardingId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "204" : {
+            "description" : "Gate evaluated — orchestration triggered if documents complete, no action otherwise"
+          },
+          "400" : {
+            "description" : "Bad Request — no mandatory documents configured for this onboarding context",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Onboarding not found",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "500" : {
+            "description" : "Internal Server Error",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Not Authorized"
+          },
+          "403" : {
+            "description" : "Not Allowed"
+          }
+        },
+        "security" : [ {
+          "SecurityScheme" : [ ]
+        } ]
+      },
       "delete" : {
-        "tags" : [ "internal-v1" ],
+        "tags" : [ "internal-v1", "external-v2", "Onboarding Controller" ],
         "summary" : "Perform delete operation of an onboarding request",
         "description" : "Perform delete operation of an onboarding request receiving onboarding id, then invokes async process to set DELETED as status for institution and user onboardings.",
         "operationId" : "deleteOnboarding",
@@ -1455,6 +1438,15 @@
             "type" : "string"
           }
         } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/ApproveRequest"
+              }
+            }
+          }
+        },
         "responses" : {
           "200" : {
             "description" : "OK",
@@ -1476,7 +1468,7 @@
     },
     "/v1/onboarding/{onboardingId}/complete" : {
       "put" : {
-        "tags" : [ "internal-v1" ],
+        "tags" : [ "internal-v1", "external-v2", "Onboarding Controller" ],
         "summary" : "Complete onboarding by verifying and uploading contract, then trigger async activities.",
         "description" : "Perform complete operation of an onboarding request receiving onboarding id and contract signed by the institution.It checks the contract's signature and upload the contract on an azure storageAt the end, function triggers async activities related to complete onboarding that consist of create the institution, activate the onboarding and sending data to notification queue.",
         "operationId" : "completeOnboardingUsingPUT",
@@ -1509,6 +1501,39 @@
             "description" : "OK",
             "content" : {
               "application/json" : { }
+            }
+          },
+          "204" : {
+            "description" : "No Content"
+          },
+          "400" : {
+            "description" : "Bad Request",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "409" : {
+            "description" : "Conflict",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "500" : {
+            "description" : "Internal Server Error",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
             }
           },
           "401" : {
@@ -1700,10 +1725,10 @@
     },
     "/v1/onboarding/{onboardingId}/reject" : {
       "put" : {
-        "tags" : [ "Onboarding Controller" ],
+        "tags" : [ "external-v2", "Onboarding Controller" ],
         "summary" : "Perform reject operation of an onboarding request",
         "description" : "Perform reject operation of an onboarding request receiving onboarding id.Function change status to REJECT for an onboarding request that is not COMPLETED. ",
-        "operationId" : "delete",
+        "operationId" : "rejectOnboardingUsingPUT",
         "parameters" : [ {
           "name" : "onboardingId",
           "in" : "path",
@@ -1837,6 +1862,46 @@
         } ]
       }
     },
+    "/v1/onboarding/{onboardingId}/user/{userId}" : {
+      "delete" : {
+        "tags" : [ "internal-v1", "Onboarding Controller" ],
+        "summary" : "Perform delete operation of a USER type onboarding request",
+        "description" : "Perform delete operation of a USER type onboarding request receiving onboarding id and userId. It verifies that the userId corresponds to a DELEGATE role in the onboarding users list. If the user is a MANAGER (and not also a DELEGATE), a 400 error is returned. If the user is a DELEGATE, it deletes the associated document from document-ms, then sets DELETED as status and updates date fields.",
+        "operationId" : "deleteOnboardingUser",
+        "parameters" : [ {
+          "name" : "onboardingId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "userId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : { }
+            }
+          },
+          "401" : {
+            "description" : "Not Authorized"
+          },
+          "403" : {
+            "description" : "Not Allowed"
+          }
+        },
+        "security" : [ {
+          "SecurityScheme" : [ ]
+        } ]
+      }
+    },
     "/v1/onboarding/{onboardingId}/withUserInfo" : {
       "get" : {
         "tags" : [ "Onboarding Controller" ],
@@ -1873,342 +1938,6 @@
           "SecurityScheme" : [ ]
         } ],
         "x-legacy-api" : "true"
-      }
-    },
-    "/v1/tokens" : {
-      "get" : {
-        "tags" : [ "Token Controller" ],
-        "summary" : "Retrieves the token for a given onboarding",
-        "description" : "Fetches a list of tokens associated with the specified onboarding ID.",
-        "operationId" : "getToken",
-        "parameters" : [ {
-          "name" : "onboardingId",
-          "in" : "query",
-          "schema" : {
-            "type" : "string"
-          }
-        } ],
-        "responses" : {
-          "200" : {
-            "description" : "OK",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "type" : "array",
-                  "items" : {
-                    "$ref" : "#/components/schemas/TokenResponse"
-                  }
-                }
-              }
-            }
-          },
-          "401" : {
-            "description" : "Not Authorized"
-          },
-          "403" : {
-            "description" : "Not Allowed"
-          }
-        },
-        "security" : [ {
-          "SecurityScheme" : [ ]
-        } ]
-      }
-    },
-    "/v1/tokens/contract-report" : {
-      "get" : {
-        "tags" : [ "internal-v1" ],
-        "summary" : "Check if contract signed is a CADES file",
-        "description" : "Check if contract signed is a CADES file even if is not .p7m",
-        "operationId" : "reportContractSigned",
-        "parameters" : [ {
-          "name" : "onboardingId",
-          "in" : "query",
-          "required" : true,
-          "schema" : {
-            "type" : "string"
-          }
-        } ],
-        "responses" : {
-          "200" : {
-            "description" : "OK",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ContractSignedReport"
-                }
-              }
-            }
-          },
-          "401" : {
-            "description" : "Not Authorized"
-          },
-          "403" : {
-            "description" : "Not Allowed"
-          }
-        },
-        "security" : [ {
-          "SecurityScheme" : [ ]
-        } ]
-      }
-    },
-    "/v1/tokens/contract-signed" : {
-      "put" : {
-        "tags" : [ "internal-v1" ],
-        "summary" : "Find an attachment for a given onboarding id and update the contract signed path",
-        "description" : "Find  an attachment for a given onboarding id and update the contract signed path",
-        "operationId" : "updateContractSigned",
-        "parameters" : [ {
-          "name" : "contractSigned",
-          "in" : "query",
-          "required" : true,
-          "schema" : {
-            "type" : "string"
-          }
-        }, {
-          "name" : "onboardingId",
-          "in" : "query",
-          "required" : true,
-          "schema" : {
-            "type" : "string"
-          }
-        } ],
-        "responses" : {
-          "200" : {
-            "description" : "OK",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "format" : "int64",
-                  "type" : "integer"
-                }
-              }
-            }
-          },
-          "401" : {
-            "description" : "Not Authorized"
-          },
-          "403" : {
-            "description" : "Not Allowed"
-          }
-        },
-        "security" : [ {
-          "SecurityScheme" : [ ]
-        } ]
-      }
-    },
-    "/v1/tokens/{onboardingId}/attachment" : {
-      "get" : {
-        "tags" : [ "Token Controller" ],
-        "summary" : "Retrieve attachment for a given onboarding and filename",
-        "description" : "Downloads the attachment file associated with the specified onboarding ID and filename.",
-        "operationId" : "getAttachment",
-        "parameters" : [ {
-          "name" : "onboardingId",
-          "in" : "path",
-          "required" : true,
-          "schema" : {
-            "type" : "string"
-          }
-        }, {
-          "name" : "name",
-          "in" : "query",
-          "required" : true,
-          "schema" : {
-            "type" : "string"
-          }
-        } ],
-        "responses" : {
-          "200" : {
-            "description" : "OK",
-            "content" : {
-              "application/octet-stream" : {
-                "schema" : {
-                  "format" : "binary",
-                  "type" : "string"
-                }
-              }
-            }
-          },
-          "401" : {
-            "description" : "Not Authorized"
-          },
-          "403" : {
-            "description" : "Not Allowed"
-          }
-        },
-        "security" : [ {
-          "SecurityScheme" : [ ]
-        } ]
-      },
-      "post" : {
-        "tags" : [ "Token Controller" ],
-        "summary" : "Upload attachment by verifying and signing document, then save into storage.",
-        "description" : "Perform upload  of the file passed in input verifying digest e put company signature",
-        "operationId" : "complete",
-        "parameters" : [ {
-          "name" : "onboardingId",
-          "in" : "path",
-          "required" : true,
-          "schema" : {
-            "type" : "string"
-          }
-        }, {
-          "name" : "name",
-          "in" : "query",
-          "required" : true,
-          "schema" : {
-            "type" : "string"
-          }
-        } ],
-        "requestBody" : {
-          "content" : {
-            "multipart/form-data" : {
-              "schema" : {
-                "required" : [ "file" ],
-                "type" : "object",
-                "properties" : {
-                  "file" : {
-                    "format" : "binary",
-                    "type" : "string"
-                  }
-                }
-              }
-            }
-          }
-        },
-        "responses" : {
-          "200" : {
-            "description" : "OK",
-            "content" : {
-              "application/json" : { }
-            }
-          },
-          "401" : {
-            "description" : "Not Authorized"
-          },
-          "403" : {
-            "description" : "Not Allowed"
-          }
-        },
-        "security" : [ {
-          "SecurityScheme" : [ ]
-        } ]
-      }
-    },
-    "/v1/tokens/{onboardingId}/attachment/status" : {
-      "head" : {
-        "tags" : [ "Token Controller" ],
-        "summary" : "Verify attachment availability",
-        "description" : "Verifies the availability of the specified attachment in the storage system. A successful check returns HTTP 204 (No Content), while a missing attachment results in HTTP 404 (Not Found).",
-        "operationId" : "headAttachment",
-        "parameters" : [ {
-          "name" : "onboardingId",
-          "in" : "path",
-          "required" : true,
-          "schema" : {
-            "type" : "string"
-          }
-        }, {
-          "name" : "name",
-          "in" : "query",
-          "required" : true,
-          "schema" : {
-            "type" : "string"
-          }
-        } ],
-        "responses" : {
-          "200" : {
-            "description" : "OK",
-            "content" : {
-              "application/json" : { }
-            }
-          },
-          "401" : {
-            "description" : "Not Authorized"
-          },
-          "403" : {
-            "description" : "Not Allowed"
-          }
-        },
-        "security" : [ {
-          "SecurityScheme" : [ ]
-        } ]
-      }
-    },
-    "/v1/tokens/{onboardingId}/contract" : {
-      "get" : {
-        "tags" : [ "Token Controller" ],
-        "summary" : "Retrieve contract not signed for a given onboarding",
-        "description" : "Downloads the unsigned contract file associated with the specified onboarding ID.",
-        "operationId" : "getContract",
-        "parameters" : [ {
-          "name" : "onboardingId",
-          "in" : "path",
-          "required" : true,
-          "schema" : {
-            "type" : "string"
-          }
-        } ],
-        "responses" : {
-          "200" : {
-            "description" : "OK",
-            "content" : {
-              "application/octet-stream" : {
-                "schema" : {
-                  "format" : "binary",
-                  "type" : "string"
-                }
-              }
-            }
-          },
-          "401" : {
-            "description" : "Not Authorized"
-          },
-          "403" : {
-            "description" : "Not Allowed"
-          }
-        },
-        "security" : [ {
-          "SecurityScheme" : [ ]
-        } ]
-      }
-    },
-    "/v1/tokens/{onboardingId}/contract-signed" : {
-      "get" : {
-        "tags" : [ "Token Controller" ],
-        "summary" : "Retrieve contract signed for a given onboarding",
-        "description" : "Downloads the contract file associated with the specified onboarding ID.",
-        "operationId" : "getContractSigned",
-        "parameters" : [ {
-          "name" : "onboardingId",
-          "in" : "path",
-          "required" : true,
-          "schema" : {
-            "type" : "string"
-          }
-        } ],
-        "responses" : {
-          "200" : {
-            "description" : "OK",
-            "content" : {
-              "application/octet-stream" : {
-                "schema" : {
-                  "format" : "binary",
-                  "type" : "string"
-                }
-              }
-            }
-          },
-          "401" : {
-            "description" : "Not Authorized"
-          },
-          "403" : {
-            "description" : "Not Allowed"
-          }
-        },
-        "security" : [ {
-          "SecurityScheme" : [ ]
-        } ]
       }
     }
   },
@@ -2352,6 +2081,9 @@
               "$ref" : "#/components/schemas/UserRequest"
             }
           },
+          "istatCode" : {
+            "type" : "string"
+          },
           "recipientCode" : {
             "type" : "string"
           },
@@ -2366,6 +2098,9 @@
           },
           "iban" : {
             "type" : "string"
+          },
+          "isTest" : {
+            "type" : "boolean"
           }
         }
       },
@@ -2385,6 +2120,14 @@
             "type" : "string"
           },
           "role" : {
+            "type" : "string"
+          }
+        }
+      },
+      "ApproveRequest" : {
+        "type" : "object",
+        "properties" : {
+          "userUid" : {
             "type" : "string"
           }
         }
@@ -2470,14 +2213,6 @@
         "type" : "object",
         "properties" : {
           "response" : {
-            "type" : "boolean"
-          }
-        }
-      },
-      "ContractSignedReport" : {
-        "type" : "object",
-        "properties" : {
-          "cades" : {
             "type" : "boolean"
           }
         }
@@ -2643,6 +2378,9 @@
             "items" : {
               "type" : "string"
             }
+          },
+          "isTest" : {
+            "type" : "boolean"
           }
         }
       },
@@ -2798,6 +2536,9 @@
               "type" : "string"
             }
           },
+          "isTest" : {
+            "type" : "boolean"
+          },
           "paymentServiceProvider" : {
             "$ref" : "#/components/schemas/PaymentServiceProviderRequest"
           },
@@ -2933,6 +2674,9 @@
           "signContract" : {
             "type" : "boolean"
           },
+          "userRequester" : {
+            "$ref" : "#/components/schemas/UserRequesterDto"
+          },
           "institution" : {
             "$ref" : "#/components/schemas/InstitutionBaseRequest"
           },
@@ -2945,11 +2689,42 @@
           "gpuData" : {
             "$ref" : "#/components/schemas/GPUData"
           },
-          "payment" : {
-            "$ref" : "#/components/schemas/PaymentRequestDto"
-          },
           "onboardingImportContract" : {
             "$ref" : "#/components/schemas/OnboardingImportContract"
+          }
+        }
+      },
+      "OnboardingContractUpdateRequest" : {
+        "required" : [ "productId", "origin", "originId", "users" ],
+        "type" : "object",
+        "properties" : {
+          "productId" : {
+            "minLength" : 1,
+            "type" : "string"
+          },
+          "institutionType" : {
+            "$ref" : "#/components/schemas/InstitutionType"
+          },
+          "subunitCode" : {
+            "type" : "string"
+          },
+          "origin" : {
+            "minLength" : 1,
+            "type" : "string"
+          },
+          "originId" : {
+            "minLength" : 1,
+            "type" : "string"
+          },
+          "taxCode" : {
+            "type" : "string"
+          },
+          "users" : {
+            "minItems" : 1,
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/UserRequest"
+            }
           }
         }
       },
@@ -2982,6 +2757,9 @@
           "signContract" : {
             "type" : "boolean"
           },
+          "userRequester" : {
+            "$ref" : "#/components/schemas/UserRequesterDto"
+          },
           "institution" : {
             "$ref" : "#/components/schemas/InstitutionBaseRequest"
           },
@@ -2993,9 +2771,6 @@
           },
           "gpuData" : {
             "$ref" : "#/components/schemas/GPUData"
-          },
-          "payment" : {
-            "$ref" : "#/components/schemas/PaymentRequestDto"
           }
         }
       },
@@ -3026,9 +2801,6 @@
           "billing" : {
             "$ref" : "#/components/schemas/BillingResponse"
           },
-          "payment" : {
-            "$ref" : "#/components/schemas/PaymentResponse"
-          },
           "signContract" : {
             "type" : "boolean"
           },
@@ -3050,8 +2822,8 @@
           "status" : {
             "type" : "string"
           },
-          "userRequestUid" : {
-            "type" : "string"
+          "userRequester" : {
+            "$ref" : "#/components/schemas/UserRequesterResponse"
           },
           "reasonForReject" : {
             "type" : "string"
@@ -3061,6 +2833,9 @@
             "items" : {
               "type" : "string"
             }
+          },
+          "contractUpdateRequired" : {
+            "type" : "boolean"
           }
         }
       },
@@ -3180,6 +2955,9 @@
           "signContract" : {
             "type" : "boolean"
           },
+          "userRequester" : {
+            "$ref" : "#/components/schemas/UserRequesterDto"
+          },
           "institution" : {
             "$ref" : "#/components/schemas/InstitutionBaseRequest"
           },
@@ -3192,7 +2970,7 @@
         }
       },
       "OnboardingPgRequest" : {
-        "required" : [ "productId", "users", "taxCode", "origin", "digitalAddress" ],
+        "required" : [ "productId", "users", "taxCode", "origin" ],
         "type" : "object",
         "properties" : {
           "productId" : {
@@ -3255,6 +3033,9 @@
           "signContract" : {
             "type" : "boolean"
           },
+          "userRequester" : {
+            "$ref" : "#/components/schemas/UserRequesterDto"
+          },
           "institution" : {
             "$ref" : "#/components/schemas/InstitutionPspRequest"
           },
@@ -3296,9 +3077,6 @@
           "additionalInformations" : {
             "$ref" : "#/components/schemas/AdditionalInformationsDto"
           },
-          "userRequestUid" : {
-            "type" : "string"
-          },
           "isAggregator" : {
             "type" : "boolean"
           },
@@ -3310,11 +3088,14 @@
           },
           "referenceOnboardingId" : {
             "type" : "string"
+          },
+          "userRequester" : {
+            "$ref" : "#/components/schemas/UserRequesterResponse"
           }
         }
       },
       "OnboardingStatus" : {
-        "enum" : [ "REQUEST", "TOBEVALIDATED", "PENDING", "COMPLETED", "FAILED", "REJECTED", "DELETED" ],
+        "enum" : [ "REQUESTING", "REQUEST", "TOBEVALIDATED", "PENDING", "PENDING_IN_REVIEW", "COMPLETED", "FAILED", "REJECTED", "DELETED", "OVERRIDDEN" ],
         "type" : "string"
       },
       "OnboardingUserPgRequest" : {
@@ -3388,29 +3169,6 @@
         "enum" : [ "MANAGER", "DELEGATE", "SUB_DELEGATE", "OPERATOR", "ADMIN_EA" ],
         "type" : "string"
       },
-      "PaymentRequestDto" : {
-        "type" : "object",
-        "properties" : {
-          "iban" : {
-            "pattern" : "^IT\\d{2}[A-Z]\\d{5}\\d{5}[0-9A-Z]{12}$",
-            "type" : "string"
-          },
-          "holder" : {
-            "type" : "string"
-          }
-        }
-      },
-      "PaymentResponse" : {
-        "type" : "object",
-        "properties" : {
-          "iban" : {
-            "type" : "string"
-          },
-          "holder" : {
-            "type" : "string"
-          }
-        }
-      },
       "PaymentServiceProviderRequest" : {
         "type" : "object",
         "properties" : {
@@ -3446,10 +3204,39 @@
           }
         }
       },
+      "Problem" : {
+        "type" : "object",
+        "properties" : {
+          "status" : {
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "errors" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/ProblemError"
+            }
+          }
+        }
+      },
+      "ProblemError" : {
+        "type" : "object",
+        "properties" : {
+          "code" : {
+            "type" : "string"
+          },
+          "detail" : {
+            "type" : "string"
+          }
+        }
+      },
       "ReasonRequest" : {
         "type" : "object",
         "properties" : {
           "reasonForReject" : {
+            "type" : "string"
+          },
+          "userUid" : {
             "type" : "string"
           }
         }
@@ -3473,48 +3260,6 @@
             "type" : "string"
           }
         }
-      },
-      "TokenResponse" : {
-        "type" : "object",
-        "properties" : {
-          "id" : {
-            "type" : "string"
-          },
-          "type" : {
-            "$ref" : "#/components/schemas/TokenType"
-          },
-          "productId" : {
-            "type" : "string"
-          },
-          "checksum" : {
-            "type" : "string"
-          },
-          "contractVersion" : {
-            "type" : "string"
-          },
-          "contractTemplate" : {
-            "type" : "string"
-          },
-          "contractSigned" : {
-            "type" : "string"
-          },
-          "createdAt" : {
-            "$ref" : "#/components/schemas/LocalDateTime"
-          },
-          "updatedAt" : {
-            "$ref" : "#/components/schemas/LocalDateTime"
-          },
-          "closedAt" : {
-            "$ref" : "#/components/schemas/LocalDateTime"
-          },
-          "deletedAt" : {
-            "$ref" : "#/components/schemas/LocalDateTime"
-          }
-        }
-      },
-      "TokenType" : {
-        "enum" : [ "INSTITUTION", "LEGALS", "USER", "ATTACHMENT" ],
-        "type" : "string"
       },
       "UUID" : {
         "format" : "uuid",
@@ -3555,6 +3300,31 @@
           },
           "role" : {
             "$ref" : "#/components/schemas/PartyRole"
+          }
+        }
+      },
+      "UserRequesterDto" : {
+        "type" : "object",
+        "properties" : {
+          "name" : {
+            "type" : "string"
+          },
+          "surname" : {
+            "type" : "string"
+          },
+          "email" : {
+            "type" : "string"
+          }
+        }
+      },
+      "UserRequesterResponse" : {
+        "type" : "object",
+        "properties" : {
+          "userMailUuid" : {
+            "type" : "string"
+          },
+          "userRequestUid" : {
+            "type" : "string"
           }
         }
       },
@@ -3600,6 +3370,10 @@
             }
           }
         }
+      },
+      "WorkflowType" : {
+        "enum" : [ "CONTRACT_REGISTRATION", "CONTRACT_WITH_COUNTERSIGNATURE", "CONTRACT_UPDATE", "FOR_APPROVE", "FOR_APPROVE_PT", "FOR_APPROVE_GPU", "CONFIRMATION", "USERS", "USERS_IMPORT", "IMPORT", "IMPORT_AGGREGATION", "CONTRACT_REGISTRATION_AGGREGATOR", "CONFIRMATION_AGGREGATE", "INCREMENT_REGISTRATION_AGGREGATOR", "CONFIRMATION_AGGREGATOR", "USERS_PG", "USERS_EA" ],
+        "type" : "string"
       }
     },
     "securitySchemes" : {

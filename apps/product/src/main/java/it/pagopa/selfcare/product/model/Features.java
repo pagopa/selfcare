@@ -18,6 +18,7 @@ public class Features {
   private boolean invoiceable;
   private boolean requiresParentOnboarding;
   private boolean allowSameUserManagerAndDelegate;
+  private boolean contractEnabled;
 
   @Builder.Default private int expirationDays = 30;
 

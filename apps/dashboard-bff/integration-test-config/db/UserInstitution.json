@@ -461,6 +461,30 @@
   },
   {
     "_id": {
+      "$oid": "4833e1efe058efba207e6290"
+    },
+    "institutionDescription": "Uff_eFatturaPA",
+    "institutionId": "b4705659-3a01-430a-a19b-7bdb4e340223",
+    "products": [
+      {
+        "createdAt": {
+          "$date": "2024-10-28T12:25:53.228+00:00"
+        },
+        "env": "ROOT",
+        "productId": "prod-pagopa",
+        "productRole": "admin",
+        "role": "DELEGATE",
+        "status": "ACTIVE",
+        "updatedAt": {
+          "$date": "2024-10-28T12:25:53.228+00:00"
+        }
+      }
+    ],
+    "userId": "97a511a7-2acc-47b9-afed-2f3c65753b4a",
+    "userMailUuid": "ID_CONTACTS#8370aa38-a2ab-404b-9b8a-10487167332e"
+  },
+  {
+    "_id": {
       "$oid": "6772b3beb957efbe104b7395"
     },
     "institutionDescription": "COMUNE DI MORANSENGO-TONENGO",

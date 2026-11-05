@@ -145,7 +145,7 @@ public class OnboardingStep extends CucumberQuarkusTest {
 
   @BeforeEach
   void init() {
-    when(orchestrationApi.apiStartOnboardingOrchestrationGet(any(), any(), any()))
+    when(orchestrationApi.apiStartOnboardingOrchestrationGet(any(), any()))
             .thenReturn(Uni.createFrom().item(new OrchestrationResponse()));
     mockMSCoreResponses();
   }

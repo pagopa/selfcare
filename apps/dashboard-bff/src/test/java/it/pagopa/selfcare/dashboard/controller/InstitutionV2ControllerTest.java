@@ -15,6 +15,8 @@ import it.pagopa.selfcare.dashboard.model.mapper.InstitutionResourceMapperImpl;
 import it.pagopa.selfcare.dashboard.model.mapper.OnboardingMapperImpl;
 import it.pagopa.selfcare.dashboard.model.mapper.UserMapperImpl;
 import it.pagopa.selfcare.dashboard.model.mapper.UserMapperV2Impl;
+import it.pagopa.selfcare.dashboard.model.onboarding.ContractUpdateUserDto;
+import it.pagopa.selfcare.dashboard.model.onboarding.OnboardingContractUpdateDto;
 import it.pagopa.selfcare.dashboard.model.user.*;
 import it.pagopa.selfcare.dashboard.service.DelegationService;
 import it.pagopa.selfcare.dashboard.service.InstitutionV2Service;
@@ -470,6 +472,76 @@ class InstitutionV2ControllerTest extends BaseControllerTest {
         // then
         assertEquals(HttpStatus.BAD_REQUEST.value(), result.getResponse().getStatus());
         verifyNoInteractions(userServiceMock);
+    }
+
+    @Test
+    void onboardingContractUpdate_happyPath() throws Exception {
+        // given
+        final String institutionId = "institutionId";
+        final String productId = "prod-io";
+        ContractUpdateUserDto manager = new ContractUpdateUserDto();
+        manager.setName("John");
+        manager.setSurname("Doe");
+        manager.setTaxCode("TAXCODE1");
+        manager.setEmail("john.doe@example.com");
+        manager.setRole(it.pagopa.selfcare.onboarding.common.PartyRole.MANAGER);
+        ContractUpdateUserDto delegate = new ContractUpdateUserDto();
+        delegate.setName("Jane");
+        delegate.setSurname("Roe");
+        delegate.setTaxCode("TAXCODE2");
+        delegate.setEmail("jane.roe@example.com");
+        delegate.setRole(it.pagopa.selfcare.onboarding.common.PartyRole.DELEGATE);
+        OnboardingContractUpdateDto request = new OnboardingContractUpdateDto();
+        request.setInstitutionType(it.pagopa.selfcare.onboarding.common.InstitutionType.PA);
+        request.setOrigin("IPA");
+        request.setOriginId("originId");
+        request.setTaxCode("institutionTaxCode");
+        request.setSubunitCode("subunitCode");
+        request.setUsers(List.of(manager, delegate));
+
+        // when
+        mockMvc.perform(MockMvcRequestBuilders
+                        .post(BASE_URL + "/{institutionId}/products/{productId}/contract-update", institutionId, productId)
+                        .contentType(APPLICATION_JSON_VALUE)
+                        .content(objectMapper.writeValueAsString(request))
+                        .accept(APPLICATION_JSON_VALUE))
+                .andExpect(status().isCreated());
+
+        // then
+        verify(institutionV2ServiceMock, times(1)).onboardingContractUpdate(argThat(req ->
+                productId.equals(req.getProductId())
+                        && it.pagopa.selfcare.onboarding.generated.openapi.v1.dto.InstitutionType.PA.equals(req.getInstitutionType())
+                        && "IPA".equals(req.getOrigin())
+                        && "originId".equals(req.getOriginId())
+                        && "institutionTaxCode".equals(req.getTaxCode())
+                        && "subunitCode".equals(req.getSubunitCode())
+                        && req.getUsers().size() == 2
+                        && "TAXCODE1".equals(req.getUsers().get(0).getTaxCode())
+                        && it.pagopa.selfcare.onboarding.generated.openapi.v1.dto.PartyRole.MANAGER.equals(req.getUsers().get(0).getRole())
+                        && "jane.roe@example.com".equals(req.getUsers().get(1).getEmail())
+                        && it.pagopa.selfcare.onboarding.generated.openapi.v1.dto.PartyRole.DELEGATE.equals(req.getUsers().get(1).getRole())));
+        verifyNoMoreInteractions(institutionV2ServiceMock);
+    }
+
+    @Test
+    void onboardingContractUpdate_whenUsersAreEmpty_returnsBadRequest() throws Exception {
+        // given
+        OnboardingContractUpdateDto request = new OnboardingContractUpdateDto();
+        request.setOrigin("IPA");
+        request.setOriginId("originId");
+        request.setUsers(List.of());
+
+        // when
+        MvcResult result = mockMvc.perform(MockMvcRequestBuilders
+                        .post(BASE_URL + "/{institutionId}/products/{productId}/contract-update", "institutionId", "prod-io")
+                        .contentType(APPLICATION_JSON_VALUE)
+                        .content(objectMapper.writeValueAsString(request))
+                        .accept(APPLICATION_JSON_VALUE))
+                .andReturn();
+
+        // then
+        assertEquals(HttpStatus.BAD_REQUEST.value(), result.getResponse().getStatus());
+        verifyNoInteractions(institutionV2ServiceMock);
     }
 
     @Test

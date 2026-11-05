@@ -16,10 +16,12 @@ import it.pagopa.selfcare.onboarding.dto.ResendNotificationsFilters;
 import it.pagopa.selfcare.onboarding.context.TenantContext;
 import it.pagopa.selfcare.onboarding.entity.Onboarding;
 import it.pagopa.selfcare.onboarding.dto.QueueEvent;
+import it.pagopa.selfcare.onboarding.exception.DatabaseThrottledException;
 import it.pagopa.selfcare.onboarding.exception.NotificationException;
 import it.pagopa.selfcare.onboarding.service.CompletionService;
 import it.pagopa.selfcare.onboarding.service.FunctionInvocationLogger;
-import it.pagopa.selfcare.onboarding.service.HttpJwtValidator;
+import it.pagopa.selfcare.onboarding.service.HttpAuthorization;
+import it.pagopa.selfcare.onboarding.service.HttpFunctionGuard;
 import it.pagopa.selfcare.onboarding.service.NotificationEventResenderService;
 import it.pagopa.selfcare.onboarding.service.NotificationEventService;
 import it.pagopa.selfcare.onboarding.service.OnboardingService;
@@ -27,6 +29,9 @@ import it.pagopa.selfcare.onboarding.service.TelemetryService;
 import jakarta.ws.rs.core.MediaType;
 import org.apache.http.HttpHeaders;
 
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -47,7 +52,7 @@ public class NotificationFunctions {
   private final TelemetryService telemetryService;
   private final CompletionService completionService;
   private final FunctionInvocationLogger functionInvocationLogger;
-  private final HttpJwtValidator httpJwtValidator;
+  private final HttpFunctionGuard httpFunctionGuard;
 
   public NotificationFunctions(ObjectMapper objectMapper,
                                NotificationEventService notificationEventService,
@@ -56,7 +61,7 @@ public class NotificationFunctions {
                                TelemetryService telemetryService,
                                CompletionService completionService,
                                FunctionInvocationLogger functionInvocationLogger,
-                               HttpJwtValidator httpJwtValidator) {
+                               HttpFunctionGuard httpFunctionGuard) {
     this.objectMapper = objectMapper;
     this.notificationEventService = notificationEventService;
     this.onboardingService = onboardingService;
@@ -64,7 +69,7 @@ public class NotificationFunctions {
     this.telemetryService = telemetryService;
     this.completionService = completionService;
     this.functionInvocationLogger = functionInvocationLogger;
-    this.httpJwtValidator = httpJwtValidator;
+    this.httpFunctionGuard = httpFunctionGuard;
   }
 
   /**
@@ -75,11 +80,11 @@ public class NotificationFunctions {
   public HttpResponseMessage sendNotification(
     @HttpTrigger(name = "req", methods = {HttpMethod.POST}, authLevel = AuthorizationLevel.FUNCTION) HttpRequestMessage<Optional<String>> request,
     final ExecutionContext context) {
-    Optional<HttpResponseMessage> authenticationError = httpJwtValidator.validate(request, context);
-    if (authenticationError.isPresent()) {
-      return authenticationError.get();
+    HttpAuthorization authorization =
+        httpFunctionGuard.authorize("Notification", request, context);
+    if (authorization.isRejected()) {
+      return authorization.rejection();
     }
-    functionInvocationLogger.logInvocation("Notification", request);
 
     String onboardingString = request.getBody().orElseThrow(() -> new IllegalArgumentException("Request body cannot be empty."));
     final String queueEventString = request.getQueryParameters().get("queueEvent");
@@ -119,11 +124,11 @@ public class NotificationFunctions {
   public HttpResponseMessage resendNotification(
     @HttpTrigger(name = "req", methods = {HttpMethod.POST}, authLevel = AuthorizationLevel.FUNCTION) HttpRequestMessage<Optional<String>> request,
     final ExecutionContext context) {
-    Optional<HttpResponseMessage> authenticationError = httpJwtValidator.validate(request, context);
-    if (authenticationError.isPresent()) {
-      return authenticationError.get();
+    HttpAuthorization authorization =
+        httpFunctionGuard.authorize("ResendNotification", request, context);
+    if (authorization.isRejected()) {
+      return authorization.rejection();
     }
-    functionInvocationLogger.logInvocation("ResendNotification", request);
 
     final String onboardingId = request.getQueryParameters().get("onboardingId");
     if (Objects.isNull(onboardingId)) {
@@ -136,12 +141,6 @@ public class NotificationFunctions {
     final QueueEvent queueEvent = Objects.isNull(queueEventString) ? null : QueueEvent.valueOf(queueEventString);
 
 
-    final Optional<Onboarding> onboarding = onboardingService.getOnboarding(onboardingId);
-    if (onboarding.isEmpty()) {
-      return request.createResponseBuilder(HttpStatus.NOT_FOUND)
-        .body("Onboarding with ID: " + onboardingId + " not found")
-        .build();
-    }
     TenantContext.Scope tenantScope;
     try {
       tenantScope = TenantContext.open(request, context);
@@ -149,6 +148,12 @@ public class NotificationFunctions {
       return invalidTenantResponse(request, context);
     }
     try (TenantContext.Scope ignored = tenantScope) {
+      final Optional<Onboarding> onboarding = onboardingService.getOnboarding(onboardingId);
+      if (onboarding.isEmpty()) {
+        return request.createResponseBuilder(HttpStatus.NOT_FOUND)
+          .body("Onboarding with ID: " + onboardingId + " not found")
+          .build();
+      }
       if (!matchesRequestTenant(onboarding.get())) {
         return invalidTenantResponse(request, context);
       }
@@ -190,21 +195,65 @@ public class NotificationFunctions {
   public HttpResponseMessage countNotifications(
     @HttpTrigger(name = "req", route = "onboardings/notifications/count", methods = {HttpMethod.GET}, authLevel = AuthorizationLevel.FUNCTION) HttpRequestMessage<Optional<String>> request,
     final ExecutionContext context) {
-    Optional<HttpResponseMessage> authenticationError = httpJwtValidator.validate(request, context);
-    if (authenticationError.isPresent()) {
-      return authenticationError.get();
+    HttpAuthorization authorization =
+        httpFunctionGuard.authorize("CountNotifications", request, context);
+    if (authorization.isRejected()) {
+      return authorization.rejection();
     }
-    functionInvocationLogger.logInvocation("CountNotifications", request);
 
     String from = request.getQueryParameters().get("from");
     String to = request.getQueryParameters().get("to");
     String productId = request.getQueryParameters().get("productId");
 
-    List<NotificationCountResult> countedResult = onboardingService.countNotifications(productId, from, to, context);
-    return request.createResponseBuilder(HttpStatus.OK)
-      .body(countedResult)
-      .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON)
-      .build();
+    try {
+      validateCountNotificationsRange(from, to);
+    } catch (IllegalArgumentException e) {
+      return request.createResponseBuilder(HttpStatus.BAD_REQUEST)
+        .body(e.getMessage())
+        .build();
+    }
+
+    TenantContext.Scope tenantScope;
+    try {
+      tenantScope = TenantContext.open(request, context);
+    } catch (IllegalArgumentException exception) {
+      return invalidTenantResponse(request, context);
+    }
+
+    try (TenantContext.Scope ignored = tenantScope) {
+      List<NotificationCountResult> countedResult = onboardingService.countNotifications(productId, from, to, context);
+      return request.createResponseBuilder(HttpStatus.OK)
+        .body(countedResult)
+        .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON)
+        .build();
+    } catch (DatabaseThrottledException e) {
+      context.getLogger().warning("CountNotifications throttled by the database, retryAfterMs: " + e.getRetryAfterMs());
+      return request.createResponseBuilder(HttpStatus.TOO_MANY_REQUESTS)
+        .header(HttpHeaders.RETRY_AFTER, String.valueOf(Math.max(1L, (e.getRetryAfterMs() + 999) / 1000)))
+        .body("Too many requests, retry later.")
+        .build();
+    }
+  }
+
+  private static void validateCountNotificationsRange(String from, String to) {
+    LocalDate fromDate = parseCountNotificationsDate("from", from);
+    LocalDate toDate = parseCountNotificationsDate("to", to);
+    if (fromDate != null && toDate != null) {
+      if (toDate.isBefore(fromDate)) {
+        throw new IllegalArgumentException("'to' cannot be before 'from'.");
+      }
+    }
+  }
+
+  private static LocalDate parseCountNotificationsDate(String name, String value) {
+    if (value == null) {
+      return null;
+    }
+    try {
+      return LocalDate.parse(value, DateTimeFormatter.ISO_LOCAL_DATE);
+    } catch (DateTimeParseException e) {
+      throw new IllegalArgumentException("'" + name + "' must be a date in YYYY-MM-DD format.");
+    }
   }
 
   /**
@@ -215,17 +264,12 @@ public class NotificationFunctions {
     @HttpTrigger(name = "req", methods = {HttpMethod.POST}, authLevel = AuthorizationLevel.FUNCTION) HttpRequestMessage<Optional<String>> request,
     @DurableClientInput(name = "durableContext") DurableClientContext durableContext,
     final ExecutionContext context) throws JsonProcessingException {
-    Optional<HttpResponseMessage> authenticationError = httpJwtValidator.validate(request, context);
-    if (authenticationError.isPresent()) {
-      return authenticationError.get();
+    HttpAuthorization authorization =
+        httpFunctionGuard.authorize("ResendNotifications", request, context);
+    if (authorization.isRejected()) {
+      return authorization.rejection();
     }
-    String userId = functionInvocationLogger.logInvocation("ResendNotifications", request);
-    if (FunctionInvocationLogger.isMissingUserId(userId)) {
-      return request
-          .createResponseBuilder(HttpStatus.BAD_REQUEST)
-          .body(FunctionInvocationLogger.USER_ID_HEADER + " header cannot be null or blank")
-          .build();
-    }
+    String userId = authorization.caller().userId();
 
     ResendNotificationsFilters filters = getResendNotificationsFilters(request);
     try {

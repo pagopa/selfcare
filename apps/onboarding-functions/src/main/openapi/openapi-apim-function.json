@@ -62,7 +62,7 @@
           {
             "name": "from",
             "in": "query",
-            "description": "from date (in YYYY-MM-DD format)",
+            "description": "from date (in YYYY-MM-DD format).",
             "required": false,
             "schema": {
               "type": "string"
@@ -97,6 +97,20 @@
                   "items": {
                     "$ref": "#/components/schemas/NotificationCountResult"
                   }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid from/to dates: wrong format or 'to' before 'from'"
+          },
+          "429": {
+            "description": "The database is throttling requests, retry after the number of seconds in the Retry-After header",
+            "headers": {
+              "Retry-After": {
+                "description": "Seconds to wait before retrying",
+                "schema": {
+                  "type": "integer"
                 }
               }
             }

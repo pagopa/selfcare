@@ -205,6 +205,55 @@ Feature: Onboarding collection
       | PENDING_IN_REVIEW |
 #      | COMPLETED |
 
+  Scenario: Verify correct invocation of the StartOnboardingOrchestration for workflow CONTRACT_UPDATE request
+    Given The onboarding "5f1c7e2a-9b3d-4c8e-a1f0-2d6b8c4e9a01" is present
+    And Preparing the invocation of "StartOnboardingOrchestration" HTTP call with onboardingId "5f1c7e2a-9b3d-4c8e-a1f0-2d6b8c4e9a02"
+    When I send a GET request with given onboardingId
+    Then the response should have status code 202
+    And there is a document for onboarding with status "PENDING"
+    And the contract document of the onboarding has rootOnboardingId "5f1c7e2a-9b3d-4c8e-a1f0-2d6b8c4e9a01"
+    And the signed contract of the onboarding is uploaded
+    When I send a GET request with given onboardingId
+    Then the response should have status code 202
+    And there is a document for onboarding with status "COMPLETED"
+    And the referenced onboarding "5f1c7e2a-9b3d-4c8e-a1f0-2d6b8c4e9a01" is aligned with the completed contract update
+
+  Scenario: Completing a CONTRACT_UPDATE overrides only the other pending contract updates of the same adhesion
+    Given The onboarding "5f1c7e2a-9b3d-4c8e-a1f0-2d6b8c4e9b01" is present
+    And The onboarding "5f1c7e2a-9b3d-4c8e-a1f0-2d6b8c4e9b04" is present
+    And Preparing the invocation of "StartOnboardingOrchestration" HTTP call with onboardingId "5f1c7e2a-9b3d-4c8e-a1f0-2d6b8c4e9b02"
+    When I send a GET request with given onboardingId
+    Then there is a document for onboarding with status "PENDING"
+    Given Preparing the invocation of "StartOnboardingOrchestration" HTTP call with onboardingId "5f1c7e2a-9b3d-4c8e-a1f0-2d6b8c4e9b03"
+    When I send a GET request with given onboardingId
+    Then there is a document for onboarding with status "PENDING"
+    And the signed contract of the onboarding is uploaded
+    When I send a GET request with given onboardingId
+    Then there is a document for onboarding with status "COMPLETED"
+    And the onboarding "5f1c7e2a-9b3d-4c8e-a1f0-2d6b8c4e9b02" has status "OVERRIDDEN"
+    And the onboarding "5f1c7e2a-9b3d-4c8e-a1f0-2d6b8c4e9b04" has status "PENDING"
+    And the referenced onboarding "5f1c7e2a-9b3d-4c8e-a1f0-2d6b8c4e9b01" is aligned with the completed contract update
+
+  Scenario: Revoking an adhesion deletes the contracts of its contract updates and rejects the pending ones
+    Given The onboarding "5f1c7e2a-9b3d-4c8e-a1f0-2d6b8c4e9c01" is present
+    And Preparing the invocation of "StartOnboardingOrchestration" HTTP call with onboardingId "5f1c7e2a-9b3d-4c8e-a1f0-2d6b8c4e9c02"
+    When I send a GET request with given onboardingId
+    Then there is a document for onboarding with status "PENDING"
+    And the signed contract of the onboarding is uploaded
+    When I send a GET request with given onboardingId
+    Then there is a document for onboarding with status "COMPLETED"
+    Given Preparing the invocation of "StartOnboardingOrchestration" HTTP call with onboardingId "5f1c7e2a-9b3d-4c8e-a1f0-2d6b8c4e9c03"
+    When I send a GET request with given onboardingId
+    Then there is a document for onboarding with status "PENDING"
+    And the signed contract of the onboarding is uploaded
+    Given Preparing the invocation of "TriggerDeleteInstitutionAndUser" HTTP call with onboardingId "5f1c7e2a-9b3d-4c8e-a1f0-2d6b8c4e9c01"
+    When I send a GET request with given onboardingId
+    Then the response should have status code 202
+    And the onboarding "5f1c7e2a-9b3d-4c8e-a1f0-2d6b8c4e9c03" has status "REJECTED"
+    And the onboarding "5f1c7e2a-9b3d-4c8e-a1f0-2d6b8c4e9c02" has status "COMPLETED"
+    And the contract of the onboarding "5f1c7e2a-9b3d-4c8e-a1f0-2d6b8c4e9c02" has been moved to the deleted storage
+    And the contract of the onboarding "5f1c7e2a-9b3d-4c8e-a1f0-2d6b8c4e9c03" has been moved to the deleted storage
+
   Scenario: Reject StartOnboardingOrchestration without Authorization
     Given Preparing the invocation of "StartOnboardingOrchestration" HTTP call with onboardingId "89ad7142-24bb-48ad-8504-9c9231137e85"
     And the request has no Authorization header
@@ -242,3 +291,10 @@ Feature: Onboarding collection
     When I send a GET request with given onboardingId
     Then the response should have status code 400
     And the onboarding status should not change
+
+  Scenario: Accept StartOnboardingOrchestration with a token without tenant_id claim attributed to the default tenant
+    Given Preparing the invocation of "StartOnboardingOrchestration" HTTP call with onboardingId "89ad7142-24bb-48ad-8504-9c9231137e85"
+    And the request token has no tenant_id claim
+    When I send a GET request with given onboardingId
+    Then the response should have status code 202
+    And the answer should contain "id,purgeHistoryDeleteUri,restartPostUri"

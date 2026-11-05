@@ -8,8 +8,12 @@ import io.restassured.common.mapper.TypeRef;
 import io.restassured.response.ExtractableResponse;
 import io.restassured.specification.RequestSpecification;
 import it.pagopa.selfcare.dashboard.model.*;
+import it.pagopa.selfcare.dashboard.model.onboarding.ContractUpdateUserDto;
+import it.pagopa.selfcare.dashboard.model.onboarding.OnboardingContractUpdateDto;
 import it.pagopa.selfcare.dashboard.model.user.UserCountResource;
 import it.pagopa.selfcare.dashboard.model.user.UserProductRoles;
+import it.pagopa.selfcare.onboarding.common.InstitutionType;
+import it.pagopa.selfcare.onboarding.common.PartyRole;
 import org.apache.commons.lang3.StringUtils;
 import org.junit.jupiter.api.Assertions;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,6 +24,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -27,6 +32,8 @@ public class InstitutionApiSteps {
 
     @Autowired
     private DashboardStepsUtil dashboardStepsUtil;
+
+    private OnboardingContractUpdateDto contractUpdateRequest;
 
 
     @DataTableType
@@ -315,17 +322,65 @@ public class InstitutionApiSteps {
         }
     }
 
+    @And("the following contract update institution details:")
+    public void theFollowingContractUpdateInstitutionDetails(List<Map<String, String>> rows) {
+        Map<String, String> entry = rows.get(0);
+        contractUpdateRequest = new OnboardingContractUpdateDto();
+        Optional.ofNullable(entry.get("institutionType")).map(InstitutionType::valueOf).ifPresent(contractUpdateRequest::setInstitutionType);
+        contractUpdateRequest.setOrigin(entry.get("origin"));
+        contractUpdateRequest.setOriginId(entry.get("originId"));
+        contractUpdateRequest.setTaxCode(entry.get("taxCode"));
+        contractUpdateRequest.setSubunitCode(entry.get("subunitCode"));
+        contractUpdateRequest.setUsers(List.of());
+    }
+
+    @And("the following contract update users:")
+    public void theFollowingContractUpdateUsers(List<Map<String, String>> rows) {
+        contractUpdateRequest.setUsers(rows.stream().map(entry -> {
+            ContractUpdateUserDto user = new ContractUpdateUserDto();
+            user.setName(entry.get("name"));
+            user.setSurname(entry.get("surname"));
+            user.setTaxCode(entry.get("taxCode"));
+            user.setEmail(entry.get("email"));
+            Optional.ofNullable(entry.get("role")).map(PartyRole::valueOf).ifPresent(user::setRole);
+            return user;
+        }).toList());
+    }
+
+    @When("I send a POST request to {string} to request a contract update")
+    public void iSendAPOSTRequestToRequestAContractUpdate(String url) {
+        RequestSpecification requestSpecification = RestAssured.given()
+                .contentType("application/json");
+
+        dashboardStepsUtil.setHeader(requestSpecification);
+
+        ExtractableResponse<?> response = requestSpecification
+                .when()
+                .pathParam("institutionId", dashboardStepsUtil.filter.getInstitutionId())
+                .pathParam("productId", dashboardStepsUtil.filter.getProductId())
+                .body(contractUpdateRequest)
+                .post(url)
+                .then()
+                .extract();
+
+        dashboardStepsUtil.status = response.statusCode();
+        if (dashboardStepsUtil.status != 201) {
+            dashboardStepsUtil.errorMessage = response.body().asString();
+        }
+    }
+
     @And("the response should contain institutions list")
     public void theResponseShouldContainInstitutionsList() {
         Assertions.assertFalse(dashboardStepsUtil.responses.getInstitutionBaseResourceList().isEmpty());
         final Set<String> institutionIds = dashboardStepsUtil.responses.getInstitutionBaseResourceList().stream()
             .map(InstitutionBaseResource::getId)
             .collect(Collectors.toSet());
-        Assertions.assertEquals(4, institutionIds.size());
+        Assertions.assertEquals(5, institutionIds.size());
         Assertions.assertTrue(institutionIds.contains("467ac77d-7faa-47bf-a60e-38ea74bd5fd2"));
         Assertions.assertTrue(institutionIds.contains("2a4c94f1-5d11-41f1-89e9-9fef0de4fbfe"));
         Assertions.assertTrue(institutionIds.contains("067327d3-bdd6-408d-8655-87e8f1960046"));
         Assertions.assertTrue(institutionIds.contains("c9a50656-f345-4c81-84be-5b2474470544"));
+        Assertions.assertTrue(institutionIds.contains("b4705659-3a01-430a-a19b-7bdb4e340223"));
     }
 
     @When("I send a POST request to {string} to create a new user related to a product for institutions")

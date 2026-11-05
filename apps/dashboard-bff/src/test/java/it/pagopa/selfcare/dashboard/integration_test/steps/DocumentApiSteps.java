@@ -1,0 +1,100 @@
+package it.pagopa.selfcare.dashboard.integration_test.steps;
+
+import io.cucumber.java.en.When;
+import io.restassured.RestAssured;
+import io.restassured.response.ExtractableResponse;
+import io.restassured.specification.RequestSpecification;
+import org.springframework.beans.factory.annotation.Autowired;
+
+import java.util.Objects;
+
+public class DocumentApiSteps {
+
+    @Autowired
+    private DashboardStepsUtil dashboardStepsUtil;
+
+    @When("I send a GET request to {string} to get document status")
+    public void iSendAGetRequestToGetDocumentStatus(String url) {
+        RequestSpecification requestSpecification = RestAssured.given()
+                .contentType("application/json");
+
+        dashboardStepsUtil.setHeader(requestSpecification);
+
+        if (Objects.nonNull(dashboardStepsUtil.filter.getInstitutionId())) {
+            requestSpecification.queryParam("institutionId", dashboardStepsUtil.filter.getInstitutionId());
+        }
+        if (Objects.nonNull(dashboardStepsUtil.filter.getProducts())) {
+            requestSpecification.queryParam("productIds", dashboardStepsUtil.filter.getProducts());
+        }
+
+        ExtractableResponse<?> response = requestSpecification
+                .when()
+                .get(url)
+                .then()
+                .extract();
+
+        dashboardStepsUtil.status = response.statusCode();
+        if (dashboardStepsUtil.status == 200) {
+            dashboardStepsUtil.setResponse(response);
+        } else {
+            dashboardStepsUtil.errorMessage = response.body().asString();
+        }
+    }
+
+    @When("I send a GET request to {string} to get documents list")
+    public void iSendAGetRequestToGetDocumentsList(String url) {
+        RequestSpecification requestSpecification = RestAssured.given()
+                .contentType("application/json");
+
+        dashboardStepsUtil.setHeader(requestSpecification);
+
+        ExtractableResponse<?> response = requestSpecification
+                .when()
+                .pathParam("institutionId", dashboardStepsUtil.filter.getInstitutionId())
+                .pathParam("productId", dashboardStepsUtil.filter.getProductId())
+                .get(url)
+                .then()
+                .extract();
+
+        dashboardStepsUtil.status = response.statusCode();
+        if (dashboardStepsUtil.status == 200) {
+            dashboardStepsUtil.setResponse(response);
+        } else {
+            dashboardStepsUtil.errorMessage = response.body().asString();
+        }
+    }
+
+    @When("I send a GET request to {string} to get the document with name {string} and type {string}")
+    public void iSendAGetRequestToGetTheDocument(String url, String name, String type) {
+        getDocument(url, name, type);
+    }
+
+    @When("I send a GET request to {string} to get the document with type {string}")
+    public void iSendAGetRequestToGetTheDocumentWithoutName(String url, String type) {
+        getDocument(url, null, type);
+    }
+
+    private void getDocument(String url, String name, String type) {
+        RequestSpecification requestSpecification = RestAssured.given();
+
+        dashboardStepsUtil.setHeader(requestSpecification);
+        if (Objects.nonNull(name)) {
+            requestSpecification.queryParam("name", name);
+        }
+
+        ExtractableResponse<?> response = requestSpecification
+                .when()
+                .pathParam("institutionId", dashboardStepsUtil.filter.getInstitutionId())
+                .pathParam("productId", dashboardStepsUtil.filter.getProductId())
+                .queryParam("type", type)
+                .get(url)
+                .then()
+                .extract();
+
+        dashboardStepsUtil.status = response.statusCode();
+        if (dashboardStepsUtil.status != 200) {
+            dashboardStepsUtil.errorMessage = response.body().asString();
+        }
+    }
+
+}

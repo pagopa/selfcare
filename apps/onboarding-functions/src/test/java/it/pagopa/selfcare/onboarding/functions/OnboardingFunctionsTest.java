@@ -8,6 +8,8 @@ import com.microsoft.azure.functions.HttpRequestMessage;
 import com.microsoft.azure.functions.HttpResponseMessage;
 import com.microsoft.azure.functions.HttpStatus;
 import com.microsoft.durabletask.DurableTaskClient;
+import com.microsoft.durabletask.FailureDetails;
+import com.microsoft.durabletask.RetryContext;
 import com.microsoft.durabletask.Task;
 import com.microsoft.durabletask.TaskFailedException;
 import com.microsoft.durabletask.TaskOrchestrationContext;
@@ -23,7 +25,9 @@ import it.pagopa.selfcare.onboarding.dto.ManagingInstitutionSendEmail;
 import it.pagopa.selfcare.onboarding.dto.AttachmentTemplate;
 import it.pagopa.selfcare.onboarding.dto.UserMail;
 import it.pagopa.selfcare.onboarding.entity.*;
+import it.pagopa.selfcare.onboarding.config.RetryPolicyConfig;
 import it.pagopa.selfcare.onboarding.exception.GenericOnboardingException;
+import it.pagopa.selfcare.onboarding.exception.NonRetryableRestClientException;
 import it.pagopa.selfcare.onboarding.exception.ResourceNotFoundException;
 import it.pagopa.selfcare.onboarding.service.ContractService;
 import it.pagopa.selfcare.onboarding.service.CompletionService;
@@ -32,6 +36,8 @@ import it.pagopa.selfcare.onboarding.service.OnboardingService;
 import it.pagopa.selfcare.onboarding.service.ProductService;
 import it.pagopa.selfcare.onboarding.service.TelemetryService;
 import it.pagopa.selfcare.onboarding.service.UserService;
+import it.pagopa.selfcare.onboarding.service.CallerIdentity;
+import it.pagopa.selfcare.onboarding.service.HttpAuthorization;
 import it.pagopa.selfcare.onboarding.service.HttpJwtValidator;
 import it.pagopa.selfcare.onboarding.utils.Utils;
 import jakarta.inject.Inject;
@@ -88,7 +94,10 @@ class OnboardingFunctionsTest {
 
   @BeforeEach
   void allowAuthenticatedRequests() {
-    when(httpJwtValidator.validate(any(), any())).thenReturn(Optional.empty());
+    when(httpJwtValidator.authenticate(any(), any()))
+        .thenReturn(
+            HttpAuthorization.authorized(
+                new CallerIdentity("requester-id", "SPID", null, null, null)));
   }
 
   final String onboardingStringBase = "{\"id\":\"onboardingId\", \"tenantId\":\"AR\", \"productId\":\"prod-test\"}";
@@ -201,9 +210,7 @@ class OnboardingFunctionsTest {
     @SuppressWarnings("unchecked")
     final HttpRequestMessage<Optional<String>> req = mock(HttpRequestMessage.class);
     doReturn(Map.of("onboardingId", "onboardingId")).when(req).getQueryParameters();
-    Map<String, String> requestHeaders = new HashMap<>(headers);
-    requestHeaders.put("x-selfcare-uid", "requester-id");
-    doReturn(requestHeaders).when(req).getHeaders();
+    doReturn(headers).when(req).getHeaders();
     doAnswer(
             (Answer<HttpResponseMessage.Builder>)
                 invocation ->
@@ -219,26 +226,30 @@ class OnboardingFunctionsTest {
   }
 
   @Test
-  void startOrchestration_missingRequester_returnsBadRequestWithoutStartingOrchestration() {
+  void startOrchestration_tracksRequesterFromTokenIgnoringDeclaredHeader() {
     // given
-    @SuppressWarnings("unchecked")
-    HttpRequestMessage<Optional<String>> req = mock(HttpRequestMessage.class);
-    when(req.getQueryParameters()).thenReturn(Map.of("onboardingId", "onboarding-id"));
-    when(req.getHeaders()).thenReturn(Map.of());
-    when(req.createResponseBuilder(HttpStatus.BAD_REQUEST))
-        .thenReturn(
-            new HttpResponseMessageMock.HttpResponseMessageBuilderMock()
-                .status(HttpStatus.BAD_REQUEST));
-    DurableClientContext durableContext = mock(DurableClientContext.class);
-    ExecutionContext context = mock(ExecutionContext.class);
+    final DurableTaskClient client = mock(DurableTaskClient.class);
+    final DurableClientContext durableContext = mock(DurableClientContext.class);
+    doReturn(client).when(durableContext).getClient();
+    doReturn("instanceId")
+        .when(client)
+        .scheduleNewOrchestrationInstance(eq("Onboardings"), anyString());
 
     // when
-    HttpResponseMessage response = function.startOrchestration(req, durableContext, context);
+    startOrchestrationRequest(Map.of("X-Tenant-Id", "AR", "x-selfcare-uid", "pippo"), durableContext);
 
     // then
-    assertEquals(HttpStatus.BAD_REQUEST.value(), response.getStatusCode());
-    assertEquals("x-selfcare-uid header cannot be null or blank", response.getBody());
-    verifyNoInteractions(durableContext);
+    verify(client).scheduleNewOrchestrationInstance(eq("Onboardings"), anyString());
+    verify(telemetryService)
+        .trackFunction(
+            eq("StartOnboardingOrchestration"),
+            any(),
+            eq(SeverityLevel.Information),
+            argThat(
+                properties ->
+                    "requester-id".equals(properties.get("userId"))
+                        && "pippo".equals(properties.get("declaredUserId"))
+                        && "true".equals(properties.get("declaredUserIdMismatch"))));
   }
 
   @Test
@@ -271,7 +282,7 @@ class OnboardingFunctionsTest {
     Onboarding onboarding = new Onboarding();
     onboarding.setId(onboardingId);
     onboarding.setTenantId("AR");
-    onboarding.setWorkflowType(WorkflowType.CONTRACT_UPDATE);
+    onboarding.setWorkflowType(WorkflowType.USERS_IMPORT);
     when(service.getOnboarding(onboardingId)).thenReturn(Optional.of(onboarding));
 
     Logger logger = mock(Logger.class);
@@ -284,11 +295,79 @@ class OnboardingFunctionsTest {
             () -> function.onboardingsOrchestrator(orchestrationContext, functionContext));
 
     assertEquals(
-        "Workflow options not found for onboardingId onboardingId and workflowType CONTRACT_UPDATE",
+        "Workflow options not found for onboardingId onboardingId and workflowType USERS_IMPORT",
         exception.getMessage());
     verify(logger).severe(exception.getMessage());
     verify(service, never())
         .updateOnboardingStatusAndInstanceId(anyString(), any(OnboardingStatus.class), anyString());
+  }
+
+  @Test
+  void onboardingsOrchestratorContractUpdateRequest() {
+    Onboarding onboarding = contractUpdateOnboarding(OnboardingStatus.REQUEST);
+    TaskOrchestrationContext orchestrationContext = mockTaskOrchestrationContext(onboarding);
+
+    function.onboardingsOrchestrator(orchestrationContext, executionContext);
+
+    ArgumentCaptor<String> captorActivity = ArgumentCaptor.forClass(String.class);
+    verify(orchestrationContext, times(3)).callActivity(captorActivity.capture(), any(), any(), any());
+    assertEquals(
+        List.of(BUILD_CONTRACT_ACTIVITY_NAME, SAVE_TOKEN_WITH_CONTRACT_ACTIVITY_NAME, SEND_MAIL_REGISTRATION_FOR_CONTRACT),
+        captorActivity.getAllValues());
+    verify(service, times(1)).updateOnboardingStatus(onboarding.getId(), OnboardingStatus.PENDING);
+  }
+
+  @Test
+  void onboardingsOrchestratorContractUpdatePending() {
+    Onboarding onboarding = contractUpdateOnboarding(OnboardingStatus.PENDING);
+    TaskOrchestrationContext orchestrationContext = mockTaskOrchestrationContext(onboarding);
+
+    function.onboardingsOrchestrator(orchestrationContext, executionContext);
+
+    ArgumentCaptor<String> captorActivity = ArgumentCaptor.forClass(String.class);
+    verify(orchestrationContext, times(6)).callActivity(captorActivity.capture(), any(), any(), any());
+    assertEquals(
+        List.of(
+            SYNC_PRODUCT_USERS_ACTIVITY,
+            STORE_ONBOARDING_ACTIVATEDAT,
+            ACTIVATE_CONTRACT_ACTIVITY,
+            SEND_MAIL_COMPLETION_ACTIVITY,
+            OVERRIDE_PENDING_ONBOARDINGS,
+            CLEAR_CONTRACT_UPDATE_REQUIRED_ACTIVITY),
+        captorActivity.getAllValues());
+    verify(service, times(1)).updateOnboardingStatus(onboarding.getId(), OnboardingStatus.COMPLETED);
+  }
+
+  private static Onboarding contractUpdateOnboarding(OnboardingStatus status) {
+    Onboarding onboarding = new Onboarding();
+    onboarding.setId("onboardingId");
+    onboarding.setReferenceOnboardingId("adhesionId");
+    onboarding.setStatus(status);
+    onboarding.setWorkflowType(WorkflowType.CONTRACT_UPDATE);
+    onboarding.setUsers(List.of(new User()));
+    onboarding.setInstitution(new Institution());
+    return onboarding;
+  }
+
+  @Test
+  void syncProductUsers() {
+    function.syncProductUsers(onboardingStringBase, executionContext);
+
+    verify(completionService, times(1)).syncProductUsers(any());
+  }
+
+  @Test
+  void activateContract() {
+    function.activateContract(onboardingStringBase, executionContext);
+
+    verify(completionService, times(1)).activateContract(any());
+  }
+
+  @Test
+  void clearContractUpdateRequired() {
+    function.clearContractUpdateRequired(onboardingStringBase, executionContext);
+
+    verify(completionService, times(1)).clearContractUpdateRequired(any());
   }
 
   @Test
@@ -904,9 +983,36 @@ class OnboardingFunctionsTest {
         .callActivity(captorActivity.capture(), any(), any(), any());
 
     assertEquals(EXISTS_DELEGATION_ACTIVITY, captorActivity.getAllValues().get(0));
-    verify(service, times(1))
+    // the aggregator onboarding ("id") must not be marked FAILED when the aggregate cannot be created
+    verify(service, never()).updateOnboardingStatusAndInstanceId(any(), any(), any());
+  }
+
+  @Test
+  void onboardingsAggregateOrchestrator_subOrchestratorFailed_marksAggregateFailed() {
+    TaskOrchestrationContext orchestrationContext = mock(TaskOrchestrationContext.class);
+    when(orchestrationContext.getInput(String.class)).thenReturn(onboardingString);
+    when(orchestrationContext.getInstanceId()).thenReturn("instance-id");
+    Task delegationTask = mock(Task.class);
+    when(delegationTask.await()).thenReturn("false");
+    when(orchestrationContext.callActivity(eq(EXISTS_DELEGATION_ACTIVITY), any(), any(), any()))
+        .thenReturn(delegationTask);
+    Task createTask = mock(Task.class);
+    when(createTask.await()).thenReturn("aggregate-onboarding-id");
+    when(orchestrationContext.callActivity(
+            eq(CREATE_AGGREGATE_ONBOARDING_REQUEST_ACTIVITY), any(), any(), any()))
+        .thenReturn(createTask);
+    Task subTask = mock(Task.class);
+    when(subTask.await()).thenThrow(mock(TaskFailedException.class));
+    when(orchestrationContext.callSubOrchestrator(eq("Onboardings"), any(), any())).thenReturn(subTask);
+
+    assertThrows(
+        TaskFailedException.class,
+        () -> function.onboardingsAggregateOrchestrator(orchestrationContext, executionContext));
+
+    verify(service)
         .updateOnboardingStatusAndInstanceId(
-            "id", OnboardingStatus.FAILED, orchestrationContext.getInstanceId());
+            "aggregate-onboarding-id", OnboardingStatus.FAILED, "instance-id");
+    verify(service, never()).updateOnboardingStatusAndInstanceId(eq("id"), any(), any());
   }
 
   @Test
@@ -1022,6 +1128,8 @@ class OnboardingFunctionsTest {
 
     // Verify severe log was called for the failure
     verify(telemetryService).trackFunction(any(), contains("failed during batch processing"), eq(SeverityLevel.Error), any());
+    // Final summary reports the failed aggregates without blocking the flow
+    verify(telemetryService).trackFunction(any(), contains("1/3 aggregates failed"), eq(SeverityLevel.Warning), any());
 
     // Verify all 3 aggregates were attempted
     verify(orchestrationContext, times(3))
@@ -1372,26 +1480,6 @@ class OnboardingFunctionsTest {
     // then
     assertEquals(HttpStatus.BAD_REQUEST.value(), responseMessage.getStatusCode());
     assertEquals("Body can not be empty", responseMessage.getBody());
-  }
-
-  @Test
-  void buildAttachmentsAndSaveTokens_missingRequester_doesNotStartOrchestration() {
-    // given
-    HttpRequestMessage<Optional<String>> req = mock(HttpRequestMessage.class);
-    when(req.getHeaders()).thenReturn(Map.of());
-    when(req.createResponseBuilder(HttpStatus.BAD_REQUEST))
-        .thenReturn(
-            new HttpResponseMessageMock.HttpResponseMessageBuilderMock()
-                .status(HttpStatus.BAD_REQUEST));
-    DurableClientContext durableContext = mock(DurableClientContext.class);
-
-    // when
-    HttpResponseMessage response =
-        function.buildAttachmentsAndSaveTokens(req, durableContext, executionContext);
-
-    // then
-    assertEquals(HttpStatus.BAD_REQUEST.value(), response.getStatusCode());
-    verifyNoInteractions(durableContext);
   }
 
   @Test
@@ -2417,4 +2505,65 @@ class OnboardingFunctionsTest {
       return managingInstitution;
   }
 
+
+  @Test
+  void retryHandler_shouldReplicateRetryPolicyBackoff() {
+    TaskOrchestrationContext orchestrationContext = mock(TaskOrchestrationContext.class);
+    Task<Void> timer = mock(Task.class);
+    when(orchestrationContext.createTimer(any(Duration.class))).thenReturn(timer);
+    RetryContext retryContext = retryContext(orchestrationContext, 2, "java.lang.RuntimeException", "boom", null);
+
+    assertTrue(OnboardingFunctions.retryHandler(retryConfig()).handle(retryContext));
+    // same delay as RetryPolicy: firstRetryInterval * backoffCoefficient ^ attempt
+    verify(orchestrationContext).createTimer(Duration.ofSeconds(5 * 5 * 5));
+  }
+
+  @Test
+  void retryHandler_shouldStopAfterMaxAttempts() {
+    TaskOrchestrationContext orchestrationContext = mock(TaskOrchestrationContext.class);
+    RetryContext retryContext = retryContext(orchestrationContext, 5, "java.lang.RuntimeException", "boom", null);
+
+    assertFalse(OnboardingFunctions.retryHandler(retryConfig()).handle(retryContext));
+    verify(orchestrationContext, never()).createTimer(any(Duration.class));
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = {"errorType", "errorMessage", "stackTrace"})
+  void retryHandler_shouldNotRetryNonRetryableRestClientErrors(String markerPosition) {
+    TaskOrchestrationContext orchestrationContext = mock(TaskOrchestrationContext.class);
+    String type = NonRetryableRestClientException.class.getName();
+    RetryContext retryContext =
+        retryContext(
+            orchestrationContext,
+            1,
+            "errorType".equals(markerPosition) ? type : "Microsoft.Azure.WebJobs.Host.FunctionInvocationException",
+            "errorMessage".equals(markerPosition) ? "Exception: NonRetryableRestClientException: HTTP 400" : "failed",
+            "stackTrace".equals(markerPosition) ? "Caused by: " + type + ": HTTP 400" : null);
+
+    assertFalse(OnboardingFunctions.retryHandler(retryConfig()).handle(retryContext));
+    verify(orchestrationContext, never()).createTimer(any(Duration.class));
+  }
+
+  private static RetryPolicyConfig retryConfig() {
+    RetryPolicyConfig config = mock(RetryPolicyConfig.class);
+    when(config.maxAttempts()).thenReturn(5);
+    when(config.firstRetryInterval()).thenReturn(5L);
+    when(config.backoffCoefficient()).thenReturn(5.0);
+    return config;
+  }
+
+  private static RetryContext retryContext(
+      TaskOrchestrationContext orchestrationContext, int attempt, String errorType, String errorMessage, String stackTrace) {
+    try {
+      var failureCtor = FailureDetails.class.getDeclaredConstructor(String.class, String.class, String.class, boolean.class);
+      failureCtor.setAccessible(true);
+      var retryCtor = RetryContext.class.getDeclaredConstructor(
+          TaskOrchestrationContext.class, int.class, FailureDetails.class, Duration.class);
+      retryCtor.setAccessible(true);
+      return retryCtor.newInstance(
+          orchestrationContext, attempt, failureCtor.newInstance(errorType, errorMessage, stackTrace, false), Duration.ZERO);
+    } catch (ReflectiveOperationException e) {
+      throw new IllegalStateException(e);
+    }
+  }
 }

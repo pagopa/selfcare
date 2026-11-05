@@ -504,6 +504,120 @@ public class CompletionServiceDefaultTest {
     }
 
     @Test
+    void overridePendingOnboardings_contractUpdate_overridesOnlyRelatedPendingUpdates() {
+        Onboarding onboarding = createOnboarding();
+        onboarding.setId("updateId");
+        onboarding.setReferenceOnboardingId("adhesionId");
+        onboarding.setWorkflowType(WorkflowType.CONTRACT_UPDATE);
+
+        com.mongodb.client.MongoCollection mongoCollection = mock(com.mongodb.client.MongoCollection.class);
+        when(onboardingRepository.mongoCollection()).thenReturn(mongoCollection);
+
+        completionServiceDefault.overridePendingOnboardings(onboarding);
+
+        ArgumentCaptor<org.bson.Document> queryCaptor = ArgumentCaptor.forClass(org.bson.Document.class);
+        ArgumentCaptor<org.bson.Document> updateCaptor = ArgumentCaptor.forClass(org.bson.Document.class);
+        verify(mongoCollection, times(1)).updateMany(queryCaptor.capture(), updateCaptor.capture());
+        org.bson.Document query = queryCaptor.getValue();
+        assertEquals("adhesionId", query.getString("referenceOnboardingId"));
+        assertEquals("CONTRACT_UPDATE", query.getString("workflowType"));
+        assertEquals(new org.bson.Document("$ne", "updateId"), query.get("_id"));
+        assertEquals(new org.bson.Document("$in", List.of("REQUEST", "PENDING")), query.get("status"));
+        assertNull(query.get("institution.taxCode"));
+        assertEquals("OVERRIDDEN", updateCaptor.getValue().get("$set", org.bson.Document.class).getString("status"));
+    }
+
+    @Test
+    void syncProductUsers() {
+        Onboarding onboarding = createOnboarding();
+        onboarding.setId("updateId");
+        onboarding.getInstitution().setId("institutionId");
+        onboarding.getInstitution().setDescription("description");
+        onboarding.getInstitution().setParentDescription("root");
+        User user = new User();
+        user.setId("userId");
+        user.setRole(PartyRole.DELEGATE);
+        user.setProductRole("admin");
+        user.setUserMailUuid("mailUuid");
+        onboarding.setUsers(List.of(user));
+        when(userInstitutionApi.updateProductUsers(any(), any(), any())).thenReturn(Response.noContent().build());
+
+        completionServiceDefault.syncProductUsers(onboarding);
+
+        ArgumentCaptor<org.openapi.quarkus.user_json.model.UpdateProductUsersDto> captor =
+                ArgumentCaptor.forClass(org.openapi.quarkus.user_json.model.UpdateProductUsersDto.class);
+        verify(userInstitutionApi).updateProductUsers(eq("institutionId"), eq(productId), captor.capture());
+        assertEquals("description", captor.getValue().getInstitutionDescription());
+        assertEquals("root", captor.getValue().getInstitutionRootName());
+        assertEquals("updateId", captor.getValue().getTokenId());
+        org.openapi.quarkus.user_json.model.ProductUser productUser = captor.getValue().getUsers().get(0);
+        assertEquals("userId", productUser.getUserId());
+        assertEquals("DELEGATE", productUser.getRole());
+        assertEquals(List.of("admin"), productUser.getProductRoles());
+        assertEquals("mailUuid", productUser.getUserMailUuid());
+    }
+
+    @Test
+    void syncProductUsers_shouldThrowWhenResponseIsNotSuccessful() {
+        Onboarding onboarding = createOnboarding();
+        onboarding.getInstitution().setId("institutionId");
+        when(userInstitutionApi.updateProductUsers(any(), any(), any())).thenReturn(Response.serverError().build());
+
+        assertThrows(GenericOnboardingException.class, () -> completionServiceDefault.syncProductUsers(onboarding));
+    }
+
+    @Test
+    void activateContract() {
+        Onboarding onboarding = createOnboarding();
+        onboarding.setId("updateId");
+        when(documentService.activateContract("updateId")).thenReturn(Response.ok().build());
+
+        completionServiceDefault.activateContract(onboarding);
+
+        verify(documentService).activateContract("updateId");
+    }
+
+    @Test
+    void activateContract_shouldThrowWhenResponseIsNotSuccessful() {
+        Onboarding onboarding = createOnboarding();
+        onboarding.setId("updateId");
+        when(documentService.activateContract("updateId")).thenReturn(Response.status(404).build());
+
+        assertThrows(GenericOnboardingException.class, () -> completionServiceDefault.activateContract(onboarding));
+    }
+
+    @Test
+    void clearContractUpdateRequired_shouldUpdateAdhesionOnceWithActivatedAt() {
+        Onboarding onboarding = createOnboarding();
+        onboarding.setId("updateId");
+        onboarding.setReferenceOnboardingId("adhesionId");
+        LocalDateTime activatedAt = LocalDateTime.of(2026, 1, 1, 10, 0);
+        Onboarding persisted = new Onboarding();
+        persisted.setActivatedAt(activatedAt);
+        when(onboardingRepository.findByIdOptional("updateId")).thenReturn(Optional.of(persisted));
+        com.mongodb.client.MongoCollection mongoCollection = mock(com.mongodb.client.MongoCollection.class);
+        when(onboardingRepository.mongoCollection()).thenReturn(mongoCollection);
+
+        completionServiceDefault.clearContractUpdateRequired(onboarding);
+
+        ArgumentCaptor<org.bson.Document> updateCaptor = ArgumentCaptor.forClass(org.bson.Document.class);
+        verify(mongoCollection, times(1)).updateOne(eq(new org.bson.Document("_id", "adhesionId")), updateCaptor.capture());
+        assertEquals(
+                new org.bson.Document("$set", new org.bson.Document("contractUpdateRequired", false).append("updatedAt", activatedAt)),
+                updateCaptor.getValue());
+    }
+
+    @Test
+    void clearContractUpdateRequired_shouldThrowWhenActivatedAtIsMissing() {
+        Onboarding onboarding = createOnboarding();
+        onboarding.setId("updateId");
+        when(onboardingRepository.findByIdOptional("updateId")).thenReturn(Optional.of(new Onboarding()));
+
+        assertThrows(GenericOnboardingException.class, () -> completionServiceDefault.clearContractUpdateRequired(onboarding));
+        verify(onboardingRepository, never()).mongoCollection();
+    }
+
+    @Test
     void createInstitutionAndPersistInstitutionId_notFoundInstitutionAndCreateSaAnac() {
         Onboarding onboarding = createOnboarding();
 
@@ -854,6 +968,22 @@ public class CompletionServiceDefaultTest {
 
         Mockito.verify(notificationService, times(1))
                 .sendCompletedEmail(any(), any(), any());
+    }
+
+    @Test
+    void sendCompletedEmail_contractUpdate_shouldSendOnlyToPec() {
+        ProductResponse product = createDummyProduct();
+        Onboarding onboarding = createOnboarding();
+        onboarding.setWorkflowType(WorkflowType.CONTRACT_UPDATE);
+        onboarding.getInstitution().setDigitalAddress("test@pec.it");
+        createDummyUser(onboarding);
+        OnboardingWorkflow onboardingWorkflow = new OnboardingWorkflowInstitution(onboarding, "INSTITUTION");
+        when(productService.getValidProduct(onboarding.getProductId())).thenReturn(product);
+
+        completionServiceDefault.sendCompletedEmail(onboardingWorkflow);
+
+        verify(notificationService).sendCompletedEmail(List.of("test@pec.it"), product, onboardingWorkflow);
+        verifyNoInteractions(userRegistryApi);
     }
 
     @Test

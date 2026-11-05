@@ -193,6 +193,13 @@ public class PdfMapperData {
     }
 
     /**
+     * Sets up prod-ced specific data: the company register fields of the Partner Aderente.
+     */
+    public static void setupProdCEDData(Map<String, Object> map, InstitutionPdfData institution) {
+        setECData(map, institution);
+    }
+
+    /**
      * Sets up PRV-specific data for PDF generation.
      */
     public static void setupPRVData(Map<String, Object> map, ContractPdfRequest request) {

@@ -6,6 +6,7 @@ import static org.mockito.Mockito.when;
 
 import io.quarkus.test.junit.QuarkusTest;
 import it.pagopa.selfcare.onboarding.common.WorkflowType;
+import it.pagopa.selfcare.onboarding.config.MailTemplatePathConfig;
 import it.pagopa.selfcare.onboarding.config.MailTemplatePlaceholdersConfig;
 import org.junit.jupiter.api.Test;
 
@@ -34,6 +35,32 @@ class OnboardingWorkflowInstitutionTest {
   private void mockConfig() {
     when(config.confirmTokenPlaceholder()).thenReturn(CONFIRM_URL);
     when(config.confirmTokenContractUpdatePlaceholder()).thenReturn(CONTRACT_UPDATE_URL);
+  }
+
+  @Test
+  void emailPaths_shouldUseContractUpdateTemplatesForContractUpdate() {
+    MailTemplatePathConfig pathConfig = mock(MailTemplatePathConfig.class);
+    when(pathConfig.contractUpdateRequestPath()).thenReturn("request");
+    when(pathConfig.contractUpdateCompletePath()).thenReturn("complete");
+
+    OnboardingWorkflowInstitution workflow = workflow(WorkflowType.CONTRACT_UPDATE);
+
+    assertEquals("request", workflow.getEmailRegistrationPath(pathConfig));
+    assertEquals("complete", workflow.getEmailCompletionPath(pathConfig));
+  }
+
+  @Test
+  void emailPaths_shouldUseDefaultTemplatesForOtherWorkflows() {
+    MailTemplatePathConfig pathConfig = mock(MailTemplatePathConfig.class);
+    when(pathConfig.registrationPath()).thenReturn("registration");
+    when(pathConfig.completePath()).thenReturn("completion");
+
+    OnboardingWorkflowInstitution workflow = workflow(WorkflowType.CONTRACT_REGISTRATION);
+    workflow.getOnboarding().setProductId("prod-io");
+    workflow.getOnboarding().setInstitution(new Institution());
+
+    assertEquals("registration", workflow.getEmailRegistrationPath(pathConfig));
+    assertEquals("completion", workflow.getEmailCompletionPath(pathConfig));
   }
 
   private static OnboardingWorkflowInstitution workflow(WorkflowType workflowType) {

@@ -90,7 +90,7 @@ class DocumentContentControllerTest {
 
         // when / then
         given()
-                .queryParam("downloadP7MFile", true)
+                .queryParam("downloadP7mFile", true)
                 .when()
                 .get(BASE_PATH + DOCUMENT_ID + "/contract-signed")
                 .then()

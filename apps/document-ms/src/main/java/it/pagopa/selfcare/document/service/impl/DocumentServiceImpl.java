@@ -7,6 +7,7 @@ import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.infrastructure.Infrastructure;
 import it.pagopa.selfcare.azurestorage.error.SelfcareAzureStorageException;
 import it.pagopa.selfcare.document.config.DocumentMsConfig;
+import it.pagopa.selfcare.document.exception.InvalidRequestException;
 import it.pagopa.selfcare.document.exception.ResourceNotFoundException;
 import it.pagopa.selfcare.document.model.StorageOrigin;
 import it.pagopa.selfcare.document.model.dto.request.DocumentBuilderRequest;
@@ -23,9 +24,11 @@ import it.pagopa.selfcare.document.service.SignatureService;
 import it.pagopa.selfcare.document.storage.TemplateStorage;
 import it.pagopa.selfcare.document.storage.TenantBlobClientProvider;
 import it.pagopa.selfcare.document.util.DocumentFileUtils;
+import it.pagopa.selfcare.document.util.ErrorMessage;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -387,11 +390,21 @@ public class DocumentServiceImpl implements DocumentService {
     }
 
     private static void setContractFileName(DocumentBuilderRequest request, Document document) {
+        requireNotBlank(request.getProductTitle(), ErrorMessage.PRODUCT_TITLE_REQUIRED, request.getOnboardingId());
+        if (ATTACHMENT.equals(request.getDocumentType())) {
+            requireNotBlank(request.getAttachmentName(), ErrorMessage.ATTACHMENT_NAME_REQUIRED, request.getOnboardingId());
+        }
         String filenamePattern = ATTACHMENT.equals(request.getDocumentType())
                 ? "%s_" + request.getAttachmentName() + ".pdf"
                 : PDF_FORMAT_FILENAME;
 
         document.setContractFilename(CONTRACT_FILENAME_FUNC.apply(filenamePattern, request.getProductTitle()));
+    }
+
+    private static void requireNotBlank(String value, ErrorMessage error, String onboardingId) {
+        if (StringUtils.isBlank(value)) {
+            throw new InvalidRequestException(String.format(error.getMessage(), sanitize(onboardingId)), error.getCode());
+        }
     }
 
     private Uni<Boolean> checkAttachmentExists(Document document, String onboardingId, String attachmentName) {

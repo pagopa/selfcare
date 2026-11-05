@@ -11,6 +11,8 @@ import org.junit.jupiter.api.function.Executable;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedHashMap;
@@ -18,7 +20,9 @@ import java.util.Map;
 
 import static feign.Util.UTF_8;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.Mockito.*;
 
 class FeignErrorDecoderTest {
     FeignErrorDecoder feignDecoder = new FeignErrorDecoder();
@@ -39,6 +43,55 @@ class FeignErrorDecoderTest {
         Executable executable = () -> feignDecoder.decode("", response);
         //then
         assertThrows(InvalidRequestException.class, executable);
+    }
+
+    @Test
+    void testDecodeToInvalidRequestReadsStreamBody() throws IOException {
+        String message = "Invalid users information provided: identit\u00e0 non valida";
+        ByteArrayInputStream body = spy(new ByteArrayInputStream(message.getBytes(UTF_8)));
+        Response response = Response.builder()
+                .status(400)
+                .reason("Bad Request")
+                .request(Request.create(Request.HttpMethod.POST, "/api", Collections.emptyMap(), null, UTF_8))
+                .body(body, null)
+                .build();
+
+        InvalidRequestException exception = assertThrows(InvalidRequestException.class,
+                () -> feignDecoder.decode("", response));
+
+        assertEquals(message, exception.getMessage());
+        verify(body, atLeastOnce()).close();
+    }
+
+    @Test
+    void testDecodeToInvalidRequestWithoutBody() {
+        Response response = Response.builder()
+                .status(400)
+                .reason("Bad Request")
+                .request(Request.create(Request.HttpMethod.POST, "/api", Collections.emptyMap(), null, UTF_8))
+                .build();
+
+        InvalidRequestException exception = assertThrows(InvalidRequestException.class,
+                () -> feignDecoder.decode("", response));
+
+        assertEquals("Bad Request", exception.getMessage());
+    }
+
+    @Test
+    void testDecodeToInvalidRequestWithUnreadableBody() throws IOException {
+        Response.Body body = mock(Response.Body.class);
+        when(body.asReader(UTF_8)).thenThrow(new IOException("Cannot read body"));
+        Response response = Response.builder()
+                .status(400)
+                .reason("Bad Request")
+                .request(Request.create(Request.HttpMethod.POST, "/api", Collections.emptyMap(), null, UTF_8))
+                .body(body)
+                .build();
+
+        InvalidRequestException exception = assertThrows(InvalidRequestException.class,
+                () -> feignDecoder.decode("", response));
+
+        assertEquals("Bad Request", exception.getMessage());
     }
 
     @Test

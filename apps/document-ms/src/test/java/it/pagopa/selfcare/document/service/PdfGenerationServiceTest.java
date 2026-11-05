@@ -5,12 +5,15 @@ import it.pagopa.selfcare.document.util.PdfBuilder;
 import it.pagopa.selfcare.onboarding.common.InstitutionType;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Map;
 
+import static it.pagopa.selfcare.onboarding.common.ProductId.PROD_CED;
 import static it.pagopa.selfcare.onboarding.common.ProductId.PROD_IO;
 import static it.pagopa.selfcare.onboarding.common.ProductId.PROD_PAGOPA;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -75,6 +78,29 @@ class PdfGenerationServiceTest {
             // Assert
             assertEquals(expectedFile, result);
             pdfBuilderMock.verify(() -> PdfBuilder.generateDocument(anyString(), eq(templateText), anyMap()));
+        }
+    }
+
+    @Test
+    void generateContractPdf_shouldProvideCompanyRegisterData_whenProductIsCed() throws IOException {
+        ContractPdfRequest request = buildValidContractRequest();
+        request.setProductId(PROD_CED.getValue());
+        request.getInstitution().setInstitutionType(InstitutionType.PA);
+        request.getInstitution().setRea("RM-123456");
+
+        File expectedFile = new File("dummy_ced.pdf");
+        ArgumentCaptor<Map<String, Object>> dataCaptor = ArgumentCaptor.forClass(Map.class);
+
+        try (MockedStatic<PdfBuilder> pdfBuilderMock = Mockito.mockStatic(PdfBuilder.class)) {
+            pdfBuilderMock.when(() -> PdfBuilder.generateDocument(anyString(), anyString(), anyMap()))
+                    .thenReturn(expectedFile);
+
+            pdfGenerationService.generateContractPdf("<html>Template CED</html>", request);
+
+            pdfBuilderMock.verify(() -> PdfBuilder.generateDocument(anyString(), anyString(), dataCaptor.capture()));
+            assertEquals("RM-123456", dataCaptor.getValue().get("institutionREA"));
+            assertEquals("_______________", dataCaptor.getValue().get("institutionShareCapital"));
+            assertEquals("_______________", dataCaptor.getValue().get("institutionBusinessRegisterPlace"));
         }
     }
 
