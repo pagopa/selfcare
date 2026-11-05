@@ -64,6 +64,7 @@ class SwaggerConfigTest {
     @DynamicPropertySource
     static void tenantProperties(DynamicPropertyRegistry properties) {
         properties.add("TENANT_SUPPORTED_TENANTS", () -> "AR,PNPG");
+        properties.add("JWT_TENANT_CLAIM_REQUIRED", () -> "false");
         properties.add("JWT_TEST_AR", () -> Base64.getEncoder().encodeToString(AR.getPublic().getEncoded()));
         properties.add("JWT_TEST_PNPG", () -> Base64.getEncoder().encodeToString(PNPG.getPublic().getEncoded()));
         properties.add("USER_REGISTRY_API_KEY_AR", () -> "ar-test-key");
@@ -170,7 +171,35 @@ class SwaggerConfigTest {
     }
 
     @Test
-    void rejectsMissingDuplicatedUnknownMismatchedAndUnclaimedTenants() throws Exception {
+    void acceptsAudienceOnlyTokensWithoutUsingDefaultTenants() throws Exception {
+        MockMvc mvc = securedMvc();
+        for (String tenant : List.of("AR", "PNPG", "AR")) {
+            doAnswer(ignored -> {
+                assertEquals(tenant, tenantContext.requiredTenantId());
+                return List.of();
+            }).when(institutionService).getInstitutionUserProductsV2("institution", "user");
+            mvc.perform(productsRequest().header("X-Tenant-Id", tenant)
+                            .header("Authorization", "Bearer " + token(tenant, tenant.equals("AR") ? AR : PNPG)
+                                    .setIssuer(tenant.equals("AR") ? "PAGOPA" : "SPID")
+                                    .claim("tenant_id", null).compact()))
+                    .andExpect(status().isOk());
+            assertTrue(tenantContext.tenantId().isEmpty());
+            assertNull(SecurityContextHolder.getContext().getAuthentication());
+        }
+    }
+
+    @Test
+    void acceptsAudienceArrayIdentifyingOneTenant() throws Exception {
+        securedMvc().perform(productsRequest().header("X-Tenant-Id", "PNPG")
+                        .header("Authorization", "Bearer " + token("PNPG", PNPG)
+                                .claim("tenant_id", null).claim("aud", List.of("PNPG-audience")).compact()))
+                .andExpect(status().isOk());
+        verify(institutionService).getInstitutionUserProductsV2("institution", "user");
+        assertTrue(tenantContext.tenantId().isEmpty());
+    }
+
+    @Test
+    void rejectsMissingDuplicatedUnknownAndMismatchedTenants() throws Exception {
         MockMvc mvc = securedMvc();
         String arToken = token("AR", AR).compact();
         for (String[] tenants : new String[][] {{}, {"AR", "AR"}, {"UNKNOWN"}, {"PNPG"}}) {
@@ -181,10 +210,29 @@ class SwaggerConfigTest {
             mvc.perform(request).andExpect(status().is4xxClientError());
             assertTrue(tenantContext.tenantId().isEmpty());
         }
-        mvc.perform(productsRequest().header("X-Tenant-Id", "PNPG")
-                        .header("Authorization", "Bearer " + token(null, PNPG).compact()))
-                .andExpect(status().is4xxClientError());
         assertTrue(tenantContext.tenantId().isEmpty());
+        verifyNoInteractions(institutionService);
+    }
+
+    @Test
+    void rejectsInvalidAudiencesAndClaimsWithoutFallback() throws Exception {
+        for (String invalid : List.of(
+                token("PNPG", PNPG).setAudience(null).compact(),
+                token("PNPG", PNPG).setAudience("unknown").compact(),
+                token("PNPG", PNPG).claim("aud", List.of()).compact(),
+                token("PNPG", PNPG).claim("aud", List.of("PNPG-audience", 42)).compact(),
+                token("PNPG", PNPG).claim("aud", List.of("PNPG-audience", "AR-audience")).compact(),
+                token("PNPG", PNPG).claim("tenant_id", "AR").compact(),
+                token("PNPG", PNPG).claim("tenant_id", "").compact(),
+                token("PNPG", PNPG).claim("tenant_id", 42).compact(),
+                token("PNPG", PNPG).claim("tenant_id", null).setAudience(null).compact(),
+                token("PNPG", PNPG).claim("tenant_id", null).setIssuer("kubernetes/serviceaccount").compact())) {
+            securedMvc().perform(productsRequest().header("X-Tenant-Id", "PNPG")
+                            .header("Authorization", "Bearer " + invalid))
+                    .andExpect(status().is4xxClientError());
+            assertTrue(tenantContext.tenantId().isEmpty());
+            assertNull(SecurityContextHolder.getContext().getAuthentication());
+        }
         verifyNoInteractions(institutionService);
     }
 

@@ -102,12 +102,8 @@ locals {
       value = "AR"
     },
     {
-      name  = "TENANT_DEFAULT"
-      value = "AR"
-    },
-    {
       name  = "JWT_TENANT_CLAIM_REQUIRED"
-      value = "true"
+      value = "false"
     },
     {
       name = "SELFCARE_TENANT_DATA_ISOLATION"

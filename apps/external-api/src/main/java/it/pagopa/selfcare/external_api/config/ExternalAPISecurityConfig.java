@@ -8,6 +8,9 @@ import org.springframework.context.annotation.Import;
 import org.springframework.core.env.Environment;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 
+import java.util.HashSet;
+import java.util.Set;
+
 @Slf4j
 @Configuration
 @EnableWebSecurity
@@ -18,15 +21,20 @@ class ExternalAPISecurityConfig {
         if (registry.supportedTenantIds().isEmpty()) {
             throw new IllegalStateException("External API requires a tenant registry");
         }
-        if (registry.supportedTenantIds().size() > 1
-                && !environment.getProperty("jwt.tenant-claim-required", Boolean.class, true)) {
-            throw new IllegalStateException("Shared deployments require the JWT tenant claim");
+        if (!environment.getProperty("jwt.tenant-audience-resolution-enabled", Boolean.class, false)) {
+            throw new IllegalStateException("External API requires JWT audience tenant resolution");
         }
+        Set<String> audiences = new HashSet<>();
         for (String tenant : registry.supportedTenantIds()) {
             var jwt = registry.resolve(tenant).jwt();
             if (jwt == null || jwt.issuers().isEmpty() || jwt.audiences().isEmpty()) {
                 throw new IllegalStateException(
                         "External API requires JWT keys, issuers and audiences for tenant " + tenant);
+            }
+            for (String audience : jwt.audiences()) {
+                if (audience.isBlank() || !audiences.add(audience)) {
+                    throw new IllegalStateException("External API requires unambiguous JWT tenant audiences");
+                }
             }
         }
     }

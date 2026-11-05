@@ -13,11 +13,15 @@ The application reuses `selc-commons-tenant`, `selc-commons-web` and
 `tenant.mongodb.required=false`; Mongo queries and migration flags belong to the
 downstream services, not this application.
 
-Every protected request must carry one `X-Tenant-Id` header and a signed JWT with
-the same `tenant_id`. Verification uses that tenant's RSA key, issuer/audience
-allowlists, RS256, expiration and not-before. Missing, duplicated, unknown or
-mismatched tenants are rejected before business logic. Both request contexts are
-cleared after success and failure.
+Every protected request must carry one `X-Tenant-Id` header and a signed JWT whose
+`aud` identifies exactly one supported tenant through the registry's audience
+allowlists. Verification uses the header tenant's RSA key, issuer/audience
+allowlists, RS256, expiration and not-before; only verified claims determine the
+authenticated tenant, which must match the header. `tenant_id` is optional, but
+must match that tenant when present. Missing, unknown or ambiguous audiences and
+missing, duplicated, unknown or mismatched tenants are rejected before business
+logic. There is no default tenant, including for tokens without `tenant_id`.
+Both request contexts are cleared after success and failure.
 
 Internal Feign clients propagate the authenticated bearer and the validated
 `TenantContext`; they never derive the tenant from raw request headers. Product
@@ -35,8 +39,13 @@ unchanged, including the UAT PDV endpoint currently configured in PROD PNPG.
 ### Environment configuration
 
 Each `infra/resources/external-api/{dev,uat,prod}-{ar,pnpg}/locals.tf` owns its
-complete `SELFCARE_TENANT_DATA_ISOLATION` JSON, supported/default tenant and
-`JWT_TENANT_CLAIM_REQUIRED=true`. No external-api resource registry is defined in
+complete `SELFCARE_TENANT_DATA_ISOLATION` JSON, supported tenants and
+`JWT_TENANT_CLAIM_REQUIRED=false`. The application requires
+`jwt.tenant-audience-resolution-enabled=true`; the shared security library keeps
+this mode disabled for other services unless explicitly enabled. Setting
+`JWT_TENANT_CLAIM_REQUIRED=true` additionally requires `tenant_id`, without changing
+audience resolution or introducing a fallback. Kubernetes service-account tokens
+are not accepted in audience-resolution mode. No external-api resource registry is defined in
 the shared `local-env` module. Secret values remain in Key Vault; the JSON contains
 only the names of secret-backed environment variables.
 
@@ -94,11 +103,13 @@ image. Local runs must also provide the registry, its referenced credentials and
 the supported tenant.
 
 The existing stacks remain single-tenant. A shared deployment requires both
-tenant definitions, distinct credential references, mandatory JWT tenant claims
-and tenant-aware/reachable downstream services. The application rejects a shared
-configuration that disables the claim requirement. Confirm APIM subscription
+tenant definitions, distinct credential references, disjoint JWT audience
+allowlists and tenant-aware/reachable downstream services. The application rejects
+ambiguous audience bindings or disabled audience resolution at startup. Confirm APIM subscription
 bindings, provider-side User Registry isolation, Blob ownership/access and
 downstream migration/strict-mode readiness before consolidating traffic.
+The original JWT is propagated unchanged: downstream services must support
+audience-based resolution before accepting traffic without `tenant_id`.
 Infrastructure validation alone does not establish those runtime guarantees.
 Keep the legacy stacks and a tested rollback route until the environment checks
 pass. This change does not perform infrastructure apply, backfill or cutover.

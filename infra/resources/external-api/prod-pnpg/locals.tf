@@ -30,12 +30,8 @@ locals {
       value = "PNPG"
     },
     {
-      name  = "TENANT_DEFAULT"
-      value = "PNPG"
-    },
-    {
       name  = "JWT_TENANT_CLAIM_REQUIRED"
-      value = "true"
+      value = "false"
     },
     {
       name = "SELFCARE_TENANT_DATA_ISOLATION"
