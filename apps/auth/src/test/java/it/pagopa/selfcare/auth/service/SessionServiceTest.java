@@ -45,6 +45,7 @@ public class SessionServiceTest {
             .getItem();
 
     assertEquals("AR", jwtParser.parseOnly(token).getClaim("tenant_id"));
+    assertEquals("selfcare-fe", jwtParser.parseOnly(token).getClaim("client_id"));
     assertEquals("jwt_test_kid", tokenHeader(token).get("kid").asText());
     assertEquals(
         Set.of("api.dev.selfcare.pagopa.it"), jwtParser.parseOnly(token).getAudience());
@@ -95,6 +96,7 @@ public class SessionServiceTest {
             .getItem();
 
     assertEquals("AR", jwtParser.parseOnly(token).getClaim("tenant_id"));
+    assertEquals("selfcare-saml", jwtParser.parseOnly(token).getClaim("client_id"));
     assertEquals("jwt_test_kid", tokenHeader(token).get("kid").asText());
   }
 
