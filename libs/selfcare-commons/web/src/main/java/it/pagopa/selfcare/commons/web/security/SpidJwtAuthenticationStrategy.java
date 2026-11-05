@@ -41,6 +41,9 @@ public class SpidJwtAuthenticationStrategy implements JwtAuthenticationStrategy 
     @Value("${jwt.tenant-claim-required:false}")
     private boolean tenantClaimRequired;
 
+    @Value("${jwt.tenant-audience-resolution-enabled:false}")
+    private boolean tenantAudienceResolutionEnabled;
+
     @Autowired
     public SpidJwtAuthenticationStrategy(
             JwtService jwtService,
@@ -116,6 +119,9 @@ public class SpidJwtAuthenticationStrategy implements JwtAuthenticationStrategy 
 
 
     private String resolveTenant(String headerTenantId, Claims claims) {
+        if (tenantAudienceResolutionEnabled) {
+            return jwtService.resolveTenantFromAudience(claims, headerTenantId, tenantClaimRequired);
+        }
         final Object rawClaimTenantId = claims.get(CLAIM_TENANT_ID);
         final String effectiveTenantId;
         if (rawClaimTenantId == null) {

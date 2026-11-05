@@ -32,6 +32,9 @@ public class K8sJwtAuthenticationStrategy implements JwtAuthenticationStrategy {
     @Value("${jwt.tenant-claim-required:false}")
     private boolean tenantClaimRequired;
 
+    @Value("${jwt.tenant-audience-resolution-enabled:false}")
+    private boolean tenantAudienceResolutionEnabled;
+
     @Autowired
     public K8sJwtAuthenticationStrategy(
             AuthenticationV1Api apiClient,
@@ -55,7 +58,7 @@ public class K8sJwtAuthenticationStrategy implements JwtAuthenticationStrategy {
     @Override
     public JwtAuthenticationToken authenticate(JwtAuthenticationToken authentication) throws AuthenticationException {
         log.trace("authenticate start");
-        if (tenantClaimRequired) {
+        if (tenantClaimRequired || tenantAudienceResolutionEnabled) {
             throw new TenantValidationException();
         }
         log.debug(LogUtils.CONFIDENTIAL_MARKER, "authenticate authentication = {}", authentication);
