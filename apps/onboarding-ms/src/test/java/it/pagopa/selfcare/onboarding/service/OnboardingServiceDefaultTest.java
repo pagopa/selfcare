@@ -2897,7 +2897,7 @@ class OnboardingServiceDefaultTest {
 
         mockVerifyOnboardingNotFound();
 
-        when(orchestrationService.triggerOrchestrationIfEnabled(any(), any(), any()))
+        when(orchestrationService.triggerOrchestrationIfEnabled(any(), any()))
                 .thenReturn(Uni.createFrom().item(new OrchestrationResponse()));
 
         // when
@@ -2911,7 +2911,7 @@ class OnboardingServiceDefaultTest {
         Assertions.assertNotNull(actual);
         Assertions.assertEquals(onboarding.getId(), actual.getId());
         verify(orchestrationService)
-                .triggerOrchestrationIfEnabled(onboarding.getId(), null, approveRequest.getUserUid());
+                .triggerOrchestrationIfEnabled(onboarding.getId(), null);
     }
 
     @Test
@@ -2949,7 +2949,7 @@ class OnboardingServiceDefaultTest {
 
         mockVerifyOnboardingNotFound();
 
-        when(orchestrationService.triggerOrchestrationIfEnabled(any(), any(), any()))
+        when(orchestrationService.triggerOrchestrationIfEnabled(any(), any()))
                 .thenReturn(Uni.createFrom().item(new OrchestrationResponse()));
 
         // when
@@ -2964,7 +2964,7 @@ class OnboardingServiceDefaultTest {
         Assertions.assertEquals(onboarding.getId(), actual.getId());
 
         verify(orchestrationService, times(1))
-                .triggerOrchestrationIfEnabled(onboarding.getId(), null, approveRequest.getUserUid());
+                .triggerOrchestrationIfEnabled(onboarding.getId(), null);
     }
 
     @Test

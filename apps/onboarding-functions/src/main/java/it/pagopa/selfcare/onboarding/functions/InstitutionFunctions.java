@@ -39,7 +39,7 @@ public class InstitutionFunctions {
   private final OnboardingService onboardingService;
   private final ObjectMapper objectMapper;
   private final FunctionInvocationLogger functionInvocationLogger;
-  private final HttpJwtValidator httpJwtValidator;
+  private final HttpFunctionGuard httpFunctionGuard;
   private final TaskOptions optionsRetry;
 
   public InstitutionFunctions(ObjectMapper objectMapper,
@@ -48,13 +48,13 @@ public class InstitutionFunctions {
                               OnboardingService onboardingService,
                               RetryPolicyConfig retryPolicyConfig,
                               FunctionInvocationLogger functionInvocationLogger,
-                              HttpJwtValidator httpJwtValidator) {
+                              HttpFunctionGuard httpFunctionGuard) {
     this.objectMapper = objectMapper;
     this.institutionService = institutionService;
     this.userService = userService;
     this.onboardingService = onboardingService;
     this.functionInvocationLogger = functionInvocationLogger;
-    this.httpJwtValidator = httpJwtValidator;
+    this.httpFunctionGuard = httpFunctionGuard;
     final int maxAttempts = retryPolicyConfig.maxAttempts();
     final Duration firstRetryInterval = Duration.ofSeconds(retryPolicyConfig.firstRetryInterval());
     RetryPolicy retryPolicy = new RetryPolicy(maxAttempts, firstRetryInterval);
@@ -71,14 +71,12 @@ public class InstitutionFunctions {
     @DurableClientInput(name = "durableContext") DurableClientContext durableContext,
 
     final ExecutionContext context) {
-    Optional<HttpResponseMessage> authenticationError = httpJwtValidator.validate(request, context);
-    if (authenticationError.isPresent()) {
-      return authenticationError.get();
+    HttpAuthorization authorization =
+        httpFunctionGuard.authorize("TriggerDeleteInstitutionAndUser", request, context);
+    if (authorization.isRejected()) {
+      return authorization.rejection();
     }
-    String userId = functionInvocationLogger.logInvocation("TriggerDeleteInstitutionAndUser", request);
-    if (FunctionInvocationLogger.isMissingUserId(userId)) {
-      return FunctionInvocationLogger.missingUserIdResponse(request);
-    }
+    String userId = authorization.caller().userId();
 
     final String onboardingId = request.getQueryParameters().get("onboardingId");
     if (Objects.isNull(onboardingId) || StringUtils.isBlank(onboardingId)) {

@@ -20,9 +20,9 @@ public interface JwtValidationConfig {
    * {@code X-Tenant-Id} header. Not to be confused with {@code DEFAULT_TENANT}, used when the header
    * is absent.
    *
-   * <p>AR tokens are issued by the {@code auth} app and always carry the claim, while PNPG tokens
-   * are still issued by the legacy PNPG SPID hub, which does not emit it: hence the {@code PNPG}
-   * default. Once PNPG logins are issued by {@code auth} as well, enable {@link
+   * <p>PNPG tokens issued by the legacy PNPG SPID hub do not emit the claim: hence the {@code
+   * PNPG} default. AR backstage tokens ({@code iss=PAGOPA}) do not emit it either, so the AR stacks
+   * set {@code JWT_DEFAULT_TENANT=AR}. Once every issuer emits the claim, enable {@link
    * #tenantClaimRequired()} and remove this fallback.
    */
   @WithDefault("PNPG")

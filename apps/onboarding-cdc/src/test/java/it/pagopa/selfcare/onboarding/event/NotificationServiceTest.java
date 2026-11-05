@@ -46,7 +46,7 @@ class NotificationServiceTest {
         onboarding.setUpdatedAt(LocalDateTime.now());
         onboarding.setActivatedAt(LocalDateTime.now());
 
-        when(notificationsApi.apiNotificationPost(any(), any(), any()))
+        when(notificationsApi.apiNotificationPost(any(), any()))
                 .thenReturn(Uni.createFrom().item(new OrchestrationResponse()));
 
         // when
@@ -58,7 +58,7 @@ class NotificationServiceTest {
         subscriber.assertCompleted().awaitItem();
 
         verify(notificationsApi, times(1))
-                .apiNotificationPost(eq(QueueEvent.ADD.name()), eq("m2m:onboarding-cdc"), any());
+                .apiNotificationPost(eq(QueueEvent.ADD.name()), any());
     }
 
     @Test
@@ -70,7 +70,7 @@ class NotificationServiceTest {
         onboarding.setUpdatedAt(LocalDateTime.now().plusMinutes(10)); // 5 minutes should be the threshold
         onboarding.setActivatedAt(LocalDateTime.now());
 
-        when(notificationsApi.apiNotificationPost(any(), any(), any()))
+        when(notificationsApi.apiNotificationPost(any(), any()))
                 .thenReturn(Uni.createFrom().item(new OrchestrationResponse()));
 
         // when
@@ -82,7 +82,7 @@ class NotificationServiceTest {
         subscriber.assertCompleted().awaitItem();
 
         verify(notificationsApi, times(1))
-                .apiNotificationPost(eq(QueueEvent.UPDATE.name()), eq("m2m:onboarding-cdc"), any());
+                .apiNotificationPost(eq(QueueEvent.UPDATE.name()), any());
     }
 
     @Test
@@ -94,7 +94,7 @@ class NotificationServiceTest {
         onboarding.setUpdatedAt(LocalDateTime.now()); // 5 minutes should be the threshold
         onboarding.setActivatedAt(LocalDateTime.now());
 
-        when(notificationsApi.apiNotificationPost(any(), any(), any()))
+        when(notificationsApi.apiNotificationPost(any(), any()))
                 .thenReturn(Uni.createFrom().item(new OrchestrationResponse()));
 
         // when
@@ -106,7 +106,7 @@ class NotificationServiceTest {
         subscriber.assertCompleted().awaitItem();
 
         verify(notificationsApi, times(1))
-                .apiNotificationPost(eq(QueueEvent.UPDATE.name()), eq("m2m:onboarding-cdc"), any());
+                .apiNotificationPost(eq(QueueEvent.UPDATE.name()), any());
     }
 
 }

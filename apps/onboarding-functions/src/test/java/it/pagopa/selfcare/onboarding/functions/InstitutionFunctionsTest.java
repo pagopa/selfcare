@@ -65,7 +65,10 @@ public class InstitutionFunctionsTest {
 
   @BeforeEach
   void allowAuthenticatedRequests() {
-    when(httpJwtValidator.validate(any(), any())).thenReturn(Optional.empty());
+    when(httpJwtValidator.authenticate(any(), any()))
+        .thenReturn(
+            HttpAuthorization.authorized(
+                new CallerIdentity("requester-id", "SPID", null, null, null)));
   }
 
   final String institutionUserFilters = "{\"userId\":\"userId\",\"productId\":\"productId\",\"institutionId\":\"institutionId\",\"tenantId\":\"ar\"}";
