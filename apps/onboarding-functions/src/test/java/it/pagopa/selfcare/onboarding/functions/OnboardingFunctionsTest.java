@@ -36,6 +36,8 @@ import it.pagopa.selfcare.onboarding.service.OnboardingService;
 import it.pagopa.selfcare.onboarding.service.ProductService;
 import it.pagopa.selfcare.onboarding.service.TelemetryService;
 import it.pagopa.selfcare.onboarding.service.UserService;
+import it.pagopa.selfcare.onboarding.service.CallerIdentity;
+import it.pagopa.selfcare.onboarding.service.HttpAuthorization;
 import it.pagopa.selfcare.onboarding.service.HttpJwtValidator;
 import it.pagopa.selfcare.onboarding.utils.Utils;
 import jakarta.inject.Inject;
@@ -92,7 +94,10 @@ class OnboardingFunctionsTest {
 
   @BeforeEach
   void allowAuthenticatedRequests() {
-    when(httpJwtValidator.validate(any(), any())).thenReturn(Optional.empty());
+    when(httpJwtValidator.authenticate(any(), any()))
+        .thenReturn(
+            HttpAuthorization.authorized(
+                new CallerIdentity("requester-id", "SPID", null, null, null)));
   }
 
   final String onboardingStringBase = "{\"id\":\"onboardingId\", \"tenantId\":\"AR\", \"productId\":\"prod-test\"}";
@@ -205,9 +210,7 @@ class OnboardingFunctionsTest {
     @SuppressWarnings("unchecked")
     final HttpRequestMessage<Optional<String>> req = mock(HttpRequestMessage.class);
     doReturn(Map.of("onboardingId", "onboardingId")).when(req).getQueryParameters();
-    Map<String, String> requestHeaders = new HashMap<>(headers);
-    requestHeaders.put("x-selfcare-uid", "requester-id");
-    doReturn(requestHeaders).when(req).getHeaders();
+    doReturn(headers).when(req).getHeaders();
     doAnswer(
             (Answer<HttpResponseMessage.Builder>)
                 invocation ->
@@ -223,26 +226,30 @@ class OnboardingFunctionsTest {
   }
 
   @Test
-  void startOrchestration_missingRequester_returnsBadRequestWithoutStartingOrchestration() {
+  void startOrchestration_tracksRequesterFromTokenIgnoringDeclaredHeader() {
     // given
-    @SuppressWarnings("unchecked")
-    HttpRequestMessage<Optional<String>> req = mock(HttpRequestMessage.class);
-    when(req.getQueryParameters()).thenReturn(Map.of("onboardingId", "onboarding-id"));
-    when(req.getHeaders()).thenReturn(Map.of());
-    when(req.createResponseBuilder(HttpStatus.BAD_REQUEST))
-        .thenReturn(
-            new HttpResponseMessageMock.HttpResponseMessageBuilderMock()
-                .status(HttpStatus.BAD_REQUEST));
-    DurableClientContext durableContext = mock(DurableClientContext.class);
-    ExecutionContext context = mock(ExecutionContext.class);
+    final DurableTaskClient client = mock(DurableTaskClient.class);
+    final DurableClientContext durableContext = mock(DurableClientContext.class);
+    doReturn(client).when(durableContext).getClient();
+    doReturn("instanceId")
+        .when(client)
+        .scheduleNewOrchestrationInstance(eq("Onboardings"), anyString());
 
     // when
-    HttpResponseMessage response = function.startOrchestration(req, durableContext, context);
+    startOrchestrationRequest(Map.of("X-Tenant-Id", "AR", "x-selfcare-uid", "pippo"), durableContext);
 
     // then
-    assertEquals(HttpStatus.BAD_REQUEST.value(), response.getStatusCode());
-    assertEquals("x-selfcare-uid header cannot be null or blank", response.getBody());
-    verifyNoInteractions(durableContext);
+    verify(client).scheduleNewOrchestrationInstance(eq("Onboardings"), anyString());
+    verify(telemetryService)
+        .trackFunction(
+            eq("StartOnboardingOrchestration"),
+            any(),
+            eq(SeverityLevel.Information),
+            argThat(
+                properties ->
+                    "requester-id".equals(properties.get("userId"))
+                        && "pippo".equals(properties.get("declaredUserId"))
+                        && "true".equals(properties.get("declaredUserIdMismatch"))));
   }
 
   @Test
@@ -1473,26 +1480,6 @@ class OnboardingFunctionsTest {
     // then
     assertEquals(HttpStatus.BAD_REQUEST.value(), responseMessage.getStatusCode());
     assertEquals("Body can not be empty", responseMessage.getBody());
-  }
-
-  @Test
-  void buildAttachmentsAndSaveTokens_missingRequester_doesNotStartOrchestration() {
-    // given
-    HttpRequestMessage<Optional<String>> req = mock(HttpRequestMessage.class);
-    when(req.getHeaders()).thenReturn(Map.of());
-    when(req.createResponseBuilder(HttpStatus.BAD_REQUEST))
-        .thenReturn(
-            new HttpResponseMessageMock.HttpResponseMessageBuilderMock()
-                .status(HttpStatus.BAD_REQUEST));
-    DurableClientContext durableContext = mock(DurableClientContext.class);
-
-    // when
-    HttpResponseMessage response =
-        function.buildAttachmentsAndSaveTokens(req, durableContext, executionContext);
-
-    // then
-    assertEquals(HttpStatus.BAD_REQUEST.value(), response.getStatusCode());
-    verifyNoInteractions(durableContext);
   }
 
   @Test

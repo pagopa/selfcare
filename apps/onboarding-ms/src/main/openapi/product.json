@@ -200,6 +200,9 @@
           "allowSameUserManagerAndDelegate" : {
             "type" : "boolean"
           },
+          "contractEnabled" : {
+            "type" : "boolean"
+          },
           "expirationDays" : {
             "format" : "int32",
             "type" : "integer"
