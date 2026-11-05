@@ -206,6 +206,10 @@ locals {
       value = "OFF"
     },
     {
+      name  = "APPLICATIONINSIGHTS_ROLE_NAME"
+      value = "registry-proxy"
+    },
+    {
       name  = "MS_PARTY_REGISTRY_PROXY_LOG_LEVEL"
       value = "DEBUG"
     },
