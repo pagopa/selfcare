@@ -9,17 +9,49 @@ It is triggered by http request at GET or POST `/api/StartOnboardingOrchestratio
 
 ### HTTP requester traceability
 
-Every HTTP-triggered function reads the requester identity from the
-`x-selfcare-uid` header and writes it to Application Insights as the structured
-`userId` property. Missing or blank values are recorded as `unknown` with warning
-severity, so invocations can still be diagnosed without losing the function name.
+Every HTTP trigger calls `HttpFunctionGuard.authorize(...)` first: it validates the
+bearer JWT (see below) and writes an Application Insights trace whose caller
+identity comes **only from signed JWT claims**, never from client-controlled
+headers.
 
-The HTTP triggers that start Durable orchestrations require a non-blank requester:
-`StartOnboardingOrchestration`, `TriggerBuildAttachmentsAndSaveTokens`,
-`ResendNotifications` and `TriggerDeleteInstitutionAndUser`. They return `400 Bad
-Request` and do not schedule an orchestration when the header is absent or blank.
-Human requests use the authenticated user identifier; service-to-service callers
-use a stable identity such as `m2m:onboarding-ms` or `m2m:onboarding-cdc`.
+| `customDimensions` | Source | Notes |
+|--------------------|--------|-------|
+| `userId` | `uid` claim | Same property name as before, existing queries keep working |
+| `issuer` | `iss` claim | `SPID`, `PAGOPA` |
+| `clientId` | `client_id` claim | Entry channel: `selfcare-fe` (SPID/CIE login), `selfcare-saml` (internal SAML login), `apim` (APIM-minted token); absent for legacy tokens |
+| `subscriptionId`, `productId` | `subscription_id`, `product_id` claims | APIM subscription and product that originated the call |
+| `declaredUserId`, `declaredUserIdMismatch` | `x-selfcare-uid` header | Legacy, untrusted header: tracked only for auditing when present |
+
+The `x-selfcare-uid` header is no longer required nor used as identity: a request
+with `x-selfcare-uid: pippo` is attributed to the `uid` of its token and flagged
+with `declaredUserIdMismatch=true`. To follow a call across services (FE ->
+APIM -> BFF/onboarding-ms -> functions) use the distributed tracing that the
+Application Insights agent already propagates (`operation_Id`, W3C `traceparent`).
+
+```kusto
+// Who called the HTTP triggers, through which channel
+traces
+| where cloud_RoleName contains "onboarding-fn" and message endswith "HTTP trigger processed a request"
+| extend functionName = tostring(customDimensions.functionName),
+         userId = tostring(customDimensions.userId),
+         clientId = tostring(customDimensions.clientId),
+         subscriptionId = tostring(customDimensions.subscriptionId)
+| summarize calls = count() by functionName, clientId, subscriptionId, userId
+| order by calls desc
+
+// Requests whose declared header differs from the verified identity
+traces
+| where customDimensions.declaredUserIdMismatch == "true"
+| project timestamp, operation_Id, functionName = tostring(customDimensions.functionName),
+          userId = tostring(customDimensions.userId),
+          declaredUserId = tostring(customDimensions.declaredUserId)
+
+// Full call chain of a single invocation
+union requests, dependencies, traces, exceptions
+| where operation_Id == "<operation_Id>"
+| project timestamp, itemType, cloud_RoleName, name, message, resultCode
+| order by timestamp asc
+```
 
 ### HTTP trigger authentication
 
@@ -27,12 +59,15 @@ All twelve HTTP triggers require three independent credentials: the Azure Functi
 key, `X-Tenant-Id`, and `Authorization: Bearer <jwt>`. The JWT must use RS256, be
 signed by the public key configured for the header tenant, contain an unexpired
 `exp`, an allowed `iss`, `uid`, and a matching `tenant_id`. Tokens without
-`tenant_id` (the legacy PNPG SPID hub does not emit it) are attributed to
-`JWT_DEFAULT_TENANT` (default `PNPG`), which must still match the header; set
-`JWT_TENANT_CLAIM_REQUIRED=true` to reject them. `JWT_DEFAULT_TENANT` is unrelated
-to `DEFAULT_TENANT` (tenant used when the header is absent). This fallback is
-temporary: AR tokens come from the `auth` app, which always emits `tenant_id`; once
-PNPG logins move to `auth` too, enable `JWT_TENANT_CLAIM_REQUIRED`. Missing or unsupported
+`tenant_id` are attributed to `JWT_DEFAULT_TENANT`, which must still match the
+header; set `JWT_TENANT_CLAIM_REQUIRED=true` to reject them. The legacy PNPG SPID hub
+does not emit the claim (code default `PNPG`), and neither do the Area Riservata
+backstage tokens (`iss=PAGOPA`) used to approve onboardings, so the AR stacks set
+`JWT_DEFAULT_TENANT=AR`. This is safe because each stack only loads the public key
+of its own tenant, so a token without the claim must still be signed by that
+tenant's key. `JWT_DEFAULT_TENANT` is unrelated to `DEFAULT_TENANT` (tenant used
+when the header is absent). This fallback is temporary: once every issuer emits
+`tenant_id`, enable `JWT_TENANT_CLAIM_REQUIRED`. Missing or unsupported
 tenant context returns `400`; JWT failures return `401` with
 `WWW-Authenticate: Bearer`. Validation runs before request parsing, telemetry with
 application data, service calls, or Durable orchestration scheduling.
@@ -67,7 +102,7 @@ Before running you must set these properties as environment variables.
 | onboarding-functions.jwt.validation.tenants.AR.public-key<br/>        | JWT_PUBLIC_KEY_AR          |             | for AR       |
 | onboarding-functions.jwt.validation.tenants.PNPG.public-key<br/>      | JWT_PUBLIC_KEY_PNPG        |             | for PNPG     |
 | onboarding-functions.jwt.validation.allowed-issuers<br/>              | JWT_ALLOWED_ISSUERS        | SPID,PAGOPA | yes          |
-| onboarding-functions.jwt.validation.default-tenant<br/>               | JWT_DEFAULT_TENANT         | PNPG        | no           |
+| onboarding-functions.jwt.validation.default-tenant<br/>               | JWT_DEFAULT_TENANT         | PNPG (AR stacks: AR) | no           |
 | onboarding-functions.jwt.validation.tenant-claim-required<br/>        | JWT_TENANT_CLAIM_REQUIRED  | false       | no           |
 
 ### Blob storage authentication

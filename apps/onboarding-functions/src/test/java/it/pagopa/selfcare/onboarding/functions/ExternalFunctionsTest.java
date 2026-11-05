@@ -8,6 +8,8 @@ import io.quarkus.test.InjectMock;
 import io.quarkus.test.junit.QuarkusTest;
 import it.pagopa.selfcare.onboarding.HttpResponseMessageMock;
 import it.pagopa.selfcare.onboarding.service.CheckOrganizationService;
+import it.pagopa.selfcare.onboarding.service.CallerIdentity;
+import it.pagopa.selfcare.onboarding.service.HttpAuthorization;
 import it.pagopa.selfcare.onboarding.service.HttpJwtValidator;
 import jakarta.inject.Inject;
 import org.junit.jupiter.api.Test;
@@ -34,7 +36,10 @@ import static org.mockito.Mockito.*;
 
     @BeforeEach
     void allowAuthenticatedRequests() {
-        when(httpJwtValidator.validate(any(), any())).thenReturn(Optional.empty());
+        when(httpJwtValidator.authenticate(any(), any()))
+            .thenReturn(
+                HttpAuthorization.authorized(
+                    new CallerIdentity("requester-id", "SPID", null, null, null)));
     }
 
     static final String ACK_PAYLOAD_OK = "{\"message\":\"message\"}";
