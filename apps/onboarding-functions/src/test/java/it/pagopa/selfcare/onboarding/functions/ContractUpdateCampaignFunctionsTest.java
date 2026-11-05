@@ -18,6 +18,8 @@ import it.pagopa.selfcare.onboarding.dto.ContractUpdateCampaignResponse;
 import it.pagopa.selfcare.onboarding.exception.GenericOnboardingException;
 import it.pagopa.selfcare.onboarding.service.ContractUpdateCampaignService;
 import it.pagopa.selfcare.onboarding.service.FunctionInvocationLogger;
+import it.pagopa.selfcare.onboarding.service.CallerIdentity;
+import it.pagopa.selfcare.onboarding.service.HttpAuthorization;
 import it.pagopa.selfcare.onboarding.service.HttpJwtValidator;
 import it.pagopa.selfcare.onboarding.service.TelemetryService;
 import jakarta.inject.Inject;
@@ -47,7 +49,10 @@ class ContractUpdateCampaignFunctionsTest {
 
     @BeforeEach
     void setup() {
-        when(httpJwtValidator.validate(any(), any())).thenReturn(Optional.empty());
+        when(httpJwtValidator.authenticate(any(), any()))
+            .thenReturn(
+                HttpAuthorization.authorized(
+                    new CallerIdentity("requester-id", "SPID", null, null, null)));
         doReturn(Logger.getGlobal()).when(context).getLogger();
     }
 
@@ -64,19 +69,22 @@ class ContractUpdateCampaignFunctionsTest {
                 .send(new ContractUpdateCampaignRequest("institution-id", List.of("prod-io", "prod-pagopa")));
         verify(telemetryService).trackFunction(eq("SendContractUpdateMail"), any(), eq(SeverityLevel.Information),
                 eq(Map.of("institutionId", "institution-id", "productIds", "prod-io,prod-pagopa",
-                        "userId", "user-id", "outcome", "SENT")));
+                        "userId", "requester-id", "outcome", "SENT")));
     }
 
     @Test
-    void sendContractUpdateMail_shouldRejectMissingUserId() {
+    void sendContractUpdateMail_shouldNotRequireUserIdHeader() {
+        when(contractUpdateCampaignService.send(any()))
+                .thenReturn(new ContractUpdateCampaignResponse(ContractUpdateCampaignResponse.Outcome.SENT, "ente@pec.it"));
         HttpRequestMessage<Optional<String>> req = request(VALID_BODY, "AR");
         doReturn(Map.of("X-Tenant-Id", "AR")).when(req).getHeaders();
 
         HttpResponseMessage response = function.sendContractUpdateMail(req, context);
 
-        assertEquals(HttpStatus.BAD_REQUEST.value(), response.getStatusCode());
-        assertEquals("x-selfcare-uid header cannot be null or blank", response.getBody());
-        verifyNoInteractions(contractUpdateCampaignService);
+        assertEquals(HttpStatus.OK.value(), response.getStatusCode());
+        verify(telemetryService).trackFunction(eq("SendContractUpdateMail"), any(), eq(SeverityLevel.Information),
+                eq(Map.of("institutionId", "institution-id", "productIds", "prod-io,prod-pagopa",
+                        "userId", "requester-id", "outcome", "SENT")));
     }
 
     @Test
@@ -114,15 +122,15 @@ class ContractUpdateCampaignFunctionsTest {
         assertEquals("mail error", response.getBody());
         verify(telemetryService).trackFunction(eq("SendContractUpdateMail"), any(), eq(SeverityLevel.Error),
                 eq(Map.of("institutionId", "institution-id", "productIds", "prod-io,prod-pagopa",
-                        "userId", "user-id", "outcome", "ERROR")));
+                        "userId", "requester-id", "outcome", "ERROR")));
     }
 
     @SuppressWarnings("unchecked")
     private static HttpRequestMessage<Optional<String>> request(String body, String tenant) {
         HttpRequestMessage<Optional<String>> req = mock(HttpRequestMessage.class);
         doReturn(Optional.of(body)).when(req).getBody();
-        doReturn(tenant == null ? Map.of(FunctionInvocationLogger.USER_ID_HEADER, "user-id")
-                : Map.of("X-Tenant-Id", tenant, FunctionInvocationLogger.USER_ID_HEADER, "user-id"))
+        doReturn(tenant == null ? Map.of(FunctionInvocationLogger.USER_ID_HEADER, "pippo")
+                : Map.of("X-Tenant-Id", tenant, FunctionInvocationLogger.USER_ID_HEADER, "pippo"))
                 .when(req).getHeaders();
         doAnswer((Answer<HttpResponseMessage.Builder>) invocation ->
                 new HttpResponseMessageMock.HttpResponseMessageBuilderMock().status((HttpStatus) invocation.getArguments()[0]))
