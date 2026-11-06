@@ -49,7 +49,7 @@ jobs:
           done
 
       - name: Cloud Login
-        uses: pagopa/dx/actions/csp-login@main
+        uses: pagopa/dx/actions/csp-login@d137c49e2c0a935a544a3b87dae98472e5e5c4fd # main
 
       - name: Set Terraform Version
         id: set-terraform-version

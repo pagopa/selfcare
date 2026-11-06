@@ -48,7 +48,7 @@ services:
       - develop-network
 
   userms:
-    image: ghcr.io/pagopa/selfcare-user-ms:latest
+    image: ghcr.io/pagopa/selfcare-user-ms:latest@sha256:91d95b836f728ec02f73200d845f3cb2362354c8fff8fa07dc877f31b8e09603
     pull_policy: always
     platform: linux/amd64
     ports:
@@ -61,7 +61,7 @@ services:
       - mongodb
 
   onboardingms:
-    image: ghcr.io/pagopa/selfcare-onboarding-ms:latest
+    image: ghcr.io/pagopa/selfcare-onboarding-ms:latest@sha256:3e145ecb747f150de017bbaa009ed8e1ab23a60159075e42d7afd6f0fe03dd4a
     pull_policy: always
     platform: linux/amd64
     ports:
@@ -75,7 +75,7 @@ services:
       - productms
 
   documentms:
-    image: ghcr.io/pagopa/selfcare-document-ms:latest
+    image: ghcr.io/pagopa/selfcare-document-ms:latest@sha256:cb3d6b00101ec420ca602a46052cea7c542d6f789afdbc89234ea9ba39e4100c
     pull_policy: always
     platform: linux/amd64
     ports:
@@ -88,7 +88,7 @@ services:
       - mongodb
 
   institutionms:
-    image: ghcr.io/pagopa/selfcare-institution-ms:latest
+    image: ghcr.io/pagopa/selfcare-institution-ms:latest@sha256:92c663516273a99257ef736b701caf95acb431ee96ee9adda755cdabde0774a2
     pull_policy: always
     platform: linux/amd64
     ports:
@@ -101,7 +101,7 @@ services:
       - mongodb
 
   usergroupms:
-    image: ghcr.io/pagopa/selfcare-user-group-ms:latest
+    image: ghcr.io/pagopa/selfcare-user-group-ms:latest@sha256:de4e772d7ff58a885e855f7fa9068c26fe68ffe354adcdd18952c5f6597dca4e
     pull_policy: always
     platform: linux/amd64
     ports:
@@ -114,7 +114,7 @@ services:
       - mongodb
 
   iamms:
-    image: ghcr.io/pagopa/selfcare-iam-ms:latest
+    image: ghcr.io/pagopa/selfcare-iam-ms:latest@sha256:5a21cbef4f5067a382d46c13437cf7a42b49a58e413ed8df27d047e2cc95d968
     pull_policy: always
     platform: linux/amd64
     ports:
@@ -127,7 +127,7 @@ services:
       - mongodb
 
   productms:
-    image: ghcr.io/pagopa/selfcare-product-ms:latest
+    image: ghcr.io/pagopa/selfcare-product-ms:latest@sha256:357a53fe1ee06fe6e24cae40d731d1f599656ef12237565dd00b553699570f17
     pull_policy: always
     platform: linux/amd64
     env_file:
