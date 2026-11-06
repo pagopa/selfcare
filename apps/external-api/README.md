@@ -93,9 +93,10 @@ Blob credentials/settings are removed; product data is obtained through REST.
 
 The Dockerfile copies `libs/` and builds commons 2.23.0 from source through
 `--also-make`; publishing those artifacts is only required for builds outside the
-reactor. The Spring `selc-starter-parent` remains external and is resolved from the
-Azure Artifacts `selfcare-platform` feed, which must remain available until that
-parent is migrated.
+reactor. Both External API and commons use `selc-starter-parent` 0.3.3 from
+`libs/selfcare-starter-parent/pom.xml`, also published on GitHub Packages.
+The Azure Artifacts `selfcare-platform` feed is retained for other legacy
+dependencies; it is no longer needed for their starter parent.
 
 Deploy the new image and its renamed secret-backed variables together in one
 Container App revision; the new environment names are not compatible with an old
