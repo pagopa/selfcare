@@ -183,10 +183,10 @@ public final class DocumentFileUtils {
         return CONTRACT_FILENAME_FUNC.apply(format, productName);
     }
 
+    // Legacy documents have no storageOrigin: they are SYSTEM ones, as in buildAttachmentPath
     public static String getAttachmentFileName(Document document) {
-      return switch (document.getStorageOrigin()) {
-        case USER -> document.getAttachmentName();
-        case SYSTEM -> document.getContractFilename();
-      };
+      return StorageOrigin.USER.equals(document.getStorageOrigin())
+          ? document.getAttachmentName()
+          : document.getContractFilename();
     }
 }
