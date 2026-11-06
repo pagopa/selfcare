@@ -1,5 +1,7 @@
 package it.pagopa.selfcare.mscore.core;
 
+import it.pagopa.selfcare.commons.tenant.TenantContext;
+import it.pagopa.selfcare.commons.tenant.TenantRegistry;
 import it.pagopa.selfcare.mscore.api.DelegationConnector;
 import it.pagopa.selfcare.mscore.api.EventHubConnector;
 import it.pagopa.selfcare.mscore.core.mapper.DelegationNotificationMapper;
@@ -22,9 +24,16 @@ public class EventsServiceImpl implements EventsService {
     private final DelegationConnector delegationConnector;
     private final EventHubConnector eventHubConnector;
     private final DelegationNotificationMapper delegationNotificationMapper;
+    private final TenantRegistry tenantRegistry;
+    private final TenantContext tenantContext;
 
     @Override
     public void sendDelegationEvents(OffsetDateTime fromDate) {
+        String tenantId = tenantContext.requiredTenantId();
+        if (tenantRegistry.eventHubCredentials(tenantId).isEmpty()) {
+            log.info("Skipping delegation events for tenant {}: EventHub is not configured (success: 0, error: 0)", tenantId);
+            return;
+        }
         long successCount = 0L;
         long errorCount = 0L;
         long page = 0L;

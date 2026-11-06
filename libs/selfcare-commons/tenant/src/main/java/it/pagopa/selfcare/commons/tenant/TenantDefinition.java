@@ -14,7 +14,17 @@ public record TenantDefinition(
         @JsonProperty("storages") Map<String, StorageDefinition> storages,
         @JsonProperty("oneIdentity") OneIdentityDefinition oneIdentity,
         @JsonProperty("userRegistry") UserRegistryDefinition userRegistry,
-        @JsonProperty("registryProxy") RegistryProxyDefinition registryProxy) {
+        @JsonProperty("registryProxy") RegistryProxyDefinition registryProxy,
+        @JsonProperty("oneMail") OneMailDefinition oneMail,
+        @JsonProperty("pec") PecDefinition pec,
+        @JsonProperty("eventHub") EventHubDefinition eventHub) {
+
+    public TenantDefinition(
+            MongoDefinition mongo, JwtDefinition jwt, Map<String, StorageDefinition> storages,
+            OneIdentityDefinition oneIdentity, UserRegistryDefinition userRegistry,
+            RegistryProxyDefinition registryProxy) {
+        this(mongo, jwt, storages, oneIdentity, userRegistry, registryProxy, null, null, null);
+    }
 
     public TenantDefinition(
             MongoDefinition mongo, JwtDefinition jwt, Map<String, StorageDefinition> storages) {
@@ -39,6 +49,54 @@ public record TenantDefinition(
 
     @JsonIgnoreProperties(ignoreUnknown = true)
     public record UserRegistryDefinition(@JsonProperty("apiKeyEnvVar") String apiKeyEnvVar) {
+    }
+
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    public record OneMailDefinition(String url, String sender, String apiKeyEnvVar) {
+    }
+
+    public record OneMailCredentials(String url, String sender, String apiKey) {
+        @Override
+        public String toString() {
+            return "OneMailCredentials[REDACTED]";
+        }
+    }
+
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    public record PecDefinition(
+            String host, Integer port, String sender, String usernameEnvVar, String passwordEnvVar) {
+    }
+
+    public record PecCredentials(
+            String host, int port, String sender, String username, String password) {
+        @Override
+        public String toString() {
+            return "PecCredentials[REDACTED]";
+        }
+    }
+
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    public record EventHubDefinition(
+            String namespaceUrl, String topic, EventHubAuthentication authentication) {
+    }
+
+    public enum EventHubAuthenticationType {
+        MANAGED_IDENTITY, SHARED_ACCESS_KEY
+    }
+
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    public record EventHubAuthentication(
+            EventHubAuthenticationType type, String managedIdentityClientIdEnvVar,
+            String keyName, String keyEnvVar) {
+    }
+
+    public record EventHubCredentials(
+            String namespaceUrl, String topic, EventHubAuthenticationType type,
+            String managedIdentityClientId, String keyName, String key) {
+        @Override
+        public String toString() {
+            return "EventHubCredentials[REDACTED]";
+        }
     }
 
     public record OneIdentityCredentials(String clientId, String clientSecret) {
