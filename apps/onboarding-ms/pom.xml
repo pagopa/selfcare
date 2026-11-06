@@ -138,6 +138,15 @@
             <groupId>io.quarkus</groupId>
             <artifactId>quarkus-smallrye-context-propagation</artifactId>
         </dependency>
+        <!--
+          Only the OpenTelemetry API, bridged by the Application Insights Java agent (as in webhook):
+          used by OpenTelemetryContextProvider to propagate the tracing context across Mutiny callbacks.
+          Do not add quarkus-opentelemetry: it would register a second SDK and conflict with the agent.
+        -->
+        <dependency>
+            <groupId>io.opentelemetry</groupId>
+            <artifactId>opentelemetry-api</artifactId>
+        </dependency>
 
         <dependency>
             <groupId>io.quarkus</groupId>
