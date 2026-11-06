@@ -97,7 +97,7 @@ class OnboardingFunctionsTest {
     when(httpJwtValidator.authenticate(any(), any()))
         .thenReturn(
             HttpAuthorization.authorized(
-                new CallerIdentity("requester-id", "SPID", null, null, null)));
+                new CallerIdentity("requester-id", "SPID", null, null, null, null, null)));
   }
 
   final String onboardingStringBase = "{\"id\":\"onboardingId\", \"tenantId\":\"AR\", \"productId\":\"prod-test\"}";

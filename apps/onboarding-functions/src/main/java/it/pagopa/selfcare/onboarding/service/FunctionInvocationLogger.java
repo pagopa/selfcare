@@ -29,6 +29,8 @@ public class FunctionInvocationLogger {
     Map<String, String> properties = new HashMap<>();
     properties.put("functionName", functionName);
     properties.put(USER_ID_PROPERTY, caller.userId());
+    putIfPresent(properties, "tenant", caller.tenant());
+    putIfPresent(properties, "tenantSource", caller.tenantSource());
     putIfPresent(properties, "issuer", caller.issuer());
     putIfPresent(properties, "clientId", caller.clientId());
     putIfPresent(properties, "subscriptionId", caller.subscriptionId());

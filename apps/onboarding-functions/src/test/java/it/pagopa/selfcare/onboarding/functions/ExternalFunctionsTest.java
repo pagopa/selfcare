@@ -39,7 +39,7 @@ import static org.mockito.Mockito.*;
         when(httpJwtValidator.authenticate(any(), any()))
             .thenReturn(
                 HttpAuthorization.authorized(
-                    new CallerIdentity("requester-id", "SPID", null, null, null)));
+                    new CallerIdentity("requester-id", "SPID", null, null, null, null, null)));
     }
 
     static final String ACK_PAYLOAD_OK = "{\"message\":\"message\"}";

@@ -80,7 +80,7 @@ public class NotificationFunctionsTest {
         when(httpJwtValidator.authenticate(any(), any()))
             .thenReturn(
                 HttpAuthorization.authorized(
-                    new CallerIdentity("requester-id", "SPID", null, null, null)));
+                    new CallerIdentity("requester-id", "SPID", null, null, null, null, null)));
     }
 
 
