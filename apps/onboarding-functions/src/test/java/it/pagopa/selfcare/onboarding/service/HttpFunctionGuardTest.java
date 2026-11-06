@@ -43,7 +43,7 @@ class HttpFunctionGuardTest {
   @Test
   void authorizeTracksInvocationWithVerifiedCaller() {
     // given
-    CallerIdentity caller = new CallerIdentity("token-uid", "SPID", "apim", null, null);
+    CallerIdentity caller = new CallerIdentity("token-uid", "SPID", "apim", null, null, null, null);
     when(httpJwtValidator.authenticate(request, context))
         .thenReturn(HttpAuthorization.authorized(caller));
 

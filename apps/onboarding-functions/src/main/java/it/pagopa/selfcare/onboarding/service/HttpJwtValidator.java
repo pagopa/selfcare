@@ -58,8 +58,7 @@ public class HttpJwtValidator {
     }
 
     try {
-      return HttpAuthorization.authorized(
-          CallerIdentity.fromClaims(verifiedClaims(request, headerTenant)));
+      return HttpAuthorization.authorized(verifiedCaller(request, headerTenant));
     } catch (JwtException | IllegalArgumentException exception) {
       context.getLogger().warning(() -> "Rejected request with invalid JWT: " + exception.getMessage());
       return HttpAuthorization.rejected(
@@ -71,7 +70,7 @@ public class HttpJwtValidator {
     }
   }
 
-  private Claims verifiedClaims(HttpRequestMessage<?> request, String headerTenant) {
+  private CallerIdentity verifiedCaller(HttpRequestMessage<?> request, String headerTenant) {
     String token = extractBearerToken(request);
     requireAlgorithm(token);
 
@@ -91,14 +90,20 @@ public class HttpJwtValidator {
       throw new JwtException("Missing uid claim");
     }
 
-    if (!resolveTokenTenant(claims).equals(headerTenant)) {
+    boolean tenantFromClaim = claims.get(TenantContext.TENANT_CLAIM) != null;
+    if (!resolveTokenTenant(claims, tenantFromClaim).equals(headerTenant)) {
       throw new JwtException("Tenant claim does not match tenant header");
     }
-    return claims;
+    return CallerIdentity.fromClaims(
+        claims,
+        headerTenant,
+        tenantFromClaim
+            ? CallerIdentity.TENANT_SOURCE_CLAIM
+            : CallerIdentity.TENANT_SOURCE_DEFAULT);
   }
 
-  private String resolveTokenTenant(Claims claims) {
-    if (claims.get(TenantContext.TENANT_CLAIM) == null) {
+  private String resolveTokenTenant(Claims claims, boolean tenantFromClaim) {
+    if (!tenantFromClaim) {
       if (config.tenantClaimRequired()) {
         throw new JwtException("Missing tenant_id claim");
       }

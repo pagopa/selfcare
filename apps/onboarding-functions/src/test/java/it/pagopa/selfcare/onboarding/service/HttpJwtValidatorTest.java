@@ -98,6 +98,8 @@ class HttpJwtValidatorTest {
     assertEquals("apim", response.caller().clientId());
     assertEquals("subscription-id", response.caller().subscriptionId());
     assertNull(response.caller().productId());
+    assertEquals("AR", response.caller().tenant());
+    assertEquals("claim", response.caller().tenantSource());
   }
 
   @Test
@@ -301,6 +303,8 @@ class HttpJwtValidatorTest {
 
     // then
     assertFalse(response.isRejected());
+    assertEquals("PNPG", response.caller().tenant());
+    assertEquals("default", response.caller().tenantSource());
   }
 
   @Test

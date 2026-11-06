@@ -52,7 +52,7 @@ class ContractUpdateCampaignFunctionsTest {
         when(httpJwtValidator.authenticate(any(), any()))
             .thenReturn(
                 HttpAuthorization.authorized(
-                    new CallerIdentity("requester-id", "SPID", null, null, null)));
+                    new CallerIdentity("requester-id", "SPID", null, null, null, null, null)));
         doReturn(Logger.getGlobal()).when(context).getLogger();
     }
 

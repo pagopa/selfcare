@@ -20,7 +20,7 @@ class FunctionInvocationLoggerTest {
     // given
     HttpRequestMessage<?> request = mock(HttpRequestMessage.class);
     when(request.getHeaders()).thenReturn(Map.of());
-    CallerIdentity caller = new CallerIdentity("token-uid", "SPID", null, null, null);
+    CallerIdentity caller = new CallerIdentity("token-uid", "SPID", null, null, null, null, null);
 
     // when
     functionInvocationLogger.logInvocation("TestFunction", caller, request);
@@ -40,7 +40,8 @@ class FunctionInvocationLoggerTest {
     HttpRequestMessage<?> request = mock(HttpRequestMessage.class);
     when(request.getHeaders()).thenReturn(Map.of("X-SelfCare-Uid", " pippo "));
     CallerIdentity caller =
-        new CallerIdentity("token-uid", "SPID", "apim", "subscription-id", "product-id");
+        new CallerIdentity(
+            "token-uid", "SPID", "apim", "subscription-id", "product-id", "PNPG", "default");
 
     // when
     functionInvocationLogger.logInvocation("TestFunction", caller, request);
@@ -54,6 +55,8 @@ class FunctionInvocationLoggerTest {
             Map.of(
                 "functionName", "TestFunction",
                 "userId", "token-uid",
+                "tenant", "PNPG",
+                "tenantSource", "default",
                 "issuer", "SPID",
                 "clientId", "apim",
                 "subscriptionId", "subscription-id",
@@ -67,7 +70,7 @@ class FunctionInvocationLoggerTest {
     // given
     HttpRequestMessage<?> request = mock(HttpRequestMessage.class);
     when(request.getHeaders()).thenReturn(Map.of("x-selfcare-uid", "token-uid"));
-    CallerIdentity caller = new CallerIdentity("token-uid", null, null, null, null);
+    CallerIdentity caller = new CallerIdentity("token-uid", null, null, null, null, null, null);
 
     // when
     functionInvocationLogger.logInvocation("TestFunction", caller, request);
@@ -90,7 +93,7 @@ class FunctionInvocationLoggerTest {
     // given
     HttpRequestMessage<?> request = mock(HttpRequestMessage.class);
     when(request.getHeaders()).thenReturn(null);
-    CallerIdentity caller = new CallerIdentity("token-uid", null, null, null, null);
+    CallerIdentity caller = new CallerIdentity("token-uid", null, null, null, null, null, null);
 
     // when
     functionInvocationLogger.logInvocation("TestFunction", caller, request);

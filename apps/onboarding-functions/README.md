@@ -17,6 +17,8 @@ headers.
 | `customDimensions` | Source | Notes |
 |--------------------|--------|-------|
 | `userId` | `uid` claim | Same property name as before, existing queries keep working |
+| `tenant` | `tenant_id` claim, or the function default for tokens without it | `AR` / `PNPG`: the Personal Data Vault that owns `userId` (a PNPG `userId` is not found on the AR PDV) |
+| `tenantSource` | - | `claim` if read from the token, `default` if attributed by `JWT_DEFAULT_TENANT` (e.g. PNPG tokens from the SPID hub) |
 | `issuer` | `iss` claim | `SPID`, `PAGOPA` |
 | `clientId` | `client_id` claim | Entry channel: `selfcare-fe` (SPID/CIE login), `selfcare-saml` (internal SAML login), `apim` (APIM-minted token); absent for legacy tokens |
 | `subscriptionId`, `productId` | `subscription_id`, `product_id` claims | APIM subscription and product that originated the call |
@@ -33,10 +35,11 @@ Application Insights agent already propagates (`operation_Id`, W3C `traceparent`
 traces
 | where cloud_RoleName contains "onboarding-fn" and message endswith "HTTP trigger processed a request"
 | extend functionName = tostring(customDimensions.functionName),
+         tenant = tostring(customDimensions.tenant),
          userId = tostring(customDimensions.userId),
          clientId = tostring(customDimensions.clientId),
          subscriptionId = tostring(customDimensions.subscriptionId)
-| summarize calls = count() by functionName, clientId, subscriptionId, userId
+| summarize calls = count() by functionName, tenant, clientId, subscriptionId, userId
 | order by calls desc
 
 // Requests whose declared header differs from the verified identity
