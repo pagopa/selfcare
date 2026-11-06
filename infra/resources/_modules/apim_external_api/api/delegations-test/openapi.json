@@ -1,0 +1,376 @@
+{
+  "openapi": "3.0.1",
+  "info": {
+    "title": "SelfCare Delegations Test API",
+    "version": "1.0.0",
+    "description": "API di consultazione, creazione e cancellazione deleghe per il tenant SELC/AR, disponibili solo in DEV e UAT.\n\nImportare questo file in Swagger UI o Postman, scegliere l'ambiente e configurare la propria subscription key nell'autenticazione subscriptionKey. La key deve appartenere a una subscription attiva del prodotto APIM delegations-test nello stesso ambiente. Inviarla nell'header Ocp-Apim-Subscription-Key. Non servono un JWT del chiamante o un header X-Tenant-Id: APIM autentica la chiamata al backend e imposta il tenant AR.\n\nGET e POST richiedono un productId della whitelist: prod-pn, prod-pn-dev, prod-pn-test, prod-pn-svil, prod-pn-uat, prod-pn-coll, prod-pn-cert, prod-pn-hotfix, prod-pn-prod. Il confronto distingue maiuscole e minuscole. Questi sono identificativi del prodotto SelfCare, non identificativi della subscription Azure o del prodotto APIM delegations-test.\n\nGli esempi contengono identificativi fittizi: sostituirli con quelli degli enti di test. POST modifica dati e, per deleghe di tipo PT, avvia l'invio di una notifica email. DELETE effettua una cancellazione logica e non applica la whitelist productId. Questo documento descrive la configurazione delle API e non certifica che sia stata distribuita nell'ambiente scelto."
+  },
+  "servers": [
+    {
+      "url": "https://api.dev.selfcare.pagopa.it/external/test/v1",
+      "description": "DEV - SELC/AR"
+    },
+    {
+      "url": "https://api.uat.selfcare.pagopa.it/external/test/v1",
+      "description": "UAT - SELC/AR"
+    }
+  ],
+  "security": [
+    {
+      "subscriptionKey": []
+    }
+  ],
+  "tags": [
+    {
+      "name": "Delegations test",
+      "description": "Consultazione, creazione e cancellazione delle deleghe."
+    }
+  ],
+  "paths": {
+    "/delegations": {
+      "get": {
+        "tags": ["Delegations test"],
+        "summary": "Consultare le deleghe",
+        "description": "Restituisce un array di deleghe. Specificare productId e almeno uno tra institutionId (ente delegante) e brokerId (ente delegato/partner). Si possono combinare i filtri. Nessun body richiesto. Un productId assente, vuoto o fuori whitelist viene rifiutato da APIM con 403. Se mancano sia institutionId sia brokerId, il backend risponde con 400.",
+        "operationId": "getDelegationsUsingGET",
+        "parameters": [
+          {
+            "name": "institutionId",
+            "in": "query",
+            "description": "Identificativo interno dell'ente delegante. Obbligatorio se brokerId non viene specificato.",
+            "required": false,
+            "style": "form",
+            "schema": { "type": "string" },
+            "example": "00000000-0000-4000-8000-000000000001"
+          },
+          {
+            "name": "brokerId",
+            "in": "query",
+            "description": "Identificativo interno dell'ente delegato/partner. Obbligatorio se institutionId non viene specificato.",
+            "required": false,
+            "style": "form",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "productId",
+            "in": "query",
+            "description": "Identificativo SelfCare del prodotto. Obbligatorio e soggetto alla whitelist.",
+            "required": true,
+            "style": "form",
+            "schema": { "$ref": "#/components/schemas/AllowedProductId" },
+            "example": "prod-pn"
+          },
+          {
+            "name": "search",
+            "in": "query",
+            "description": "Filtro di ricerca sulla descrizione dell'ente.",
+            "required": false,
+            "style": "form",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "taxCode",
+            "in": "query",
+            "description": "Filtro sul codice fiscale dell'ente, secondo le regole del backend institution-ms.",
+            "required": false,
+            "style": "form",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "order",
+            "in": "query",
+            "description": "Ordinamento dei risultati.",
+            "required": false,
+            "style": "form",
+            "schema": {
+              "type": "string",
+              "enum": ["NONE", "ASC", "DESC"],
+              "default": "NONE"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "description": "Indice della pagina, a partire da 0.",
+            "required": false,
+            "style": "form",
+            "schema": { "type": "integer", "format": "int32", "default": 0 }
+          },
+          {
+            "name": "size",
+            "in": "query",
+            "description": "Numero di risultati per pagina. Usare un valore tra 1 e 10000. Se omesso o fuori intervallo, il backend usa 10000.",
+            "required": false,
+            "style": "form",
+            "schema": { "type": "integer", "format": "int32", "default": 10000 },
+            "example": 10
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Array di deleghe; puo essere vuoto.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/DelegationResponse" }
+                },
+                "example": [
+                  {
+                    "id": "00000000-0000-4000-8000-000000000003",
+                    "institutionId": "00000000-0000-4000-8000-000000000001",
+                    "institutionName": "Ente di esempio",
+                    "brokerId": "00000000-0000-4000-8000-000000000002",
+                    "brokerName": "Partner tecnico di esempio",
+                    "productId": "prod-pn",
+                    "type": "PT",
+                    "status": "ACTIVE"
+                  }
+                ]
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "403": { "$ref": "#/components/responses/Forbidden" },
+          "404": { "$ref": "#/components/responses/NotFound" }
+        }
+      },
+      "post": {
+        "tags": ["Delegations test"],
+        "summary": "Creare una delega",
+        "description": "Crea una delega da from (ente delegante) a to (ente delegato/partner). Entrambi gli enti devono esistere. Inviare JSON con Content-Type: application/json e un productId della whitelist. Se la stessa delega risulta gia attiva, il backend restituisce 409; una delega corrispondente cancellata logicamente puo essere riattivata. Conservare l'id restituito per una successiva cancellazione.",
+        "operationId": "createDelegationUsingPOST",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/DelegationRequest" },
+              "example": {
+                "from": "00000000-0000-4000-8000-000000000001",
+                "to": "00000000-0000-4000-8000-000000000002",
+                "institutionFromName": "Ente di esempio",
+                "institutionToName": "Partner tecnico di esempio",
+                "productId": "prod-pn",
+                "type": "PT"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Delega creata o riattivata. Il campo id identifica la delega.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/DelegationResponse" },
+                "example": {
+                  "id": "00000000-0000-4000-8000-000000000003",
+                  "institutionId": "00000000-0000-4000-8000-000000000001",
+                  "institutionName": "Ente di esempio",
+                  "brokerId": "00000000-0000-4000-8000-000000000002",
+                  "brokerName": "Partner tecnico di esempio",
+                  "productId": "prod-pn",
+                  "type": "PT",
+                  "status": "ACTIVE"
+                }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "403": { "$ref": "#/components/responses/Forbidden" },
+          "404": { "$ref": "#/components/responses/NotFound" },
+          "409": { "$ref": "#/components/responses/Conflict" }
+        }
+      }
+    },
+    "/delegations/{delegationId}": {
+      "delete": {
+        "tags": ["Delegations test"],
+        "summary": "Cancellare una delega",
+        "description": "Usare l'id della delega restituito da POST o GET. Non inviare un body o un productId. La cancellazione e logica: imposta lo stato DELETED, senza rimuovere il documento. Questa operazione richiede la subscription dedicata ma non applica la whitelist dei prodotti usata da GET e POST.",
+        "operationId": "deleteDelegationUsingDELETE",
+        "parameters": [
+          {
+            "name": "delegationId",
+            "in": "path",
+            "description": "Identificativo interno della delega, non dell'ente.",
+            "required": true,
+            "style": "simple",
+            "schema": { "type": "string" },
+            "example": "00000000-0000-4000-8000-000000000003"
+          }
+        ],
+        "responses": {
+          "204": { "description": "Delega cancellata logicamente. Nessun body nella risposta." },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "403": { "$ref": "#/components/responses/Forbidden" },
+          "404": { "$ref": "#/components/responses/NotFound" },
+          "409": { "$ref": "#/components/responses/Conflict" }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "subscriptionKey": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "Ocp-Apim-Subscription-Key",
+        "description": "Key di una subscription attiva associata al prodotto APIM delegations-test nell'ambiente selezionato. Le subscription API-scoped o all-APIs non sono ammesse. Non condividere la key insieme a questo documento."
+      }
+    },
+    "schemas": {
+      "AllowedProductId": {
+        "type": "string",
+        "description": "Whitelist condivisa dal query parameter di GET e dal body di POST. Confronto esatto e case-sensitive.",
+        "enum": [
+          "prod-pn",
+          "prod-pn-dev",
+          "prod-pn-test",
+          "prod-pn-svil",
+          "prod-pn-uat",
+          "prod-pn-coll",
+          "prod-pn-cert",
+          "prod-pn-hotfix",
+          "prod-pn-prod"
+        ],
+        "example": "prod-pn"
+      },
+      "DelegationRequest": {
+        "title": "DelegationRequest",
+        "type": "object",
+        "required": ["from", "institutionFromName", "institutionToName", "productId", "to", "type"],
+        "properties": {
+          "from": {
+            "type": "string",
+            "description": "Identificativo interno dell'ente delegante."
+          },
+          "to": {
+            "type": "string",
+            "description": "Identificativo interno dell'ente delegato/partner."
+          },
+          "institutionFromName": {
+            "type": "string",
+            "description": "Nome dell'ente delegante."
+          },
+          "institutionToName": {
+            "type": "string",
+            "description": "Nome dell'ente delegato/partner."
+          },
+          "productId": { "$ref": "#/components/schemas/AllowedProductId" },
+          "type": { "type": "string", "enum": ["PT", "AOO", "EA"] },
+          "institutionFromRootName": {
+            "type": "string",
+            "description": "Nome dell'ente radice del delegante, se applicabile."
+          }
+        }
+      },
+      "DelegationResponse": {
+        "title": "DelegationResponse",
+        "type": "object",
+        "required": ["brokerId", "id", "institutionId", "institutionName", "productId", "type"],
+        "properties": {
+          "id": { "type": "string", "description": "Identificativo della delega da usare in DELETE." },
+          "institutionId": { "type": "string", "description": "Identificativo dell'ente delegante (from)." },
+          "institutionName": { "type": "string" },
+          "institutionRootName": { "type": "string" },
+          "type": { "type": "string", "enum": ["PT", "AOO", "EA"] },
+          "productId": { "type": "string" },
+          "taxCode": { "type": "string" },
+          "institutionType": { "type": "string" },
+          "brokerId": { "type": "string", "description": "Identificativo dell'ente delegato/partner (to)." },
+          "brokerTaxCode": { "type": "string" },
+          "brokerType": { "type": "string" },
+          "brokerName": { "type": "string" },
+          "status": { "type": "string", "enum": ["ACTIVE", "DELETED"] },
+          "createdAt": { "type": "string", "format": "date-time" },
+          "updatedAt": { "type": "string", "format": "date-time" },
+          "isTest": { "type": "boolean" }
+        }
+      },
+      "Problem": {
+        "title": "Problem",
+        "type": "object",
+        "required": ["status", "title"],
+        "description": "Dettagli dell'errore in formato application/problem+json.",
+        "properties": {
+          "type": { "type": "string" },
+          "title": { "type": "string" },
+          "status": { "type": "integer", "format": "int32", "minimum": 100, "maximum": 599 },
+          "detail": { "type": "string" },
+          "instance": { "type": "string" },
+          "invalidParams": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/InvalidParam" }
+          }
+        }
+      },
+      "InvalidParam": {
+        "title": "InvalidParam",
+        "type": "object",
+        "required": ["name", "reason"],
+        "properties": {
+          "name": { "type": "string" },
+          "reason": { "type": "string" }
+        }
+      }
+    },
+    "responses": {
+      "BadRequest": {
+        "description": "Richiesta non valida. GET richiede institutionId o brokerId; POST richiede un oggetto JSON valido e i campi obbligatori.",
+        "content": {
+          "application/problem+json": {
+            "schema": { "$ref": "#/components/schemas/Problem" }
+          }
+        }
+      },
+      "Unauthorized": {
+        "description": "Subscription key mancante, non valida, non attiva o non abilitata per questa API. La risposta e generata da APIM."
+      },
+      "Forbidden": {
+        "description": "Subscription non associata al prodotto delegations-test oppure, per GET/POST, productId assente, vuoto, non valido o fuori whitelist.",
+        "content": {
+          "application/problem+json": {
+            "schema": { "$ref": "#/components/schemas/Problem" },
+            "examples": {
+              "subscription": {
+                "summary": "Subscription non dedicata",
+                "value": {
+                  "title": "Forbidden",
+                  "status": 403,
+                  "detail": "A dedicated delegations-test product subscription is required."
+                }
+              },
+              "product": {
+                "summary": "productId non ammesso (GET/POST)",
+                "value": {
+                  "title": "Forbidden",
+                  "status": 403,
+                  "detail": "productId must be one of the allowed PN/AR products."
+                }
+              }
+            }
+          }
+        }
+      },
+      "NotFound": {
+        "description": "Risorsa non trovata.",
+        "content": {
+          "application/problem+json": {
+            "schema": { "$ref": "#/components/schemas/Problem" }
+          }
+        }
+      },
+      "Conflict": {
+        "description": "Conflitto con lo stato della risorsa; in creazione, la stessa delega puo essere gia attiva.",
+        "content": {
+          "application/problem+json": {
+            "schema": { "$ref": "#/components/schemas/Problem" }
+          }
+        }
+      }
+    }
+  }
+}
