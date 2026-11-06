@@ -204,6 +204,28 @@ class DocumentContentServiceImplTest {
     }
 
     @Test
+    void retrieveAttachment_shouldReturnOkResponse_whenLegacyDocumentHasNoStorageOrigin() {
+        Document doc = buildDocument();
+        doc.setType(DocumentType.ATTACHMENT);
+        doc.setAttachmentName("Addendum");
+        doc.setContractSigned("parties/docs/onboardingId/attachments/signed_addendum.pdf");
+        doc.setContractFilename("addendum.pdf");
+        doc.setStorageOrigin(null);
+        File mockFile = mock(File.class);
+
+        when(documentRepository.findAttachment(ONBOARDING_ID, DocumentType.ATTACHMENT.name(), "Addendum"))
+                .thenReturn(Uni.createFrom().item(doc));
+        when(azureBlobClient.getFileAsPdf("parties/docs/onboardingId/attachments/signed_addendum.pdf")).thenReturn(mockFile);
+
+        RestResponse<File> response = documentContentService.retrieveAttachment(ONBOARDING_ID, "Addendum")
+                .await().indefinitely();
+
+        assertEquals(RestResponse.Status.OK.getStatusCode(), response.getStatus());
+        assertEquals(DocumentContentServiceImpl.HTTP_HEADER_VALUE_ATTACHMENT_FILENAME + "addendum.pdf",
+                response.getHeaderString("Content-Disposition"));
+    }
+
+    @Test
     void retrieveAttachment_shouldThrowResourceNotFoundWhenDocumentIsNull() {
         when(documentRepository.findAttachment(ONBOARDING_ID, DocumentType.ATTACHMENT.name(), "missingAttachment"))
                 .thenReturn(Uni.createFrom().nullItem());
