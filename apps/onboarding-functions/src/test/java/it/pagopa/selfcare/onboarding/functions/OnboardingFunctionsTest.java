@@ -8,12 +8,16 @@ import com.microsoft.azure.functions.HttpRequestMessage;
 import com.microsoft.azure.functions.HttpResponseMessage;
 import com.microsoft.azure.functions.HttpStatus;
 import com.microsoft.durabletask.DurableTaskClient;
+import com.microsoft.durabletask.DataConverter;
 import com.microsoft.durabletask.FailureDetails;
+import com.microsoft.durabletask.OrchestrationMetadata;
 import com.microsoft.durabletask.RetryContext;
 import com.microsoft.durabletask.Task;
 import com.microsoft.durabletask.TaskFailedException;
 import com.microsoft.durabletask.TaskOrchestrationContext;
 import com.microsoft.durabletask.azurefunctions.DurableClientContext;
+import com.microsoft.durabletask.implementation.protobuf.OrchestratorService.OrchestrationState;
+import com.microsoft.durabletask.implementation.protobuf.OrchestratorService.OrchestrationStatus;
 import io.quarkus.test.InjectMock;
 import io.quarkus.test.junit.QuarkusTest;
 import it.pagopa.selfcare.onboarding.HttpResponseMessageMock;
@@ -61,6 +65,7 @@ import org.openapi.quarkus.product_json.model.SigningConfiguration;
 
 import java.time.Duration;
 import java.util.*;
+import java.util.concurrent.TimeoutException;
 import java.util.logging.Logger;
 
 import static it.pagopa.selfcare.onboarding.functions.utils.ActivityName.*;
@@ -172,7 +177,70 @@ class OnboardingFunctionsTest {
 
     // then
     verify(client, times(1)).waitForInstanceCompletion(anyString(), any(), anyBoolean());
+    verify(client).close();
     assertEquals(HttpStatus.INTERNAL_SERVER_ERROR.value(), responseMessage.getStatusCode());
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = {"async", "completed", "timeout", "scheduling-error"})
+  void startOrchestration_closesClient(String outcome) throws Exception {
+    DurableTaskClient client = mock(DurableTaskClient.class);
+    DurableClientContext durableContext = mock(DurableClientContext.class);
+    when(durableContext.getClient()).thenReturn(client);
+    RuntimeException schedulingError = new IllegalStateException("Scheduling failed");
+    if ("scheduling-error".equals(outcome)) {
+      when(client.scheduleNewOrchestrationInstance(eq("Onboardings"), anyString()))
+          .thenThrow(schedulingError);
+    } else {
+      when(client.scheduleNewOrchestrationInstance(eq("Onboardings"), anyString()))
+          .thenReturn("instanceId");
+    }
+
+    Map<String, String> query = new HashMap<>(Map.of("onboardingId", "onboardingId"));
+    if ("completed".equals(outcome) || "timeout".equals(outcome)) {
+      query.put("timeout", "10");
+      if ("timeout".equals(outcome)) {
+        when(client.waitForInstanceCompletion("instanceId", Duration.ofSeconds(10), true))
+            .thenThrow(new TimeoutException());
+      } else {
+        // The SDK exposes no public constructor for this final result type.
+        var constructor = OrchestrationMetadata.class.getDeclaredConstructor(
+            OrchestrationState.class, DataConverter.class, boolean.class);
+        constructor.setAccessible(true);
+        OrchestrationMetadata metadata = constructor.newInstance(
+            OrchestrationState.newBuilder()
+                .setOrchestrationStatus(OrchestrationStatus.ORCHESTRATION_STATUS_COMPLETED)
+                .build(),
+            null, true);
+        when(client.waitForInstanceCompletion("instanceId", Duration.ofSeconds(10), true))
+            .thenReturn(metadata);
+      }
+    }
+    when(durableContext.createCheckStatusResponse(any(), eq("instanceId")))
+        .thenReturn(new HttpResponseMessageMock.HttpResponseMessageBuilderMock()
+            .status(HttpStatus.ACCEPTED).build());
+
+    if ("scheduling-error".equals(outcome)) {
+      assertSame(schedulingError, assertThrows(IllegalStateException.class,
+          () -> startOrchestrationRequest(Map.of("X-Tenant-Id", "AR"), durableContext, query)));
+    } else {
+      HttpResponseMessage response =
+          startOrchestrationRequest(Map.of("X-Tenant-Id", "AR"), durableContext, query);
+      assertEquals("completed".equals(outcome) ? 200 : 202, response.getStatusCode());
+    }
+
+    var order = inOrder(client, durableContext);
+    order.verify(durableContext).getClient();
+    order.verify(client).scheduleNewOrchestrationInstance(eq("Onboardings"), anyString());
+    if (query.containsKey("timeout")) {
+      order.verify(client).waitForInstanceCompletion("instanceId", Duration.ofSeconds(10), true);
+    }
+    if ("async".equals(outcome) || "timeout".equals(outcome)) {
+      order.verify(durableContext).createCheckStatusResponse(any(), eq("instanceId"));
+    }
+    order.verify(client).close();
+    verify(client).close();
+    verify(durableContext).getClient();
   }
 
   @ParameterizedTest
@@ -207,9 +275,16 @@ class OnboardingFunctionsTest {
 
   private HttpResponseMessage startOrchestrationRequest(
       Map<String, String> headers, DurableClientContext durableContext) {
+    return startOrchestrationRequest(
+        headers, durableContext, Map.of("onboardingId", "onboardingId"));
+  }
+
+  private HttpResponseMessage startOrchestrationRequest(
+      Map<String, String> headers, DurableClientContext durableContext,
+      Map<String, String> queryParams) {
     @SuppressWarnings("unchecked")
     final HttpRequestMessage<Optional<String>> req = mock(HttpRequestMessage.class);
-    doReturn(Map.of("onboardingId", "onboardingId")).when(req).getQueryParameters();
+    doReturn(queryParams).when(req).getQueryParameters();
     doReturn(headers).when(req).getHeaders();
     doAnswer(
             (Answer<HttpResponseMessage.Builder>)
@@ -1448,6 +1523,7 @@ class OnboardingFunctionsTest {
             function.buildAttachmentsAndSaveTokens(req, durableContext, context);
 
     // then
+    verify(client).close();
     assertEquals(HttpStatus.ACCEPTED.value(), responseMessage.getStatusCode());
   }
 

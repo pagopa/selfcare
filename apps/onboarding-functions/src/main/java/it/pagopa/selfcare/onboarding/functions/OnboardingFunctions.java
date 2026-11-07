@@ -184,47 +184,48 @@ public class OnboardingFunctions {
       return request.createResponseBuilder(HttpStatus.BAD_REQUEST).body("Invalid tenant context").build();
     }
 
-    DurableTaskClient client = durableContext.getClient();
-    String instanceId =
-        client.scheduleNewOrchestrationInstance(
-            "Onboardings",
-            getOnboardingOrchestrationInputString(
-                objectMapper, new OnboardingOrchestrationInput(onboardingId, tenantId)));
+    try (DurableTaskClient client = durableContext.getClient()) {
+      String instanceId =
+          client.scheduleNewOrchestrationInstance(
+              "Onboardings",
+              getOnboardingOrchestrationInputString(
+                  objectMapper, new OnboardingOrchestrationInput(onboardingId, tenantId)));
 
-    telemetryService.trackFunction(
-        START_ONBOARDING_ORCHESTRATION,
-        String.format(
-            "%s %s", CREATED_NEW_ONBOARDING_ORCHESTRATION_WITH_INSTANCE_ID_MSG, instanceId),
-        SeverityLevel.Information,
-        Map.of(
-            ONBOARDING_ID, onboardingId,
-            FunctionInvocationLogger.USER_ID_PROPERTY, userId,
-            "instanceId", instanceId));
+      telemetryService.trackFunction(
+          START_ONBOARDING_ORCHESTRATION,
+          String.format(
+              "%s %s", CREATED_NEW_ONBOARDING_ORCHESTRATION_WITH_INSTANCE_ID_MSG, instanceId),
+          SeverityLevel.Information,
+          Map.of(
+              ONBOARDING_ID, onboardingId,
+              FunctionInvocationLogger.USER_ID_PROPERTY, userId,
+              "instanceId", instanceId));
 
-    try {
+      try {
 
-      /* if timeout is null, caller wants response asynchronously */
-      if (Objects.isNull(timeoutString)) {
+        /* if timeout is null, caller wants response asynchronously */
+        if (Objects.isNull(timeoutString)) {
+          return durableContext.createCheckStatusResponse(request, instanceId);
+        }
+
+        int timeoutInSeconds = Integer.parseInt(timeoutString);
+        OrchestrationMetadata metadata =
+            client.waitForInstanceCompletion(instanceId, Duration.ofSeconds(timeoutInSeconds), true);
+
+        boolean isFailed =
+            Optional.ofNullable(metadata)
+                .map(
+                    orchestration ->
+                        OrchestrationRuntimeStatus.FAILED.equals(orchestration.getRuntimeStatus()))
+                .orElse(true);
+
+        return isFailed
+            ? request.createResponseBuilder(HttpStatus.INTERNAL_SERVER_ERROR).build()
+            : request.createResponseBuilder(HttpStatus.OK).build();
+      } catch (TimeoutException timeoutEx) {
+        // timeout expired - return a 202 response
         return durableContext.createCheckStatusResponse(request, instanceId);
       }
-
-      int timeoutInSeconds = Integer.parseInt(timeoutString);
-      OrchestrationMetadata metadata =
-          client.waitForInstanceCompletion(instanceId, Duration.ofSeconds(timeoutInSeconds), true);
-
-      boolean isFailed =
-          Optional.ofNullable(metadata)
-              .map(
-                  orchestration ->
-                      OrchestrationRuntimeStatus.FAILED.equals(orchestration.getRuntimeStatus()))
-              .orElse(true);
-
-      return isFailed
-          ? request.createResponseBuilder(HttpStatus.INTERNAL_SERVER_ERROR).build()
-          : request.createResponseBuilder(HttpStatus.OK).build();
-    } catch (TimeoutException timeoutEx) {
-      // timeout expired - return a 202 response
-      return durableContext.createCheckStatusResponse(request, instanceId);
     }
   }
 
@@ -527,20 +528,21 @@ public class OnboardingFunctions {
           .build();
     }
 
-    DurableTaskClient client = durableContext.getClient();
-    String instanceId =
-        client.scheduleNewOrchestrationInstance(
-            "BuildAttachmentAndSaveToken", onboardingString.get());
-    telemetryService.trackFunction(
-        TRIGGER_BUILD_ATTACHMENTS_AND_SAVE_TOKENS,
-        String.format(
-            "%s %s", CREATED_NEW_BUILD_ATTACHMENTS_ORCHESTRATION_WITH_INSTANCE_ID_MSG, instanceId),
-        SeverityLevel.Information,
-        Map.of(
-            "instanceId", instanceId,
-            FunctionInvocationLogger.USER_ID_PROPERTY, userId));
+    try (DurableTaskClient client = durableContext.getClient()) {
+      String instanceId =
+          client.scheduleNewOrchestrationInstance(
+              "BuildAttachmentAndSaveToken", onboardingString.get());
+      telemetryService.trackFunction(
+          TRIGGER_BUILD_ATTACHMENTS_AND_SAVE_TOKENS,
+          String.format(
+              "%s %s", CREATED_NEW_BUILD_ATTACHMENTS_ORCHESTRATION_WITH_INSTANCE_ID_MSG, instanceId),
+          SeverityLevel.Information,
+          Map.of(
+              "instanceId", instanceId,
+              FunctionInvocationLogger.USER_ID_PROPERTY, userId));
 
-    return durableContext.createCheckStatusResponse(request, instanceId);
+      return durableContext.createCheckStatusResponse(request, instanceId);
+    }
   }
 
   /**
