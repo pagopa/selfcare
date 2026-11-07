@@ -281,11 +281,12 @@ public class NotificationFunctions {
     }
 
     String filtersInJson = objectMapper.writeValueAsString(filters);
-    DurableTaskClient client = durableContext.getClient();
-    String instanceId = client.scheduleNewOrchestrationInstance("NotificationsSender", filtersInJson);
-    functionInvocationLogger.logOrchestrationStarted("ResendNotifications", userId, instanceId);
+    try (DurableTaskClient client = durableContext.getClient()) {
+      String instanceId = client.scheduleNewOrchestrationInstance("NotificationsSender", filtersInJson);
+      functionInvocationLogger.logOrchestrationStarted("ResendNotifications", userId, instanceId);
 
-    return durableContext.createCheckStatusResponse(request, instanceId);
+      return durableContext.createCheckStatusResponse(request, instanceId);
+    }
   }
 
   /**

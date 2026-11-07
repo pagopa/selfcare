@@ -119,6 +119,7 @@ public class InstitutionFunctionsTest {
       function.deleteInstitutionAndUserTrigger(req, durableContext, executionContext);
 
     // then
+    verify(client).close();
     assertEquals(HttpStatus.ACCEPTED.value(), responseMessage.getStatusCode());
   }
 

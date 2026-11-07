@@ -527,6 +527,7 @@ public class NotificationFunctionsTest {
         HttpResponseMessage responseMessage = function.resendNotifications(req, durableContext, context);
 
         // then
+        verify(client).close();
         assertEquals(HttpStatus.ACCEPTED.value(), responseMessage.getStatusCode());
     }
 

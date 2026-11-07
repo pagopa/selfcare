@@ -85,12 +85,13 @@ public class InstitutionFunctions {
         .body("onboardingId can't be null or empty")
         .build();
     }
-    DurableTaskClient client = durableContext.getClient();
-    String instanceId = client.scheduleNewOrchestrationInstance("DeleteInstitutionAndUserOnboarding", onboardingId);
-    functionInvocationLogger.logOrchestrationStarted(
-      "TriggerDeleteInstitutionAndUser", userId, instanceId);
+    try (DurableTaskClient client = durableContext.getClient()) {
+      String instanceId = client.scheduleNewOrchestrationInstance("DeleteInstitutionAndUserOnboarding", onboardingId);
+      functionInvocationLogger.logOrchestrationStarted(
+        "TriggerDeleteInstitutionAndUser", userId, instanceId);
 
-    return durableContext.createCheckStatusResponse(request, instanceId);
+      return durableContext.createCheckStatusResponse(request, instanceId);
+    }
   }
 
   /**
