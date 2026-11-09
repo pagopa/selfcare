@@ -22,6 +22,13 @@ Before running you have to set these properties as environment variables.
 When `delegation-cdc.webhook.enabled` is true, every notification successfully sent to the `sc-delegations` event hub is also
 forwarded (best effort) to the webhook service (`POST /webhooks/notify`) with the configured tenant and topic.
 
+## Tenant ownership
+
+Delegations derived for aggregates (EA delegations copied onto a PT) are written to the `Delegations` collection with a
+`tenantId`. The value comes from the PT delegation that triggered the change event; if it is missing, the aggregate
+delegation's `tenantId` is used. institution-ms runs with strict tenant isolation (`TENANT_STRICT_DATA_ISOLATION=true`), so
+untagged documents are not visible through its APIs.
+
 
 > **_NOTE:_**  properties that contains secret must have the same name of its secret as uppercase.
 
