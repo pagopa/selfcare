@@ -85,7 +85,7 @@ locals {
     },
     {
       name  = "TENANT_STRICT_DATA_ISOLATION"
-      value = "false"
+      value = "true"
     },
     {
       name = "SELFCARE_TENANT_DATA_ISOLATION"
@@ -98,6 +98,21 @@ locals {
           }
           jwt = {
             publicKeyEnvVar = "JWT_PUBLIC_KEY_PNPG"
+          }
+          userRegistry = {
+            apiKeyEnvVar = "USER_REGISTRY_API_KEY_PNPG"
+          }
+          oneMail = {
+            url          = "https://uat.onemail.pagopa.it"
+            sender       = "noreply@selfcare.pagopa.it"
+            apiKeyEnvVar = "ONE_MAIL_API_KEY_PNPG"
+          }
+          pec = {
+            host           = "smtps.pec.aruba.it"
+            port           = 465
+            sender         = "noreply@areariservata.pagopa.it"
+            usernameEnvVar = "SMTP_USR_PNPG"
+            passwordEnvVar = "SMTP_PSW_PNPG"
           }
           storages = {
             products = {
@@ -153,14 +168,6 @@ locals {
       value = "DEBUG"
     },
     {
-      name  = "SMTP_HOST"
-      value = "smtps.pec.aruba.it"
-    },
-    {
-      name  = "SMTP_PORT"
-      value = "465"
-    },
-    {
       name  = "SMTP_SSL"
       value = "true"
     },
@@ -181,10 +188,6 @@ locals {
       value = "https://selc-${module.local.config.env_short}-pnpg-user-ms-ca.${module.local.config.private_dns_name_domain}"
     },
     {
-      name  = "MAIL_SENDER_ADDRESS"
-      value = "noreply@areariservata.pagopa.it"
-    },
-    {
       name  = "PEC_NOTIFICATION_DISABLED"
       value = "true"
     },
@@ -197,14 +200,6 @@ locals {
       value = data.azurerm_user_assigned_identity.product_storage_blob_identity.client_id
     },
     {
-      name  = "ONE_MAIL_URL"
-      value = "https://uat.onemail.pagopa.it"
-    },
-    {
-      name  = "ONE_MAIL_SENDER_ADDRESS"
-      value = "noreply@selfcare.pagopa.it"
-    },
-    {
       name  = "USER_MAIL_ENABLED"
       value = "false"
     }
@@ -213,12 +208,12 @@ locals {
   secrets_names_institution_ms = {
     "APPLICATIONINSIGHTS_CONNECTION_STRING"    = "appinsights-connection-string"
     "MONGODB_CONNECTION_STRING_PNPG"           = "mongodb-connection-string"
-    "SMTP_USR"                                 = "smtp-usr"
-    "SMTP_PSW"                                 = "smtp-psw"
+    "SMTP_USR_PNPG"                            = "smtp-usr"
+    "SMTP_PSW_PNPG"                            = "smtp-psw"
     "ONBOARDING_INSTITUTION_ALTERNATIVE_EMAIL" = "party-test-institution-email"
-    "USER_REGISTRY_API_KEY"                    = "user-registry-api-key"
+    "USER_REGISTRY_API_KEY_PNPG"               = "user-registry-api-key"
     "JWT_PUBLIC_KEY_PNPG"                      = "jwt-public-key"
-    "ONE_MAIL_API_KEY"                         = "onemail-api-key"
+    "ONE_MAIL_API_KEY_PNPG"                    = "onemail-api-key"
   }
 }
 

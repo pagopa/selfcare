@@ -144,7 +144,7 @@ locals {
     },
     {
       name  = "TENANT_STRICT_DATA_ISOLATION"
-      value = "false"
+      value = "true"
     },
     {
       name = "SELFCARE_TENANT_DATA_ISOLATION"
@@ -157,6 +157,29 @@ locals {
           }
           jwt = {
             publicKeyEnvVar = "JWT_PUBLIC_KEY_AR"
+          }
+          userRegistry = {
+            apiKeyEnvVar = "USER_REGISTRY_API_KEY_AR"
+          }
+          oneMail = {
+            url          = "https://uat.onemail.pagopa.it"
+            sender       = "noreply@selfcare.pagopa.it"
+            apiKeyEnvVar = "ONE_MAIL_API_KEY_AR"
+          }
+          pec = {
+            host           = "smtps.pec.aruba.it"
+            port           = 465
+            sender         = "noreply@areariservata.pagopa.it"
+            usernameEnvVar = "SMTP_USR_AR"
+            passwordEnvVar = "SMTP_PSW_AR"
+          }
+          eventHub = {
+            namespaceUrl = "https://selc-u-eventhub-ns.servicebus.windows.net/"
+            topic        = "sc-delegations"
+            authentication = {
+              type                          = "MANAGED_IDENTITY"
+              managedIdentityClientIdEnvVar = "EVENTHUB_SENDER_MANAGED_IDENTITY_CLIENT_ID"
+            }
           }
           storages = {
             products = {
@@ -212,15 +235,6 @@ locals {
       value = "DEBUG"
     },
     {
-      name  = "SMTP_HOST"
-      value = "smtps.pec.aruba.it"
-    },
-
-    {
-      name  = "SMTP_PORT"
-      value = "465"
-    },
-    {
       name  = "SMTP_SSL"
       value = "true"
     },
@@ -241,24 +255,8 @@ locals {
       value = "https://selc-${module.local.config.env_short}-user-ms-ca.${module.local.config.private_dns_name_domain}"
     },
     {
-      name  = "MAIL_SENDER_ADDRESS"
-      value = "noreply@areariservata.pagopa.it"
-    },
-    {
       name  = "PEC_NOTIFICATION_DISABLED"
       value = "false"
-    },
-    {
-      name  = "EVENT_HUB_BASE_PATH"
-      value = "https://selc-u-eventhub-ns.servicebus.windows.net/"
-    },
-    {
-      name  = "EVENT_HUB_SC_DELEGATIONS_TOPIC"
-      value = "sc-delegations"
-    },
-    {
-      name  = "SHARED_ACCESS_KEY_NAME"
-      value = "selfcare-wo"
     },
     {
       name  = "INSTITUTION_MAIL_TEMPLATES_STORAGE_CLIENT_ID"
@@ -273,14 +271,6 @@ locals {
       value = data.azurerm_user_assigned_identity.delegations_eventhub_sender_identity.client_id
     },
     {
-      name  = "ONE_MAIL_URL"
-      value = "https://uat.onemail.pagopa.it"
-    },
-    {
-      name  = "ONE_MAIL_SENDER_ADDRESS"
-      value = "noreply@selfcare.pagopa.it"
-    },
-    {
       name  = "USER_MAIL_ENABLED"
       value = "false"
     }
@@ -289,12 +279,12 @@ locals {
   secrets_names_institution_ms = {
     "APPLICATIONINSIGHTS_CONNECTION_STRING"    = "appinsights-connection-string"
     "MONGODB_CONNECTION_STRING_AR"             = "mongodb-connection-string"
-    "SMTP_USR"                                 = "smtp-usr"
-    "SMTP_PSW"                                 = "smtp-psw"
+    "SMTP_USR_AR"                              = "smtp-usr"
+    "SMTP_PSW_AR"                              = "smtp-psw"
     "ONBOARDING_INSTITUTION_ALTERNATIVE_EMAIL" = "party-test-institution-email"
-    "USER_REGISTRY_API_KEY"                    = "user-registry-api-key"
+    "USER_REGISTRY_API_KEY_AR"                 = "user-registry-api-key"
     "JWT_PUBLIC_KEY_AR"                        = "jwt-public-key"
-    "ONE_MAIL_API_KEY"                         = "onemail-api-key"
+    "ONE_MAIL_API_KEY_AR"                      = "onemail-api-key"
   }
 }
 

@@ -3,6 +3,7 @@ package it.pagopa.selfcare.mscore.connector.rest.client;
 import com.github.tomakehurst.wiremock.junit5.WireMockExtension;
 import feign.RetryableException;
 import it.pagopa.selfcare.commons.connector.rest.BaseFeignRestClientTest;
+import it.pagopa.selfcare.commons.tenant.TenantContext;
 import it.pagopa.selfcare.one_mail.generated.openapi.v1.dto.EmailHighPriorityBodyDTO;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
@@ -12,7 +13,6 @@ import org.springframework.context.ApplicationContextInitializer;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
-import org.springframework.test.context.support.TestPropertySourceUtils;
 
 import java.net.SocketTimeoutException;
 import java.time.Duration;
@@ -26,7 +26,9 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 @TestPropertySource(
         locations = "classpath:config/one-mail-rest-client.properties",
         properties = {
-                "ONE_MAIL_API_KEY=test-api-key",
+                "MAIL_AR=test-api-key",
+                "MAIL_PNPG=pnpg-api-key",
+                "tenant.mongodb.required=false",
                 "ONE_MAIL_REST_CLIENT_READ_TIMEOUT=500"
         }
 )
@@ -44,13 +46,16 @@ class OneMailRestClientTimeoutTest extends BaseFeignRestClientTest {
     public static class RandomPortInitializer implements ApplicationContextInitializer<ConfigurableApplicationContext> {
         @Override
         public void initialize(ConfigurableApplicationContext applicationContext) {
-            TestPropertySourceUtils.addInlinedPropertiesToEnvironment(applicationContext,
-                    String.format("ONE_MAIL_URL=%s", wm.getRuntimeInfo().getHttpBaseUrl()));
+            OneMailRestClientTest.configureRegistry(applicationContext,
+                    wm.getRuntimeInfo().getHttpBaseUrl(), wm.getRuntimeInfo().getHttpBaseUrl());
         }
     }
 
     @Autowired
     private OneMailRestClient restClient;
+
+    @Autowired
+    private TenantContext tenantContext;
 
     @Test
     void sendHighPriorityEmail_readTimeout() {
@@ -59,7 +64,7 @@ class OneMailRestClientTimeoutTest extends BaseFeignRestClientTest {
         EmailHighPriorityBodyDTO body = EmailHighPriorityBodyDTO.builder().build();
 
         RetryableException exception = assertThrows(RetryableException.class,
-                () -> restClient._v1EmailsSendHighPost(false, body));
+                () -> tenantContext.withTenant("AR", () -> restClient._v1EmailsSendHighPost(false, body)));
 
         assertInstanceOf(SocketTimeoutException.class, exception.getCause());
         // The client can time out before WireMock records the request.

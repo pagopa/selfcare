@@ -87,6 +87,16 @@ public class CucumberSuite {
                       "connectionStringEnvVar": "MONGODB_CONNECTION_STRING_AR"
                     },
                     "jwt": { "publicKeyEnvVar": "JWT_PUBLIC_KEY_AR" },
+                    "userRegistry": { "apiKeyEnvVar": "USER_REGISTRY_API_KEY_AR" },
+                    "oneMail": {
+                      "url": "http://localhost:1080",
+                      "sender": "noreply-ar@test.it",
+                      "apiKeyEnvVar": "ONE_MAIL_API_KEY_AR"
+                    },
+                    "pec": {
+                      "host": "localhost", "port": 9999, "sender": "pec-ar@test.it",
+                      "usernameEnvVar": "SMTP_USR_AR", "passwordEnvVar": "SMTP_PSW_AR"
+                    },
                     "storages": {
                       "products": {
                         "account": "devstoreaccount1",
@@ -114,6 +124,16 @@ public class CucumberSuite {
                       "connectionStringEnvVar": "MONGODB_CONNECTION_STRING_PNPG"
                     },
                     "jwt": { "publicKeyEnvVar": "JWT_PUBLIC_KEY_PNPG" },
+                    "userRegistry": { "apiKeyEnvVar": "USER_REGISTRY_API_KEY_PNPG" },
+                    "oneMail": {
+                      "url": "http://localhost:1080",
+                      "sender": "noreply-pnpg@test.it",
+                      "apiKeyEnvVar": "ONE_MAIL_API_KEY_PNPG"
+                    },
+                    "pec": {
+                      "host": "localhost", "port": 9999, "sender": "pec-pnpg@test.it",
+                      "usernameEnvVar": "SMTP_USR_PNPG", "passwordEnvVar": "SMTP_PSW_PNPG"
+                    },
                     "storages": {
                       "products": {
                         "account": "devstoreaccount1",

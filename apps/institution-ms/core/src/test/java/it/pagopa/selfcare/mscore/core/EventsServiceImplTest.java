@@ -1,5 +1,9 @@
 package it.pagopa.selfcare.mscore.core;
 
+import it.pagopa.selfcare.commons.tenant.TenantContext;
+import it.pagopa.selfcare.commons.tenant.TenantRegistry;
+import it.pagopa.selfcare.commons.tenant.TenantDefinition.EventHubCredentials;
+import it.pagopa.selfcare.commons.tenant.TenantDefinition.EventHubAuthenticationType;
 import it.pagopa.selfcare.mscore.api.DelegationConnector;
 import it.pagopa.selfcare.mscore.api.EventHubConnector;
 import it.pagopa.selfcare.mscore.constant.DelegationState;
@@ -22,6 +26,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.OffsetDateTime;
 import java.util.List;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.*;
@@ -39,11 +44,20 @@ public class EventsServiceImplTest {
     @Mock
     private EventHubConnector eventHubConnector;
 
+    @Mock
+    private TenantRegistry tenantRegistry;
+
+    @Spy
+    private TenantContext tenantContext = new TenantContext();
+
     @Spy
     private DelegationNotificationMapper delegationNotificationMapper = new DelegationNotificationMapperImpl();
 
     @Test
     void sendDelegationEventsTest() {
+        when(tenantRegistry.eventHubCredentials("AR")).thenReturn(Optional.of(
+                new EventHubCredentials("https://ar.test", "events",
+                        EventHubAuthenticationType.MANAGED_IDENTITY, "identity", null, null)));
         final DelegationWithPagination delegationsPage0 = new DelegationWithPagination();
         delegationsPage0.setDelegations(List.of(
                 createDelegation(OffsetDateTime.now(), null, null),
@@ -59,7 +73,10 @@ public class EventsServiceImplTest {
         delegationsPage1.setPageInfo(PageInfo.builder().totalPages(2).pageNo(1).totalElements(3).pageSize(2).build());
         when(delegationConnector.findFromDate(any(), eq(1L), any())).thenReturn(delegationsPage1);
 
-        eventsServiceImpl.sendDelegationEvents(OffsetDateTime.now());
+        tenantContext.withTenant("AR", () -> {
+            eventsServiceImpl.sendDelegationEvents(OffsetDateTime.now());
+            return null;
+        });
 
         final ArgumentCaptor<DelegationNotificationToSend> captor = ArgumentCaptor.forClass(DelegationNotificationToSend.class);
         verify(eventHubConnector, times(3)).sendEvent(captor.capture());
@@ -70,6 +87,16 @@ public class EventsServiceImplTest {
 
         verify(delegationConnector, times(1)).findFromDate(any(), eq(0L), any());
         verify(delegationConnector, times(1)).findFromDate(any(), eq(1L), any());
+    }
+
+    @Test
+    void tenantWithoutEventHubSkipsWithoutFetchingOrSendingDelegations() {
+        when(tenantRegistry.eventHubCredentials("PNPG")).thenReturn(Optional.empty());
+        tenantContext.withTenant("PNPG", () -> {
+            eventsServiceImpl.sendDelegationEvents(OffsetDateTime.now());
+            return null;
+        });
+        verifyNoInteractions(delegationConnector, eventHubConnector, delegationNotificationMapper);
     }
 
     private Delegation createDelegation(OffsetDateTime createdAt, OffsetDateTime updatedAt, OffsetDateTime closedAt) {
