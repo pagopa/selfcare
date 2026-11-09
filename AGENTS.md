@@ -19,7 +19,7 @@ SelfCare monorepo (PagoPA): microservices, SDKs, infrastructure and release auto
 | `test-coverage/` | Aggregated JaCoCo reports for SonarCloud (one profile per module) |
 | `infra/` | Terraform (`core`, `resources`, `bootstrap`, `repository`, `cert`, `dashboards`, ...) |
 | `doc/<app>/knowledge.md` | Per-app notes (present for some apps, e.g. `product`, `onboarding-*`): read before changing that app |
-| `docs/` | Architecture diagrams and specs |
+| `docs/` | Repository documentation: start at `docs/README.md` (architecture, per-app and per-lib pages, infra, CI/CD, testing) and specs in `docs/specs/` |
 | `.github/workflows/` | CI/CD: `pr_<app>.yml` (PR checks), `pr_<app>_infra.yml`, `trigger_release_<app>.yml`, `release_*.yml`, `integration_test*.yml` |
 
 Apps: `auth`, `iam`, `product`, `product-cdc`, `webhook`, `webhook-consumer`, `institution-ms`, `institution-cdc`, `institution-send-mail-scheduler`, `user-ms`, `user-cdc`, `user-group-ms`, `user-group-cdc`, `dashboard-bff`, `external-api`, `onboarding-ms`, `onboarding-bff`, `onboarding-cdc`, `onboarding-functions` (Azure Functions), `document-ms`, `delegation-cdc`, `registry-proxy`, `registry-proxy-runner`, `log-availability-runner`.
