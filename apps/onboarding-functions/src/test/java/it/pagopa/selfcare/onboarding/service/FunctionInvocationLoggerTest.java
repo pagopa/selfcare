@@ -1,6 +1,5 @@
 package it.pagopa.selfcare.onboarding.service;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -17,16 +16,37 @@ class FunctionInvocationLoggerTest {
       new FunctionInvocationLogger(telemetryService);
 
   @Test
-  void logInvocationTracksRequesterUserId() {
+  void logInvocationTracksUserIdFromVerifiedToken() {
     // given
     HttpRequestMessage<?> request = mock(HttpRequestMessage.class);
-    when(request.getHeaders()).thenReturn(Map.of("X-SelfCare-Uid", " requester-id "));
+    when(request.getHeaders()).thenReturn(Map.of());
+    CallerIdentity caller = new CallerIdentity("token-uid", "SPID", null, null, null, null, null);
 
     // when
-    String userId = functionInvocationLogger.logInvocation("TestFunction", request);
+    functionInvocationLogger.logInvocation("TestFunction", caller, request);
 
     // then
-    assertEquals("requester-id", userId);
+    verify(telemetryService)
+        .trackFunction(
+            "TestFunction",
+            "TestFunction HTTP trigger processed a request",
+            SeverityLevel.Information,
+            Map.of("functionName", "TestFunction", "userId", "token-uid", "issuer", "SPID"));
+  }
+
+  @Test
+  void logInvocationIgnoresDeclaredHeaderAsIdentityAndFlagsMismatch() {
+    // given
+    HttpRequestMessage<?> request = mock(HttpRequestMessage.class);
+    when(request.getHeaders()).thenReturn(Map.of("X-SelfCare-Uid", " pippo "));
+    CallerIdentity caller =
+        new CallerIdentity(
+            "token-uid", "SPID", "apim", "subscription-id", "product-id", "PNPG", "default");
+
+    // when
+    functionInvocationLogger.logInvocation("TestFunction", caller, request);
+
+    // then
     verify(telemetryService)
         .trackFunction(
             "TestFunction",
@@ -34,52 +54,57 @@ class FunctionInvocationLoggerTest {
             SeverityLevel.Information,
             Map.of(
                 "functionName", "TestFunction",
-                "userId", "requester-id",
-                "missingUserId", "false"));
+                "userId", "token-uid",
+                "tenant", "PNPG",
+                "tenantSource", "default",
+                "issuer", "SPID",
+                "clientId", "apim",
+                "subscriptionId", "subscription-id",
+                "productId", "product-id",
+                "declaredUserId", "pippo",
+                "declaredUserIdMismatch", "true"));
   }
 
   @Test
-  void logInvocationTracksUnknownWhenRequesterHeaderIsBlank() {
+  void logInvocationTracksMatchingDeclaredHeader() {
     // given
     HttpRequestMessage<?> request = mock(HttpRequestMessage.class);
-    when(request.getHeaders()).thenReturn(Map.of("x-selfcare-uid", " "));
+    when(request.getHeaders()).thenReturn(Map.of("x-selfcare-uid", "token-uid"));
+    CallerIdentity caller = new CallerIdentity("token-uid", null, null, null, null, null, null);
 
     // when
-    String userId = functionInvocationLogger.logInvocation("TestFunction", request);
+    functionInvocationLogger.logInvocation("TestFunction", caller, request);
 
     // then
-    assertEquals(FunctionInvocationLogger.UNKNOWN_USER_ID, userId);
     verify(telemetryService)
         .trackFunction(
             "TestFunction",
-            "TestFunction HTTP trigger received a request without a userId",
-            SeverityLevel.Warning,
+            "TestFunction HTTP trigger processed a request",
+            SeverityLevel.Information,
             Map.of(
                 "functionName", "TestFunction",
-                "userId", "unknown",
-                "missingUserId", "true"));
+                "userId", "token-uid",
+                "declaredUserId", "token-uid",
+                "declaredUserIdMismatch", "false"));
   }
 
   @Test
-  void logInvocationTracksUnknownWhenHeadersAreMissing() {
+  void logInvocationHandlesMissingHeaders() {
     // given
     HttpRequestMessage<?> request = mock(HttpRequestMessage.class);
     when(request.getHeaders()).thenReturn(null);
+    CallerIdentity caller = new CallerIdentity("token-uid", null, null, null, null, null, null);
 
     // when
-    String userId = functionInvocationLogger.logInvocation("TestFunction", request);
+    functionInvocationLogger.logInvocation("TestFunction", caller, request);
 
     // then
-    assertEquals(FunctionInvocationLogger.UNKNOWN_USER_ID, userId);
     verify(telemetryService)
         .trackFunction(
             "TestFunction",
-            "TestFunction HTTP trigger received a request without a userId",
-            SeverityLevel.Warning,
-            Map.of(
-                "functionName", "TestFunction",
-                "userId", "unknown",
-                "missingUserId", "true"));
+            "TestFunction HTTP trigger processed a request",
+            SeverityLevel.Information,
+            Map.of("functionName", "TestFunction", "userId", "token-uid"));
   }
 
   @Test

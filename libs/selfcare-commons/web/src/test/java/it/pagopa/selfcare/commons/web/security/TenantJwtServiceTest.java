@@ -86,6 +86,42 @@ class TenantJwtServiceTest {
         assertThrows(RuntimeException.class, () -> service.getClaims(invalidAudienceToken, "AR"));
     }
 
+    @Test
+    void audienceResolutionReconcilesClaimsAndHonorsStrictMode() throws Exception {
+        TenantRegistry registry = mock(TenantRegistry.class);
+        when(registry.isConfigured()).thenReturn(true);
+        when(registry.supportedTenantIds()).thenReturn(java.util.Set.of("AR"));
+        when(registry.normalizeAndValidate("AR")).thenReturn("AR");
+        when(registry.resolve("AR")).thenReturn(new TenantDefinition(null,
+                new TenantDefinition.JwtDefinition("KEY", java.util.Set.of("SPID"),
+                        java.util.Set.of("ar-audience")), java.util.Map.of()));
+        JwtService service = new JwtService("", registry);
+        Claims claims = Jwts.claims().setAudience("ar-audience");
+
+        assertEquals("AR", service.resolveTenantFromAudience(claims, "AR", false));
+        assertThrows(TenantValidationException.class,
+                () -> service.resolveTenantFromAudience(claims, "AR", true));
+        claims.put("tenant_id", "AR");
+        assertEquals("AR", service.resolveTenantFromAudience(claims, "AR", true));
+    }
+
+    @Test
+    void audienceResolutionRejectsAmbiguousRegistryBindings() throws Exception {
+        TenantRegistry registry = mock(TenantRegistry.class);
+        when(registry.isConfigured()).thenReturn(true);
+        when(registry.supportedTenantIds()).thenReturn(java.util.Set.of("AR", "PNPG"));
+        var definition = new TenantDefinition(null,
+                new TenantDefinition.JwtDefinition("KEY", java.util.Set.of("SPID"),
+                        java.util.Set.of("shared-audience")), java.util.Map.of());
+        when(registry.resolve("AR")).thenReturn(definition);
+        when(registry.resolve("PNPG")).thenReturn(definition);
+        JwtService service = new JwtService("", registry);
+
+        assertThrows(TenantValidationException.class,
+                () -> service.resolveTenantFromAudience(
+                        Jwts.claims().setAudience("shared-audience"), "AR", false));
+    }
+
     private static KeyPair keyPair() throws Exception {
         KeyPairGenerator generator = KeyPairGenerator.getInstance("RSA");
         generator.initialize(2048);
@@ -116,6 +152,8 @@ class TenantJwtServiceTest {
                         .signWith(ar.getPrivate(), SignatureAlgorithm.RS256).compact(),
                 Jwts.builder().setIssuer("SPID").setAudience("pnpg-audience").setExpiration(expiry)
                         .signWith(ar.getPrivate(), SignatureAlgorithm.RS256).compact(),
+                Jwts.builder().setIssuer("SPID").claim("aud", java.util.List.of("ar-audience"))
+                        .setExpiration(expiry).signWith(ar.getPrivate(), SignatureAlgorithm.RS256).compact(),
                 Jwts.builder().setIssuer("SPID").setAudience("ar-audience")
                         .signWith(ar.getPrivate(), SignatureAlgorithm.RS256).compact(),
                 Jwts.builder().setIssuer("SPID").setAudience("ar-audience").setExpiration(expiry)

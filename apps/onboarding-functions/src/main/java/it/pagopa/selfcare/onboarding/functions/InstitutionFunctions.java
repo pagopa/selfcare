@@ -39,7 +39,7 @@ public class InstitutionFunctions {
   private final OnboardingService onboardingService;
   private final ObjectMapper objectMapper;
   private final FunctionInvocationLogger functionInvocationLogger;
-  private final HttpJwtValidator httpJwtValidator;
+  private final HttpFunctionGuard httpFunctionGuard;
   private final TaskOptions optionsRetry;
 
   public InstitutionFunctions(ObjectMapper objectMapper,
@@ -48,13 +48,13 @@ public class InstitutionFunctions {
                               OnboardingService onboardingService,
                               RetryPolicyConfig retryPolicyConfig,
                               FunctionInvocationLogger functionInvocationLogger,
-                              HttpJwtValidator httpJwtValidator) {
+                              HttpFunctionGuard httpFunctionGuard) {
     this.objectMapper = objectMapper;
     this.institutionService = institutionService;
     this.userService = userService;
     this.onboardingService = onboardingService;
     this.functionInvocationLogger = functionInvocationLogger;
-    this.httpJwtValidator = httpJwtValidator;
+    this.httpFunctionGuard = httpFunctionGuard;
     final int maxAttempts = retryPolicyConfig.maxAttempts();
     final Duration firstRetryInterval = Duration.ofSeconds(retryPolicyConfig.firstRetryInterval());
     RetryPolicy retryPolicy = new RetryPolicy(maxAttempts, firstRetryInterval);
@@ -71,17 +71,12 @@ public class InstitutionFunctions {
     @DurableClientInput(name = "durableContext") DurableClientContext durableContext,
 
     final ExecutionContext context) {
-    Optional<HttpResponseMessage> authenticationError = httpJwtValidator.validate(request, context);
-    if (authenticationError.isPresent()) {
-      return authenticationError.get();
+    HttpAuthorization authorization =
+        httpFunctionGuard.authorize("TriggerDeleteInstitutionAndUser", request, context);
+    if (authorization.isRejected()) {
+      return authorization.rejection();
     }
-    String userId = functionInvocationLogger.logInvocation("TriggerDeleteInstitutionAndUser", request);
-    if (FunctionInvocationLogger.isMissingUserId(userId)) {
-      return request
-        .createResponseBuilder(HttpStatus.BAD_REQUEST)
-        .body(FunctionInvocationLogger.USER_ID_HEADER + " header cannot be null or blank")
-        .build();
-    }
+    String userId = authorization.caller().userId();
 
     final String onboardingId = request.getQueryParameters().get("onboardingId");
     if (Objects.isNull(onboardingId) || StringUtils.isBlank(onboardingId)) {
@@ -90,12 +85,13 @@ public class InstitutionFunctions {
         .body("onboardingId can't be null or empty")
         .build();
     }
-    DurableTaskClient client = durableContext.getClient();
-    String instanceId = client.scheduleNewOrchestrationInstance("DeleteInstitutionAndUserOnboarding", onboardingId);
-    functionInvocationLogger.logOrchestrationStarted(
-      "TriggerDeleteInstitutionAndUser", userId, instanceId);
+    try (DurableTaskClient client = durableContext.getClient()) {
+      String instanceId = client.scheduleNewOrchestrationInstance("DeleteInstitutionAndUserOnboarding", onboardingId);
+      functionInvocationLogger.logOrchestrationStarted(
+        "TriggerDeleteInstitutionAndUser", userId, instanceId);
 
-    return durableContext.createCheckStatusResponse(request, instanceId);
+      return durableContext.createCheckStatusResponse(request, instanceId);
+    }
   }
 
   /**
@@ -116,6 +112,7 @@ public class InstitutionFunctions {
     String filtersString = objectMapper.writeValueAsString(filters);
 
     processDocumentsDeletions(ctx, onboarding);
+    processContractUpdatesDeletions(ctx, onboarding);
     processOnboardingDeletions(ctx, filtersString);
     processUserDeletions(ctx, filters);
     processSendEmailDeletions(ctx, onboarding.getId());
@@ -205,6 +202,45 @@ public class InstitutionFunctions {
       .await();
 
     logger.debug("processDocumentsDeletions completed");
+  }
+
+  private void processContractUpdatesDeletions(TaskOrchestrationContext ctx, Onboarding onboarding) throws JsonProcessingException {
+    String adhesionFilter = objectMapper.writeValueAsString(
+        EntityFilter.builder().value(onboarding.getId()).tenantId(onboarding.getTenantId()).build());
+
+    String contractUpdateIds = ctx.callActivity(
+        GET_CONTRACT_UPDATE_ONBOARDING_IDS_ACTIVITY, adhesionFilter, optionsRetry, String.class).await();
+    for (String contractUpdateId : objectMapper.readValue(contractUpdateIds, String[].class)) {
+      String contractUpdateFilter = objectMapper.writeValueAsString(
+          EntityFilter.builder().value(contractUpdateId).tenantId(onboarding.getTenantId()).build());
+      ctx.callActivity(DELETE_TOKEN_CONTRACT_ACTIVITY_NAME, contractUpdateFilter, optionsRetry, String.class).await();
+    }
+
+    ctx.callActivity(REJECT_PENDING_CONTRACT_UPDATES_ACTIVITY, adhesionFilter, optionsRetry, String.class).await();
+  }
+
+  @FunctionName(GET_CONTRACT_UPDATE_ONBOARDING_IDS_ACTIVITY)
+  public String getContractUpdateOnboardingIds(
+    @DurableActivityTrigger(name = "filtersString") String filtersString,
+    final ExecutionContext context) throws JsonProcessingException {
+    context.getLogger().info(() ->
+        String.format(FORMAT_LOGGER_INSTITUTION_STRING, GET_CONTRACT_UPDATE_ONBOARDING_IDS_ACTIVITY, filtersString));
+    EntityFilter entityFilter = objectMapper.readValue(filtersString, EntityFilter.class);
+    try (TenantContext.Scope ignored = TenantContext.open(entityFilter.getTenantId())) {
+      return objectMapper.writeValueAsString(onboardingService.findContractUpdateIdsWithContract(entityFilter.getValue()));
+    }
+  }
+
+  @FunctionName(REJECT_PENDING_CONTRACT_UPDATES_ACTIVITY)
+  public void rejectPendingContractUpdates(
+    @DurableActivityTrigger(name = "filtersString") String filtersString,
+    final ExecutionContext context) throws JsonProcessingException {
+    context.getLogger().info(() ->
+        String.format(FORMAT_LOGGER_INSTITUTION_STRING, REJECT_PENDING_CONTRACT_UPDATES_ACTIVITY, filtersString));
+    EntityFilter entityFilter = objectMapper.readValue(filtersString, EntityFilter.class);
+    try (TenantContext.Scope ignored = TenantContext.open(entityFilter.getTenantId())) {
+      onboardingService.rejectPendingContractUpdates(entityFilter.getValue());
+    }
   }
 
   private void processSendEmailDeletions(TaskOrchestrationContext ctx, String onboardingId) {

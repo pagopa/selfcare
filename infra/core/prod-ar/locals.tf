@@ -199,6 +199,18 @@ locals {
       ip_mask = "52.29.74.207",
       action  = "Allow"
     },
+    { // DATALAKE NEW
+      ip_mask = "63.184.191.90",
+      action  = "Allow"
+    },
+    { // DATALAKE NEW
+      ip_mask = "63.184.95.69",
+      action  = "Allow"
+    },
+    { // DATALAKE NEW
+      ip_mask = "93.189.21.104",
+      action  = "Allow"
+    },
     { // PROD-IO Vulnerability & Penetration Test
       ip_mask = "2.38.65.171",
       action  = "Allow"
@@ -580,7 +592,7 @@ locals {
       name              = "SC-Delegations"
       partitions        = 10
       message_retention = 7
-      consumers         = ["datalake"]
+      consumers         = ["datalake", "pn-kafka-bridge-prod"]
       keys = [
         {
           name   = "selfcare-wo"
@@ -590,6 +602,12 @@ locals {
         },
         {
           name   = "datalake"
+          listen = true
+          send   = false
+          manage = false
+        },
+        {
+          name   = "pn"
           listen = true
           send   = false
           manage = false

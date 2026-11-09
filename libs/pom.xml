@@ -27,6 +27,7 @@
         <module>selfcare-sdk-pom</module>
         <module>selfcare-onboarding-sdk-pom</module>
         <module>selfcare-user-sdk-pom</module>
+        <module>selfcare-starter-parent</module>
         <module>selfcare-commons</module>
         <module>selfcare-internal-events-sdk</module>
     </modules>

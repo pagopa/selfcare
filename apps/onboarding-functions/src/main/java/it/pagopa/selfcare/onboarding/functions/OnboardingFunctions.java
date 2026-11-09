@@ -34,7 +34,8 @@ import it.pagopa.selfcare.onboarding.service.CompletionService;
 import it.pagopa.selfcare.onboarding.service.ContractService;
 import it.pagopa.selfcare.onboarding.service.DocumentService;
 import it.pagopa.selfcare.onboarding.service.FunctionInvocationLogger;
-import it.pagopa.selfcare.onboarding.service.HttpJwtValidator;
+import it.pagopa.selfcare.onboarding.service.HttpAuthorization;
+import it.pagopa.selfcare.onboarding.service.HttpFunctionGuard;
 import it.pagopa.selfcare.onboarding.service.OnboardingService;
 import it.pagopa.selfcare.onboarding.service.UserService;
 import it.pagopa.selfcare.onboarding.service.ProductService;
@@ -84,8 +85,7 @@ public class OnboardingFunctions {
   private final DocumentService documentService;
   private final UserService userService;
   private final TelemetryService telemetryService;
-  private final FunctionInvocationLogger functionInvocationLogger;
-  private final HttpJwtValidator httpJwtValidator;
+  private final HttpFunctionGuard httpFunctionGuard;
   private final ProductService productService;
 
   private final ObjectMapper objectMapper;
@@ -106,8 +106,7 @@ public class OnboardingFunctions {
       DocumentService documentService,
       TelemetryService telemetryService,
       UserService userService,
-      FunctionInvocationLogger functionInvocationLogger,
-      HttpJwtValidator httpJwtValidator) {
+      HttpFunctionGuard httpFunctionGuard) {
     this.onboardingService = onboardingService;
     this.objectMapper = objectMapper;
     this.completionService = completionService;
@@ -118,8 +117,7 @@ public class OnboardingFunctions {
     this.documentService = documentService;
     this.telemetryService = telemetryService;
     this.userService = userService;
-    this.functionInvocationLogger = functionInvocationLogger;
-    this.httpJwtValidator = httpJwtValidator;
+    this.httpFunctionGuard = httpFunctionGuard;
     optionsRetry = new TaskOptions(retryHandler(retryPolicyConfig));
   }
 
@@ -168,14 +166,12 @@ public class OnboardingFunctions {
       @DurableClientInput(name = "durableContext") DurableClientContext durableContext,
       final ExecutionContext context) {
 
-    Optional<HttpResponseMessage> authenticationError = httpJwtValidator.validate(request, context);
-    if (authenticationError.isPresent()) {
-      return authenticationError.get();
+    HttpAuthorization authorization =
+        httpFunctionGuard.authorize(START_ONBOARDING_ORCHESTRATION, request, context);
+    if (authorization.isRejected()) {
+      return authorization.rejection();
     }
-    String userId = functionInvocationLogger.logInvocation(START_ONBOARDING_ORCHESTRATION, request);
-    if (FunctionInvocationLogger.isMissingUserId(userId)) {
-      return missingRequesterResponse(request);
-    }
+    String userId = authorization.caller().userId();
 
     final String onboardingId = request.getQueryParameters().get(ONBOARDING_ID);
     final String timeoutString = request.getQueryParameters().get("timeout");
@@ -188,47 +184,48 @@ public class OnboardingFunctions {
       return request.createResponseBuilder(HttpStatus.BAD_REQUEST).body("Invalid tenant context").build();
     }
 
-    DurableTaskClient client = durableContext.getClient();
-    String instanceId =
-        client.scheduleNewOrchestrationInstance(
-            "Onboardings",
-            getOnboardingOrchestrationInputString(
-                objectMapper, new OnboardingOrchestrationInput(onboardingId, tenantId)));
+    try (DurableTaskClient client = durableContext.getClient()) {
+      String instanceId =
+          client.scheduleNewOrchestrationInstance(
+              "Onboardings",
+              getOnboardingOrchestrationInputString(
+                  objectMapper, new OnboardingOrchestrationInput(onboardingId, tenantId)));
 
-    telemetryService.trackFunction(
-        START_ONBOARDING_ORCHESTRATION,
-        String.format(
-            "%s %s", CREATED_NEW_ONBOARDING_ORCHESTRATION_WITH_INSTANCE_ID_MSG, instanceId),
-        SeverityLevel.Information,
-        Map.of(
-            ONBOARDING_ID, onboardingId,
-            FunctionInvocationLogger.USER_ID_PROPERTY, userId,
-            "instanceId", instanceId));
+      telemetryService.trackFunction(
+          START_ONBOARDING_ORCHESTRATION,
+          String.format(
+              "%s %s", CREATED_NEW_ONBOARDING_ORCHESTRATION_WITH_INSTANCE_ID_MSG, instanceId),
+          SeverityLevel.Information,
+          Map.of(
+              ONBOARDING_ID, onboardingId,
+              FunctionInvocationLogger.USER_ID_PROPERTY, userId,
+              "instanceId", instanceId));
 
-    try {
+      try {
 
-      /* if timeout is null, caller wants response asynchronously */
-      if (Objects.isNull(timeoutString)) {
+        /* if timeout is null, caller wants response asynchronously */
+        if (Objects.isNull(timeoutString)) {
+          return durableContext.createCheckStatusResponse(request, instanceId);
+        }
+
+        int timeoutInSeconds = Integer.parseInt(timeoutString);
+        OrchestrationMetadata metadata =
+            client.waitForInstanceCompletion(instanceId, Duration.ofSeconds(timeoutInSeconds), true);
+
+        boolean isFailed =
+            Optional.ofNullable(metadata)
+                .map(
+                    orchestration ->
+                        OrchestrationRuntimeStatus.FAILED.equals(orchestration.getRuntimeStatus()))
+                .orElse(true);
+
+        return isFailed
+            ? request.createResponseBuilder(HttpStatus.INTERNAL_SERVER_ERROR).build()
+            : request.createResponseBuilder(HttpStatus.OK).build();
+      } catch (TimeoutException timeoutEx) {
+        // timeout expired - return a 202 response
         return durableContext.createCheckStatusResponse(request, instanceId);
       }
-
-      int timeoutInSeconds = Integer.parseInt(timeoutString);
-      OrchestrationMetadata metadata =
-          client.waitForInstanceCompletion(instanceId, Duration.ofSeconds(timeoutInSeconds), true);
-
-      boolean isFailed =
-          Optional.ofNullable(metadata)
-              .map(
-                  orchestration ->
-                      OrchestrationRuntimeStatus.FAILED.equals(orchestration.getRuntimeStatus()))
-              .orElse(true);
-
-      return isFailed
-          ? request.createResponseBuilder(HttpStatus.INTERNAL_SERVER_ERROR).build()
-          : request.createResponseBuilder(HttpStatus.OK).build();
-    } catch (TimeoutException timeoutEx) {
-      // timeout expired - return a 202 response
-      return durableContext.createCheckStatusResponse(request, instanceId);
     }
   }
 
@@ -444,6 +441,8 @@ public class OnboardingFunctions {
         case USERS_EA ->
             workflowExecutor =
                 new WorkflowExecutorForUsersEa(objectMapper, optionsRetry, onboardingMapper);
+        case CONTRACT_UPDATE ->
+            workflowExecutor = new WorkflowExecutorContractUpdate(objectMapper, optionsRetry);
         default -> {
           String errorMessage =
               String.format(
@@ -514,15 +513,12 @@ public class OnboardingFunctions {
           HttpRequestMessage<Optional<String>> request,
       @DurableClientInput(name = "durableContext") DurableClientContext durableContext,
       final ExecutionContext context) {
-    Optional<HttpResponseMessage> authenticationError = httpJwtValidator.validate(request, context);
-    if (authenticationError.isPresent()) {
-      return authenticationError.get();
+    HttpAuthorization authorization =
+        httpFunctionGuard.authorize(TRIGGER_BUILD_ATTACHMENTS_AND_SAVE_TOKENS, request, context);
+    if (authorization.isRejected()) {
+      return authorization.rejection();
     }
-    String userId =
-        functionInvocationLogger.logInvocation(TRIGGER_BUILD_ATTACHMENTS_AND_SAVE_TOKENS, request);
-    if (FunctionInvocationLogger.isMissingUserId(userId)) {
-      return missingRequesterResponse(request);
-    }
+    String userId = authorization.caller().userId();
     Optional<String> onboardingString = request.getBody();
 
     if (onboardingString.isEmpty()) {
@@ -532,28 +528,21 @@ public class OnboardingFunctions {
           .build();
     }
 
-    DurableTaskClient client = durableContext.getClient();
-    String instanceId =
-        client.scheduleNewOrchestrationInstance(
-            "BuildAttachmentAndSaveToken", onboardingString.get());
-    telemetryService.trackFunction(
-        TRIGGER_BUILD_ATTACHMENTS_AND_SAVE_TOKENS,
-        String.format(
-            "%s %s", CREATED_NEW_BUILD_ATTACHMENTS_ORCHESTRATION_WITH_INSTANCE_ID_MSG, instanceId),
-        SeverityLevel.Information,
-        Map.of(
-            "instanceId", instanceId,
-            FunctionInvocationLogger.USER_ID_PROPERTY, userId));
+    try (DurableTaskClient client = durableContext.getClient()) {
+      String instanceId =
+          client.scheduleNewOrchestrationInstance(
+              "BuildAttachmentAndSaveToken", onboardingString.get());
+      telemetryService.trackFunction(
+          TRIGGER_BUILD_ATTACHMENTS_AND_SAVE_TOKENS,
+          String.format(
+              "%s %s", CREATED_NEW_BUILD_ATTACHMENTS_ORCHESTRATION_WITH_INSTANCE_ID_MSG, instanceId),
+          SeverityLevel.Information,
+          Map.of(
+              "instanceId", instanceId,
+              FunctionInvocationLogger.USER_ID_PROPERTY, userId));
 
-    return durableContext.createCheckStatusResponse(request, instanceId);
-  }
-
-  private HttpResponseMessage missingRequesterResponse(
-      HttpRequestMessage<Optional<String>> request) {
-    return request
-        .createResponseBuilder(HttpStatus.BAD_REQUEST)
-        .body(FunctionInvocationLogger.USER_ID_HEADER + " header cannot be null or blank")
-        .build();
+      return durableContext.createCheckStatusResponse(request, instanceId);
+    }
   }
 
   /**
@@ -958,6 +947,51 @@ public class OnboardingFunctions {
     runWithTenant(onboarding, () -> completionService.overridePendingOnboardings(onboarding));
   }
 
+  @FunctionName(SYNC_PRODUCT_USERS_ACTIVITY)
+  public void syncProductUsers(
+      @DurableActivityTrigger(name = "onboardingString") String onboardingString,
+      final ExecutionContext context) {
+    Onboarding onboarding = readOnboardingValue(objectMapper, onboardingString);
+    telemetryService.trackFunction(
+        SYNC_PRODUCT_USERS_ACTIVITY,
+        String.format(FORMAT_LOGGER_ONBOARDING_STRING, SYNC_PRODUCT_USERS_ACTIVITY, onboardingString),
+        SeverityLevel.Information,
+        Map.of(
+            ONBOARDING_ID, onboarding.getId(),
+            PRODUCT_ID, onboarding.getProductId()));
+    runWithTenant(onboarding, () -> completionService.syncProductUsers(onboarding));
+  }
+
+  @FunctionName(ACTIVATE_CONTRACT_ACTIVITY)
+  public void activateContract(
+      @DurableActivityTrigger(name = "onboardingString") String onboardingString,
+      final ExecutionContext context) {
+    Onboarding onboarding = readOnboardingValue(objectMapper, onboardingString);
+    telemetryService.trackFunction(
+        ACTIVATE_CONTRACT_ACTIVITY,
+        String.format(FORMAT_LOGGER_ONBOARDING_STRING, ACTIVATE_CONTRACT_ACTIVITY, onboardingString),
+        SeverityLevel.Information,
+        Map.of(
+            ONBOARDING_ID, onboarding.getId(),
+            PRODUCT_ID, onboarding.getProductId()));
+    runWithTenant(onboarding, () -> completionService.activateContract(onboarding));
+  }
+
+  @FunctionName(CLEAR_CONTRACT_UPDATE_REQUIRED_ACTIVITY)
+  public void clearContractUpdateRequired(
+      @DurableActivityTrigger(name = "onboardingString") String onboardingString,
+      final ExecutionContext context) {
+    Onboarding onboarding = readOnboardingValue(objectMapper, onboardingString);
+    telemetryService.trackFunction(
+        CLEAR_CONTRACT_UPDATE_REQUIRED_ACTIVITY,
+        String.format(FORMAT_LOGGER_ONBOARDING_STRING, CLEAR_CONTRACT_UPDATE_REQUIRED_ACTIVITY, onboardingString),
+        SeverityLevel.Information,
+        Map.of(
+            ONBOARDING_ID, onboarding.getId(),
+            PRODUCT_ID, onboarding.getProductId()));
+    runWithTenant(onboarding, () -> completionService.clearContractUpdateRequired(onboarding));
+  }
+
   @FunctionName(CREATE_ONBOARDING_ACTIVITY)
   public void createOnboarding(
       @DurableActivityTrigger(name = "onboardingString") String onboardingString,
@@ -1108,11 +1142,11 @@ public class OnboardingFunctions {
               authLevel = AuthorizationLevel.FUNCTION)
           HttpRequestMessage<Optional<String>> request,
       final ExecutionContext context) {
-    Optional<HttpResponseMessage> authenticationError = httpJwtValidator.validate(request, context);
-    if (authenticationError.isPresent()) {
-      return authenticationError.get();
+    HttpAuthorization authorization =
+        httpFunctionGuard.authorize("TestSendEmail", request, context);
+    if (authorization.isRejected()) {
+      return authorization.rejection();
     }
-    functionInvocationLogger.logInvocation("TestSendEmail", request);
     completionService.sendTestEmail(context);
     return request.createResponseBuilder(HttpStatus.OK).build();
   }

@@ -91,4 +91,8 @@ public class IntegrationFunctionProfile implements QuarkusTestProfile {
   public static MongoDatabase getUserDatabase(MongoClient mongoClient) {
     return mongoClient.getDatabase("selcUser");
   }
+
+  public static MongoDatabase getDocumentDatabase(MongoClient mongoClient) {
+    return mongoClient.getDatabase("selcDocument");
+  }
 }

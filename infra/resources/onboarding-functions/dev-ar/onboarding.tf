@@ -31,6 +31,7 @@ locals {
     nat_gateway_name          = module.local.config.nat_gw_name
     app_settings = {
       "APPLICATIONINSIGHTS_CONNECTION_STRING"            = "@Microsoft.KeyVault(SecretUri=https://selc-d-kv.vault.azure.net/secrets/appinsights-connection-string/)"
+      "APPLICATIONINSIGHTS_ENABLE_AGENT"                 = "true"
       "USER_REGISTRY_URL"                                = "https://api.uat.pdv.pagopa.it/user-registry/v1"
       "MONGODB_CONNECTION_URI"                           = "@Microsoft.KeyVault(SecretUri=https://selc-d-kv.vault.azure.net/secrets/mongodb-connection-string/)"
       "USER_REGISTRY_API_KEY"                            = "@Microsoft.KeyVault(SecretUri=https://selc-d-kv.vault.azure.net/secrets/user-registry-api-key/)"
@@ -70,9 +71,10 @@ locals {
       "MAIL_TEMPLATE_USER_COMPLETE_NOTIFICATION_PATH"      = "contracts/template/mail/onboarding-complete-user/1.0.0.json"
       "MAIL_TEMPLATE_CONTRACT_UPDATE_COMPLETE_PATH"        = "contracts/template/mail/contract-update-complete/1.0.0.json"
       "MAIL_TEMPLATE_CONTRACT_UPDATE_REQUEST_PATH"         = "contracts/template/mail/contract-update-request/1.0.0.json"
+      "MAIL_TEMPLATE_CONTRACT_UPDATE_CAMPAIGN_PATH"        = "contracts/template/mail/contract-update-campaign/1.0.0.json"
       "MAIL_TEMPLATE_REGISTRATION_USER_NEW_MANAGER_PATH"   = "contracts/template/mail/onboarding-request-manager/1.0.1.json"
       "SELFCARE_ADMIN_NOTIFICATION_URL"                    = "https://dev.selfcare.pagopa.it/dashboard/admin/onboarding/"
-      "SELFCARE_URL"                                       = "https://selfcare.pagopa.it"
+      "SELFCARE_URL"                                       = "https://dev.selfcare.pagopa.it"
       "MAIL_ONBOARDING_CONFIRMATION_LINK"                  = "https://dev.selfcare.pagopa.it/onboarding/confirm?jwt="
       "MAIL_USER_CONFIRMATION_LINK"                        = "https://dev.selfcare.pagopa.it/onboarding/confirm?add-user=true&jwt="
       "MAIL_CONTRACT_UPDATE_CONFIRMATION_LINK"             = "https://dev.selfcare.pagopa.it/onboarding/confirm?contract-update=true&jwt="
@@ -106,6 +108,8 @@ locals {
       "FD_TOKEN_CLIENT_SECRET"                             = "@Microsoft.KeyVault(SecretUri=https://selc-d-kv.vault.azure.net/secrets/prod-fd-client-secret/)"
       "EMAIL_SERVICE_AVAILABLE"                            = "true"
       "JWT_TOKEN_ISSUER"                                   = "SPID"
+      "JWT_TOKEN_AUDIENCE_AR"                              = "api.dev.selfcare.pagopa.it"
+      "JWT_TOKEN_AUDIENCE_PNPG"                            = "api-pnpg.dev.selfcare.pagopa.it"
       "JWT_TOKEN_PRIVATE_KEY"                              = "@Microsoft.KeyVault(SecretUri=https://selc-d-kv.vault.azure.net/secrets/jwt-private-key/)"
       "JWT_PUBLIC_KEY_AR"                                  = "@Microsoft.KeyVault(SecretUri=https://selc-d-kv.vault.azure.net/secrets/jwt-public-key/)"
       "JWT_TOKEN_KID"                                      = "@Microsoft.KeyVault(SecretUri=https://selc-d-kv.vault.azure.net/secrets/jwt-kid/)"
@@ -115,6 +119,7 @@ locals {
       "NAMIRIAL_SIGN_SERVICE_IDENTITY_USER"                = "@Microsoft.KeyVault(SecretUri=https://selc-d-kv.vault.azure.net/secrets/namirial-sign-service-user/)"
       "NAMIRIAL_SIGN_SERVICE_IDENTITY_PASSWORD"            = "@Microsoft.KeyVault(SecretUri=https://selc-d-kv.vault.azure.net/secrets/namirial-sign-service-psw/)"
       "DEFAULT_TENANT"                                     = "AR"
+      "JWT_DEFAULT_TENANT"                                 = "AR"
       "SUPPORTED_TENANTS"                                  = "AR"
     }
   }

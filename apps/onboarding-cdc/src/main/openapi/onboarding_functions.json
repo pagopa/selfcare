@@ -96,15 +96,6 @@
             "schema": {
               "type": "string"
             }
-          },
-          {
-            "name": "x-selfcare-uid",
-            "in": "header",
-            "description": "Identifier of the service requesting the operation",
-            "required": false,
-            "schema": {
-              "type": "string"
-            }
           }
         ],
         "requestBody": {

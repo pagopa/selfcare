@@ -309,6 +309,84 @@
       }
     },
     "/institutions/{institutionId}/products/{productId}/users" : {
+      "put" : {
+        "tags" : [ "Institution" ],
+        "summary" : "Update the admin users of a product of an institution",
+        "description" : "Receives the complete list of administrators of the product (e.g. the ones indicated in a signed contract update; allowed roles: MANAGER, DELEGATE, ADMIN_EA) and aligns the user roles: missing users are added in ACTIVE, users with a different role are updated without sending emails, active administrators (MANAGER, DELEGATE, SUB_DELEGATE, ADMIN_EA) not in the list are set to DELETED. Other roles are not affected.",
+        "operationId" : "updateProductUsers",
+        "parameters" : [ {
+          "name" : "institutionId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "productId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/UpdateProductUsersDto"
+              }
+            }
+          }
+        },
+        "responses" : {
+          "204" : {
+            "description" : "No Content"
+          },
+          "400" : {
+            "description" : "Bad Request",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Not Authorized",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Not Found",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "SecurityScheme" : [ ]
+        } ]
+      },
       "delete" : {
         "tags" : [ "Institution" ],
         "summary" : "Logically delete all the users associated with a product of an institution",
@@ -1640,55 +1718,6 @@
         } ]
       }
     },
-    "/users/{userId}/send-mail-otp" : {
-      "post" : {
-        "tags" : [ "User" ],
-        "summary" : "Send an email with OTP",
-        "description" : "The sendEmailOtp function is used to send email containing a One Time Password for account verification",
-        "operationId" : "sendEmailOtp",
-        "parameters" : [ {
-          "name" : "userId",
-          "in" : "path",
-          "required" : true,
-          "schema" : {
-            "type" : "string"
-          }
-        } ],
-        "requestBody" : {
-          "content" : {
-            "application/json" : {
-              "schema" : {
-                "$ref" : "#/components/schemas/SendEmailOtpDto"
-              }
-            }
-          }
-        },
-        "responses" : {
-          "202" : {
-            "description" : "Email send accepted!"
-          },
-          "400" : {
-            "description" : "Bad Request",
-            "content" : {
-              "application/problem+json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/Problem"
-                }
-              }
-            }
-          },
-          "401" : {
-            "description" : "Not Authorized"
-          },
-          "403" : {
-            "description" : "Not Allowed"
-          }
-        },
-        "security" : [ {
-          "SecurityScheme" : [ ]
-        } ]
-      }
-    },
     "/users/{userId}/send-mail-request" : {
       "post" : {
         "tags" : [ "User" ],
@@ -1835,6 +1864,42 @@
         "type" : "string",
         "example" : "2022-03-10T12:15:50-04:00"
       },
+      "OnboardedProductDataResponse" : {
+        "type" : "object",
+        "properties" : {
+          "roleId" : {
+            "type" : "string"
+          },
+          "productId" : {
+            "type" : "string"
+          },
+          "tokenId" : {
+            "type" : "string"
+          },
+          "status" : {
+            "$ref" : "#/components/schemas/OnboardedProductState"
+          },
+          "productRole" : {
+            "type" : "string"
+          },
+          "role" : {
+            "description" : "Available values: MANAGER, DELEGATE, SUB_DELEGATE, OPERATOR, ADMIN_EA",
+            "type" : "string"
+          },
+          "env" : {
+            "$ref" : "#/components/schemas/Env"
+          },
+          "createdAt" : {
+            "$ref" : "#/components/schemas/OffsetDateTime"
+          },
+          "updatedAt" : {
+            "$ref" : "#/components/schemas/OffsetDateTime"
+          },
+          "excludeRoleFromUserGroups" : {
+            "type" : "boolean"
+          }
+        }
+      },
       "OnboardedProductResponse" : {
         "type" : "object",
         "properties" : {
@@ -1893,6 +1958,9 @@
           "role" : {
             "description" : "Available values: MANAGER, DELEGATE, SUB_DELEGATE, OPERATOR, ADMIN_EA",
             "type" : "string"
+          },
+          "partnerTechRole" : {
+            "type" : "boolean"
           },
           "env" : {
             "$ref" : "#/components/schemas/Env"
@@ -2004,6 +2072,31 @@
           }
         }
       },
+      "ProductUser" : {
+        "required" : [ "userId", "role", "productRoles" ],
+        "type" : "object",
+        "properties" : {
+          "userId" : {
+            "pattern" : "\\S",
+            "type" : "string"
+          },
+          "role" : {
+            "description" : "Available values: MANAGER, DELEGATE, ADMIN_EA",
+            "pattern" : "\\S",
+            "type" : "string"
+          },
+          "productRoles" : {
+            "minItems" : 1,
+            "type" : "array",
+            "items" : {
+              "type" : "string"
+            }
+          },
+          "userMailUuid" : {
+            "type" : "string"
+          }
+        }
+      },
       "QueueEvent" : {
         "enum" : [ "ADD", "UPDATE" ],
         "type" : "string"
@@ -2013,20 +2106,6 @@
         "type" : "object",
         "properties" : {
           "fiscalCode" : {
-            "type" : "string"
-          }
-        }
-      },
-      "SendEmailOtpDto" : {
-        "required" : [ "otp", "institutionalEmail" ],
-        "type" : "object",
-        "properties" : {
-          "otp" : {
-            "minLength" : 1,
-            "type" : "string"
-          },
-          "institutionalEmail" : {
-            "minLength" : 1,
             "type" : "string"
           }
         }
@@ -2065,6 +2144,30 @@
           },
           "institutionRootName" : {
             "type" : "string"
+          }
+        }
+      },
+      "UpdateProductUsersDto" : {
+        "required" : [ "institutionDescription", "users" ],
+        "type" : "object",
+        "properties" : {
+          "institutionDescription" : {
+            "pattern" : "\\S",
+            "type" : "string"
+          },
+          "institutionRootName" : {
+            "type" : "string"
+          },
+          "tokenId" : {
+            "description" : "Onboarding id to set as tokenId on the created roles",
+            "type" : "string"
+          },
+          "users" : {
+            "minItems" : 1,
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/ProductUser"
+            }
           }
         }
       },

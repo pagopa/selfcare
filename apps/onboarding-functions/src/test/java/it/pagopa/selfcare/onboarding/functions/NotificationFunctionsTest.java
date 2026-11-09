@@ -22,6 +22,8 @@ import it.pagopa.selfcare.onboarding.service.NotificationEventService;
 import it.pagopa.selfcare.onboarding.service.OnboardingService;
 import it.pagopa.selfcare.onboarding.service.TelemetryService;
 import it.pagopa.selfcare.onboarding.service.CompletionService;
+import it.pagopa.selfcare.onboarding.service.CallerIdentity;
+import it.pagopa.selfcare.onboarding.service.HttpAuthorization;
 import it.pagopa.selfcare.onboarding.service.HttpJwtValidator;
 import jakarta.inject.Inject;
 import org.junit.jupiter.api.Assertions;
@@ -75,7 +77,10 @@ public class NotificationFunctionsTest {
 
     @BeforeEach
     void allowAuthenticatedRequests() {
-        when(httpJwtValidator.validate(any(), any())).thenReturn(Optional.empty());
+        when(httpJwtValidator.authenticate(any(), any()))
+            .thenReturn(
+                HttpAuthorization.authorized(
+                    new CallerIdentity("requester-id", "SPID", null, null, null, null, null)));
     }
 
 
@@ -522,28 +527,8 @@ public class NotificationFunctionsTest {
         HttpResponseMessage responseMessage = function.resendNotifications(req, durableContext, context);
 
         // then
+        verify(client).close();
         assertEquals(HttpStatus.ACCEPTED.value(), responseMessage.getStatusCode());
-    }
-
-    @Test
-    void resendNotifications_missingRequester_doesNotStartOrchestration()
-            throws JsonProcessingException {
-        // given
-        HttpRequestMessage<Optional<String>> req = mock(HttpRequestMessage.class);
-        when(req.getHeaders()).thenReturn(Map.of());
-        when(req.createResponseBuilder(HttpStatus.BAD_REQUEST))
-                .thenReturn(
-                        new HttpResponseMessageMock.HttpResponseMessageBuilderMock()
-                                .status(HttpStatus.BAD_REQUEST));
-        DurableClientContext durableContext = mock(DurableClientContext.class);
-
-        // when
-        HttpResponseMessage response =
-                function.resendNotifications(req, durableContext, executionContext);
-
-        // then
-        assertEquals(HttpStatus.BAD_REQUEST.value(), response.getStatusCode());
-        verifyNoInteractions(durableContext);
     }
 
     @Test

@@ -14,11 +14,8 @@
   <parent>
     <groupId>it.pagopa.selfcare</groupId>
     <artifactId>selc-starter-parent</artifactId>
-    <version>0.3.2-SNAPSHOT</version>
-    <!-- lookup parent from repository instead of the default ../pom.xml,
-         which would otherwise incorrectly resolve to libs/pom.xml now that
-         this module is nested under libs/ in the monorepo -->
-    <relativePath/>
+    <version>0.3.3</version>
+    <relativePath>../selfcare-starter-parent/pom.xml</relativePath>
   </parent>
 
   <artifactId>selc-commons</artifactId>
@@ -30,9 +27,8 @@
     <!-- Aligned with the other libs/* aggregators: shared libraries are excluded from the
          monorepo SonarCloud analysis. This is also required for a valid Sonar module tree:
          libs/pom.xml is itself sonar-skipped, so the scanner never descends into its children.
-         Without this flag selc-commons (whose parent is resolved from the repository instead
-         of libs/pom.xml, hence it does not inherit the property) would be unreachable from the
-         root project and the analysis would fail with "selc-commons is orphan". -->
+         selc-commons inherits the starter parent rather than libs/pom.xml and must also
+         stay excluded to avoid "selc-commons is orphan" errors. -->
     <sonar.skip>true</sonar.skip>
   </properties>
 
@@ -89,6 +85,10 @@
   </dependencyManagement>
 
   <repositories>
+    <repository>
+      <id>selfcare</id>
+      <url>https://maven.pkg.github.com/pagopa/selfcare</url>
+    </repository>
     <repository>
       <id>selfcare-platform</id>
       <url>

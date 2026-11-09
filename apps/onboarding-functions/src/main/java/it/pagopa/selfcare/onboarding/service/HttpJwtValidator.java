@@ -4,7 +4,6 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.microsoft.azure.functions.ExecutionContext;
 import com.microsoft.azure.functions.HttpRequestMessage;
-import com.microsoft.azure.functions.HttpResponseMessage;
 import com.microsoft.azure.functions.HttpStatus;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
@@ -30,7 +29,6 @@ import java.util.stream.Collectors;
 public class HttpJwtValidator {
 
   static final String AUTHORIZATION_HEADER = "Authorization";
-  static final String UID_CLAIM = "uid";
   private static final String BEARER_PREFIX = "Bearer ";
   private static final String EXPECTED_ALGORITHM = "RS256";
 
@@ -43,17 +41,16 @@ public class HttpJwtValidator {
   }
 
   /**
-   * Validates both the tenant header and the JWT. The returned response must be sent immediately;
-   * an empty result means that the request is authenticated.
+   * Validates both the tenant header and the JWT. A rejected result carries the response that must
+   * be sent immediately; otherwise it carries the caller identity built from the verified claims.
    */
-  public Optional<HttpResponseMessage> validate(
-      HttpRequestMessage<?> request, ExecutionContext context) {
+  public HttpAuthorization authenticate(HttpRequestMessage<?> request, ExecutionContext context) {
     final String headerTenant;
     try {
       headerTenant = TenantContext.resolve(TenantContext.tenantHeader(request));
     } catch (IllegalArgumentException exception) {
       context.getLogger().warning("Rejected request with missing or unsupported tenant");
-      return Optional.of(
+      return HttpAuthorization.rejected(
           request
               .createResponseBuilder(HttpStatus.BAD_REQUEST)
               .body("Invalid tenant context")
@@ -61,11 +58,10 @@ public class HttpJwtValidator {
     }
 
     try {
-      authenticate(request, headerTenant);
-      return Optional.empty();
+      return HttpAuthorization.authorized(verifiedCaller(request, headerTenant));
     } catch (JwtException | IllegalArgumentException exception) {
       context.getLogger().warning(() -> "Rejected request with invalid JWT: " + exception.getMessage());
-      return Optional.of(
+      return HttpAuthorization.rejected(
           request
               .createResponseBuilder(HttpStatus.UNAUTHORIZED)
               .header("WWW-Authenticate", "Bearer")
@@ -74,7 +70,7 @@ public class HttpJwtValidator {
     }
   }
 
-  private void authenticate(HttpRequestMessage<?> request, String headerTenant) {
+  private CallerIdentity verifiedCaller(HttpRequestMessage<?> request, String headerTenant) {
     String token = extractBearerToken(request);
     requireAlgorithm(token);
 
@@ -90,17 +86,24 @@ public class HttpJwtValidator {
     if (isBlank(claims.getIssuer()) || !allowedIssuers().contains(claims.getIssuer())) {
       throw new JwtException("Unexpected issuer");
     }
-    if (isBlank(claims.get(UID_CLAIM, String.class))) {
+    if (isBlank(claims.get(CallerIdentity.UID_CLAIM, String.class))) {
       throw new JwtException("Missing uid claim");
     }
 
-    if (!resolveTokenTenant(claims).equals(headerTenant)) {
+    boolean tenantFromClaim = claims.get(TenantContext.TENANT_CLAIM) != null;
+    if (!resolveTokenTenant(claims, tenantFromClaim).equals(headerTenant)) {
       throw new JwtException("Tenant claim does not match tenant header");
     }
+    return CallerIdentity.fromClaims(
+        claims,
+        headerTenant,
+        tenantFromClaim
+            ? CallerIdentity.TENANT_SOURCE_CLAIM
+            : CallerIdentity.TENANT_SOURCE_DEFAULT);
   }
 
-  private String resolveTokenTenant(Claims claims) {
-    if (claims.get(TenantContext.TENANT_CLAIM) == null) {
+  private String resolveTokenTenant(Claims claims, boolean tenantFromClaim) {
+    if (!tenantFromClaim) {
       if (config.tenantClaimRequired()) {
         throw new JwtException("Missing tenant_id claim");
       }

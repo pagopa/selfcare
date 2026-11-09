@@ -25,7 +25,7 @@
         <quarkus.platform.version>3.36.2</quarkus.platform.version>
         <skipITs>true</skipITs>
         <surefire-plugin.version>3.1.2</surefire-plugin.version>
-        <quarkus-openapi-generator.version>2.4.1</quarkus-openapi-generator.version>
+        <quarkus-openapi-generator.version>2.16.0</quarkus-openapi-generator.version>
     </properties>
     <dependencyManagement>
         <dependencies>
@@ -136,6 +136,11 @@
         <dependency>
             <groupId>io.quarkus</groupId>
             <artifactId>quarkus-rest-client-jackson</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.quarkiverse.openapi.generator</groupId>
+            <artifactId>quarkus-openapi-generator</artifactId>
+            <version>${quarkus-openapi-generator.version}</version>
         </dependency>
         <dependency>
             <groupId>org.glassfish.jaxb</groupId>

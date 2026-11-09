@@ -8,12 +8,16 @@ import com.microsoft.azure.functions.HttpRequestMessage;
 import com.microsoft.azure.functions.HttpResponseMessage;
 import com.microsoft.azure.functions.HttpStatus;
 import com.microsoft.durabletask.DurableTaskClient;
+import com.microsoft.durabletask.DataConverter;
 import com.microsoft.durabletask.FailureDetails;
+import com.microsoft.durabletask.OrchestrationMetadata;
 import com.microsoft.durabletask.RetryContext;
 import com.microsoft.durabletask.Task;
 import com.microsoft.durabletask.TaskFailedException;
 import com.microsoft.durabletask.TaskOrchestrationContext;
 import com.microsoft.durabletask.azurefunctions.DurableClientContext;
+import com.microsoft.durabletask.implementation.protobuf.OrchestratorService.OrchestrationState;
+import com.microsoft.durabletask.implementation.protobuf.OrchestratorService.OrchestrationStatus;
 import io.quarkus.test.InjectMock;
 import io.quarkus.test.junit.QuarkusTest;
 import it.pagopa.selfcare.onboarding.HttpResponseMessageMock;
@@ -36,6 +40,8 @@ import it.pagopa.selfcare.onboarding.service.OnboardingService;
 import it.pagopa.selfcare.onboarding.service.ProductService;
 import it.pagopa.selfcare.onboarding.service.TelemetryService;
 import it.pagopa.selfcare.onboarding.service.UserService;
+import it.pagopa.selfcare.onboarding.service.CallerIdentity;
+import it.pagopa.selfcare.onboarding.service.HttpAuthorization;
 import it.pagopa.selfcare.onboarding.service.HttpJwtValidator;
 import it.pagopa.selfcare.onboarding.utils.Utils;
 import jakarta.inject.Inject;
@@ -59,6 +65,7 @@ import org.openapi.quarkus.product_json.model.SigningConfiguration;
 
 import java.time.Duration;
 import java.util.*;
+import java.util.concurrent.TimeoutException;
 import java.util.logging.Logger;
 
 import static it.pagopa.selfcare.onboarding.functions.utils.ActivityName.*;
@@ -92,7 +99,10 @@ class OnboardingFunctionsTest {
 
   @BeforeEach
   void allowAuthenticatedRequests() {
-    when(httpJwtValidator.validate(any(), any())).thenReturn(Optional.empty());
+    when(httpJwtValidator.authenticate(any(), any()))
+        .thenReturn(
+            HttpAuthorization.authorized(
+                new CallerIdentity("requester-id", "SPID", null, null, null, null, null)));
   }
 
   final String onboardingStringBase = "{\"id\":\"onboardingId\", \"tenantId\":\"AR\", \"productId\":\"prod-test\"}";
@@ -167,7 +177,70 @@ class OnboardingFunctionsTest {
 
     // then
     verify(client, times(1)).waitForInstanceCompletion(anyString(), any(), anyBoolean());
+    verify(client).close();
     assertEquals(HttpStatus.INTERNAL_SERVER_ERROR.value(), responseMessage.getStatusCode());
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = {"async", "completed", "timeout", "scheduling-error"})
+  void startOrchestration_closesClient(String outcome) throws Exception {
+    DurableTaskClient client = mock(DurableTaskClient.class);
+    DurableClientContext durableContext = mock(DurableClientContext.class);
+    when(durableContext.getClient()).thenReturn(client);
+    RuntimeException schedulingError = new IllegalStateException("Scheduling failed");
+    if ("scheduling-error".equals(outcome)) {
+      when(client.scheduleNewOrchestrationInstance(eq("Onboardings"), anyString()))
+          .thenThrow(schedulingError);
+    } else {
+      when(client.scheduleNewOrchestrationInstance(eq("Onboardings"), anyString()))
+          .thenReturn("instanceId");
+    }
+
+    Map<String, String> query = new HashMap<>(Map.of("onboardingId", "onboardingId"));
+    if ("completed".equals(outcome) || "timeout".equals(outcome)) {
+      query.put("timeout", "10");
+      if ("timeout".equals(outcome)) {
+        when(client.waitForInstanceCompletion("instanceId", Duration.ofSeconds(10), true))
+            .thenThrow(new TimeoutException());
+      } else {
+        // The SDK exposes no public constructor for this final result type.
+        var constructor = OrchestrationMetadata.class.getDeclaredConstructor(
+            OrchestrationState.class, DataConverter.class, boolean.class);
+        constructor.setAccessible(true);
+        OrchestrationMetadata metadata = constructor.newInstance(
+            OrchestrationState.newBuilder()
+                .setOrchestrationStatus(OrchestrationStatus.ORCHESTRATION_STATUS_COMPLETED)
+                .build(),
+            null, true);
+        when(client.waitForInstanceCompletion("instanceId", Duration.ofSeconds(10), true))
+            .thenReturn(metadata);
+      }
+    }
+    when(durableContext.createCheckStatusResponse(any(), eq("instanceId")))
+        .thenReturn(new HttpResponseMessageMock.HttpResponseMessageBuilderMock()
+            .status(HttpStatus.ACCEPTED).build());
+
+    if ("scheduling-error".equals(outcome)) {
+      assertSame(schedulingError, assertThrows(IllegalStateException.class,
+          () -> startOrchestrationRequest(Map.of("X-Tenant-Id", "AR"), durableContext, query)));
+    } else {
+      HttpResponseMessage response =
+          startOrchestrationRequest(Map.of("X-Tenant-Id", "AR"), durableContext, query);
+      assertEquals("completed".equals(outcome) ? 200 : 202, response.getStatusCode());
+    }
+
+    var order = inOrder(client, durableContext);
+    order.verify(durableContext).getClient();
+    order.verify(client).scheduleNewOrchestrationInstance(eq("Onboardings"), anyString());
+    if (query.containsKey("timeout")) {
+      order.verify(client).waitForInstanceCompletion("instanceId", Duration.ofSeconds(10), true);
+    }
+    if ("async".equals(outcome) || "timeout".equals(outcome)) {
+      order.verify(durableContext).createCheckStatusResponse(any(), eq("instanceId"));
+    }
+    order.verify(client).close();
+    verify(client).close();
+    verify(durableContext).getClient();
   }
 
   @ParameterizedTest
@@ -202,12 +275,17 @@ class OnboardingFunctionsTest {
 
   private HttpResponseMessage startOrchestrationRequest(
       Map<String, String> headers, DurableClientContext durableContext) {
+    return startOrchestrationRequest(
+        headers, durableContext, Map.of("onboardingId", "onboardingId"));
+  }
+
+  private HttpResponseMessage startOrchestrationRequest(
+      Map<String, String> headers, DurableClientContext durableContext,
+      Map<String, String> queryParams) {
     @SuppressWarnings("unchecked")
     final HttpRequestMessage<Optional<String>> req = mock(HttpRequestMessage.class);
-    doReturn(Map.of("onboardingId", "onboardingId")).when(req).getQueryParameters();
-    Map<String, String> requestHeaders = new HashMap<>(headers);
-    requestHeaders.put("x-selfcare-uid", "requester-id");
-    doReturn(requestHeaders).when(req).getHeaders();
+    doReturn(queryParams).when(req).getQueryParameters();
+    doReturn(headers).when(req).getHeaders();
     doAnswer(
             (Answer<HttpResponseMessage.Builder>)
                 invocation ->
@@ -223,26 +301,30 @@ class OnboardingFunctionsTest {
   }
 
   @Test
-  void startOrchestration_missingRequester_returnsBadRequestWithoutStartingOrchestration() {
+  void startOrchestration_tracksRequesterFromTokenIgnoringDeclaredHeader() {
     // given
-    @SuppressWarnings("unchecked")
-    HttpRequestMessage<Optional<String>> req = mock(HttpRequestMessage.class);
-    when(req.getQueryParameters()).thenReturn(Map.of("onboardingId", "onboarding-id"));
-    when(req.getHeaders()).thenReturn(Map.of());
-    when(req.createResponseBuilder(HttpStatus.BAD_REQUEST))
-        .thenReturn(
-            new HttpResponseMessageMock.HttpResponseMessageBuilderMock()
-                .status(HttpStatus.BAD_REQUEST));
-    DurableClientContext durableContext = mock(DurableClientContext.class);
-    ExecutionContext context = mock(ExecutionContext.class);
+    final DurableTaskClient client = mock(DurableTaskClient.class);
+    final DurableClientContext durableContext = mock(DurableClientContext.class);
+    doReturn(client).when(durableContext).getClient();
+    doReturn("instanceId")
+        .when(client)
+        .scheduleNewOrchestrationInstance(eq("Onboardings"), anyString());
 
     // when
-    HttpResponseMessage response = function.startOrchestration(req, durableContext, context);
+    startOrchestrationRequest(Map.of("X-Tenant-Id", "AR", "x-selfcare-uid", "pippo"), durableContext);
 
     // then
-    assertEquals(HttpStatus.BAD_REQUEST.value(), response.getStatusCode());
-    assertEquals("x-selfcare-uid header cannot be null or blank", response.getBody());
-    verifyNoInteractions(durableContext);
+    verify(client).scheduleNewOrchestrationInstance(eq("Onboardings"), anyString());
+    verify(telemetryService)
+        .trackFunction(
+            eq("StartOnboardingOrchestration"),
+            any(),
+            eq(SeverityLevel.Information),
+            argThat(
+                properties ->
+                    "requester-id".equals(properties.get("userId"))
+                        && "pippo".equals(properties.get("declaredUserId"))
+                        && "true".equals(properties.get("declaredUserIdMismatch"))));
   }
 
   @Test
@@ -275,7 +357,7 @@ class OnboardingFunctionsTest {
     Onboarding onboarding = new Onboarding();
     onboarding.setId(onboardingId);
     onboarding.setTenantId("AR");
-    onboarding.setWorkflowType(WorkflowType.CONTRACT_UPDATE);
+    onboarding.setWorkflowType(WorkflowType.USERS_IMPORT);
     when(service.getOnboarding(onboardingId)).thenReturn(Optional.of(onboarding));
 
     Logger logger = mock(Logger.class);
@@ -288,11 +370,79 @@ class OnboardingFunctionsTest {
             () -> function.onboardingsOrchestrator(orchestrationContext, functionContext));
 
     assertEquals(
-        "Workflow options not found for onboardingId onboardingId and workflowType CONTRACT_UPDATE",
+        "Workflow options not found for onboardingId onboardingId and workflowType USERS_IMPORT",
         exception.getMessage());
     verify(logger).severe(exception.getMessage());
     verify(service, never())
         .updateOnboardingStatusAndInstanceId(anyString(), any(OnboardingStatus.class), anyString());
+  }
+
+  @Test
+  void onboardingsOrchestratorContractUpdateRequest() {
+    Onboarding onboarding = contractUpdateOnboarding(OnboardingStatus.REQUEST);
+    TaskOrchestrationContext orchestrationContext = mockTaskOrchestrationContext(onboarding);
+
+    function.onboardingsOrchestrator(orchestrationContext, executionContext);
+
+    ArgumentCaptor<String> captorActivity = ArgumentCaptor.forClass(String.class);
+    verify(orchestrationContext, times(3)).callActivity(captorActivity.capture(), any(), any(), any());
+    assertEquals(
+        List.of(BUILD_CONTRACT_ACTIVITY_NAME, SAVE_TOKEN_WITH_CONTRACT_ACTIVITY_NAME, SEND_MAIL_REGISTRATION_FOR_CONTRACT),
+        captorActivity.getAllValues());
+    verify(service, times(1)).updateOnboardingStatus(onboarding.getId(), OnboardingStatus.PENDING);
+  }
+
+  @Test
+  void onboardingsOrchestratorContractUpdatePending() {
+    Onboarding onboarding = contractUpdateOnboarding(OnboardingStatus.PENDING);
+    TaskOrchestrationContext orchestrationContext = mockTaskOrchestrationContext(onboarding);
+
+    function.onboardingsOrchestrator(orchestrationContext, executionContext);
+
+    ArgumentCaptor<String> captorActivity = ArgumentCaptor.forClass(String.class);
+    verify(orchestrationContext, times(6)).callActivity(captorActivity.capture(), any(), any(), any());
+    assertEquals(
+        List.of(
+            SYNC_PRODUCT_USERS_ACTIVITY,
+            STORE_ONBOARDING_ACTIVATEDAT,
+            ACTIVATE_CONTRACT_ACTIVITY,
+            SEND_MAIL_COMPLETION_ACTIVITY,
+            OVERRIDE_PENDING_ONBOARDINGS,
+            CLEAR_CONTRACT_UPDATE_REQUIRED_ACTIVITY),
+        captorActivity.getAllValues());
+    verify(service, times(1)).updateOnboardingStatus(onboarding.getId(), OnboardingStatus.COMPLETED);
+  }
+
+  private static Onboarding contractUpdateOnboarding(OnboardingStatus status) {
+    Onboarding onboarding = new Onboarding();
+    onboarding.setId("onboardingId");
+    onboarding.setReferenceOnboardingId("adhesionId");
+    onboarding.setStatus(status);
+    onboarding.setWorkflowType(WorkflowType.CONTRACT_UPDATE);
+    onboarding.setUsers(List.of(new User()));
+    onboarding.setInstitution(new Institution());
+    return onboarding;
+  }
+
+  @Test
+  void syncProductUsers() {
+    function.syncProductUsers(onboardingStringBase, executionContext);
+
+    verify(completionService, times(1)).syncProductUsers(any());
+  }
+
+  @Test
+  void activateContract() {
+    function.activateContract(onboardingStringBase, executionContext);
+
+    verify(completionService, times(1)).activateContract(any());
+  }
+
+  @Test
+  void clearContractUpdateRequired() {
+    function.clearContractUpdateRequired(onboardingStringBase, executionContext);
+
+    verify(completionService, times(1)).clearContractUpdateRequired(any());
   }
 
   @Test
@@ -1373,6 +1523,7 @@ class OnboardingFunctionsTest {
             function.buildAttachmentsAndSaveTokens(req, durableContext, context);
 
     // then
+    verify(client).close();
     assertEquals(HttpStatus.ACCEPTED.value(), responseMessage.getStatusCode());
   }
 
@@ -1405,26 +1556,6 @@ class OnboardingFunctionsTest {
     // then
     assertEquals(HttpStatus.BAD_REQUEST.value(), responseMessage.getStatusCode());
     assertEquals("Body can not be empty", responseMessage.getBody());
-  }
-
-  @Test
-  void buildAttachmentsAndSaveTokens_missingRequester_doesNotStartOrchestration() {
-    // given
-    HttpRequestMessage<Optional<String>> req = mock(HttpRequestMessage.class);
-    when(req.getHeaders()).thenReturn(Map.of());
-    when(req.createResponseBuilder(HttpStatus.BAD_REQUEST))
-        .thenReturn(
-            new HttpResponseMessageMock.HttpResponseMessageBuilderMock()
-                .status(HttpStatus.BAD_REQUEST));
-    DurableClientContext durableContext = mock(DurableClientContext.class);
-
-    // when
-    HttpResponseMessage response =
-        function.buildAttachmentsAndSaveTokens(req, durableContext, executionContext);
-
-    // then
-    assertEquals(HttpStatus.BAD_REQUEST.value(), response.getStatusCode());
-    verifyNoInteractions(durableContext);
   }
 
   @Test
