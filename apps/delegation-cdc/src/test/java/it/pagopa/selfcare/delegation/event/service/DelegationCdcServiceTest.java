@@ -113,6 +113,7 @@ class DelegationCdcServiceTest {
         delegationsEntity.setProductId(PROD_PAGOPA.getValue());
         delegationsEntity.setFrom("institutionId");
         delegationsEntity.setTo("toInstitutionId");
+        delegationsEntity.setTenantId("AR");
 
         Institution institution = new Institution();
         OnboardingEntity onboardingEntity = new OnboardingEntity();
@@ -127,6 +128,7 @@ class DelegationCdcServiceTest {
         delegationEA.setFrom("institutionIdFromEA");
         delegationEA.setTo("institutionIdToEA");
         delegationEA.setProductId(PROD_PAGOPA.getValue());
+        delegationEA.setTenantId("AR");
 
         BsonDocument bsonDocument = mock(BsonDocument.class);
         BsonDocument bsonDocument1 = new BsonDocument();
@@ -149,7 +151,12 @@ class DelegationCdcServiceTest {
         verify(institutionRepository).findInstitutionById(anyString());
         verify(delegationRepository).getInstitutionsAlreadyPresent(anyString(), anyString());
         verify(delegationRepository).getDelegationsEA(anyString(), anyString());
-        verify(delegationRepository).insertDelegations(ArgumentMatchers.any());
+        ArgumentCaptor<Multi<DelegationsEntity>> insertedDelegations = ArgumentCaptor.forClass(Multi.class);
+        verify(delegationRepository).insertDelegations(insertedDelegations.capture());
+        List<DelegationsEntity> aggregatePtDelegations = insertedDelegations.getValue()
+                .collect().asList().await().indefinitely();
+        assertEquals(1, aggregatePtDelegations.size());
+        assertEquals("AR", aggregatePtDelegations.get(0).getTenantId());
         verify(eventHubRestClient).sendMessage(any());
         verify(tableClient, times(1)).upsertEntity(any());
 
@@ -590,6 +597,29 @@ class DelegationCdcServiceTest {
         assertTrue(allValues.containsAll(List.of("DelegationEvent_success", "DelegationInsert_failure")));
     }
 
+
+    @Test
+    void toDelegationAggregatePT_inheritsTenantFromPtDelegation() {
+        DelegationsEntity delegationAggregate = new DelegationsEntity();
+        delegationAggregate.setTenantId("PNPG");
+        DelegationsEntity delegationPT = new DelegationsEntity();
+        delegationPT.setTenantId("AR");
+
+        DelegationsEntity result = delegationMapper.toDelegationAggregatePT(delegationAggregate, delegationPT);
+
+        assertEquals("AR", result.getTenantId());
+    }
+
+    @Test
+    void toDelegationAggregatePT_fallsBackToAggregateTenant() {
+        DelegationsEntity delegationAggregate = new DelegationsEntity();
+        delegationAggregate.setTenantId("AR");
+        DelegationsEntity delegationPT = new DelegationsEntity();
+
+        DelegationsEntity result = delegationMapper.toDelegationAggregatePT(delegationAggregate, delegationPT);
+
+        assertEquals("AR", result.getTenantId());
+    }
 
     @Test
     void testDelegationCdcServiceConstructorNotTest() {
