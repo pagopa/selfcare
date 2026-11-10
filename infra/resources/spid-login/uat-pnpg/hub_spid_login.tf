@@ -155,7 +155,7 @@ locals {
     },
     {
       name  = "SPID_LOGS_STORAGE_CONTAINER_NAME"
-      value = "selc-u-logs-blob"
+      value = "selc-${module.local.config.env_short}-${module.local.config.location_short}-${module.local.config.domain}-logs-blob"
     },
     {
       name  = "APPLICATIONINSIGHTS_INSTRUMENTATION_LOGGING_LEVEL"
