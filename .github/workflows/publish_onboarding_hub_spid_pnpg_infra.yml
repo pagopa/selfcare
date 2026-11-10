@@ -74,11 +74,9 @@ jobs:
         uses: pagopa/dx/.github/workflows/infra_plan.yaml@main
         with:
           environment: ${{ inputs.env }}-pnpg
-          base_path: infra/resources/${{ inputs.app }}
+          base_path: ${{ env.dir }}
           use_private_agent: true
           override_github_environment: ${{ inputs.env }}
-          use_labels: true
-          override_labels: ${{ inputs.env }}
 
       - name: Upload Terraform Plan as Artifact
         uses: pagopa/dx/actions/terraform-plan-upload@main
