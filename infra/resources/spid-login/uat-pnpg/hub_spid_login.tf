@@ -34,7 +34,7 @@ locals {
     },
     {
       name  = "ORG_URL"
-      value = "https://www.pagopa.gov.it"
+      value = "https://www.pagopa.it"
     },
     {
       name  = "ACS_BASE_URL"
@@ -191,11 +191,11 @@ locals {
     },
     {
       name  = "REDIS_URL"
-      value = "selc-u-weu-pnpg-redis.redis.cache.windows.net"
+      value = "selc-${module.local.config.env_short}-weu-pnpg-redis.redis.cache.windows.net"
     },
     {
       name  = "WELL_KNOWN_URL"
-      value = "https://selcuweupnpgcheckoutst01.z6.web.core.windows.net/.well-known/jwks.json"
+      value = "https://selc${module.local.config.env_short}weupnpgcheckoutst01.z6.web.core.windows.net/.well-known/jwks.json"
     }
   ]
 
