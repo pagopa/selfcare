@@ -29,7 +29,7 @@ jobs:
 
   tf_plan:
     name: 'Terraform Plan'
-    runs-on: ubuntu-24.04
+    runs-on: [self-hosted, '${{ inputs.env }}']
     environment: ${{ inputs.env }}-ci
     permissions:
       id-token: write
@@ -59,25 +59,20 @@ jobs:
         with:
           terraform_version: ${{ steps.set-terraform-version.outputs.terraform_version}}
 
-      # - name: Terraform Plans
-      #   uses: pagopa/terraform-preapply-azure-action@54ded8cda3437c3f6a9f46baf69cb321ce82f5cd
-      #   with:
-      #     client_id: ${{ secrets.ARM_CLIENT_ID }}
-      #     tenant_id: ${{ secrets.ARM_TENANT_ID }}
-      #     subscription_id: ${{ secrets.ARM_SUBSCRIPTION_ID }}
-      #     dir: ${{ env.dir }}
-      #     azure_environment: ${{ inputs.env }}-pnpg
-      #   env:
-      #     TF_VAR_image_tag: ${{ inputs.release_version }}
-      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Cloud Login
+        uses: pagopa/dx/actions/csp-login@main
 
-      - name: "Infra Plan"
-        uses: pagopa/dx/.github/workflows/infra_plan.yaml@main
-        with:
-          environment: ${{ inputs.env }}-pnpg
-          base_path: ${{ env.dir }}
-          use_private_agent: true
-          override_github_environment: ${{ inputs.env }}
+      - name: Terraform Init
+        shell: bash
+        working-directory: ${{ env.dir }}
+        run: |
+          terraform init -input=false
+
+      - name: Terraform Plan
+        shell: bash
+        working-directory: ${{ env.dir }}
+        run: |
+          terraform plan -lock-timeout=3000s -out=tfplan-${{ inputs.env }}-${{ github.sha }} -input=false
 
       - name: Upload Terraform Plan as Artifact
         uses: pagopa/dx/actions/terraform-plan-upload@main
@@ -91,7 +86,7 @@ jobs:
 
   release:
     name: 'Release'
-    runs-on: ubuntu-24.04
+    runs-on: [self-hosted, '${{ inputs.env }}']
     needs: [ tf_plan ]
     environment: ${{ inputs.env }}-cd
     permissions:
@@ -138,7 +133,7 @@ jobs:
         shell: bash
         working-directory: ${{ env.dir }}
         run: |
-          bash ./terraform.sh init ${{ inputs.env }}-pnpg
+          terraform init -input=false
 
       - name: Terraform Apply
         shell: bash
