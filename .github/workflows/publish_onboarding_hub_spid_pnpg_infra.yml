@@ -1,4 +1,5 @@
 name: Publish - Hub Spid PNPG Infra
+run-name: Publish - Hub Spid PNPG Infra ${{ inputs.env }}
 
 on:
   workflow_dispatch:
@@ -70,7 +71,7 @@ jobs:
       #     TF_VAR_image_tag: ${{ inputs.release_version }}
       #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: "[${{ inputs.env }}] Infra Plan"
+      - name: "Infra Plan"
         uses: pagopa/dx/.github/workflows/infra_plan.yaml@main
         with:
           environment: ${{ inputs.env }}-pnpg
