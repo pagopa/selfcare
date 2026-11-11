@@ -8,8 +8,8 @@ import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import it.pagopa.selfcare.onboarding.config.TokenConfig;
 import it.pagopa.selfcare.onboarding.context.TenantContext;
-import it.pagopa.selfcare.onboarding.context.TenantJwtSessionAudiences;
 import it.pagopa.selfcare.onboarding.service.*;
+import it.pagopa.selfcare.tenant.TenantRegistry;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import java.security.KeyFactory;
@@ -36,7 +36,7 @@ public class JwtSessionServiceImpl implements JwtSessionService {
   @Inject TokenConfig tokenConfig;
   @RestClient @Inject UserApi userRegistryApi;
 
-  @Inject TenantJwtSessionAudiences tenantAudiences;
+  @Inject TenantRegistry tenantRegistry;
 
   private static final String PRIVATE_KEY_HEADER_TEMPLATE = "-----BEGIN %s-----";
   private static final String PRIVATE_KEY_FOOTER_TEMPLATE = "-----END %s-----";
@@ -59,7 +59,7 @@ public class JwtSessionServiceImpl implements JwtSessionService {
           .claim("fiscal_number", userResource.getFiscalCode())
           .claim("name", userResource.getName().getValue())
           .claim("uid", userId)
-          .setAudience(tenantAudiences.audience(tenant))
+          .setAudience(sessionAudience(tenant))
           .claim(TenantContext.TENANT_CLAIM, tenant)
           .signWith(SignatureAlgorithm.RS256, privateKey)
           .setHeaderParam(JwsHeader.KEY_ID, tokenConfig.kid())
@@ -84,7 +84,7 @@ public class JwtSessionServiceImpl implements JwtSessionService {
           .setExpiration(
               Date.from(new Date().toInstant().plus(Duration.parse(tokenConfig.duration()))))
           .claim("uid", MACHINE_UID)
-          .setAudience(tenantAudiences.audience(tenant))
+          .setAudience(sessionAudience(tenant))
           .claim(TenantContext.TENANT_CLAIM, tenant)
           .signWith(SignatureAlgorithm.RS256, privateKey)
           .setHeaderParam(JwsHeader.KEY_ID, tokenConfig.kid())
@@ -129,5 +129,13 @@ public class JwtSessionServiceImpl implements JwtSessionService {
 
     KeyFactory keyFactory = KeyFactory.getInstance("RSA");
     return keyFactory.generatePrivate(keySpec);
+  }
+
+  /** A tenant without {@code jwt.session.audience} is rejected: no fallback to another tenant. */
+  private String sessionAudience(String tenant) {
+    return tenantRegistry
+        .jwtSessionAudience(tenant)
+        .orElseThrow(
+            () -> new IllegalStateException("No JWT session audience configured for tenant " + tenant));
   }
 }

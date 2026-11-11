@@ -3,17 +3,20 @@ package it.pagopa.selfcare.onboarding.config;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import io.quarkus.arc.Arc;
 import io.quarkus.runtime.StartupEvent;
 import io.quarkus.test.junit.QuarkusTest;
-import it.pagopa.selfcare.onboarding.context.TenantJwtSessionAudiences;
 import it.pagopa.selfcare.tenant.TenantRegistry;
 import jakarta.enterprise.event.Observes;
 import jakarta.inject.Inject;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
 import java.util.Arrays;
+import java.util.Optional;
+import java.util.Set;
 import org.junit.jupiter.api.Test;
 
 /**
@@ -24,7 +27,6 @@ import org.junit.jupiter.api.Test;
 class TenantRegistryStartupValidatorTest {
 
   @Inject TenantRegistry registry;
-  @Inject TenantJwtSessionAudiences audiences;
 
   @Test
   void validatorBeanIsRegistered() {
@@ -44,17 +46,17 @@ class TenantRegistryStartupValidatorTest {
 
   @Test
   void acceptsRegistryWithAudienceForEverySupportedTenant() {
-    assertDoesNotThrow(() -> TenantRegistryStartupValidator.validate(registry, audiences));
+    assertDoesNotThrow(() -> TenantRegistryStartupValidator.validate(registry));
   }
 
   @Test
   void failsWhenASupportedTenantHasNoSessionAudience() {
-    TenantJwtSessionAudiences arOnly =
-        new TenantJwtSessionAudiences(
-            registry, "{\"AR\":{\"jwt\":{\"session\":{\"audience\":\"api.dev.selfcare.pagopa.it\"}}}}");
+    TenantRegistry arOnly = mock(TenantRegistry.class);
+    when(arOnly.supportedTenantIds()).thenReturn(Set.of("AR", "PNPG"));
+    when(arOnly.jwtSessionAudience("AR")).thenReturn(Optional.of("api.dev.selfcare.pagopa.it"));
+    when(arOnly.jwtSessionAudience("PNPG")).thenReturn(Optional.empty());
 
-    assertThrows(
-        IllegalStateException.class, () -> TenantRegistryStartupValidator.validate(registry, arOnly));
+    assertThrows(IllegalStateException.class, () -> TenantRegistryStartupValidator.validate(arOnly));
   }
 
   private static boolean observesStartupWithRegistry(Method method) {

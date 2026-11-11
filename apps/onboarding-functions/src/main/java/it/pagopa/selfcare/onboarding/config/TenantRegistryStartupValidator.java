@@ -1,7 +1,6 @@
 package it.pagopa.selfcare.onboarding.config;
 
 import io.quarkus.runtime.StartupEvent;
-import it.pagopa.selfcare.onboarding.context.TenantJwtSessionAudiences;
 import it.pagopa.selfcare.tenant.TenantRegistry;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.event.Observes;
@@ -20,14 +19,11 @@ public class TenantRegistryStartupValidator {
 
   private static final Logger log = LoggerFactory.getLogger(TenantRegistryStartupValidator.class);
 
-  void onStart(
-      @Observes StartupEvent event,
-      TenantRegistry tenantRegistry,
-      TenantJwtSessionAudiences sessionAudiences) {
-    validate(tenantRegistry, sessionAudiences);
+  void onStart(@Observes StartupEvent event, TenantRegistry tenantRegistry) {
+    validate(tenantRegistry);
   }
 
-  static void validate(TenantRegistry tenantRegistry, TenantJwtSessionAudiences sessionAudiences) {
+  static void validate(TenantRegistry tenantRegistry) {
     log.info("Tenant registry validated, supported tenants: {}", tenantRegistry.supportedTenantIds());
     tenantRegistry
         .supportedTenantIds()
@@ -36,6 +32,15 @@ public class TenantRegistryStartupValidator {
                 log.info(
                     "Tenant {} uses JWT session audience {}",
                     tenantId,
-                    sessionAudiences.audience(tenantId)));
+                    requiredSessionAudience(tenantRegistry, tenantId)));
+  }
+
+  private static String requiredSessionAudience(TenantRegistry tenantRegistry, String tenantId) {
+    return tenantRegistry
+        .jwtSessionAudience(tenantId)
+        .orElseThrow(
+            () ->
+                new IllegalStateException(
+                    "No JWT session audience configured for tenant " + tenantId));
   }
 }
