@@ -51,6 +51,8 @@ public class Onboarding extends ReactivePanacheMongoEntityBase {
     private UserRequester userRequester;
     private Boolean contractUpdateRequired;
 
+    private List<RtpServiceType> rtpServiceTypes;
+
     @BsonIgnore
     private Boolean skipVerifyLegal;
 }

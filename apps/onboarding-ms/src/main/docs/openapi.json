@@ -2836,6 +2836,12 @@
           },
           "contractUpdateRequired" : {
             "type" : "boolean"
+          },
+          "rtpServiceTypes" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/RtpServiceTypeResponse"
+            }
           }
         }
       },
@@ -3041,6 +3047,13 @@
           },
           "billing" : {
             "$ref" : "#/components/schemas/BillingRequest"
+          },
+          "rtpServiceTypes" : {
+            "description" : "Required and non-empty when productId is prod-rtp.",
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/RtpServiceTypeRequest"
+            }
           }
         }
       },
@@ -3260,6 +3273,14 @@
             "type" : "string"
           }
         }
+      },
+      "RtpServiceTypeRequest" : {
+        "enum" : [ "RTP", "REPOSITORY_CONSULTATION" ],
+        "type" : "string"
+      },
+      "RtpServiceTypeResponse" : {
+        "enum" : [ "RTP", "REPOSITORY_CONSULTATION" ],
+        "type" : "string"
       },
       "UUID" : {
         "format" : "uuid",
