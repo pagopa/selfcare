@@ -393,6 +393,71 @@ class OnboardingControllerTest {
                 .statusCode(200);
     }
 
+    @ParameterizedTest
+    @TestSecurity(user = "userJwt")
+    @ValueSource(strings = {"/psp", "/psp/completion", "/aggregation/psp/completion"})
+    void onboardingPsp_shouldRejectRtpWithoutServiceTypes(String path) {
+        OnboardingPspRequest request = new OnboardingPspRequest();
+        request.setProductId("prod-rtp");
+        request.setInstitution(institutionPsp);
+        request.setUsers(List.of(userDTO));
+
+        for (List<RtpServiceTypeRequest> serviceTypes :
+                java.util.Arrays.<List<RtpServiceTypeRequest>>asList(null, List.of())) {
+            request.setRtpServiceTypes(serviceTypes);
+            given()
+                    .body(request)
+                    .contentType(ContentType.JSON)
+                    .post(path)
+                    .then()
+                    .statusCode(400);
+        }
+
+        verifyNoInteractions(onboardingService);
+    }
+
+    @Test
+    @TestSecurity(user = "userJwt")
+    void onboardingPsp_shouldRejectUnknownRtpServiceType() {
+        given()
+                .body("{\"productId\":\"prod-rtp\",\"rtpServiceTypes\":[\"XX\"]}")
+                .contentType(ContentType.JSON)
+                .post("/psp")
+                .then()
+                .statusCode(400)
+                .body("status", org.hamcrest.Matchers.equalTo(400))
+                .body("errors[0].detail", org.hamcrest.Matchers.containsString("rtpServiceTypes[0]"));
+
+        verifyNoInteractions(onboardingService);
+    }
+
+    @Test
+    @TestSecurity(user = "userJwt")
+    void onboardingPsp_shouldAcceptRtpWithServiceTypes() {
+        OnboardingPspRequest request = new OnboardingPspRequest();
+        request.setProductId("prod-rtp");
+        request.setInstitution(institutionPsp);
+        request.setUsers(List.of(userDTO));
+        request.setRtpServiceTypes(List.of(RtpServiceTypeRequest.RTP,
+                RtpServiceTypeRequest.REPOSITORY_CONSULTATION));
+
+        when(onboardingService.onboarding(any(), any(), any(), any()))
+                .thenReturn(Uni.createFrom().item(new OnboardingResponse()));
+
+        given()
+                .body(request)
+                .contentType(ContentType.JSON)
+                .post("/psp")
+                .then()
+                .statusCode(200);
+
+        ArgumentCaptor<Onboarding> captor = ArgumentCaptor.forClass(Onboarding.class);
+        verify(onboardingService).onboarding(captor.capture(), any(), any(), any());
+        assertEquals(List.of(it.pagopa.selfcare.onboarding.entity.RtpServiceType.RTP,
+                it.pagopa.selfcare.onboarding.entity.RtpServiceType.REPOSITORY_CONSULTATION),
+                captor.getValue().getRtpServiceTypes());
+    }
+
     @Test
     void complete_unauthorized() {
 

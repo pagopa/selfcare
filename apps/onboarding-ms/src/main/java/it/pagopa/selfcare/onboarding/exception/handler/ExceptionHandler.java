@@ -1,5 +1,6 @@
 package it.pagopa.selfcare.onboarding.exception.handler;
 
+import com.fasterxml.jackson.databind.exc.MismatchedInputException;
 import it.pagopa.selfcare.onboarding.exception.*;
 import it.pagopa.selfcare.onboarding.exception.model.Problem;
 import it.pagopa.selfcare.onboarding.exception.model.ProblemError;
@@ -9,6 +10,7 @@ import org.jboss.resteasy.reactive.RestResponse;
 import org.jboss.resteasy.reactive.server.ServerExceptionMapper;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Slf4j
 public class ExceptionHandler {
@@ -25,6 +27,19 @@ public class ExceptionHandler {
                 .entity(problem)
                 .build();
     }
+    @ServerExceptionMapper
+    public Response toResponse(MismatchedInputException exception) {
+        String field = exception.getPath().stream()
+                .map(ref -> ref.getFieldName() != null ? "." + ref.getFieldName() : "[" + ref.getIndex() + "]")
+                .collect(Collectors.joining()).replaceFirst("^\\.", "");
+        String detail = "Invalid value for field '" + field + "': " + exception.getOriginalMessage();
+        log.error(LOG_ERROR_SYNTAX, SOMETHING_HAS_GONE_WRONG_IN_THE_SERVER, detail);
+        return Response
+                .status(Response.Status.BAD_REQUEST)
+                .entity(problem(detail, Response.Status.BAD_REQUEST.getStatusCode(), "0000"))
+                .build();
+    }
+
     @ServerExceptionMapper
     public RestResponse<String> toResponse(OnboardingNotAllowedException exception) {
         log.error(LOG_ERROR_SYNTAX, SOMETHING_HAS_GONE_WRONG_IN_THE_SERVER, exception.getMessage());
