@@ -113,7 +113,7 @@ hardcoded tenant list: with an empty registry every tenant is rejected (fail clo
 `jwt.session.audience` is the `aud` claim of the JWTs the functions sign for calls to
 other microservices; a tenant without it fails with an error (no fallback to another
 tenant). `TENANT_SUPPORTED_TENANTS` (same variable as onboarding-ms, product and
-webhook; default `*`, i.e. every registry tenant) restricts the registry tenants enabled
+webhook; default `AR,PNPG`) restricts the registry tenants enabled
 on the stack. The legacy `SUPPORTED_TENANTS` is still read as a fallback until the
 SELC-9669 cleanup.
 
@@ -172,7 +172,7 @@ Before running you must set these properties as environment variables.
 | quarkus.openapi-generator.user_registry_json.auth.api_key.api-key<br/> | USER_REGISTRY_API_KEY      |             |     yes      |
 | quarkus.rest-client."*.user_registry_json.api.UserApi".url<br/>        | USER_REGISTRY_URL          |             |     yes      |
 | tenant.registry.json<br/>                                             | TENANT_REGISTRY_JSON       | `{}`        |     yes      |
-| tenant.supported-tenants<br/>                                         | TENANT_SUPPORTED_TENANTS (legacy fallback: SUPPORTED_TENANTS) | `*` | per stack |
+| tenant.supported-tenants<br/>                                         | TENANT_SUPPORTED_TENANTS (legacy fallback: SUPPORTED_TENANTS) | `AR,PNPG` | per stack |
 | selfcare.tenant.strict-data-isolation<br/>                            | SELFCARE_TENANT_STRICT_DATA_ISOLATION | false | no     |
 | (referenced by `jwt.publicKeyEnvVar`)                                 | JWT_PUBLIC_KEY_AR / JWT_PUBLIC_KEY_PNPG |  | per stack |
 | onboarding-functions.jwt.validation.allowed-issuers<br/>              | JWT_ALLOWED_ISSUERS        | SPID,PAGOPA | yes          |
