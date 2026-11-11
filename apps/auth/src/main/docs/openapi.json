@@ -1,6 +1,8 @@
 {
   "openapi" : "3.0.3",
   "tags" : [ {
+    "name" : "Machine authentication"
+  }, {
     "name" : "OIDC"
   }, {
     "name" : "OTP"
@@ -10,11 +12,61 @@
     "name" : "support"
   } ],
   "components" : {
+    "securitySchemes" : {
+      "entraMachineToken" : {
+        "type" : "http",
+        "description" : "Entra v2 app-only access token issued for auth",
+        "scheme" : "bearer",
+        "bearerFormat" : "JWT"
+      },
+      "SecurityScheme" : {
+        "type" : "http",
+        "scheme" : "bearer",
+        "bearerFormat" : "JWT",
+        "description" : "Authentication"
+      }
+    },
     "schemas" : {
       "Date" : {
         "format" : "date",
         "type" : "string",
         "example" : "2022-03-10"
+      },
+      "MachineTokenRequest" : {
+        "required" : [ "tenantId", "audience", "scope" ],
+        "type" : "object",
+        "properties" : {
+          "tenantId" : {
+            "pattern" : "AR|PNPG",
+            "type" : "string"
+          },
+          "audience" : {
+            "pattern" : "[a-z][a-z0-9-]{0,63}",
+            "type" : "string"
+          },
+          "scope" : {
+            "pattern" : "[a-z][a-z0-9.:-]{0,127}",
+            "type" : "string"
+          }
+        }
+      },
+      "MachineTokenResponse" : {
+        "type" : "object",
+        "properties" : {
+          "access_token" : {
+            "type" : "string"
+          },
+          "token_type" : {
+            "type" : "string"
+          },
+          "expires_in" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "scope" : {
+            "type" : "string"
+          }
+        }
       },
       "MailStatusHistory" : {
         "type" : "object",
@@ -241,14 +293,6 @@
             "type" : "string"
           }
         }
-      }
-    },
-    "securitySchemes" : {
-      "SecurityScheme" : {
-        "type" : "http",
-        "scheme" : "bearer",
-        "bearerFormat" : "JWT",
-        "description" : "Authentication"
       }
     }
   },
@@ -677,6 +721,51 @@
             }
           }
         }
+      }
+    },
+    "/token/service" : {
+      "post" : {
+        "summary" : "Issue a machine access token",
+        "description" : "Exchange an Entra app-only access token for a tenant-bound, authorized service token.",
+        "operationId" : "issueMachineToken",
+        "tags" : [ "Machine authentication" ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/MachineTokenRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "Machine access token",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/MachineTokenResponse"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "Invalid request"
+          },
+          "401" : {
+            "description" : "Invalid Entra credential"
+          },
+          "403" : {
+            "description" : "Machine identity is not authorized"
+          },
+          "404" : {
+            "description" : "Machine token issuance is disabled"
+          }
+        },
+        "security" : [ {
+          "entraMachineToken" : [ ]
+        } ]
       }
     }
   },
