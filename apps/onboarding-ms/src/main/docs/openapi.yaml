@@ -2074,6 +2074,10 @@ components:
             type: string
         contractUpdateRequired:
           type: boolean
+        rtpServiceTypes:
+          type: array
+          items:
+            $ref: "#/components/schemas/RtpServiceTypeResponse"
     OnboardingGetResponse:
       type: object
       properties:
@@ -2229,6 +2233,11 @@ components:
           $ref: "#/components/schemas/InstitutionPspRequest"
         billing:
           $ref: "#/components/schemas/BillingRequest"
+        rtpServiceTypes:
+          description: Required and non-empty when productId is prod-rtp.
+          type: array
+          items:
+            $ref: "#/components/schemas/RtpServiceTypeRequest"
     OnboardingResponse:
       type: object
       properties:
@@ -2412,6 +2421,16 @@ components:
           type: string
         reason:
           type: string
+    RtpServiceTypeRequest:
+      enum:
+      - RTP
+      - REPOSITORY_CONSULTATION
+      type: string
+    RtpServiceTypeResponse:
+      enum:
+      - RTP
+      - REPOSITORY_CONSULTATION
+      type: string
     UUID:
       format: uuid
       pattern: "[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}"
