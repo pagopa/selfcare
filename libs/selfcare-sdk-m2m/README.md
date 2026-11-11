@@ -74,11 +74,9 @@ The Azure SDK manages the separate Entra access token lifetime.
 ### Publishing the SDK
 
 After merge, run **Release SDKs** (`.github/workflows/release-sdk.yml`) with
-`module=selfcare-sdk-m2m` on `main`. The existing **Release SDK**
-(`release_sdk_pom.yml`) also supports that selection; run only one of these
-equivalent workflows for a given version. Both include M2M when `module=all`.
-They build/install the selected module and its dependencies, then publish only
-that module to GitHub Packages.
+`module=selfcare-sdk-m2m` on `main`. The workflow also includes M2M when
+`module=all`. It builds/installs each selected module and its dependencies, then
+publishes only the selected module to GitHub Packages.
 
 This release adds manual selection, not a new automatic push trigger. Bump the
 SDK version before publishing changed artifacts; do not republish an existing

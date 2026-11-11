@@ -35,9 +35,9 @@ From `libs/selfcare-sdk-pom/pom.xml`:
 mvn -f libs/selfcare-sdk-pom/pom.xml clean install
 ```
 
-There is no workflow deploying this POM by itself. The workflows named "Release SDK"/"Release SDKs"
-(`.github/workflows/release_sdk_pom.yml`, `.github/workflows/release-sdk.yml`) release its children
-security, tenant and tenant-mongodb. Changes to `libs/selfcare-sdk-pom/**` trigger
+There is no workflow deploying this POM by itself. The workflow named "Release SDKs"
+(`.github/workflows/release-sdk.yml`) releases its children
+security, tenant, tenant-mongodb and m2m. Changes to `libs/selfcare-sdk-pom/**` trigger
 `.github/workflows/pr_health_sdk_spring.yml` on PRs.
 
 ## References
