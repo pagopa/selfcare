@@ -26,12 +26,13 @@ import org.slf4j.LoggerFactory;
 @ApplicationScoped
 public class MachineTokenService {
   private static final Logger LOGGER = LoggerFactory.getLogger(MachineTokenService.class);
-  public static final String ISSUER = "SELFCARE-M2M";
+  public static final String ISSUER = "SPID";
 
   @Inject MachineTokenConfig config;
   @Inject MachineIdentityVerifier verifier;
   @Inject TenantSessionKeyProvider keys;
   @Inject TenantRegistry tenants;
+  @Inject SessionServiceImpl sessions;
   @Inject ObjectMapper mapper;
   private List<Grant> grants = List.of();
 
@@ -75,16 +76,20 @@ public class MachineTokenService {
             .orElseThrow(() -> new ForbiddenException("Machine identity is not authorized"));
     tenants.resolveEnabledTenant(grant.tenantId());
     TenantSessionKeyProvider.SigningKey key = keys.getSigningKey(grant.tenantId());
+    // The grant's audience selects an issuance policy, not the legacy session JWT audience.
+    String audience = sessions.resolveAudience(grant.tenantId());
     Instant now = Instant.now();
     String token =
         Jwt.claims()
             .issuer(ISSUER)
             .subject(grant.serviceId())
             .claim("uid", grant.serviceId())
+            .claim("name", "auth")
+            .claim("client_id", grant.serviceId())
             .claim("tenant_id", grant.tenantId())
             .claim("token_use", "service")
             .claim("scope", grant.scope())
-            .audience(grant.audience())
+            .audience(audience)
             .claim("jti", UUID.randomUUID().toString())
             .issuedAt(now)
             .expiresAt(now.plus(config.lifetime()))
@@ -92,10 +97,11 @@ public class MachineTokenService {
             .keyId(key.keyId())
             .sign(key.privateKey());
     LOGGER.info(
-        "event=machine_token_issued service={} tenant={} audience={} scope={}",
+        "event=machine_token_issued service={} tenant={} destination={} audience={} scope={}",
         grant.serviceId(),
         grant.tenantId(),
         grant.audience(),
+        audience,
         grant.scope());
     return new MachineTokenResponse(token, "Bearer", config.lifetime().getSeconds(), grant.scope());
   }

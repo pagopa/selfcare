@@ -9,7 +9,10 @@ The two files are intentionally kept separate because **not all APIs exposed by 
 
 The `openapi-apim.json` file must therefore be updated whenever the set of APIs exposed through APIM changes, while `openapi.json` must continue to represent the complete API surface of the microservice.
 
-`POST /token/service` is an opt-in machine-token exchange, separate from user
-sessions. It is included only in the complete specification until its network
-route and Entra grants are configured. See the
+`POST /token/service` is an opt-in Entra-to-internal-token exchange, separate
+from user login. It emits the legacy `SPID` profile used by APIM, with a
+server-assigned technical identity, the existing tenant session key/audience,
+and a default five-minute lifetime. Grant destination and scope restrict
+issuance, not downstream access in legacy receivers. It is included only in the
+complete specification until its network route and Entra grants are configured. See the
 [M2M rollout guide](../../../../../libs/selfcare-sdk-m2m/README.md).

@@ -4,11 +4,15 @@ This release provides the opt-in machine-token issuer in `auth` and the reusable
 `selfcare-sdk-m2m` client library. The library acquires a short-lived access token
 using Azure Managed Identity; callers need no client secret or signing key.
 
-No existing microservice is migrated by this release. The onboarding caller
-adapters, receiver validation and cross-service HTTP integration suite remain
-in the separate migration PR #1126. Existing user sessions and interservice
-authentication are unchanged. Keep issuance disabled until the destination
-supports the machine-token profile.
+No existing caller is migrated by this release. Auth issues technical tokens
+using the legacy SPID profile, like APIM, so receivers do not need a new issuer
+or machine-profile validator. Existing user sessions remain unchanged.
+Keep issuance disabled until the destination's signing-key trust, session
+audience and authorization behavior have been verified.
+
+The earlier `SELFCARE-M2M` receiver changes and cross-service suite in PR #1126
+target a different profile and must be adapted before that PR is used with this
+issuer. They are not required to validate these legacy-compatible tokens.
 
 ## Trust and authorization
 
@@ -24,16 +28,28 @@ destination and permission. An Entra directory is not an AR/PNPG tenant.
 The requester cannot choose its service identity or obtain a grant through
 `X-Tenant-Id`. Missing grants deny access.
 
-Auth signs a JWT with `iss=SELFCARE-M2M`, `token_use=service`, `sub`, `uid`,
-`tenant_id`, `aud`, `scope`, `jti`, `iat` and `exp`. Lifetime defaults to five
-minutes and must be 60-900 seconds. Existing tenant signing keys are reused;
-there is no change to user-token semantics or the `PAGOPA` support role.
+Auth signs an RS256 JWT with `iss=SPID`, `name=auth`, and `sub`, `uid` and
+`client_id` set to the granted service identity, never to a user supplied by the
+caller. `tenant_id`, `iat` and `exp` follow the existing session convention.
+Additional `token_use=service`, `scope` and `jti` claims identify technical use
+but do not require changes in legacy receivers. No fiscal code, e-mail, SPID
+authentication level or support role is asserted.
 
-Before a destination can accept these tokens, it must validate its tenant's
-signature, exact audience and permission, machine profile, explicit tenant,
-lifetime and tenant-header consistency, and enforce authorization for the
-requested operation. Receiver integration is not included in this release;
-accepting the issuer alone is insufficient.
+Lifetime defaults to five minutes and must be 60-900 seconds. The private key
+and `kid` come from the same tenant signing-key provider as user sessions.
+The JWT `aud` uses the existing session audience resolver:
+`SESSION_TOKEN_AUDIENCE`, or `jwt.session.audience` in `TENANT_REGISTRY_JSON`
+when `SESSION_TOKEN_TENANT_AUDIENCE_ENABLED=true` (with the existing global
+fallback). Neither session lifetime nor user/SAML token issuance is changed.
+
+**Authorization limitation:** the request/grant `audience` is a destination
+identifier used only to authorize issuance; it is not the emitted JWT `aud`.
+The request's `scope` also gates issuance, but legacy receivers do not enforce
+these M2M scopes. A token may authenticate to other services trusting the same
+key, issuer and session audience. This is the legacy APIM trust model, not
+cryptographic confinement to the selected destination. Endpoint-specific user
+or relationship checks still apply and may reject the technical identity.
+Do not grant issuance to identities that must not have this broader trust.
 
 The client caches separately by tenant, audience and permission (the identity
 is fixed per client instance), coalesces concurrent acquisitions and reuses a
@@ -67,9 +83,10 @@ The Azure SDK manages the separate Entra access token lifetime.
    that replaces it with a SelfCare JWT. Verify the actual network route before
    enabling callers.
 5. Auth must already support the requested SelfCare tenant and have its signing
-   key. The destination must have the corresponding verification key and
-   machine-token validation. Preserve any additional destination authentication
-   requirements, such as function keys.
+   key. The destination must trust the corresponding public key/certificate
+   (and `kid`, where enforced), accept `SPID` and the configured session
+   audience, and allow the technical identity on the required operation.
+   Preserve additional authentication requirements such as function keys.
 
 ### Publishing the SDK
 
@@ -96,8 +113,9 @@ environment is enabled by default:
 The SDK is configured by its consumer through `selfcare.m2m.enabled`,
 `selfcare.m2m.endpoint`, `selfcare.m2m.entra-scope` and the optional
 `selfcare.m2m.managed-identity-client-id`. Caller-specific environment mappings,
-REST-client filter registration and receiver activation belong to the later
-migration, not this release.
+REST-client filter registration and receiver compatibility checks belong to
+the later migration, not this release. No `SELFCARE-M2M` receiver activation
+is needed.
 
 Example grant structure (replace the illustrative object ID with the actual
 managed identity principal ID):
@@ -114,19 +132,21 @@ managed identity principal ID):
 ]
 ```
 
-Add separate grants for each caller and allowed SelfCare tenant. Grants for
-destinations without M2M validation must not be added.
+Add separate grants for each caller and allowed SelfCare tenant. Authorize a
+destination only after verifying its existing SPID validation and the broader
+trust described above; grant scope alone does not restrict downstream access.
 
 ## Rollout and rollback
 
 Publish the SDK and deploy auth with `M2M_ISSUER_ENABLED=false` (the default).
 This can be done independently of the onboarding migration and does not replace
-any existing token. Do not remove legacy secrets or enable grants for unmigrated
-destinations.
+any existing token. Do not remove legacy secrets or enable grants before
+verifying receiver compatibility.
 
-In the later migration, deploy receiver validation before enabling issuance and
-callers. Verify successful calls, rejection for a different tenant/destination,
-expiration, and failure when auth is unavailable in DEV before wider rollout.
+In the later caller migration, verify successful calls, tenant isolation,
+rejection of unauthorized issuance requests, expiration and failure when auth
+is unavailable in DEV before wider rollout. Do not expect legacy receivers to
+reject a token solely because it was requested for another destination.
 Caller rollback must be explicit, never an automatic fallback on token errors.
 
 Removing a grant or disabling an identity prevents future issuance; already
@@ -145,7 +165,8 @@ never contact Entra or require real credentials. Maven still needs access to
 the repository's private package dependencies.
 
 The cross-service HTTP suite and its `m2m-integration` profile are deliberately
-excluded: they require the onboarding changes from PR #1126. This release's
-checks cover issuer validation/signing, grants, HTTP responses and the SDK's
-cache/filter behavior, not a complete deployed caller-to-receiver flow. An Azure
-smoke test is still required before activation.
+excluded: the suite in PR #1126 needs adaptation to the legacy SPID profile.
+This release's checks cover issuer validation/signing, grants, HTTP responses,
+SmallRye validation using the legacy issuer/audience/required-claim rules, and
+the SDK's cache/filter behavior, not every deployed receiver or a complete
+caller-to-receiver flow. An Azure smoke test is required before activation.

@@ -43,7 +43,9 @@ public class MachineTokenController {
   @Operation(
       summary = "Issue a machine access token",
       description =
-          "Exchange an Entra app-only access token for a tenant-bound, authorized service token.",
+          "Exchange an Entra app-only access token for a short-lived internal SPID token. "
+              + "The granted service identity and tenant session audience are assigned by auth. "
+              + "Requested audience and scope restrict issuance, not authorization in legacy receivers.",
       operationId = "issueMachineToken")
   @SecurityRequirement(name = "entraMachineToken")
   @APIResponse(
