@@ -71,6 +71,19 @@ The Azure SDK manages the separate Entra access token lifetime.
    machine-token validation. Preserve any additional destination authentication
    requirements, such as function keys.
 
+### Publishing the SDK
+
+After merge, run **Release SDKs** (`.github/workflows/release-sdk.yml`) with
+`module=selfcare-sdk-m2m` on `main`. The existing **Release SDK**
+(`release_sdk_pom.yml`) also supports that selection; run only one of these
+equivalent workflows for a given version. Both include M2M when `module=all`.
+They build/install the selected module and its dependencies, then publish only
+that module to GitHub Packages.
+
+This release adds manual selection, not a new automatic push trigger. Bump the
+SDK version before publishing changed artifacts; do not republish an existing
+release version.
+
 Configure these values through the environment's Terraform app settings; no
 environment is enabled by default:
 
