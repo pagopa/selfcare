@@ -2,23 +2,24 @@ package it.pagopa.selfcare.onboarding.context;
 
 import com.microsoft.azure.functions.ExecutionContext;
 import com.microsoft.azure.functions.HttpRequestMessage;
-import org.eclipse.microprofile.config.ConfigProvider;
+import io.quarkus.arc.Arc;
+import it.pagopa.selfcare.tenant.TenantRegistry;
+import it.pagopa.selfcare.tenant.UnknownTenantException;
 
-import java.util.Arrays;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Set;
-import java.util.stream.Collectors;
 
+/**
+ * Tenant of the current function invocation, kept on a {@link ThreadLocal} because the request
+ * scope (and so the SDK {@code TenantContext}) is not active in durable and queue triggers. The
+ * supported tenants are the ones of the {@link TenantRegistry} ({@code TENANT_REGISTRY_JSON}
+ * filtered by {@code tenant.supported-tenants}).
+ */
 public final class TenantContext {
 
     public static final String TENANT_HEADER = "X-Tenant-Id";
     public static final String TENANT_CLAIM = "tenant_id";
 
-    private static final String SUPPORTED_TENANTS_PROPERTY =
-            "onboarding-functions.tenant.supported-tenants";
-    private static final String DEFAULT_SUPPORTED_TENANTS = "AR,PNPG";
     private static final ThreadLocal<String> CURRENT_TENANT = new ThreadLocal<>();
 
     private TenantContext() {}
@@ -65,29 +66,27 @@ public final class TenantContext {
         return tenant;
     }
 
+    /**
+     * Normalizes {@code tenant} ({@code trim} + upper case) and checks it against the registry.
+     *
+     * @throws IllegalArgumentException if the tenant is blank or not supported by the registry
+     */
     public static String resolve(String tenant) {
         if (tenant == null || tenant.isBlank()) {
             throw new IllegalArgumentException("Tenant context is required");
         }
-        String canonicalTenant = normalize(tenant);
-        if (!supportedTenants().contains(canonicalTenant)) {
+        TenantRegistry registry = registry();
+        String canonicalTenant = registry.normalizeTenantId(tenant);
+        try {
+            registry.resolve(canonicalTenant);
+        } catch (UnknownTenantException exception) {
             throw new IllegalArgumentException("Unsupported tenant");
         }
         return canonicalTenant;
     }
 
-    private static Set<String> supportedTenants() {
-        String configuredTenants = ConfigProvider.getConfig()
-                .getOptionalValue(SUPPORTED_TENANTS_PROPERTY, String.class)
-                .orElse(DEFAULT_SUPPORTED_TENANTS);
-        return Arrays.stream(configuredTenants.split(","))
-                .map(TenantContext::normalize)
-                .filter(value -> !value.isBlank())
-                .collect(Collectors.toUnmodifiableSet());
-    }
-
-    private static String normalize(String tenant) {
-        return tenant.trim().toUpperCase(Locale.ROOT);
+    private static TenantRegistry registry() {
+        return Arc.container().instance(TenantRegistry.class).get();
     }
 
     public static final class Scope implements AutoCloseable {
