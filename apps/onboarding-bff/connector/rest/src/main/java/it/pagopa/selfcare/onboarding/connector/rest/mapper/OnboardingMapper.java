@@ -21,6 +21,7 @@ public interface OnboardingMapper {
     @Mapping(target = "institution", source = ".", qualifiedByName = "toInstitutionBase")
     OnboardingPaRequest toOnboardingPaRequest(OnboardingData onboardingData);
     @Mapping(target = "institution", source = ".", qualifiedByName = "toInstitutionPsp")
+    @Mapping(target = "rtpServiceTypes", source = "rtpServiceTypes")
     OnboardingPspRequest toOnboardingPspRequest(OnboardingData onboardingData);
     @Mapping(target = "institution", source = ".", qualifiedByName = "toInstitutionBase")
     @Mapping(target = "additionalInformations", source = "institutionUpdate.additionalInformations")
