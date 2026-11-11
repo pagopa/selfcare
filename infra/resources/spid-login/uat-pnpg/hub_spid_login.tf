@@ -34,7 +34,7 @@ locals {
     },
     {
       name  = "ORG_URL"
-      value = "https://www.pagopa.gov.it"
+      value = "https://www.pagopa.it"
     },
     {
       name  = "ACS_BASE_URL"
@@ -155,7 +155,7 @@ locals {
     },
     {
       name  = "SPID_LOGS_STORAGE_CONTAINER_NAME"
-      value = "selc-u-logs-blob"
+      value = "selc-${module.local.config.env_short}-${module.local.config.location_short}-${module.local.config.domain}-logs-blob"
     },
     {
       name  = "APPLICATIONINSIGHTS_INSTRUMENTATION_LOGGING_LEVEL"
@@ -191,11 +191,11 @@ locals {
     },
     {
       name  = "REDIS_URL"
-      value = "selc-u-weu-pnpg-redis.redis.cache.windows.net"
+      value = "selc-${module.local.config.env_short}-weu-pnpg-redis.redis.cache.windows.net"
     },
     {
       name  = "WELL_KNOWN_URL"
-      value = "https://selcuweupnpgcheckoutst01.z6.web.core.windows.net/.well-known/jwks.json"
+      value = "https://selc${module.local.config.env_short}weupnpgcheckoutst01.z6.web.core.windows.net/.well-known/jwks.json"
     }
   ]
 
@@ -262,7 +262,7 @@ module "container_app_hub_spid_login" {
   app_settings                   = local.app_settings
   secrets_names                  = local.secrets_names
   workload_profile_name          = null
-  image_tag                      = "5.5.3-RELEASE"
+  image_tag                      = "6.0.1"
   key_vault_resource_group_name  = module.local.config.key_vault_resource_group_name
   key_vault_name                 = module.local.config.key_vault_name
   probes                         = local.probes
