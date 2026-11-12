@@ -16,7 +16,9 @@ public enum ProductId {
   PROD_IDPAY_MERCHANT("prod-idpay-merchant"),
   PROD_IDPAY_GI("prod-idpay-gi"),
   PROD_CED("prod-ced"),
-  PROD_MDC("prod-mdc");
+  PROD_MDC("prod-mdc"),
+  PROD_RTP("prod-rtp");
+
 
   private final String value;
 
