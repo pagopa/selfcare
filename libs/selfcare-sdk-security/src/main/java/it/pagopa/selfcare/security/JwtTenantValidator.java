@@ -1,7 +1,8 @@
 package it.pagopa.selfcare.security;
 
+import it.pagopa.selfcare.tenant.InvalidTenantClaimException;
+import it.pagopa.selfcare.tenant.JwtTenantClaimResolver;
 import java.util.Arrays;
-import java.util.Locale;
 import java.util.Set;
 import java.util.function.UnaryOperator;
 import java.util.stream.Collectors;
@@ -10,11 +11,12 @@ import org.eclipse.microprofile.jwt.JsonWebToken;
 /**
  * Reconciles the tenant of a verified SPID token with the {@code X-Tenant-Id} header.
  *
- * <p>Tenant ids are compared after {@code trim()} and {@code toUpperCase(Locale.ROOT)}, like the
- * tenant registry and the Spring {@code SpidJwtAuthenticationStrategy}. A token without the
- * {@code tenant_id} claim is attributed to {@code DEFAULT_TENANT}, because legacy issuers (e.g.
- * the PNPG SPID hub) do not emit it; set {@code JWT_TENANT_CLAIM_REQUIRED=true} to reject such
- * tokens once every issuer of the environment emits the claim.
+ * <p>The claim is resolved by the shared {@link JwtTenantClaimResolver}: tenant ids are compared
+ * after {@code trim()} and {@code toUpperCase(Locale.ROOT)}, like the tenant registry and the
+ * Spring {@code SpidJwtAuthenticationStrategy}. A token without the {@code tenant_id} claim is
+ * attributed to {@code DEFAULT_TENANT}, because legacy issuers (e.g. the PNPG SPID hub) do not emit
+ * it; set {@code JWT_TENANT_CLAIM_REQUIRED=true} to reject such tokens once every issuer of the
+ * environment emits the claim.
  */
 final class JwtTenantValidator {
 
@@ -23,12 +25,9 @@ final class JwtTenantValidator {
   static final String DEFAULT_TENANT_ENV = "DEFAULT_TENANT";
   static final String SUPPORTED_TENANTS_ENV = "SUPPORTED_TENANTS";
   static final String TENANT_CLAIM_REQUIRED_ENV = "JWT_TENANT_CLAIM_REQUIRED";
-  private static final String CLAIM_TENANT_ID = "tenant_id";
   private static final JwtTenantValidator FROM_ENVIRONMENT = fromEnvironment(System::getenv);
 
-  private final String defaultTenantId;
-  private final Set<String> supportedTenants;
-  private final boolean tenantClaimRequired;
+  private final JwtTenantClaimResolver resolver;
 
   private JwtTenantValidator(
       String defaultTenantId, Set<String> supportedTenants, boolean tenantClaimRequired) {
@@ -36,9 +35,8 @@ final class JwtTenantValidator {
       throw new IllegalArgumentException(
           DEFAULT_TENANT_ENV + " must be included in " + SUPPORTED_TENANTS_ENV);
     }
-    this.defaultTenantId = defaultTenantId;
-    this.supportedTenants = supportedTenants;
-    this.tenantClaimRequired = tenantClaimRequired;
+    this.resolver =
+        JwtTenantClaimResolver.of(defaultTenantId, supportedTenants, tenantClaimRequired);
   }
 
   static JwtTenantValidator fromEnvironment() {
@@ -82,24 +80,15 @@ final class JwtTenantValidator {
   }
 
   private static String normalize(String tenantId) {
-    return tenantId.trim().toUpperCase(Locale.ROOT);
+    return JwtTenantClaimResolver.normalize(tenantId);
   }
 
   String resolveTokenTenant(JsonWebToken jwt) {
-    Object rawTenantId = jwt.getClaim(CLAIM_TENANT_ID);
-    if (rawTenantId == null) {
-      if (tenantClaimRequired) {
-        throw new TenantValidationException();
-      }
-      return defaultTenantId;
+    try {
+      return resolver.resolve(jwt.getClaim(JwtTenantClaimResolver.TENANT_CLAIM)).tenantId();
+    } catch (InvalidTenantClaimException e) {
+      throw new TenantValidationException();
     }
-    if (rawTenantId instanceof String tenantId && !tenantId.isBlank()) {
-      String normalizedTenantId = normalize(tenantId);
-      if (supportedTenants.contains(normalizedTenantId)) {
-        return normalizedTenantId;
-      }
-    }
-    throw new TenantValidationException();
   }
 
   void validateHeader(String tenantId, String headerTenantId) {
