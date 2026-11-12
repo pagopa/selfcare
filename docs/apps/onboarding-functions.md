@@ -70,7 +70,7 @@ Base path `/api/<FunctionName>` on the Function App. Specs in `apps/onboarding-f
 ## Data and messaging
 
 - MongoDB database `selcOnboarding` (`MONGODB_CONNECTION_URI`): onboardings and tokens shared with onboarding-ms.
-- Contract storage per tenant (`onboarding-functions.contract-storage.tenants.<T>.*`, `storage/ContractBlobClientProvider`); product configuration from the product storage account.
+- Contract storage per tenant (`storages.contracts` of the tenant registry, `storage/ContractBlobClientProvider`); tenant filter on queries per `SELFCARE_TENANT_STRICT_DATA_ISOLATION` (`context/TenantDataIsolation`); product configuration from the product storage account.
 - Notifications: Event Hub REST (`EVENT_HUB_BASE_PATH`, `{hubName}/messages`) to consumers `standard` (`STANDARD_TOPIC_NAME`, default `SC-Contracts`), `sap` (`SC-Contracts-SAP`, filtered by `SAP_ALLOWED_INSTITUTION_TYPE`/`SAP_ALLOWED_ORIGINS`) and `fd` (`Selfcare-FD`); plus `POST webhooks/notify` on the webhook service (`WEBHOOK_BASE_PATH`).
 - E-mail via SMTP (Quarkus mailer) with JSON templates under `contracts/template/mail/` (`MAIL_TEMPLATE_*`).
 - Durable Task state in the Function App host storage account (`infra/resources/_modules/functions/function.tf`).
@@ -87,10 +87,10 @@ From `apps/onboarding-functions/src/main/resources/application.properties`, `app
 
 | Group | Variables |
 |---|---|
-| Tenant / JWT | `SUPPORTED_TENANTS`, `DEFAULT_TENANT`, `JWT_PUBLIC_KEY_AR`, `JWT_PUBLIC_KEY_PNPG`, `JWT_ALLOWED_ISSUERS`, `JWT_DEFAULT_TENANT`, `JWT_TENANT_CLAIM_REQUIRED` |
-| Token issuing | `JWT_TOKEN_PRIVATE_KEY`, `JWT_TOKEN_KID`, `JWT_TOKEN_ISSUER`, `JWT_TOKEN_DURATION`, `JWT_TOKEN_AUDIENCE_AR`, `JWT_TOKEN_AUDIENCE_PNPG`, `JWT_BEARER_TOKEN` |
+| Tenant / JWT | `TENANT_REGISTRY_JSON` (`selfcare-sdk-tenant`: JWT key, session audience, contracts storage, validated at startup), `TENANT_SUPPORTED_TENANTS` (legacy fallback `SUPPORTED_TENANTS`), `SELFCARE_TENANT_STRICT_DATA_ISOLATION`, `DEFAULT_TENANT`, `JWT_PUBLIC_KEY_<T>` (referenced by the registry), `JWT_ALLOWED_ISSUERS`, `JWT_DEFAULT_TENANT`, `JWT_TENANT_CLAIM_REQUIRED` |
+| Token issuing | `JWT_TOKEN_PRIVATE_KEY`, `JWT_TOKEN_KID`, `JWT_TOKEN_ISSUER`, `JWT_TOKEN_DURATION` (audience from the registry `jwt.session.audience`); `JWT_TOKEN_AUDIENCE_*` and `JWT_BEARER_TOKEN` are still set in Terraform but no longer read |
 | Mongo / clients | `MONGODB_CONNECTION_URI`, `MS_CORE_URL`, `MS_USER_URL`, `MS_DOCUMENT_URL`, `MS_PRODUCT_URL`, `MS_PARTY_REGISTRY_URL`, `USER_REGISTRY_URL`, `USER_REGISTRY_API_KEY` |
-| Storage | `BLOB_STORAGE_ACCOUNT_NAME_PRODUCT`, `BLOB_STORAGE_MANAGED_IDENTITY_CLIENT_ID_PRODUCT`, `STORAGE_CONTAINER_PRODUCT`, `BLOB_STORAGE_ACCOUNT_NAME_CONTRACT_<T>`, `STORAGE_CONTAINER_CONTRACT_<T>`, `BLOB_STORAGE_PATH_PREFIX_CONTRACT_<T>`, `BLOB_STORAGE_MANAGED_IDENTITY_CLIENT_ID_CONTRACT_<T>` (legacy non-suffixed names as fallback) |
+| Storage | `BLOB_STORAGE_ACCOUNT_NAME_PRODUCT`, `BLOB_STORAGE_MANAGED_IDENTITY_CLIENT_ID_PRODUCT`, `STORAGE_CONTAINER_PRODUCT`, `BLOB_STORAGE_MANAGED_IDENTITY_CLIENT_ID_CONTRACT_<T>` (referenced by the registry contracts storage) |
 | Notifications | `EVENT_HUB_BASE_PATH`, `STANDARD_TOPIC_NAME`, `SAP_TOPIC_NAME`, `FD_TOPIC_NAME`, `*_SHARED_ACCESS_KEY_NAME`, `EVENTHUB_SC_CONTRACTS_*_WO_KEY_LC`, `STANDARD_NOTIFICATION_RELATED_DOCUMENTS_ENABLED`, `MINUTES_THRESHOLD_FOR_UPDATE_NOTIFICATION`, `WEBHOOK_BASE_PATH` |
 | Mail | `MAIL_SERVER_HOST`, `MAIL_SERVER_PORT`, `MAIL_SERVER_USERNAME`, `MAIL_SERVER_PASSWORD`, `MAIL_SERVER_SSL`, `MAIL_SENDER_ADDRESS`, `MAIL_DESTINATION_TEST*`, `MAIL_TEMPLATE_*`, `MAIL_*_LINK`, `SELFCARE_URL`, `EMAIL_SERVICE_AVAILABLE` |
 | Signature / FD | `PAGOPA_SIGNATURE_SOURCE` (`disabled`/`local`/`aruba`), `NAMIRIAL_*`, `PROD_FD_URL`, `FD_TOKEN_*`, `BYPASS_CHECK_ORGANIZATION` |
@@ -98,9 +98,11 @@ From `apps/onboarding-functions/src/main/resources/application.properties`, `app
 
 ## Multitenancy
 
-- Every HTTP call must carry `X-Tenant-Id` (case-insensitive lookup, `context/TenantContext`) that is in `SUPPORTED_TENANTS`; the JWT `tenant_id` claim must match it (or `JWT_DEFAULT_TENANT` is assumed when the claim is absent and not required).
+- Every HTTP call must carry `X-Tenant-Id` (case-insensitive lookup, `context/TenantContext`) that is in `TENANT_SUPPORTED_TENANTS`; the JWT `tenant_id` claim must match it (or `JWT_DEFAULT_TENANT` is assumed when the claim is absent and not required). The claim rules (normalization, supported tenants, default tenant) are the shared `JwtTenantClaimResolver` of [selfcare-sdk-tenant](../libs/selfcare-sdk-tenant.md), the same used by `selfcare-sdk-security`.
 - The tenant is passed as orchestration input and reopened in the orchestrator (`TenantContext.open`); a mismatch with the onboarding's `tenantId` fails the orchestration ("Conflicting tenant context").
-- Contract storage is selected per tenant; each stack sets `SUPPORTED_TENANTS`/`DEFAULT_TENANT` to its own tenant and loads only its tenant public key.
+- Contract storage is selected per tenant; each stack sets `TENANT_SUPPORTED_TENANTS`/`DEFAULT_TENANT` to its own tenant and loads only its tenant public key.
+- `SELFCARE_TENANT_STRICT_DATA_ISOLATION` defaults to `false` (documents without `tenantId` are attributed to the current tenant), unlike onboarding-ms which is always strict on the same `onboardings` collection. Enable it only after `backfill_tenant_id.py --verify` (Step 1) is clean on `onboardings`/`tokens` and no pre-migration Durable orchestration is in flight. The AR backfill was verified clean on DEV, UAT and PROD on 2026-11-12 (SELC-9711); PNPG had no untagged documents.
+- Whole-entity writes (`OnboardingRepository.persist/persistOrUpdate/update`) stamp the current tenant on an onboarding without `tenantId` and reject one of another tenant (`TenantDataIsolation.tenantForWrite`, like `validateTenant` in onboarding-ms). Without a tenant in context the value is left unchanged. This keeps new aggregate onboardings (`CONFIRMATION_AGGREGATE`) tagged even if their aggregator is a legacy untagged document.
 
 See [multitenancy](../multitenancy.md), [MULTITENANT Step 2](../specs/MULTITENANT/Step_2/ARCHITECTURE.md) and [Storage identification](../specs/MULTITENANT/Step_2/Storage_identification.md).
 
