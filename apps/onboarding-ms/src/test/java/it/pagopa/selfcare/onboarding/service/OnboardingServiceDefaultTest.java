@@ -119,6 +119,10 @@ class OnboardingServiceDefaultTest {
 
     @InjectMock
     @RestClient
+    org.openapi.quarkus.core_json.api.InstitutionApi coreInstitutionApi;
+
+    @InjectMock
+    @RestClient
     UoApi uoApi;
 
     @InjectMock
@@ -3260,6 +3264,131 @@ class OnboardingServiceDefaultTest {
         asserter.execute(() -> {
             PanacheMock.verify(Onboarding.class).persist(any(Onboarding.class), any());
             PanacheMock.verify(Onboarding.class).persistOrUpdate(any(List.class));
+        });
+    }
+
+    private OnboardingUserRequest prepareOnboardingUsersWithReferencedInstitution(UniAsserter asserter, String institutionId) {
+        OnboardingUserRequest request = new OnboardingUserRequest();
+        request.setProductId(PROD_INTEROP.getValue());
+        request.setUsers(List.of(manager));
+        request.setInstitutionType(InstitutionType.PA);
+        request.setTaxCode("taxCode");
+        request.setSubunitCode("subunitCode");
+        request.setOrigin(Origin.IPA.name());
+        request.setOriginId("originId");
+        mockPersistOnboarding(asserter);
+        mockSimpleSearchPOSTAndPersist(asserter);
+        mockSimpleProductValidAssert(request.getProductId(), false, asserter, false, true);
+
+        Onboarding referencedOnboarding = createDummyOnboarding();
+        referencedOnboarding.getInstitution().setId(institutionId);
+        referencedOnboarding.getInstitution().setDigitalAddress("old@pec.it");
+        PanacheMock.mock(Onboarding.class);
+        ReactivePanacheQuery query = Mockito.mock(ReactivePanacheQuery.class);
+        when(query.stream()).thenReturn(Multi.createFrom().item(referencedOnboarding));
+        when(Onboarding.find((Document) any(), any())).thenReturn(query);
+
+        asserter.execute(() -> when(userRegistryApi.updateUsingPATCH(any(), any()))
+                .thenReturn(Uni.createFrom().item(Response.noContent().build())));
+        return request;
+    }
+
+    private static org.openapi.quarkus.core_json.model.InstitutionResponse institutionResponseWithPec(String digitalAddress) {
+        org.openapi.quarkus.core_json.model.InstitutionResponse response = new org.openapi.quarkus.core_json.model.InstitutionResponse();
+        response.setDigitalAddress(digitalAddress);
+        return response;
+    }
+
+    private static String persistedDigitalAddress() {
+        ArgumentCaptor<Onboarding> persisted = ArgumentCaptor.forClass(Onboarding.class);
+        PanacheMock.verify(Onboarding.class).persist(persisted.capture(), any());
+        return persisted.getValue().getInstitution().getDigitalAddress();
+    }
+
+    @Test
+    @RunOnVertxContext
+    void onboardingUsers_refreshesDigitalAddressFromInstitution(UniAsserter asserter) {
+        OnboardingUserRequest request = prepareOnboardingUsersWithReferencedInstitution(asserter, "institutionId");
+        asserter.execute(() -> when(coreInstitutionApi.retrieveInstitutionByIdUsingGET("institutionId", null))
+                .thenReturn(Uni.createFrom().item(institutionResponseWithPec("new@pec.it"))));
+
+        asserter.assertThat(() -> onboardingService.onboardingUsers(request, "userId", WorkflowType.USERS), response -> {
+            assertNotNull(response);
+            assertEquals("new@pec.it", persistedDigitalAddress());
+            verify(coreInstitutionApi).retrieveInstitutionByIdUsingGET("institutionId", null);
+        });
+    }
+
+    @Test
+    @RunOnVertxContext
+    void onboardingUsers_keepsDigitalAddressWhenInstitutionApiFails(UniAsserter asserter) {
+        OnboardingUserRequest request = prepareOnboardingUsersWithReferencedInstitution(asserter, "institutionId");
+        asserter.execute(() -> when(coreInstitutionApi.retrieveInstitutionByIdUsingGET("institutionId", null))
+                .thenReturn(Uni.createFrom().failure(new RuntimeException("institution-ms unavailable"))));
+
+        asserter.assertThat(() -> onboardingService.onboardingUsers(request, "userId", WorkflowType.USERS), response -> {
+            assertNotNull(response);
+            assertEquals("old@pec.it", persistedDigitalAddress());
+        });
+    }
+
+    @Test
+    @RunOnVertxContext
+    void onboardingUsers_keepsDigitalAddressWhenInstitutionPecIsBlank(UniAsserter asserter) {
+        OnboardingUserRequest request = prepareOnboardingUsersWithReferencedInstitution(asserter, "institutionId");
+        asserter.execute(() -> when(coreInstitutionApi.retrieveInstitutionByIdUsingGET("institutionId", null))
+                .thenReturn(Uni.createFrom().item(institutionResponseWithPec(" "))));
+
+        asserter.assertThat(() -> onboardingService.onboardingUsers(request, "userId", WorkflowType.USERS), response -> {
+            assertNotNull(response);
+            assertEquals("old@pec.it", persistedDigitalAddress());
+        });
+    }
+
+    @Test
+    @RunOnVertxContext
+    void onboardingUsers_skipsDigitalAddressRefreshWithoutInstitutionId(UniAsserter asserter) {
+        OnboardingUserRequest request = prepareOnboardingUsersWithReferencedInstitution(asserter, null);
+
+        asserter.assertThat(() -> onboardingService.onboardingUsers(request, "userId", WorkflowType.USERS), response -> {
+            assertNotNull(response);
+            assertEquals("old@pec.it", persistedDigitalAddress());
+            verify(coreInstitutionApi, never()).retrieveInstitutionByIdUsingGET(any(), any());
+        });
+    }
+
+    @Test
+    @RunOnVertxContext
+    void onboardingContractUpdate_refreshesDigitalAddressFromInstitution(UniAsserter asserter) {
+        OnboardingContractUpdateRequest request = new OnboardingContractUpdateRequest();
+        request.setProductId(PROD_INTEROP.getValue());
+        request.setUsers(List.of(manager));
+        request.setInstitutionType(InstitutionType.PA);
+        request.setTaxCode("taxCode");
+        request.setSubunitCode("subunitCode");
+        request.setOrigin(Origin.IPA.name());
+        request.setOriginId("originId");
+        mockPersistOnboarding(asserter);
+        mockSimpleSearchPOSTAndPersist(asserter);
+        mockSimpleProductValidAssert(request.getProductId(), false, asserter, false, true);
+
+        Onboarding referencedOnboarding = createDummyOnboarding();
+        referencedOnboarding.setContractUpdateRequired(true);
+        referencedOnboarding.getInstitution().setId("institutionId");
+        referencedOnboarding.getInstitution().setDigitalAddress("old@pec.it");
+        PanacheMock.mock(Onboarding.class);
+        ReactivePanacheQuery query = Mockito.mock(ReactivePanacheQuery.class);
+        when(query.stream()).thenReturn(Multi.createFrom().item(referencedOnboarding));
+        when(Onboarding.find((Document) any(), any())).thenReturn(query);
+
+        asserter.execute(() -> when(userRegistryApi.updateUsingPATCH(any(), any()))
+                .thenReturn(Uni.createFrom().item(Response.noContent().build())));
+        asserter.execute(() -> when(coreInstitutionApi.retrieveInstitutionByIdUsingGET("institutionId", null))
+                .thenReturn(Uni.createFrom().item(institutionResponseWithPec("new@pec.it"))));
+
+        asserter.assertThat(() -> onboardingService.onboardingContractUpdate(request, "userId"), response -> {
+            assertNotNull(response);
+            assertEquals("new@pec.it", persistedDigitalAddress());
         });
     }
 
