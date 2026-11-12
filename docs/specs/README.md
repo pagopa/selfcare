@@ -72,7 +72,7 @@ Summary of the whole initiative and its implementation status: [../multitenancy.
 | [SECURITY.md](./MULTITENANT/Step_1/SECURITY.md) | Fail-closed and isolation rules for Step 1. |
 | [EPIC.md](./MULTITENANT/Step_1/EPIC.md) | Jira epic breakdown for Step 1. |
 | [scripts/README.md](./MULTITENANT/Step_1/scripts/README.md) | Runbook for backfilling `tenantId` on legacy documents. Dry run by default; never reassigns a tenant. |
-| [scripts/backfill_tenant_id.py](./MULTITENANT/Step_1/scripts/backfill_tenant_id.py) | The backfill script (`--tenant`, `--account-name`, `--apply`, `--verify`, `--allow-missing`). |
+| [scripts/backfill_tenant_id.py](./MULTITENANT/Step_1/scripts/backfill_tenant_id.py) | The backfill script (`--tenant`, `--account-name`, `--apply`, `--batch-size`, `--verify`, `--allow-missing`). |
 | [scripts/test_backfill_tenant_id.py](./MULTITENANT/Step_1/scripts/test_backfill_tenant_id.py) | Unit tests for the backfill script. |
 
 ### Step 2: strict isolation and single ingress

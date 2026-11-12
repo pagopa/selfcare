@@ -49,6 +49,31 @@ locals {
       "BLOB_STORAGE_ACCOUNT_NAME_CONTRACT_PNPG"               = data.azurerm_storage_account.documents_storage.name
       "BLOB_STORAGE_MANAGED_IDENTITY_CLIENT_ID_CONTRACT_PNPG" = data.azurerm_user_assigned_identity.documents_storage_blob_identity.client_id
 
+      # tenant registry consumed by selfcare-sdk-tenant (SELC-9668): JWT key/audience and contracts storage
+      "TENANT_REGISTRY_JSON" = jsonencode({
+        for tenant_id, tenant in module.local.config.tenant_registry :
+        tenant_id => {
+          jwt = {
+            publicKeyEnvVar = "JWT_PUBLIC_KEY_${tenant_id}"
+            session = {
+              audience = tenant.jwt_audience
+            }
+          }
+          storages = {
+            contracts = {
+              account    = data.azurerm_storage_account.documents_storage.name
+              container  = "$web"
+              pathPrefix = ""
+              authentication = {
+                type                          = "MANAGED_IDENTITY"
+                managedIdentityClientIdEnvVar = "BLOB_STORAGE_MANAGED_IDENTITY_CLIENT_ID_CONTRACT_${tenant_id}"
+              }
+            }
+          }
+        } if tenant_id == upper(module.local.config.domain)
+      })
+      "SELFCARE_TENANT_STRICT_DATA_ISOLATION" = tostring(module.local.config.strict_tenant_data_isolation)
+
       "MAIL_DESTINATION_TEST_ADDRESS"                      = "pectest@pec.pagopa.it"
       "MAIL_TEMPLATE_REGISTRATION_REQUEST_PT_PATH"         = "contracts/template/mail/registration-request-pt/1.0.0.json"
       "MAIL_SENDER_ADDRESS"                                = "@Microsoft.KeyVault(SecretUri=https://selc-u-pnpg-kv.vault.azure.net/secrets/smtp-usr/)"
@@ -113,6 +138,8 @@ locals {
       "JWT_TOKEN_KID"                                      = "@Microsoft.KeyVault(SecretUri=https://selc-u-pnpg-kv.vault.azure.net/secrets/jwt-kid/)"
       "DEFAULT_TENANT"                                     = "PNPG"
       "SUPPORTED_TENANTS"                                  = "PNPG"
+      "TENANT_SUPPORTED_TENANTS"                           = "PNPG"
+      "JWT_DEFAULT_TENANT"                                 = "PNPG"
     }
   }
 }
