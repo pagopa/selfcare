@@ -46,7 +46,7 @@ class MachineIamAuthorizerTest {
     machine =
         new MachineDefinition(
             true,
-            MachineTokenServiceTest.UID,
+            MachineTokenServiceTest.UID_ENV,
             "http://127.0.0.1:" + server.getAddress().getPort(),
             List.of("SUPPORT"),
             300,
@@ -60,7 +60,8 @@ class MachineIamAuthorizerTest {
 
   @Test
   void checksExactTenantUidProductAndPermissionWithBootstrapIdentity() {
-    authorizer.requirePermission("PNPG", machine, grant, "test-bootstrap");
+    authorizer.requirePermission(
+        "PNPG", MachineTokenServiceTest.UID, machine, grant, "test-bootstrap");
     assertEquals(
         "/iam/users/"
             + MachineTokenServiceTest.UID
@@ -75,11 +76,15 @@ class MachineIamAuthorizerTest {
     body.set("{\"hasPermission\":false}");
     assertThrows(
         ForbiddenException.class,
-        () -> authorizer.requirePermission("PNPG", machine, grant, "test"));
+        () ->
+            authorizer.requirePermission(
+                "PNPG", MachineTokenServiceTest.UID, machine, grant, "test"));
     status.set(404);
     assertThrows(
         ForbiddenException.class,
-        () -> authorizer.requirePermission("PNPG", machine, grant, "test"));
+        () ->
+            authorizer.requirePermission(
+                "PNPG", MachineTokenServiceTest.UID, machine, grant, "test"));
   }
 
   @Test
@@ -88,13 +93,17 @@ class MachineIamAuthorizerTest {
       body.set(invalid);
       assertThrows(
           ServiceUnavailableException.class,
-          () -> authorizer.requirePermission("PNPG", machine, grant, "test"));
+          () ->
+              authorizer.requirePermission(
+                  "PNPG", MachineTokenServiceTest.UID, machine, grant, "test"));
     }
     for (int failure : List.of(302, 401, 500, 503)) {
       status.set(failure);
       assertThrows(
           ServiceUnavailableException.class,
-          () -> authorizer.requirePermission("PNPG", machine, grant, "test"));
+          () ->
+              authorizer.requirePermission(
+                  "PNPG", MachineTokenServiceTest.UID, machine, grant, "test"));
     }
   }
 }

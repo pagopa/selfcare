@@ -46,7 +46,7 @@ public record TenantDefinition(
 
   public record MachineDefinition(
       boolean enabled,
-      String uid,
+      String uidEnvVar,
       String iamBaseUrl,
       List<String> groups,
       Integer lifetimeSeconds,

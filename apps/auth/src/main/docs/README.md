@@ -13,10 +13,11 @@ specifications when its APIs change, and update the internal contract separately
 
 `POST /token/service` exists only on the opt-in internal listener.
 DEV enables plaintext HTTP explicitly, without enabling peer-to-peer encryption.
-Its tenant policies remain unconfigured, so neither tenant can obtain tokens yet.
+Its tenant policies remain disabled, so neither tenant can obtain tokens yet.
 It requires no caller credentials: CAE network isolation is the trust boundary.
 An explicit tenant grant and successful IAM permission check are required.
-It emits `PAGOPA` tokens with the tenant's configured IAM UID, session key/audience
+It emits `PAGOPA` tokens with the tenant's IAM UID resolved through the
+secret-backed `m2m.uidEnvVar` reference, session key/audience
 and a default five-minute lifetime. Grant destination/scope restrict issuance,
 not downstream access in legacy receivers; the legacy security SDK grants
 `SUPPORT` for `PAGOPA` and skips SPID-specific tenant validation. See the

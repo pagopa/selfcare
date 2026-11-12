@@ -29,12 +29,12 @@ public class MachineIamAuthorizer {
           .build();
 
   public void requirePermission(
-      String tenant, MachineDefinition machine, MachineGrant grant, String token) {
+      String tenant, String uid, MachineDefinition machine, MachineGrant grant, String token) {
     URI uri =
         URI.create(
             machine.iamBaseUrl().replaceAll("/+$", "")
                 + "/iam/users/"
-                + machine.uid()
+                + uid
                 + "/permissions/"
                 + grant.scope()
                 + "?productId="

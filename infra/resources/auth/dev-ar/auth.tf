@@ -124,9 +124,21 @@ module "collection_auth_otp_flows" {
 ###############################################################################
 
 locals {
-  m2m_enabled      = true
-  m2m_tenants      = {}
-  m2m_secret_names = {}
+  m2m_enabled = true
+  m2m_tenants = {
+    AR = {
+      enabled   = false
+      uidEnvVar = "TENANT_AR_M2M_IAM_UID"
+    }
+    PNPG = {
+      enabled   = false
+      uidEnvVar = "TENANT_PNPG_M2M_IAM_UID"
+    }
+  }
+  m2m_secret_names = {
+    "TENANT_AR_M2M_IAM_UID"   = "auth-m2m-iam-uid-ar"
+    "TENANT_PNPG_M2M_IAM_UID" = "auth-m2m-iam-uid-pnpg"
+  }
 
   app_settings_auth_ms = [
     {

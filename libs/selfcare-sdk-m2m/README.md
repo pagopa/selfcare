@@ -40,9 +40,18 @@ The existing public HTTP ingress/TLS configuration is unchanged.
 
 ## Tenant identity, IAM and privileges
 
-Each tenant's `m2m` configuration supplies the IAM `uid`, JWT `groups`, token
-lifetime and allowed destination/scope/product mappings. The request cannot
+Each tenant's `m2m` configuration supplies an IAM `uidEnvVar` reference, JWT
+`groups`, token lifetime and allowed destination/scope/product mappings. The request cannot
 override any of these identity/privilege fields.
+
+Auth resolves the UID from that environment variable using the same configuration
+mechanism as tenant signing-key references. Enabled tenants fail startup if the
+reference/value is missing, blank or the value is not a canonical UUID. There is
+no literal `m2m.uid`, global-UID or cross-tenant fallback. A single resolved UID is
+used for both JWTs and the IAM check in each acquisition; invalid configuration
+errors do not include its value. Secret updates require restarting the revision
+to refresh its environment. The UID still appears in the signed JWT claims and
+IAM permission URL; secret-backed configuration does not encrypt JWT contents.
 
 For every acquisition, auth checks the existing IAM endpoint:
 
@@ -79,8 +88,8 @@ users and groups intended for that trust level.
 ## Per-tenant configuration
 
 Merge signing and M2M settings into the existing `TENANT_REGISTRY_JSON`; preserve
-the other AR login/resource fields. This PNPG example uses an illustrative UID
-and permission/product that must be replaced with actual IAM entries:
+the other AR login/resource fields. This PNPG example references the agreed UID
+environment variable; replace the example permission/product with actual IAM entries:
 
 ```json
 {
@@ -95,7 +104,7 @@ and permission/product that must be replaced with actual IAM entries:
     },
     "m2m": {
       "enabled": true,
-      "uid": "22222222-2222-4222-8222-222222222222",
+      "uidEnvVar": "TENANT_PNPG_M2M_IAM_UID",
       "iamBaseUrl": "https://iam-pnpg.example.internal",
       "groups": ["SUPPORT"],
       "lifetimeSeconds": 300,
@@ -111,6 +120,18 @@ AR can declare a different `m2m` object and signing references. The default
 lifetime is 300 seconds, permitted range 60-900. Missing/disabled `m2m` denies
 issuance; an empty grants list denies all requests. Duplicate destination/scope
 grants, invalid policy and missing signing keys fail initialization.
+
+DEV maps these versionless Key Vault references from `selc-d-kv`:
+
+| Tenant | `m2m.uidEnvVar` | Key Vault secret name |
+|---|---|---|
+| AR | `TENANT_AR_M2M_IAM_UID` | `auth-m2m-iam-uid-ar` |
+| PNPG | `TENANT_PNPG_M2M_IAM_UID` | `auth-m2m-iam-uid-pnpg` |
+
+Populate each secret with the corresponding technical IAM user's UUID outside
+Terraform. The secret value is never embedded in `TENANT_REGISTRY_JSON`, Terraform
+variables or the repository. The Container App's existing managed identity reads
+the secrets at runtime; it is not used to authenticate M2M callers.
 
 Private keys remain in secret-backed environment variables, not the registry.
 There is no global-key or cross-tenant fallback. `auth_enabled` still controls
@@ -134,15 +155,20 @@ affects user sessions: verify AR compatibility before changing it.
 | `M2M_TLS_PRIVATE_KEY_PEM` | Matching TLS private key, injected from Key Vault |
 
 Auth Terraform roots expose `m2m_enabled`, `m2m_tenants` and `m2m_secret_names`
-locals. DEV enables only the HTTP listener; its `m2m_tenants` and
-`m2m_secret_names` remain empty, so AR and PNPG issuance both return 403 for valid
-requests. UAT and PROD remain disabled/empty. Populate `m2m_tenants` with the per-tenant
+locals. DEV enables only the HTTP listener and declares disabled AR/PNPG policies
+with UID references and their secret bindings, so both tenants return 403 for
+valid requests. Create both UID secrets before applying the DEV configuration:
+Azure must resolve the secret bindings even while tenant issuance is disabled.
+UAT and PROD remain disabled/empty. Complete `m2m_tenants` with the per-tenant
 `m2m` objects above; signing references are then included for those tenants even
 when login is disabled. Populate `m2m_secret_names` with environment-variable to
 Key Vault secret-name mappings for both TLS values and any PNPG JWT key/`kid`.
 Existing AR signing-secret bindings are retained. The module uses versionless
 Key Vault references and the existing runtime secret-reader identity.
-No secret values should enter Terraform state/configuration.
+The unused data sources that previously listed and fetched every secret value
+have been removed from the Container App module. This prevents new UID values
+from being fetched into Terraform state by this module; it does not purge secret
+values from historical state versions.
 
 Before enabling tenant issuance, provision signing secrets and IAM user/permissions
 and, for HTTPS deployments, the TLS certificate/key. Verify the configured
@@ -205,5 +231,6 @@ mvn -B -f apps/auth/pom.xml package -Dtest=MachineTokenServiceTest,MachineTokenT
 
 Tests generate temporary signing/TLS keys (using the JDK's keytool), verify HTTPS
 defaults, explicit HTTP opt-in without TLS secrets, main-port isolation,
-PNPG without login, IAM failures and SDK caching. They do
+PNPG without login, secret-backed tenant identities, missing/invalid UID rejection,
+IAM failures and SDK caching. They do
 not validate actual Azure reachability or deployed recipient authorization.

@@ -98,7 +98,7 @@ class MachineTokenTenantTest {
     assertEquals("PNPG", claims.getStringClaimValue("tenant_id"));
     assertEquals(List.of("SUPPORT"), claims.getStringListClaimValue("groups"));
     assertEquals(300, claims.getExpirationTime().getValue() - claims.getIssuedAt().getValue());
-    verify(iam).requirePermission(eq("PNPG"), any(), any(), any());
+    verify(iam).requirePermission(eq("PNPG"), eq(MachineTokenServiceTest.UID), any(), any(), any());
     assertThrows(ForbiddenException.class, () -> tenants.resolveEnabledTenant("PNPG"));
     UserClaims user = UserClaims.builder().uid("user").tenantId("PNPG").build();
     assertThrows(ForbiddenException.class, () -> sessions.generateSessionToken(user));
@@ -187,13 +187,13 @@ class MachineTokenTenantTest {
         """;
     doThrow(new ForbiddenException("Denied"))
         .when(iam)
-        .requirePermission(any(), any(), any(), any());
+        .requirePermission(any(), any(), any(), any(), any());
     var denied = post(request);
     assertEquals(403, denied.statusCode());
     assertFalse(denied.body().contains("access_token"));
     doThrow(new ServiceUnavailableException())
         .when(iam)
-        .requirePermission(any(), any(), any(), any());
+        .requirePermission(any(), any(), any(), any(), any());
     assertEquals(503, post(request).statusCode());
   }
 
@@ -226,12 +226,13 @@ class MachineTokenTenantTest {
             {"auth_enabled":false,
              "jwt":{"session":{"privateKeyEnvVar":"TEST_PNPG_PRIVATE_KEY",
                "keyIdEnvVar":"TEST_PNPG_KEY_ID","audience":"api-pnpg.example.test"}},
-             "m2m":{"enabled":true,"uid":"22222222-2222-4222-8222-222222222222",
+             "m2m":{"enabled":true,"uidEnvVar":"TEST_PNPG_M2M_IAM_UID",
                "iamBaseUrl":"https://iam.example.test","groups":["SUPPORT"],
                "grants":[{"audience":"user-ms","scope":"user.read","productId":"prod-test"}]}}
             """));
         var pair = KeyPairGenerator.getInstance("RSA").generateKeyPair();
         values.put("tenant.registry.json", mapper.writeValueAsString(registry));
+        values.put(MachineTokenServiceTest.UID_ENV, MachineTokenServiceTest.UID);
         values.put("tenant.supported-tenants", "AR");
         values.put("jwt.session.tenant-audience-enabled", "true");
         values.put("TEST_PNPG_PRIVATE_KEY", pem("PRIVATE KEY", pair.getPrivate().getEncoded()));

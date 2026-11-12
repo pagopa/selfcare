@@ -45,7 +45,7 @@ class MachineTokenHttpTest {
     assertEquals(200, response.statusCode());
     assertEquals("no-store", response.headers().firstValue("Cache-Control").orElseThrow());
     assertTrue(response.body().contains("access_token"));
-    verify(iam).requirePermission(eq("PNPG"), any(), any(), any());
+    verify(iam).requirePermission(eq("PNPG"), eq(MachineTokenServiceTest.UID), any(), any(), any());
   }
 
   @Test
