@@ -13,6 +13,8 @@ module "local" {
   private_dns_name_domain        = "lemonpond-bb0b750e.westeurope.azurecontainerapps.io"
   container_app_environment_name = "selc-p-cae-002"
   ca_resource_group_name         = "selc-p-container-app-002-rg"
+  # Keep the additional TCP listener available independently of primary HTTP traffic.
+  container_app_min_replicas     = 1
   container_app_max_replicas     = 5
   container_app_desired_replicas = "3"
   container_app_cpu              = 1.25
@@ -126,9 +128,21 @@ module "collection_auth_otp_flows" {
 ###############################################################################
 
 locals {
-  m2m_enabled      = false
-  m2m_tenants      = {}
-  m2m_secret_names = {}
+  m2m_enabled = true
+  m2m_tenants = {
+    AR = {
+      enabled   = false
+      uidEnvVar = "TENANT_AR_M2M_IAM_UID"
+    }
+    PNPG = {
+      enabled   = false
+      uidEnvVar = "TENANT_PNPG_M2M_IAM_UID"
+    }
+  }
+  m2m_secret_names = {
+    "TENANT_AR_M2M_IAM_UID"   = "auth-m2m-iam-uid-ar"
+    "TENANT_PNPG_M2M_IAM_UID" = "auth-m2m-iam-uid-pnpg"
+  }
 
   app_settings_auth_ms = [
     {
@@ -138,6 +152,10 @@ locals {
     {
       name  = "M2M_INTERNAL_PORT"
       value = "8082"
+    },
+    {
+      name  = "M2M_TLS_ENABLED"
+      value = "false"
     },
     {
       name  = "JAVA_TOOL_OPTIONS"

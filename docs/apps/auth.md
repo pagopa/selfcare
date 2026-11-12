@@ -75,7 +75,7 @@ APIM exposure:
 - Application API `selc-<env>-api-auth`, base path `auth`, module `infra/resources/_modules/apim_api`, built from `openapi-apim.json`, with tenant enforcement enabled and JWT-based tenant resolution disabled (`infra/resources/auth/dev-ar/auth.tf`).
 - Operations tagged `support` are merged into the external support API (`infra/resources/_modules/apim_external_api/api/selfcare_support_service/v1/openapi_merge/openapi_merge.json`, input `selfcare-auth-ms`).
 - The machine endpoint is absent from the primary listener and its generated specification. Its separate `openapi-m2m.yaml` must never be imported into APIM. Terraform maps its additional TCP port with `external=false`; auth terminates TLS using separate certificate/key secrets.
-- DEV explicitly uses plaintext HTTP (`M2M_TLS_ENABLED=false`), keeps one minimum auth replica, and does not enable CAE peer-to-peer encryption. Its listener is enabled but AR/PNPG tenant policies remain disabled, with only UID secret references configured. Clients require `selfcare.m2m.allow-insecure-http=true`; UAT/PROD remain unchanged.
+- DEV/UAT/PROD Terraform explicitly selects plaintext HTTP (`M2M_TLS_ENABLED=false`), keeps one minimum auth replica, and does not change CAE peer-to-peer encryption. Listeners are enabled but AR/PNPG tenant policies remain disabled, with only UID secret references configured. Clients require `selfcare.m2m.allow-insecure-http=true`.
 
 ## Data and messaging
 
@@ -126,8 +126,9 @@ and destination/scope/product grants. Scope maps to an existing IAM permission.
 Auth uses a separate 30-second bootstrap JWT to query IAM and only returns a
 five-minute token after authorization succeeds. Issued tokens remain valid until
 expiry after permission revocation.
-DEV resolves `TENANT_AR_M2M_IAM_UID` and `TENANT_PNPG_M2M_IAM_UID` from the
-`auth-m2m-iam-uid-ar` and `auth-m2m-iam-uid-pnpg` secrets in `selc-d-kv`.
+Each environment resolves `TENANT_AR_M2M_IAM_UID` and `TENANT_PNPG_M2M_IAM_UID`
+from the `auth-m2m-iam-uid-ar` and `auth-m2m-iam-uid-pnpg` secrets in its own
+Key Vault: `selc-d-kv`, `selc-u-kv` or `selc-p-kv`.
 No UID value is stored in the tenant registry. Missing/invalid UID configuration
 fails startup for enabled tenants, without a literal or cross-tenant fallback.
 Provision the secrets before applying their Container App bindings.

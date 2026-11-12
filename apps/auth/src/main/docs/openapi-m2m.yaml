@@ -4,8 +4,9 @@ info:
   version: 0.1.0
   description: |
     Dedicated internal listener, default port 8082, reachable only inside the CAE.
-    HTTPS is the default. DEV explicitly selects plaintext HTTP without enabling
-    peer-to-peer encryption; the SDK also requires explicit HTTP opt-in.
+    HTTPS is the application default. DEV/UAT/PROD Terraform explicitly selects
+    plaintext HTTP without changing CAE peer-to-peer encryption; the SDK also
+    requires explicit HTTP opt-in.
     Never import this specification into APIM or expose it on the primary ingress.
     No caller credentials are accepted or required: all reachable workloads share
     the configured tenant identity. IAM permission is checked before issuance.

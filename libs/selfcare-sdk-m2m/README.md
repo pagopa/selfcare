@@ -4,9 +4,9 @@ Auth issues short-lived `PAGOPA` JWTs on a **dedicated internal listener**, defa
 port `8082`, using HTTPS by default. The client library caches them locally for four minutes. Entra and
 Managed Identity authentication have been removed from this flow.
 
-No existing caller is migrated. DEV Terraform enables the internal listener in
+No existing caller is migrated. DEV/UAT/PROD Terraform enables the internal listener in
 explicit plaintext HTTP mode; tenant issuance remains denied until real IAM
-identities and grants are configured. UAT and PROD remain disabled.
+identities and grants are configured. No environment has been deployed by this change.
 The older caller/receiver integration in #1126 needs alignment with this contract.
 
 ## Trust boundary
@@ -31,11 +31,12 @@ callers and a CA trusted by their JVM truststore. Do not disable hostname or
 certificate verification. TLS keys are separate from tenant JWT signing keys.
 Certificate/secret rotation requires a revision restart to reload the listener.
 
-DEV explicitly sets `M2M_TLS_ENABLED=false`. Callers must also explicitly enable
+DEV/UAT/PROD explicitly set `M2M_TLS_ENABLED=false`. Callers must also explicitly enable
 `selfcare.m2m.allow-insecure-http=true`; simply configuring an HTTP URL is rejected
-by the SDK. No TLS certificate is required for this mode, and no peer-to-peer
-encryption is enabled by this change. Tokens traverse this connection in
-plaintext: CAE-only reachability is not encryption or per-tenant isolation.
+by the SDK. No TLS certificate is required for this mode, and CAE peer-to-peer
+encryption settings are not changed. The application connection is plaintext;
+where platform peer encryption is disabled, tokens also travel unencrypted across
+the internal network. CAE-only reachability is not encryption or per-tenant isolation.
 The existing public HTTP ingress/TLS configuration is unchanged.
 
 ## Tenant identity, IAM and privileges
@@ -121,13 +122,16 @@ lifetime is 300 seconds, permitted range 60-900. Missing/disabled `m2m` denies
 issuance; an empty grants list denies all requests. Duplicate destination/scope
 grants, invalid policy and missing signing keys fail initialization.
 
-DEV maps these versionless Key Vault references from `selc-d-kv`:
+Each environment maps these versionless references from its own Key Vault:
 
 | Tenant | `m2m.uidEnvVar` | Key Vault secret name |
 |---|---|---|
 | AR | `TENANT_AR_M2M_IAM_UID` | `auth-m2m-iam-uid-ar` |
 | PNPG | `TENANT_PNPG_M2M_IAM_UID` | `auth-m2m-iam-uid-pnpg` |
 
+The vaults are `selc-d-kv` (DEV), `selc-u-kv` (UAT) and `selc-p-kv` (PROD).
+Secret names are identical; values must be populated for the intended IAM identity
+in each environment and are not assumed to be shared.
 Populate each secret with the corresponding technical IAM user's UUID outside
 Terraform. The secret value is never embedded in `TENANT_REGISTRY_JSON`, Terraform
 variables or the repository. The Container App's existing managed identity reads
@@ -155,11 +159,11 @@ affects user sessions: verify AR compatibility before changing it.
 | `M2M_TLS_PRIVATE_KEY_PEM` | Matching TLS private key, injected from Key Vault |
 
 Auth Terraform roots expose `m2m_enabled`, `m2m_tenants` and `m2m_secret_names`
-locals. DEV enables only the HTTP listener and declares disabled AR/PNPG policies
+locals. All three environments enable only the HTTP listener and declare disabled AR/PNPG policies
 with UID references and their secret bindings, so both tenants return 403 for
-valid requests. Create both UID secrets before applying the DEV configuration:
+valid requests. Create both UID secrets in each target vault before applying its configuration:
 Azure must resolve the secret bindings even while tenant issuance is disabled.
-UAT and PROD remain disabled/empty. Complete `m2m_tenants` with the per-tenant
+Complete `m2m_tenants` with the per-tenant
 `m2m` objects above; signing references are then included for those tenants even
 when login is disabled. Populate `m2m_secret_names` with environment-variable to
 Key Vault secret-name mappings for both TLS values and any PNPG JWT key/`kid`.
@@ -175,17 +179,17 @@ and, for HTTPS deployments, the TLS certificate/key. Verify the configured
 transport from an actual caller and that port 8082 cannot be reached outside the CAE. No plan/apply,
 deployment, secret provisioning or IAM data changes are performed by this PR.
 Do not remove the legacy caller JWTs until consumers are migrated.
-Deploy an auth image supporting `M2M_TLS_ENABLED` before enabling the DEV HTTP
+Deploy an auth image supporting `M2M_TLS_ENABLED` before enabling the HTTP
 configuration; an older TLS-only image still requires certificate/key secrets.
 
 The module uses an AzAPI patch because AzureRM does not expose
 `additionalPortMappings`; it reapplies after Terraform updates to the app. Other apps retain
 their existing configuration (`internal_tcp_ports=null`). To clear managed extra
 ports, set `internal_tcp_ports=[]` and apply before removing the opt-in entirely.
-DEV sets one minimum auth replica, increasing its baseline running cost, so the
-additional TCP listener does not depend on primary HTTP traffic to wake the app.
-Other deployments must keep a replica running or validate additional-port scaling;
-do not assume the primary HTTP scale rule covers it.
+All environments set one minimum auth replica so the additional TCP listener does
+not depend on primary HTTP traffic to wake the app. This increases DEV's baseline
+running cost; UAT/PROD already inherited a minimum of one. Existing maximum
+replicas, cron scaling and CPU/memory settings are preserved.
 
 Disabling the issuer or revoking the IAM permission prevents future acquisitions.
 Already-issued tokens remain valid until expiry; caller cache reads do not query
@@ -198,7 +202,7 @@ Configure `selfcare.m2m.enabled=true` and
 The SDK uses normal JVM TLS verification, bounded timeouts and no redirects.
 There is no Authorization header, Entra scope, identity client ID or client secret.
 
-For the explicit DEV HTTP mode, configure:
+For the explicit HTTP mode, configure (DEV example):
 
 ```properties
 selfcare.m2m.enabled=true
@@ -206,7 +210,15 @@ selfcare.m2m.endpoint=http://selc-d-auth-ms-ca:8082/token/service
 selfcare.m2m.allow-insecure-http=true
 ```
 
-This app-name endpoint is for callers in auth's CAE (`selc-d-cae-002`) only.
+Use the endpoint and CAE for the target environment:
+
+| Environment | Endpoint | Auth CAE |
+|---|---|---|
+| DEV | `http://selc-d-auth-ms-ca:8082/token/service` | `selc-d-cae-002` |
+| UAT | `http://selc-u-auth-ms-ca:8082/token/service` | `selc-u-cae-002` |
+| PROD | `http://selc-p-auth-ms-ca:8082/token/service` | `selc-p-cae-002` |
+
+Each app-name endpoint is for callers in that auth CAE only.
 It can request either tenant once policies are configured; it does not make
 the listener reachable from the separate PNPG CAE. IAM calls still use HTTPS,
 and tenant JWT signing keys are required even when caller transport is HTTP.
