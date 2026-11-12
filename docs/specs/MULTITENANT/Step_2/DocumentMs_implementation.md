@@ -259,7 +259,7 @@ flowchart LR
 |---|---|---|---|
 | SELC-DMS-07.01 | Aggiungere `TENANT_SUPPORTED_TENANTS=AR` e `TENANT_REGISTRY_JSON` (generato da `jsonencode`, come `product`). | `infra/resources/document-ms/{dev,uat,prod}-ar/main.tf` | M |
 | SELC-DMS-07.02 | Dopo il rollout dell'immagine tenant-aware, rimuovere i secret legacy `MONGODB_CONNECTION_STRING`, `NAMIRIAL_SIGN_SERVICE_IDENTITY_{USER,PASSWORD}`, `JWT_PUBLIC_KEY` e `NAMIRIAL_BASE_URL` (gli `*_AR` e `AZURE_CLIENT_ID_AR_DOCUMENTS` sono già presenti); rimuovere `STORAGE_CONTAINER_*`, `AZURE_STORAGE_ACCOUNT_NAME_*`, `AZURE_CLIENT_ID`, `PAGOPA_SIGNATURE_SOURCE`. | stessi file | S |
-| SELC-DMS-07.03 | Aggiungere `SELFCARE_TENANT_STRICT_DATA_ISOLATION` legato a `module.local.config.strict_tenant_data_isolation`. | stessi file | S |
+| SELC-DMS-07.03 | ✅ Aggiunto `SELFCARE_TENANT_STRICT_DATA_ISOLATION` legato a `module.local.config.strict_tenant_data_isolation` (SELC-9711). | stessi file | S |
 | SELC-DMS-07.04 | Indici Cosmos composti sulla collection `documents`: `(tenantId, onboardingId)`, `(tenantId, rootOnboardingId)`, `(tenantId, productId)`, `(tenantId, type)`; da applicare **prima** del deploy dell'app. | `main.tf` (~29–60) | S |
 | SELC-DMS-07.05 | `terraform validate` e `terraform plan` per dev/uat/prod-ar, verificando che non ci siano ricreazioni di risorse. | – | S |
 

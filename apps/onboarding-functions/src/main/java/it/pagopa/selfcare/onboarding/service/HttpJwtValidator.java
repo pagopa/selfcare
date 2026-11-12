@@ -10,6 +10,8 @@ import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import it.pagopa.selfcare.onboarding.config.JwtValidationConfig;
 import it.pagopa.selfcare.onboarding.context.TenantContext;
+import it.pagopa.selfcare.tenant.InvalidTenantClaimException;
+import it.pagopa.selfcare.tenant.JwtTenantClaimResolver;
 import it.pagopa.selfcare.tenant.TenantRegistry;
 import jakarta.enterprise.context.ApplicationScoped;
 
@@ -18,7 +20,6 @@ import java.security.KeyFactory;
 import java.security.PublicKey;
 import java.security.spec.X509EncodedKeySpec;
 import java.util.Base64;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
@@ -62,7 +63,7 @@ public class HttpJwtValidator {
 
     try {
       return HttpAuthorization.authorized(verifiedCaller(request, headerTenant));
-    } catch (JwtException | IllegalArgumentException exception) {
+    } catch (JwtException | InvalidTenantClaimException | IllegalArgumentException exception) {
       context.getLogger().warning(() -> "Rejected request with invalid JWT: " + exception.getMessage());
       return HttpAuthorization.rejected(
           request
@@ -93,32 +94,28 @@ public class HttpJwtValidator {
       throw new JwtException("Missing uid claim");
     }
 
-    boolean tenantFromClaim = claims.get(TenantContext.TENANT_CLAIM) != null;
-    if (!resolveTokenTenant(claims, tenantFromClaim).equals(headerTenant)) {
+    JwtTenantClaimResolver.Resolution tokenTenant =
+        tenantClaimResolver().resolve(claims.get(JwtTenantClaimResolver.TENANT_CLAIM));
+    if (!tokenTenant.tenantId().equals(headerTenant)) {
       throw new JwtException("Tenant claim does not match tenant header");
     }
     return CallerIdentity.fromClaims(
         claims,
         headerTenant,
-        tenantFromClaim
+        tokenTenant.source() == JwtTenantClaimResolver.Source.CLAIM
             ? CallerIdentity.TENANT_SOURCE_CLAIM
             : CallerIdentity.TENANT_SOURCE_DEFAULT);
   }
 
-  private String resolveTokenTenant(Claims claims, boolean tenantFromClaim) {
-    if (!tenantFromClaim) {
-      if (config.tenantClaimRequired()) {
-        throw new JwtException("Missing tenant_id claim");
-      }
-      return config.defaultTenant()
-          .map(HttpJwtValidator::normalize)
-          .orElseThrow(() -> new JwtException("No JWT default tenant configured"));
-    }
-    String claimTenant = normalize(claims.get(TenantContext.TENANT_CLAIM, String.class));
-    if (claimTenant == null) {
-      throw new JwtException("Invalid tenant_id claim");
-    }
-    return claimTenant;
+  /**
+   * Built per request, like the issuer set, so that a misconfigured default tenant (not in {@code
+   * tenant.supported-tenants}) rejects the request with 401 instead of failing the bean creation.
+   */
+  private JwtTenantClaimResolver tenantClaimResolver() {
+    return JwtTenantClaimResolver.of(
+        config.defaultTenant().orElse(null),
+        tenantRegistry.supportedTenantIds(),
+        config.tenantClaimRequired());
   }
 
   private String extractBearerToken(HttpRequestMessage<?> request) {
@@ -193,10 +190,6 @@ public class HttpJwtValidator {
       throw new IllegalArgumentException("No JWT issuer configured");
     }
     return issuers;
-  }
-
-  private static String normalize(String tenant) {
-    return isBlank(tenant) ? null : tenant.trim().toUpperCase(Locale.ROOT);
   }
 
   private static boolean isBlank(String value) {

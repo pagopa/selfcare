@@ -41,6 +41,7 @@ class HttpJwtValidatorTest {
   private static KeyPair unknownKeys;
 
   private JwtValidationConfig config;
+  private TenantRegistry registry;
   private final Map<String, String> publicKeys = new HashMap<>();
   private HttpJwtValidator validator;
   private ExecutionContext context;
@@ -62,7 +63,8 @@ class HttpJwtValidatorTest {
     publicKeys.clear();
     publicKeys.put("AR", pem(arKeys));
     publicKeys.put("PNPG", pem(pnpgKeys));
-    TenantRegistry registry = mock(TenantRegistry.class);
+    registry = mock(TenantRegistry.class);
+    when(registry.supportedTenantIds()).thenReturn(Set.of("AR", "PNPG"));
     when(registry.jwtPublicKey(any()))
         .thenAnswer(invocation -> Optional.ofNullable(publicKeys.get(invocation.<String>getArgument(0))));
     validator = new HttpJwtValidator(config, new ObjectMapper(), registry);
@@ -364,6 +366,31 @@ class HttpJwtValidatorTest {
     // then
     assertStatus(blankResponse, HttpStatus.UNAUTHORIZED);
     assertStatus(numericResponse, HttpStatus.UNAUTHORIZED);
+  }
+
+  @Test
+  void rejectsUnsupportedTenantClaim() {
+    // given
+    String jwt = token(arKeys, claims("SPID", "user-id", "XX"), 60);
+
+    // when
+    HttpAuthorization response = authenticate(jwt, "AR");
+
+    // then
+    assertStatus(response, HttpStatus.UNAUTHORIZED);
+  }
+
+  @Test
+  void rejectsTokenWithoutTenantClaimWhenDefaultTenantIsNotSupported() {
+    // given
+    when(registry.supportedTenantIds()).thenReturn(Set.of("AR"));
+    String jwt = token(arKeys, claims("SPID", "user-id", null), 60);
+
+    // when
+    HttpAuthorization response = authenticate(jwt, "AR");
+
+    // then
+    assertStatus(response, HttpStatus.UNAUTHORIZED);
   }
 
   @Test

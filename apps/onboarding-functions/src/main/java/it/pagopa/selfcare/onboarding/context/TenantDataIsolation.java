@@ -55,4 +55,28 @@ public class TenantDataIsolation {
     }
     return TenantContext.resolve(documentTenantId);
   }
+
+  /**
+   * Tenant to persist on a document written as a whole entity, so that a write never produces an
+   * untagged document while a tenant is in context (like {@code validateTenant} in onboarding-ms).
+   *
+   * <p>A missing {@code tenantId} takes the current tenant; without a current tenant the value is
+   * left as it is.
+   *
+   * @throws IllegalArgumentException if the document belongs to a tenant other than the current one
+   */
+  public String tenantForWrite(String documentTenantId) {
+    String currentTenant = TenantContext.currentTenant();
+    if (currentTenant == null) {
+      return documentTenantId;
+    }
+    if (documentTenantId == null || documentTenantId.isBlank()) {
+      return currentTenant;
+    }
+    String documentTenant = TenantContext.resolve(documentTenantId);
+    if (!documentTenant.equals(currentTenant)) {
+      throw new IllegalArgumentException("Conflicting tenant context");
+    }
+    return documentTenant;
+  }
 }
