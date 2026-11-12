@@ -1,15 +1,19 @@
 package it.pagopa.selfcare.onboarding.web.model;
 
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.swagger.v3.oas.annotations.media.Schema;
 import it.pagopa.selfcare.onboarding.common.InstitutionType;
 import it.pagopa.selfcare.onboarding.connector.model.onboarding.GPUData;
 import lombok.Data;
 
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.AssertTrue;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import java.util.List;
+
+import static it.pagopa.selfcare.onboarding.common.ProductId.PROD_RTP;
 
 @Data
 public class OnboardingProductDto {
@@ -88,4 +92,16 @@ public class OnboardingProductDto {
 
     private UserRequestDto userRequester;
 
+    @Schema(description = "Required and non-empty when productId is prod-rtp.")
+    private List<RtpServiceTypeDto> rtpServiceTypes;
+
+    @AssertTrue(message = "rtpServiceTypes is required and must not be empty for prod-rtp")
+    @JsonIgnore
+    @Schema(hidden = true)
+    public boolean isRtpServiceTypesValid() {
+        return !PROD_RTP.getValue().equals(productId)
+                || (rtpServiceTypes != null && !rtpServiceTypes.isEmpty());
+    }
+
 }
+
