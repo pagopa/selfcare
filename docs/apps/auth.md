@@ -7,7 +7,7 @@
 | Path | `apps/auth` |
 | Stack | Quarkus 3.31.2, Java 17, reactive (Mutiny `Uni`, reactive Mongo Panache) |
 | Type | REST microservice (application API behind APIM) |
-| Tenants | AR only (PNPG login is not enabled in `auth`) |
+| Tenants | AR login; per-tenant M2M issuance also supports PNPG with login disabled |
 | Infra | `infra/resources/auth/` (`dev-ar`, `uat-ar`, `prod-ar`) |
 
 ## Responsibilities
@@ -16,6 +16,7 @@
 - Validate SAML responses posted to the Assertion Consumer Service (`SAMLServiceImpl`, `util/SamlValidator`).
 - Run the OTP flow (create, verify, resend), send OTP e-mails through OneMail and enforce attempts/daily limits (`OtpFlowServiceImpl`, `OtpNotificationServiceImpl`).
 - Sign the session JWT with the per-tenant private key and `kid` (`JwtServiceImpl`, `conf/TenantSessionKeyProvider`).
+- Issue short-lived technical `PAGOPA` tokens through the opt-in `/token/service` endpoint, after Entra verification and an explicit M2M grant.
 - Resolve and enforce the tenant on every login entry point (`filter/TenantResolutionFilter`).
 
 ## Architecture
@@ -67,6 +68,7 @@ sequenceDiagram
 | GET | `/otp/mail-info/{mailRequestId}` | `getOtpMailInfo` (tag `support`) | no |
 | GET | `/otp/info` | OTP info by `userId`/`status` (tag `support`) | no |
 | POST | `/saml/acs` | SAML ACS callback | yes |
+| POST | `/token/service` | `issueMachineToken` | no |
 
 APIM exposure:
 
@@ -109,6 +111,16 @@ Names only, from `apps/auth/src/main/resources/application.properties` and `infr
 | Observability | `APPLICATIONINSIGHTS_CONNECTION_STRING` |
 
 Secrets are injected from Key Vault (`secrets_names` map in `auth.tf`).
+
+Signing keys are referenced per tenant through `jwt.session.privateKeyEnvVar`
+and `jwt.session.keyIdEnvVar` in `TENANT_REGISTRY_JSON`; actual key material
+stays in secret-backed environment variables. A PNPG entry may declare these
+references with `auth_enabled=false`, without login credentials or resources.
+Signing-key loading is independent of login enablement; user-session generation
+still requires `auth_enabled=true`. M2M issuance additionally requires the global
+feature flag and exact identity/tenant/destination/scope grants.
+See the [M2M configuration guide](../../libs/selfcare-sdk-m2m/README.md) for a
+two-tenant example, audience settings and the `PAGOPA`/`SUPPORT` trust implications.
 
 ## Multitenancy
 

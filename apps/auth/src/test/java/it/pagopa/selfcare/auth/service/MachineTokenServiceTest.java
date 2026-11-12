@@ -15,6 +15,7 @@ import it.pagopa.selfcare.auth.conf.TenantSessionKeyProvider;
 import it.pagopa.selfcare.auth.controller.request.MachineTokenRequest;
 import it.pagopa.selfcare.auth.controller.response.MachineTokenResponse;
 import it.pagopa.selfcare.auth.exception.ForbiddenException;
+import it.pagopa.selfcare.auth.exception.InternalException;
 import it.pagopa.selfcare.auth.exception.ResourceNotFoundException;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
@@ -51,6 +52,10 @@ class MachineTokenServiceTest {
     service.verifier = mock(MachineIdentityVerifier.class);
     when(service.verifier.verify("Bearer entra-token")).thenReturn(OID);
     service.tenants = mock(TenantRegistry.class);
+    when(service.tenants.resolveTenant("AR"))
+        .thenReturn(
+            new TenantRegistry.Tenant(
+                "AR", new TenantDefinition(null, null, List.of(), null, false)));
     service.sessions = new SessionServiceImpl();
     service.sessions.audience = SESSION_AUDIENCE;
     service.sessions.tenantRegistry = service.tenants;
@@ -59,6 +64,7 @@ class MachineTokenServiceTest {
     when(service.keys.getSigningKey("AR"))
         .thenReturn(new TenantSessionKeyProvider.SigningKey(keys.getPrivate(), "test-kid"));
     service.initialize();
+    clearInvocations(service.keys);
   }
 
   @Test
@@ -103,11 +109,11 @@ class MachineTokenServiceTest {
             null,
             List.of(),
             "HUB_SPID_LOGIN",
-            true,
+            false,
             new TenantDefinition.JwtDefinition(
                 "JWT_PUBLIC_KEY_" + tenant,
                 new TenantDefinition.SessionDefinition("PK", "KID", audience)));
-    when(service.tenants.resolveEnabledTenant(tenant))
+    when(service.tenants.resolveTenant(tenant))
         .thenReturn(new TenantRegistry.Tenant(tenant, definition));
     when(service.config.grants()).thenReturn(GRANTS.replace("\"AR\"", "\"" + tenant + "\""));
     KeyPair tenantKeys = KeyPairGenerator.getInstance("RSA").generateKeyPair();
@@ -174,6 +180,14 @@ class MachineTokenServiceTest {
     assertThrows(
         ResourceNotFoundException.class, () -> service.issue("Bearer entra-token", request("AR")));
     verifyNoInteractions(service.verifier, service.keys);
+  }
+
+  @Test
+  void rejectsGrantWithoutTenantSigningKeyAtStartup() {
+    when(service.keys.getSigningKey("AR"))
+        .thenThrow(new InternalException("JWT signing key is not configured for tenant"));
+
+    assertThrows(InternalException.class, service::initialize);
   }
 
   @Test

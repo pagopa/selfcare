@@ -52,7 +52,8 @@ public class MachineTokenService {
     }
     for (Grant grant : grants) {
       grant.validate();
-      tenants.resolveEnabledTenant(grant.tenantId());
+      tenants.resolveTenant(grant.tenantId());
+      keys.getSigningKey(grant.tenantId());
     }
     if (grants.stream().map(Grant::requestKey).distinct().count() != grants.size()) {
       throw new IllegalStateException("Duplicate M2M grant");
@@ -74,10 +75,10 @@ public class MachineTokenService {
                         && value.scope().equals(request.scope()))
             .findFirst()
             .orElseThrow(() -> new ForbiddenException("Machine identity is not authorized"));
-    tenants.resolveEnabledTenant(grant.tenantId());
+    TenantRegistry.Tenant tenant = tenants.resolveTenant(grant.tenantId());
     TenantSessionKeyProvider.SigningKey key = keys.getSigningKey(grant.tenantId());
     // The grant's audience selects an issuance policy, not the legacy session JWT audience.
-    String audience = sessions.resolveAudience(grant.tenantId());
+    String audience = sessions.resolveAudience(tenant.definition());
     Instant now = Instant.now();
     String token =
         Jwt.claims()

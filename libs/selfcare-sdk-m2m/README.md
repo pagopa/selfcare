@@ -90,11 +90,68 @@ The Azure SDK manages the separate Entra access token lifetime.
    preserving the Entra Authorization header; do not use an external-API policy
    that replaces it with a SelfCare JWT. Verify the actual network route before
    enabling callers.
-5. Auth must already support the requested SelfCare tenant and have its signing
-   key. The destination must trust the corresponding public key/certificate
+5. Auth's tenant registry must contain the requested SelfCare tenant and its
+   signing-key references; `auth_enabled=true` is not required for M2M.
+   The destination must trust the corresponding public key/certificate
    (and `kid`, where enforced), accept `PAGOPA` and the configured session
    audience, and allow the technical identity on the required operation.
    Preserve additional authentication requirements such as function keys.
+
+### Per-tenant signing, including PNPG without SPID login
+
+Each tenant configures its own `jwt.session.privateKeyEnvVar`,
+`jwt.session.keyIdEnvVar` and `jwt.session.audience` in `TENANT_REGISTRY_JSON`.
+The registry stores **environment-variable references, never private key
+material**. Inject the referenced PEM keys and key IDs from Key Vault into auth.
+AR and PNPG can use different keys matching their receivers' existing
+certificates. There is no global-key or cross-tenant fallback.
+
+Merge the following signing fields into the existing registry; preserve AR's
+login, resource and other settings:
+
+```json
+{
+  "AR": {
+    "auth_enabled": true,
+    "jwt": {
+      "session": {
+        "privateKeyEnvVar": "TENANT_AR_JWT_SESSION_PRIVATE_KEY",
+        "keyIdEnvVar": "TENANT_AR_JWT_SESSION_KEY_ID",
+        "audience": "api.dev.selfcare.pagopa.it"
+      }
+    }
+  },
+  "PNPG": {
+    "auth_enabled": false,
+    "jwt": {
+      "session": {
+        "privateKeyEnvVar": "TENANT_PNPG_JWT_SESSION_PRIVATE_KEY",
+        "keyIdEnvVar": "TENANT_PNPG_JWT_SESSION_KEY_ID",
+        "audience": "api-pnpg.dev.selfcare.pagopa.it"
+      }
+    }
+  }
+}
+```
+
+Set `SESSION_TOKEN_TENANT_AUDIENCE_ENABLED=true` to use these audiences,
+checking that AR's value matches its existing receivers before enabling the
+flag. Otherwise the existing global audience remains in use.
+
+`auth_enabled` controls user login/session issuance only. Auth loads signing
+keys for all login-enabled tenants and for any other tenant declaring
+`jwt.session`. Missing or invalid signing references fail initialization,
+including for M2M-only tenants; enabled M2M grants also require a signing key
+at startup. Merely configuring a key does not authorize token issuance:
+`M2M_ISSUER_ENABLED=true` and an exact grant with `tenantId=PNPG` are still
+required.
+
+PNPG does not need OneIdentity, OTP mail or Mongo resources for this exchange.
+The shared resource registry's `TENANT_SUPPORTED_TENANTS` can remain `AR` in
+the current auth deployment; do not add PNPG to resource routing just to issue
+its tokens, because that would require PNPG resource configuration.
+PNPG user login and user-session generation remain rejected.
+No environment's secrets, registry or feature flags are changed by this PR.
 
 ### Publishing the SDK
 
@@ -165,7 +222,7 @@ must preserve verification overlap for the outstanding lifetime.
 
 ```shell
 mvn -f libs/selfcare-sdk-m2m/pom.xml install
-mvn -f apps/auth/pom.xml test -Dtest=MachineIdentityVerifierTest,MachineTokenServiceTest,MachineTokenControllerTest
+mvn -f apps/auth/pom.xml test -Dtest=MachineIdentityVerifierTest,MachineTokenServiceTest,MachineTokenTenantTest,MachineTokenControllerTest
 ```
 
 Tests use generated RSA keys, a local token server or mocked credentials; they
@@ -176,5 +233,7 @@ The cross-service HTTP suite and its `m2m-integration` profile are deliberately
 excluded: the suite in PR #1126 needs adaptation to the PAGOPA profile.
 This release's checks cover issuer validation/signing, grants, HTTP responses,
 SmallRye validation using the legacy issuer/audience/required-claim rules, and
-the SDK's cache/filter behavior, not every deployed receiver or a complete
+the SDK's cache/filter behavior. A PNPG HTTP test uses the real registry and
+signing-key provider with login disabled and only the Entra verifier mocked.
+These checks do not cover every deployed receiver or a complete
 caller-to-receiver flow. An Azure smoke test is required before activation.

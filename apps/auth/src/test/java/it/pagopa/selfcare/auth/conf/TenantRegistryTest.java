@@ -1,7 +1,6 @@
 package it.pagopa.selfcare.auth.conf;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -26,12 +25,7 @@ class TenantRegistryTest {
     assertEquals("AR", tenantRegistry.resolveEnabledTenant("AR").id());
     assertEquals(
         "TENANT_AR_JWT_SESSION_PRIVATE_KEY",
-        tenantRegistry
-            .resolveEnabledTenant("AR")
-            .definition()
-            .jwt()
-            .session()
-            .privateKeyEnvVar());
+        tenantRegistry.resolveEnabledTenant("AR").definition().jwt().session().privateKeyEnvVar());
     assertEquals("selcAuth", resourceRegistry.resolve("AR").mongo().database());
     assertEquals("id", tenantRegistry.oneIdentityCredentials("AR").clientId());
     assertEquals("123", resourceRegistry.userRegistryApiKey("AR"));
@@ -89,14 +83,46 @@ class TenantRegistryTest {
   }
 
   @Test
+  void signingTenantsIncludeM2mOnlyTenantsWithoutEnablingLogin() {
+    TenantRegistry registry =
+        registry(
+            """
+            {
+              "AR": {"auth_enabled": true},
+              "PNPG": {
+                "auth_enabled": false,
+                "jwt": {"session": {
+                  "privateKeyEnvVar": "PNPG_PRIVATE_KEY",
+                  "keyIdEnvVar": "PNPG_KEY_ID",
+                  "audience": "api-pnpg.example.test"
+                }}
+              },
+              "DISABLED": {"auth_enabled": false}
+            }
+            """,
+            mock(it.pagopa.selfcare.tenant.TenantRegistry.class));
+    registry.initialize();
+
+    assertEquals(
+        java.util.List.of("AR", "PNPG"),
+        registry.signingTenants().stream().map(TenantRegistry.Tenant::id).sorted().toList());
+    assertEquals(
+        java.util.List.of("AR"),
+        registry.enabledAuthenticationTenants().stream().map(TenantRegistry.Tenant::id).toList());
+    assertEquals("PNPG", registry.resolveTenant("PNPG").id());
+    assertThrows(ForbiddenException.class, () -> registry.resolveEnabledTenant("PNPG"));
+    assertThrows(ForbiddenException.class, () -> registry.oneIdentityCredentials("PNPG"));
+  }
+
+  @Test
   void oneIdentityCredentialsRejectTenantUsingAnotherProvider() {
-    assertThrows(
-        ForbiddenException.class, () -> tenantRegistry.oneIdentityCredentials("PNPG"));
+    assertThrows(ForbiddenException.class, () -> tenantRegistry.oneIdentityCredentials("PNPG"));
   }
 
   @Test
   void initializeRejectsInvalidRegistryJson() {
-    TenantRegistry registry = registry("{invalid", mock(it.pagopa.selfcare.tenant.TenantRegistry.class));
+    TenantRegistry registry =
+        registry("{invalid", mock(it.pagopa.selfcare.tenant.TenantRegistry.class));
 
     assertThrows(IllegalStateException.class, registry::initialize);
   }
@@ -130,8 +156,9 @@ class TenantRegistryTest {
         mock(it.pagopa.selfcare.tenant.TenantRegistry.class);
     when(resources.oneIdentityCredentials("AR"))
         .thenReturn(
-            Optional.of(new it.pagopa.selfcare.tenant.TenantRegistry.OneIdentityCredentials(
-                "ar-client", "ar-secret")));
+            Optional.of(
+                new it.pagopa.selfcare.tenant.TenantRegistry.OneIdentityCredentials(
+                    "ar-client", "ar-secret")));
     TenantRegistry registry =
         registry(
             """
@@ -175,7 +202,8 @@ class TenantRegistryTest {
   }
 
   private String enabledOneIdentityTenantJson() {
-    return """
+    return
+    """
         {
           "AR": {
             "authentication_provider": "ONE_IDENTITY",

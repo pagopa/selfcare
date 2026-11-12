@@ -22,10 +22,8 @@ public class TenantSessionKeyProvider {
   @PostConstruct
   void initialize() {
     signingKeys =
-        tenantRegistry.enabledAuthenticationTenants().stream()
-            .collect(
-                Collectors.toUnmodifiableMap(
-                    TenantRegistry.Tenant::id, this::loadSigningKey));
+        tenantRegistry.signingTenants().stream()
+            .collect(Collectors.toUnmodifiableMap(TenantRegistry.Tenant::id, this::loadSigningKey));
   }
 
   public SigningKey getSigningKey(String tenantId) {

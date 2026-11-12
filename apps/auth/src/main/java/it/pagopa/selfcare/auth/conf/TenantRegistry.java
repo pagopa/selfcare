@@ -35,10 +35,17 @@ public class TenantRegistry {
     } catch (JsonProcessingException e) {
       throw new IllegalStateException("Invalid tenant registry configuration", e);
     }
-
   }
 
   public Tenant resolveEnabledTenant(String tenantId) {
+    Tenant tenant = resolveTenant(tenantId);
+    if (!tenant.definition().authEnabled()) {
+      throw new ForbiddenException("Tenant is not enabled for auth");
+    }
+    return tenant;
+  }
+
+  public Tenant resolveTenant(String tenantId) {
     if (tenantId == null || tenantId.isBlank()) {
       throw new InvalidRequestException("X-Tenant-Id header is required");
     }
@@ -47,10 +54,6 @@ public class TenantRegistry {
     if (tenantDefinition == null) {
       throw new InvalidRequestException("Unknown tenant");
     }
-    if (!tenantDefinition.authEnabled()) {
-      throw new ForbiddenException("Tenant is not enabled for auth");
-    }
-
     return new Tenant(tenantId, tenantDefinition);
   }
 
@@ -61,13 +64,27 @@ public class TenantRegistry {
     }
     return resourceRegistry
         .oneIdentityCredentials(tenantId)
-        .map(credentials -> new OneIdentityCredentials(credentials.clientId(), credentials.clientSecret()))
-        .orElseThrow(() -> new IllegalStateException("OneIdentity is not configured for tenant " + tenantId));
+        .map(
+            credentials ->
+                new OneIdentityCredentials(credentials.clientId(), credentials.clientSecret()))
+        .orElseThrow(
+            () ->
+                new IllegalStateException("OneIdentity is not configured for tenant " + tenantId));
   }
 
   public Collection<Tenant> enabledAuthenticationTenants() {
     return tenants.entrySet().stream()
         .filter(entry -> entry.getValue().authEnabled())
+        .map(entry -> new Tenant(entry.getKey(), entry.getValue()))
+        .toList();
+  }
+
+  public Collection<Tenant> signingTenants() {
+    return tenants.entrySet().stream()
+        .filter(
+            entry ->
+                entry.getValue().authEnabled()
+                    || (entry.getValue().jwt() != null && entry.getValue().jwt().session() != null))
         .map(entry -> new Tenant(entry.getKey(), entry.getValue()))
         .toList();
   }
