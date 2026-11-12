@@ -1,6 +1,7 @@
 package it.pagopa.selfcare.onboarding.context;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import io.quarkus.test.junit.QuarkusTest;
@@ -42,5 +43,27 @@ class TenantDataIsolationTest {
   void documentTenantIsResolvedAgainstRegistry() {
     assertEquals("PNPG", strict.ownerTenant("pnpg"));
     assertThrows(IllegalArgumentException.class, () -> lenient.ownerTenant("UNKNOWN"));
+  }
+
+  @Test
+  void writeAssignsCurrentTenantToUntaggedDocument() {
+    try (TenantContext.Scope ignored = TenantContext.open("PNPG")) {
+      assertEquals("PNPG", lenient.tenantForWrite(null));
+      assertEquals("PNPG", strict.tenantForWrite(" "));
+      assertEquals("PNPG", lenient.tenantForWrite("pnpg"));
+    }
+  }
+
+  @Test
+  void writeRejectsDocumentOfAnotherTenant() {
+    try (TenantContext.Scope ignored = TenantContext.open("AR")) {
+      assertThrows(IllegalArgumentException.class, () -> lenient.tenantForWrite("PNPG"));
+    }
+  }
+
+  @Test
+  void writeWithoutCurrentTenantKeepsDocumentTenant() {
+    assertNull(lenient.tenantForWrite(null));
+    assertEquals("AR", strict.tenantForWrite("AR"));
   }
 }
