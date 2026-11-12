@@ -11,7 +11,18 @@ public record TenantDefinition(
     @JsonProperty("allowed_origins") List<String> allowedOrigins,
     @JsonProperty("authentication_provider") String authenticationProvider,
     @JsonProperty("auth_enabled") boolean authEnabled,
-    @JsonProperty("jwt") JwtDefinition jwt) {
+    @JsonProperty("jwt") JwtDefinition jwt,
+    @JsonProperty("m2m") MachineDefinition m2m) {
+
+  public TenantDefinition(
+      String frontendUri,
+      String apiUri,
+      List<String> allowedOrigins,
+      String authenticationProvider,
+      boolean authEnabled,
+      JwtDefinition jwt) {
+    this(frontendUri, apiUri, allowedOrigins, authenticationProvider, authEnabled, jwt, null);
+  }
 
   public TenantDefinition(
       String frontendUri,
@@ -32,4 +43,20 @@ public record TenantDefinition(
       @JsonProperty("privateKeyEnvVar") String privateKeyEnvVar,
       @JsonProperty("keyIdEnvVar") String keyIdEnvVar,
       @JsonProperty("audience") String audience) {}
+
+  public record MachineDefinition(
+      boolean enabled,
+      String uid,
+      String iamBaseUrl,
+      List<String> groups,
+      Integer lifetimeSeconds,
+      List<MachineGrant> grants) {
+    public MachineDefinition {
+      lifetimeSeconds = lifetimeSeconds == null ? 300 : lifetimeSeconds;
+      groups = groups == null ? List.of() : List.copyOf(groups);
+      grants = grants == null ? List.of() : List.copyOf(grants);
+    }
+  }
+
+  public record MachineGrant(String audience, String scope, String productId) {}
 }

@@ -19,14 +19,6 @@ public class ExceptionHandler {
   private static final Logger LOGGER = LoggerFactory.getLogger(ExceptionHandler.class);
 
   @ServerExceptionMapper
-  public Response toResponse(MachineAuthenticationException exception) {
-    logHandledException(Response.Status.UNAUTHORIZED, exception);
-    return Response.fromResponse(problem(Response.Status.UNAUTHORIZED, exception.getMessage()))
-        .header("WWW-Authenticate", "Bearer")
-        .build();
-  }
-
-  @ServerExceptionMapper
   public Response toResponse(InvalidRequestException exception) {
     logHandledException(Response.Status.BAD_REQUEST, exception);
     return problem(Response.Status.BAD_REQUEST, exception.getMessage());
@@ -39,6 +31,12 @@ public class ExceptionHandler {
         exception.getClass().getSimpleName(),
         exception);
     return problem(Response.Status.INTERNAL_SERVER_ERROR, SOMETHING_HAS_GONE_WRONG_IN_THE_SERVER);
+  }
+
+  @ServerExceptionMapper
+  public Response toResponse(jakarta.ws.rs.NotFoundException exception) {
+    logHandledException(Response.Status.NOT_FOUND, exception);
+    return problem(Response.Status.NOT_FOUND, RESOURCE_NOT_FOUND);
   }
 
   @ServerExceptionMapper

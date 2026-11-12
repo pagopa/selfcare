@@ -123,7 +123,19 @@ module "collection_auth_otp_flows" {
 ###############################################################################
 
 locals {
+  m2m_enabled      = false
+  m2m_tenants      = {}
+  m2m_secret_names = {}
+
   app_settings_auth_ms = [
+    {
+      name  = "M2M_ISSUER_ENABLED"
+      value = tostring(local.m2m_enabled)
+    },
+    {
+      name  = "M2M_INTERNAL_PORT"
+      value = "8082"
+    },
     {
       name  = "JAVA_TOOL_OPTIONS"
       value = "-javaagent:applicationinsights-agent.jar"
@@ -142,7 +154,8 @@ locals {
             database               = "selcAuth"
             connectionStringEnvVar = "MONGODB_CONNECTION_STRING_AR"
           } : null
-          }, tenant.auth_enabled ? {
+          m2m = try(local.m2m_tenants[tenant_id], null)
+          }, tenant.auth_enabled || try(local.m2m_tenants[tenant_id].enabled, false) ? {
           jwt = {
             publicKeyEnvVar = "JWT_PUBLIC_KEY_${tenant_id}"
             session = {
@@ -252,7 +265,8 @@ locals {
 }
 
 module "container_app_auth_ms" {
-  source = "../../_modules/container_app_microservice"
+  source             = "../../_modules/container_app_microservice"
+  internal_tcp_ports = [8082]
 
   env_short                      = module.local.config.env_short
   resource_group_name            = module.local.config.ca_resource_group_name
@@ -262,7 +276,7 @@ module "container_app_auth_ms" {
   image_name                     = "selfcare-auth-ms"
   image_tag                      = var.image_tag
   app_settings                   = local.app_settings_auth_ms
-  secrets_names                  = local.secrets_names_auth_ms
+  secrets_names                  = merge(local.secrets_names_auth_ms, local.m2m_secret_names)
   workload_profile_name          = "Consumption"
 
   key_vault_resource_group_name = module.local.config.key_vault_resource_group_name

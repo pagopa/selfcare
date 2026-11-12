@@ -3,208 +3,151 @@ package it.pagopa.selfcare.auth.service;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import io.quarkus.test.junit.QuarkusTest;
-import io.smallrye.jwt.auth.principal.DefaultJWTCallerPrincipalFactory;
-import io.smallrye.jwt.auth.principal.JWTAuthContextInfo;
-import io.smallrye.jwt.auth.principal.ParseException;
-import it.pagopa.selfcare.auth.conf.MachineTokenConfig;
-import it.pagopa.selfcare.auth.conf.TenantDefinition;
-import it.pagopa.selfcare.auth.conf.TenantRegistry;
-import it.pagopa.selfcare.auth.conf.TenantSessionKeyProvider;
+import it.pagopa.selfcare.auth.conf.*;
+import it.pagopa.selfcare.auth.conf.TenantDefinition.*;
 import it.pagopa.selfcare.auth.controller.request.MachineTokenRequest;
-import it.pagopa.selfcare.auth.controller.response.MachineTokenResponse;
 import it.pagopa.selfcare.auth.exception.ForbiddenException;
 import it.pagopa.selfcare.auth.exception.InternalException;
 import it.pagopa.selfcare.auth.exception.ResourceNotFoundException;
-import java.security.KeyPair;
+import jakarta.ws.rs.ServiceUnavailableException;
 import java.security.KeyPairGenerator;
-import java.time.Duration;
 import java.util.List;
-import java.util.Set;
-import org.jose4j.jwt.JwtClaims;
 import org.jose4j.jwt.consumer.JwtConsumerBuilder;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.ValueSource;
 
 @QuarkusTest
 class MachineTokenServiceTest {
-  private static final String OID = "22222222-2222-4222-8222-222222222222";
-  private static final String SESSION_AUDIENCE = "api.dev.selfcare.pagopa.it";
-  private static final String GRANTS =
-      """
-      [{"objectId":"22222222-2222-4222-8222-222222222222","serviceId":"onboarding-cdc",
-        "tenantId":"AR","audience":"onboarding-functions","scope":"onboarding-functions.invoke"}]
-      """;
+  static final String UID = "22222222-2222-4222-8222-222222222222";
   private MachineTokenService service;
-  private KeyPair keys;
+  private TenantRegistry.Tenant tenant;
 
   @BeforeEach
   void setUp() throws Exception {
     service = new MachineTokenService();
     service.config = mock(MachineTokenConfig.class);
     when(service.config.enabled()).thenReturn(true);
-    when(service.config.lifetime()).thenReturn(Duration.ofMinutes(5));
-    when(service.config.grants()).thenReturn(GRANTS);
-    service.mapper = new ObjectMapper();
-    service.verifier = mock(MachineIdentityVerifier.class);
-    when(service.verifier.verify("Bearer entra-token")).thenReturn(OID);
     service.tenants = mock(TenantRegistry.class);
-    when(service.tenants.resolveTenant("AR"))
-        .thenReturn(
-            new TenantRegistry.Tenant(
-                "AR", new TenantDefinition(null, null, List.of(), null, false)));
-    service.sessions = new SessionServiceImpl();
-    service.sessions.audience = SESSION_AUDIENCE;
-    service.sessions.tenantRegistry = service.tenants;
     service.keys = mock(TenantSessionKeyProvider.class);
-    keys = KeyPairGenerator.getInstance("RSA").generateKeyPair();
-    when(service.keys.getSigningKey("AR"))
-        .thenReturn(new TenantSessionKeyProvider.SigningKey(keys.getPrivate(), "test-kid"));
-    service.initialize();
-    clearInvocations(service.keys);
+    service.sessions = new SessionServiceImpl();
+    service.sessions.audience = "api.test";
+    service.iam = mock(MachineIamAuthorizer.class);
+    tenant =
+        tenant(
+            new MachineDefinition(
+                true,
+                UID,
+                "https://iam.test",
+                List.of("SUPPORT"),
+                300,
+                List.of(new MachineGrant("user-ms", "user.read", "prod-test"))));
+    when(service.tenants.machineTenants()).thenReturn(List.of(tenant));
+    when(service.tenants.resolveTenant("PNPG")).thenReturn(tenant);
+    var pair = KeyPairGenerator.getInstance("RSA").generateKeyPair();
+    when(service.keys.getSigningKey("PNPG"))
+        .thenReturn(new TenantSessionKeyProvider.SigningKey(pair.getPrivate(), "pnpg-kid"));
   }
 
   @Test
-  void issuesShortLivedPagopaTokenWithGrantedServiceIdentity() throws Exception {
-    MachineTokenResponse response = service.issue("Bearer entra-token", request("AR"));
-    JwtClaims claims =
+  void issuesConfiguredIamIdentityOnlyAfterPermissionCheck() throws Exception {
+    service.initialize();
+    var pair = KeyPairGenerator.getInstance("RSA").generateKeyPair();
+    when(service.keys.getSigningKey("PNPG"))
+        .thenReturn(new TenantSessionKeyProvider.SigningKey(pair.getPrivate(), "pnpg-kid"));
+    var response = service.issue(request("user.read"));
+    var claims =
         new JwtConsumerBuilder()
-            .setVerificationKey(keys.getPublic())
+            .setVerificationKey(pair.getPublic())
             .setExpectedIssuer("PAGOPA")
-            .setExpectedAudience(SESSION_AUDIENCE)
+            .setExpectedAudience("api.test")
             .setRequireExpirationTime()
             .build()
             .processToClaims(response.accessToken());
-    assertEquals("onboarding-cdc", claims.getSubject());
-    assertEquals("onboarding-cdc", claims.getStringClaimValue("uid"));
-    assertEquals("auth", claims.getStringClaimValue("name"));
-    assertEquals("onboarding-cdc", claims.getStringClaimValue("client_id"));
-    assertEquals("AR", claims.getStringClaimValue("tenant_id"));
-    assertEquals("service", claims.getStringClaimValue("token_use"));
-    assertEquals("onboarding-functions.invoke", claims.getStringClaimValue("scope"));
+    assertEquals(UID, claims.getSubject());
+    assertEquals(UID, claims.getStringClaimValue("uid"));
+    assertEquals("PNPG", claims.getStringClaimValue("tenant_id"));
+    assertEquals(List.of("SUPPORT"), claims.getStringListClaimValue("groups"));
     assertEquals(300, claims.getExpirationTime().getValue() - claims.getIssuedAt().getValue());
-    assertFalse(claims.hasClaim("fiscal_number"));
-    assertFalse(claims.hasClaim("spid_level"));
-    assertFalse(claims.hasClaim("groups"));
-    assertFalse(claims.hasClaim("email"));
     assertEquals(300, response.expiresIn());
-    var principal =
-        new DefaultJWTCallerPrincipalFactory()
-            .parse(response.accessToken(), legacyContext(SESSION_AUDIENCE));
-    assertEquals("PAGOPA", principal.getIssuer());
-    assertEquals(Set.of(SESSION_AUDIENCE), principal.getAudience());
-  }
-
-  @ParameterizedTest
-  @ValueSource(strings = {"AR", "PNPG"})
-  void usesTheSameTenantAudienceAndSigningKeyAsUserSessions(String tenant) throws Exception {
-    String audience = "api." + tenant.toLowerCase(java.util.Locale.ROOT) + ".selfcare.test";
-    service.sessions.tenantAudienceEnabled = true;
-    var definition =
-        new TenantDefinition(
-            null,
-            null,
-            List.of(),
-            "HUB_SPID_LOGIN",
-            false,
-            new TenantDefinition.JwtDefinition(
-                "JWT_PUBLIC_KEY_" + tenant,
-                new TenantDefinition.SessionDefinition("PK", "KID", audience)));
-    when(service.tenants.resolveTenant(tenant))
-        .thenReturn(new TenantRegistry.Tenant(tenant, definition));
-    when(service.config.grants()).thenReturn(GRANTS.replace("\"AR\"", "\"" + tenant + "\""));
-    KeyPair tenantKeys = KeyPairGenerator.getInstance("RSA").generateKeyPair();
-    when(service.keys.getSigningKey(tenant))
-        .thenReturn(
-            new TenantSessionKeyProvider.SigningKey(tenantKeys.getPrivate(), tenant + "-kid"));
-    service.initialize();
-
-    String token = issueFor(tenant).accessToken();
-    JWTAuthContextInfo context = legacyContext(audience);
-    context.setPublicVerificationKey(tenantKeys.getPublic());
-    var principal = new DefaultJWTCallerPrincipalFactory().parse(token, context);
-
-    assertEquals(tenant, principal.getClaim("tenant_id"));
-    assertEquals(Set.of(audience), principal.getAudience());
-    assertThrows(
-        ParseException.class,
-        () -> new DefaultJWTCallerPrincipalFactory().parse(token, legacyContext(audience)));
-    context.setExpectedAudience(Set.of(SESSION_AUDIENCE));
-    assertThrows(
-        ParseException.class, () -> new DefaultJWTCallerPrincipalFactory().parse(token, context));
-  }
-
-  private MachineTokenResponse issueFor(String tenant) {
-    when(service.verifier.verify("Bearer test-identity")).thenReturn(OID);
-    return service.issue("Bearer test-identity", request(tenant));
-  }
-
-  private JWTAuthContextInfo legacyContext(String audience) {
-    JWTAuthContextInfo context = new JWTAuthContextInfo();
-    context.setPublicVerificationKey(keys.getPublic());
-    context.setIssuedBy("PAGOPA");
-    context.setExpectedAudience(Set.of(audience));
-    context.setRequiredClaims(Set.of("uid", "exp", "iat"));
-    context.setDefaultSubjectClaim("uid");
-    return context;
+    var token = org.mockito.ArgumentCaptor.forClass(String.class);
+    verify(service.iam)
+        .requirePermission(eq("PNPG"), eq(tenant.definition().m2m()), any(), token.capture());
+    assertNotEquals(response.accessToken(), token.getValue());
+    var bootstrap =
+        new JwtConsumerBuilder()
+            .setVerificationKey(pair.getPublic())
+            .setExpectedIssuer("PAGOPA")
+            .setExpectedAudience("api.test")
+            .build()
+            .processToClaims(token.getValue());
+    assertEquals(30, bootstrap.getExpirationTime().getValue() - bootstrap.getIssuedAt().getValue());
   }
 
   @Test
-  void deniesOtherTenantAudienceScopeAndUnknownPrincipalBeforeSigning() {
-    assertThrows(
-        ForbiddenException.class, () -> service.issue("Bearer entra-token", request("PNPG")));
-    assertThrows(
-        ForbiddenException.class,
-        () ->
-            service.issue(
-                "Bearer entra-token",
-                new MachineTokenRequest("AR", "user-ms", "onboarding-functions.invoke")));
-    assertThrows(
-        ForbiddenException.class,
-        () ->
-            service.issue(
-                "Bearer entra-token",
-                new MachineTokenRequest("AR", "onboarding-functions", "admin")));
-    when(service.verifier.verify("Bearer entra-token")).thenReturn("unknown");
-    assertThrows(
-        ForbiddenException.class, () -> service.issue("Bearer entra-token", request("AR")));
-    verifyNoInteractions(service.keys);
+  void rejectsUnconfiguredScopeBeforeSigningOrContactingIam() {
+    assertThrows(ForbiddenException.class, () -> service.issue(request("admin")));
+    verifyNoInteractions(service.keys, service.iam);
   }
 
   @Test
-  void disabledIssuerDoesNotAuthenticateOrSign() {
+  void disabledIssuerDoesNotResolveOrSign() {
     when(service.config.enabled()).thenReturn(false);
-    assertThrows(
-        ResourceNotFoundException.class, () -> service.issue("Bearer entra-token", request("AR")));
-    verifyNoInteractions(service.verifier, service.keys);
+    assertThrows(ResourceNotFoundException.class, () -> service.issue(request("user.read")));
+    verifyNoInteractions(service.keys, service.iam);
   }
 
   @Test
-  void rejectsGrantWithoutTenantSigningKeyAtStartup() {
-    when(service.keys.getSigningKey("AR"))
-        .thenThrow(new InternalException("JWT signing key is not configured for tenant"));
+  void failsClosedWhenIamDeniesOrIsUnavailable() {
+    doThrow(new ForbiddenException("Denied"))
+        .when(service.iam)
+        .requirePermission(any(), any(), any(), any());
+    assertThrows(ForbiddenException.class, () -> service.issue(request("user.read")));
+    doThrow(new ServiceUnavailableException())
+        .when(service.iam)
+        .requirePermission(any(), any(), any(), any());
+    assertThrows(ServiceUnavailableException.class, () -> service.issue(request("user.read")));
+  }
 
+  @Test
+  void rejectsMissingKeyAndInvalidTenantConfigurationAtStartup() {
+    when(service.keys.getSigningKey("PNPG")).thenThrow(new InternalException("Missing key"));
     assertThrows(InternalException.class, service::initialize);
-  }
-
-  @Test
-  void rejectsAmbiguousPolicyAndExcessiveLifetime() {
-    when(service.config.grants())
+    when(service.tenants.machineTenants())
         .thenReturn(
-            "["
-                + GRANTS.substring(1, GRANTS.lastIndexOf(']'))
-                + ","
-                + GRANTS.substring(1, GRANTS.lastIndexOf(']'))
-                + "]");
+            List.of(
+                tenant(
+                    new MachineDefinition(
+                        true, UID, "https://iam.test", List.of(), 3600, List.of()))));
     assertThrows(IllegalStateException.class, service::initialize);
-    when(service.config.lifetime()).thenReturn(Duration.ofHours(1));
+    when(service.tenants.machineTenants())
+        .thenReturn(
+            List.of(
+                tenant(
+                    new MachineDefinition(
+                        true, UID, "http://iam.test", List.of(), 300, List.of()))));
+    assertThrows(IllegalStateException.class, service::initialize);
+    var duplicate = new MachineGrant("user-ms", "user.read", "prod-test");
+    when(service.tenants.machineTenants())
+        .thenReturn(
+            List.of(
+                tenant(
+                    new MachineDefinition(
+                        true,
+                        UID,
+                        "https://iam.test",
+                        List.of(),
+                        300,
+                        List.of(duplicate, duplicate)))));
     assertThrows(IllegalStateException.class, service::initialize);
   }
 
-  private MachineTokenRequest request(String tenant) {
-    return new MachineTokenRequest(tenant, "onboarding-functions", "onboarding-functions.invoke");
+  private TenantRegistry.Tenant tenant(MachineDefinition machine) {
+    return new TenantRegistry.Tenant(
+        "PNPG", new TenantDefinition(null, null, List.of(), null, false, null, machine));
+  }
+
+  private MachineTokenRequest request(String scope) {
+    return new MachineTokenRequest("PNPG", "user-ms", scope);
   }
 }

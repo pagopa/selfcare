@@ -89,6 +89,13 @@ public class TenantRegistry {
         .toList();
   }
 
+  public Collection<Tenant> machineTenants() {
+    return tenants.entrySet().stream()
+        .filter(entry -> entry.getValue().m2m() != null && entry.getValue().m2m().enabled())
+        .map(entry -> new Tenant(entry.getKey(), entry.getValue()))
+        .toList();
+  }
+
   public record Tenant(String id, TenantDefinition definition) {}
 
   public record OneIdentityCredentials(String clientId, String clientSecret) {

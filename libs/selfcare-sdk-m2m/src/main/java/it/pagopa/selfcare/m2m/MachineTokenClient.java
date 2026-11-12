@@ -1,8 +1,5 @@
 package it.pagopa.selfcare.m2m;
 
-import com.azure.core.credential.TokenCredential;
-import com.azure.core.credential.TokenRequestContext;
-import com.azure.identity.ManagedIdentityCredentialBuilder;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -31,10 +28,8 @@ public class MachineTokenClient {
   private static final Duration CACHE_TTL = Duration.ofMinutes(4);
   private static final Duration REFRESH_MARGIN = Duration.ofSeconds(30);
   private final boolean enabled;
-  private final TokenCredential credential;
   private final HttpClient http;
   private final URI endpoint;
-  private final String entraScope;
   private final Clock clock;
   private final ObjectMapper mapper = new ObjectMapper();
   private final Map<Request, CompletableFuture<CachedToken>> cache = new HashMap<>();
@@ -42,36 +37,24 @@ public class MachineTokenClient {
   @Inject
   public MachineTokenClient(
       @ConfigProperty(name = "selfcare.m2m.enabled", defaultValue = "false") boolean enabled,
-      @ConfigProperty(name = "selfcare.m2m.endpoint") Optional<String> endpoint,
-      @ConfigProperty(name = "selfcare.m2m.entra-scope") Optional<String> entraScope,
-      @ConfigProperty(name = "selfcare.m2m.managed-identity-client-id") Optional<String> clientId) {
+      @ConfigProperty(name = "selfcare.m2m.endpoint") Optional<String> endpoint) {
     this.enabled = enabled;
     this.clock = Clock.systemUTC();
     if (enabled) {
       this.endpoint = requireHttps(endpoint.orElseThrow(
           () -> new IllegalStateException("M2M endpoint is required")));
-      this.entraScope = entraScope.filter(value -> value.endsWith("/.default")).orElseThrow(
-          () -> new IllegalStateException("M2M Entra scope ending in /.default is required"));
-      ManagedIdentityCredentialBuilder builder = new ManagedIdentityCredentialBuilder();
-      clientId.filter(value -> !value.isBlank()).ifPresent(builder::clientId);
-      this.credential = builder.build();
       this.http = HttpClient.newBuilder().connectTimeout(TIMEOUT)
           .followRedirects(HttpClient.Redirect.NEVER).build();
     } else {
       this.endpoint = null;
-      this.entraScope = null;
-      this.credential = null;
       this.http = null;
     }
   }
 
-  MachineTokenClient(TokenCredential credential, HttpClient http, URI endpoint, String entraScope,
-      Clock clock) {
+  MachineTokenClient(HttpClient http, URI endpoint, Clock clock) {
     this.enabled = true;
-    this.credential = credential;
     this.http = http;
     this.endpoint = endpoint;
-    this.entraScope = entraScope;
     this.clock = clock;
   }
 
@@ -108,15 +91,12 @@ public class MachineTokenClient {
       return CompletableFuture.failedFuture(new IllegalStateException("Cannot encode M2M request"));
     }
     Instant started = clock.instant();
-    return credential.getToken(new TokenRequestContext().addScopes(entraScope))
-        .timeout(TIMEOUT).toFuture()
-        .thenCompose(identityToken -> http.sendAsync(HttpRequest.newBuilder(endpoint)
+    return http.sendAsync(HttpRequest.newBuilder(endpoint)
             .timeout(TIMEOUT)
-            .header("Authorization", "Bearer " + identityToken.getToken())
             .header("Content-Type", "application/json")
             .header("Accept", "application/json")
             .POST(HttpRequest.BodyPublishers.ofString(body)).build(),
-            HttpResponse.BodyHandlers.ofString()))
+            HttpResponse.BodyHandlers.ofString())
         .thenApply(response -> decode(response.statusCode(), response.body(), request.scope(), started))
         .whenComplete((token, failure) -> {
           if (failure != null) {

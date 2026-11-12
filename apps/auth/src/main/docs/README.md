@@ -1,20 +1,21 @@
 # OpenAPI specifications
 
-This directory contains two OpenAPI specifications for the Auth microservice:
+This directory separates the Auth microservice's API contracts by listener:
 
-- `openapi.json`: the complete OpenAPI specification, containing all the APIs exposed by the microservice. This specification is used for the standard OpenAPI documentation and storage.
+- `openapi.json` / `openapi.yaml`: generated specifications for the primary HTTP listener (port 8080).
 - `openapi-apim.json`: the OpenAPI specification used to configure the API exposed through Azure API Management (APIM). It contains only the APIs that are intended to be exposed through APIM.
+- `openapi-m2m.yaml`: hand-maintained contract for the dedicated internal HTTPS listener (port 8082). Never import it into APIM.
 
-The two files are intentionally kept separate because **not all APIs exposed by the microservice should be exposed through APIM**.
+The files are intentionally kept separate because **not all APIs exposed by the microservice should be exposed through APIM**.
 
-The `openapi-apim.json` file must therefore be updated whenever the set of APIs exposed through APIM changes, while `openapi.json` must continue to represent the complete API surface of the microservice.
+Update `openapi-apim.json` when the APIM surface changes, regenerate the primary
+specifications when its APIs change, and update the internal contract separately.
 
-`POST /token/service` is an opt-in Entra-to-internal-token exchange, separate
-from user login. It emits an internal token with issuer `PAGOPA`, with a
-server-assigned technical identity, the existing tenant session key/audience,
-and a default five-minute lifetime. Grant destination and scope restrict
-issuance, not downstream access in legacy receivers. Unlike APIM's `SPID`
-tokens, `PAGOPA` tokens receive the `SUPPORT` role in the legacy security SDK
-and do not follow its SPID-specific tenant validation. It is included only in the
-complete specification until its network route and Entra grants are configured. See the
+`POST /token/service` exists only on the opt-in internal TLS listener.
+It requires no caller credentials: CAE network isolation is the trust boundary.
+An explicit tenant grant and successful IAM permission check are required.
+It emits `PAGOPA` tokens with the tenant's configured IAM UID, session key/audience
+and a default five-minute lifetime. Grant destination/scope restrict issuance,
+not downstream access in legacy receivers; the legacy security SDK grants
+`SUPPORT` for `PAGOPA` and skips SPID-specific tenant validation. See the
 [M2M rollout guide](../../../../../libs/selfcare-sdk-m2m/README.md).

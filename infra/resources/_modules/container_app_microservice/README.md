@@ -18,7 +18,8 @@ Then, it updates the private DNS zone with a new A record pointing at the existi
 
 | Name | Version |
 | ---- | ------- |
-| <a name="provider_azurerm"></a> [azurerm](#provider\_azurerm) | 4.72.0 |
+| <a name="provider_azapi"></a> [azapi](#provider\_azapi) | 2.13.0 |
+| <a name="provider_azurerm"></a> [azurerm](#provider\_azurerm) | 4.81.0 |
 
 ## Modules
 
@@ -28,6 +29,7 @@ No modules.
 
 | Name | Type |
 | ---- | ---- |
+| [azapi_update_resource.internal_tcp_ingress](https://registry.terraform.io/providers/azure/azapi/latest/docs/resources/update_resource) | resource |
 | [azurerm_container_app.container_app](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/container_app) | resource |
 | [azurerm_monitor_metric_alert.container_restart](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/monitor_metric_alert) | resource |
 | [azurerm_private_dns_a_record.private_dns_record_a_azurecontainerapps_io](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/private_dns_a_record) | resource |
@@ -55,6 +57,7 @@ No modules.
 | <a name="input_env_short"></a> [env\_short](#input\_env\_short) | Environment short name | `string` | n/a | yes |
 | <a name="input_image_name"></a> [image\_name](#input\_image\_name) | Name of the image to use, hosted on GitHub container registry | `string` | n/a | yes |
 | <a name="input_image_tag"></a> [image\_tag](#input\_image\_tag) | Image tag to use for the container | `string` | `"latest"` | no |
+| <a name="input_internal_tcp_ports"></a> [internal\_tcp\_ports](#input\_internal\_tcp\_ports) | Additional CAE-only TCP ports. Null leaves them unmanaged; an empty set clears previously managed mappings. | `set(number)` | `null` | no |
 | <a name="input_key_vault_name"></a> [key\_vault\_name](#input\_key\_vault\_name) | Key Vault name (for custom domain certificate) | `string` | n/a | yes |
 | <a name="input_key_vault_resource_group_name"></a> [key\_vault\_resource\_group\_name](#input\_key\_vault\_resource\_group\_name) | Key Vault resource group name (for custom domain certificate) | `string` | n/a | yes |
 | <a name="input_port"></a> [port](#input\_port) | Container binding port | `number` | `8080` | no |

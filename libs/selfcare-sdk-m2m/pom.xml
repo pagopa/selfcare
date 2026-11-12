@@ -10,13 +10,8 @@
   </parent>
   <artifactId>selfcare-sdk-m2m</artifactId>
   <version>0.1.0</version>
-  <description>Managed Identity authentication and asynchronous machine token acquisition.</description>
+  <description>Asynchronous internal machine token acquisition and caching.</description>
   <dependencies>
-    <dependency>
-      <groupId>com.azure</groupId>
-      <artifactId>azure-identity</artifactId>
-      <version>1.18.4</version>
-    </dependency>
     <dependency>
       <groupId>com.fasterxml.jackson.core</groupId>
       <artifactId>jackson-databind</artifactId>
