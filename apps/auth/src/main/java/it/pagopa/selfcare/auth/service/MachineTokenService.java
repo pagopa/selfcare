@@ -26,7 +26,7 @@ import org.slf4j.LoggerFactory;
 @ApplicationScoped
 public class MachineTokenService {
   private static final Logger LOGGER = LoggerFactory.getLogger(MachineTokenService.class);
-  public static final String ISSUER = "SPID";
+  public static final String ISSUER = "PAGOPA";
 
   @Inject MachineTokenConfig config;
   @Inject MachineIdentityVerifier verifier;

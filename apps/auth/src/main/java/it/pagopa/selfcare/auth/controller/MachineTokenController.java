@@ -43,9 +43,10 @@ public class MachineTokenController {
   @Operation(
       summary = "Issue a machine access token",
       description =
-          "Exchange an Entra app-only access token for a short-lived internal SPID token. "
+          "Exchange an Entra app-only access token for a short-lived internal PAGOPA token. "
               + "The granted service identity and tenant session audience are assigned by auth. "
-              + "Requested audience and scope restrict issuance, not authorization in legacy receivers.",
+              + "Requested audience and scope restrict issuance, not authorization in legacy receivers. "
+              + "The legacy security SDK assigns SUPPORT to the PAGOPA issuer.",
       operationId = "issueMachineToken")
   @SecurityRequirement(name = "entraMachineToken")
   @APIResponse(

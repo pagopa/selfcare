@@ -5,8 +5,9 @@ This release provides the opt-in machine-token issuer in `auth` and the reusable
 using Azure Managed Identity; callers need no client secret or signing key.
 
 No existing caller is migrated by this release. Auth issues technical tokens
-using the legacy SPID profile, like APIM, so receivers do not need a new issuer
-or machine-profile validator. Existing user sessions remain unchanged.
+using the existing `PAGOPA` issuer, rather than APIM's `SPID` issuer.
+Receivers already supporting `PAGOPA` do not need a new issuer or machine-profile
+validator. Existing user sessions remain unchanged.
 Keep issuance disabled until the destination's signing-key trust, session
 audience and authorization behavior have been verified.
 
@@ -28,12 +29,19 @@ destination and permission. An Entra directory is not an AR/PNPG tenant.
 The requester cannot choose its service identity or obtain a grant through
 `X-Tenant-Id`. Missing grants deny access.
 
-Auth signs an RS256 JWT with `iss=SPID`, `name=auth`, and `sub`, `uid` and
+Auth signs an RS256 JWT with `iss=PAGOPA`, `name=auth`, and `sub`, `uid` and
 `client_id` set to the granted service identity, never to a user supplied by the
 caller. `tenant_id`, `iat` and `exp` follow the existing session convention.
 Additional `token_use=service`, `scope` and `jti` claims identify technical use
 but do not require changes in legacy receivers. No fiscal code, e-mail, SPID
-authentication level or support role is asserted.
+authentication level or explicit role claim is asserted.
+
+**Issuer semantics:** the existing `selfcare-sdk-security` assigns the
+`SUPPORT` role to `PAGOPA` tokens even without a `groups` claim. Its identity
+augmentor also skips the tenant validation performed for `SPID`. Keeping
+`tenant_id` in the token does not restore those SPID checks. Only authorize
+machine identities intended to receive this support-level trust, and verify
+tenant isolation and authorization in the actual receivers before activation.
 
 Lifetime defaults to five minutes and must be 60-900 seconds. The private key
 and `kid` come from the same tenant signing-key provider as user sessions.
@@ -46,7 +54,7 @@ fallback). Neither session lifetime nor user/SAML token issuance is changed.
 identifier used only to authorize issuance; it is not the emitted JWT `aud`.
 The request's `scope` also gates issuance, but legacy receivers do not enforce
 these M2M scopes. A token may authenticate to other services trusting the same
-key, issuer and session audience. This is the legacy APIM trust model, not
+key, issuer and session audience. This is a shared legacy trust model, not
 cryptographic confinement to the selected destination. Endpoint-specific user
 or relationship checks still apply and may reject the technical identity.
 Do not grant issuance to identities that must not have this broader trust.
@@ -84,7 +92,7 @@ The Azure SDK manages the separate Entra access token lifetime.
    enabling callers.
 5. Auth must already support the requested SelfCare tenant and have its signing
    key. The destination must trust the corresponding public key/certificate
-   (and `kid`, where enforced), accept `SPID` and the configured session
+   (and `kid`, where enforced), accept `PAGOPA` and the configured session
    audience, and allow the technical identity on the required operation.
    Preserve additional authentication requirements such as function keys.
 
@@ -133,7 +141,7 @@ managed identity principal ID):
 ```
 
 Add separate grants for each caller and allowed SelfCare tenant. Authorize a
-destination only after verifying its existing SPID validation and the broader
+destination only after verifying its existing PAGOPA validation and the broader
 trust described above; grant scope alone does not restrict downstream access.
 
 ## Rollout and rollback
@@ -165,7 +173,7 @@ never contact Entra or require real credentials. Maven still needs access to
 the repository's private package dependencies.
 
 The cross-service HTTP suite and its `m2m-integration` profile are deliberately
-excluded: the suite in PR #1126 needs adaptation to the legacy SPID profile.
+excluded: the suite in PR #1126 needs adaptation to the PAGOPA profile.
 This release's checks cover issuer validation/signing, grants, HTTP responses,
 SmallRye validation using the legacy issuer/audience/required-claim rules, and
 the SDK's cache/filter behavior, not every deployed receiver or a complete

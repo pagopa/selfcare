@@ -496,9 +496,10 @@ paths:
     post:
       summary: Issue a machine access token
       description: "Exchange an Entra app-only access token for a short-lived internal\
-        \ SPID token. The granted service identity and tenant session audience are\
+        \ PAGOPA token. The granted service identity and tenant session audience are\
         \ assigned by auth. Requested audience and scope restrict issuance, not authorization\
-        \ in legacy receivers."
+        \ in legacy receivers. The legacy security SDK assigns SUPPORT to the PAGOPA\
+        \ issuer."
       operationId: issueMachineToken
       tags:
       - Machine authentication

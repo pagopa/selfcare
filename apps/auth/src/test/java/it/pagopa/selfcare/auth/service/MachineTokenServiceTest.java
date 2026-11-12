@@ -62,12 +62,12 @@ class MachineTokenServiceTest {
   }
 
   @Test
-  void issuesShortLivedSpidTokenWithGrantedServiceIdentity() throws Exception {
+  void issuesShortLivedPagopaTokenWithGrantedServiceIdentity() throws Exception {
     MachineTokenResponse response = service.issue("Bearer entra-token", request("AR"));
     JwtClaims claims =
         new JwtConsumerBuilder()
             .setVerificationKey(keys.getPublic())
-            .setExpectedIssuer("SPID")
+            .setExpectedIssuer("PAGOPA")
             .setExpectedAudience(SESSION_AUDIENCE)
             .setRequireExpirationTime()
             .build()
@@ -88,7 +88,7 @@ class MachineTokenServiceTest {
     var principal =
         new DefaultJWTCallerPrincipalFactory()
             .parse(response.accessToken(), legacyContext(SESSION_AUDIENCE));
-    assertEquals("SPID", principal.getIssuer());
+    assertEquals("PAGOPA", principal.getIssuer());
     assertEquals(Set.of(SESSION_AUDIENCE), principal.getAudience());
   }
 
@@ -139,7 +139,7 @@ class MachineTokenServiceTest {
   private JWTAuthContextInfo legacyContext(String audience) {
     JWTAuthContextInfo context = new JWTAuthContextInfo();
     context.setPublicVerificationKey(keys.getPublic());
-    context.setIssuedBy("SPID");
+    context.setIssuedBy("PAGOPA");
     context.setExpectedAudience(Set.of(audience));
     context.setRequiredClaims(Set.of("uid", "exp", "iat"));
     context.setDefaultSubjectClaim("uid");
