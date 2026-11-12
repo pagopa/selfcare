@@ -18,6 +18,7 @@ import io.jsonwebtoken.SignatureAlgorithm;
 import io.quarkus.test.junit.QuarkusTest;
 import it.pagopa.selfcare.onboarding.HttpResponseMessageMock;
 import it.pagopa.selfcare.onboarding.config.JwtValidationConfig;
+import it.pagopa.selfcare.tenant.TenantRegistry;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.util.Base64;
@@ -40,6 +41,7 @@ class HttpJwtValidatorTest {
   private static KeyPair unknownKeys;
 
   private JwtValidationConfig config;
+  private final Map<String, String> publicKeys = new HashMap<>();
   private HttpJwtValidator validator;
   private ExecutionContext context;
 
@@ -56,11 +58,14 @@ class HttpJwtValidatorTest {
   void setUp() {
     config = mock(JwtValidationConfig.class);
     when(config.allowedIssuers()).thenReturn(Set.of("SPID", "PAGOPA"));
-    when(config.defaultTenant()).thenReturn("PNPG");
-    JwtValidationConfig.TenantKey arKey = tenantKey(pem(arKeys));
-    JwtValidationConfig.TenantKey pnpgKey = tenantKey(pem(pnpgKeys));
-    when(config.tenants()).thenReturn(Map.of("AR", arKey, "PNPG", pnpgKey));
-    validator = new HttpJwtValidator(config, new ObjectMapper());
+    when(config.defaultTenant()).thenReturn(Optional.of("PNPG"));
+    publicKeys.clear();
+    publicKeys.put("AR", pem(arKeys));
+    publicKeys.put("PNPG", pem(pnpgKeys));
+    TenantRegistry registry = mock(TenantRegistry.class);
+    when(registry.jwtPublicKey(any()))
+        .thenAnswer(invocation -> Optional.ofNullable(publicKeys.get(invocation.<String>getArgument(0))));
+    validator = new HttpJwtValidator(config, new ObjectMapper(), registry);
     context = mock(ExecutionContext.class);
     when(context.getLogger()).thenReturn(Logger.getGlobal());
   }
@@ -135,8 +140,7 @@ class HttpJwtValidatorTest {
         "-----BEGIN PUBLIC KEY-----\n"
             + Base64.getMimeEncoder().encodeToString(arKeys.getPublic().getEncoded())
             + "\n-----END PUBLIC KEY-----";
-    JwtValidationConfig.TenantKey tenantKey = tenantKey(pem);
-    when(config.tenants()).thenReturn(Map.of("AR", tenantKey));
+    publicKeys.put("AR", pem);
 
     // when
     HttpAuthorization response =
@@ -320,6 +324,19 @@ class HttpJwtValidatorTest {
   }
 
   @Test
+  void rejectsTokenWithoutTenantClaimWhenNoDefaultTenantIsConfigured() {
+    // given
+    when(config.defaultTenant()).thenReturn(Optional.empty());
+    String jwt = token(pnpgKeys, claims("SPID", "user-id", null), 60);
+
+    // when
+    HttpAuthorization response = authenticate(jwt, "PNPG");
+
+    // then
+    assertStatus(response, HttpStatus.UNAUTHORIZED);
+  }
+
+  @Test
   void rejectsTokenWithoutTenantClaimWhenClaimIsRequired() {
     // given
     when(config.tenantClaimRequired()).thenReturn(true);
@@ -365,8 +382,7 @@ class HttpJwtValidatorTest {
   void failsClosedWhenTenantKeyIsMissingOrInvalid() {
     // given
     String jwt = token(arKeys, claims("SPID", "user-id", "AR"), 60);
-    JwtValidationConfig.TenantKey pnpgKey = tenantKey(pem(pnpgKeys));
-    when(config.tenants()).thenReturn(Map.of("PNPG", pnpgKey));
+    publicKeys.remove("AR");
 
     // when
     HttpAuthorization missingKeyResponse = authenticate(jwt, "AR");
@@ -375,8 +391,7 @@ class HttpJwtValidatorTest {
     assertStatus(missingKeyResponse, HttpStatus.UNAUTHORIZED);
 
     // given
-    JwtValidationConfig.TenantKey invalidKey = tenantKey("not-a-key");
-    when(config.tenants()).thenReturn(Map.of("AR", invalidKey));
+    publicKeys.put("AR", "not-a-key");
 
     // when
     HttpAuthorization invalidKeyResponse = authenticate(jwt, "AR");
@@ -451,11 +466,5 @@ class HttpJwtValidatorTest {
 
   private static String pem(KeyPair keys) {
     return Base64.getEncoder().encodeToString(keys.getPublic().getEncoded());
-  }
-
-  private static JwtValidationConfig.TenantKey tenantKey(String publicKey) {
-    JwtValidationConfig.TenantKey key = mock(JwtValidationConfig.TenantKey.class);
-    when(key.publicKey()).thenReturn(Optional.ofNullable(publicKey));
-    return key;
   }
 }

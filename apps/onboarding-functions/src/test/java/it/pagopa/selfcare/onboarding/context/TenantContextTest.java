@@ -65,6 +65,30 @@ class TenantContextTest {
         assertThrows(IllegalArgumentException.class, () -> TenantContext.open(request, context));
     }
 
+    @Test
+    void resolveAcceptsOnlyRegistryTenants() {
+        assertEquals("AR", TenantContext.resolve(" ar "));
+        assertEquals("PNPG", TenantContext.resolve("pnpg"));
+        IllegalArgumentException error =
+                assertThrows(IllegalArgumentException.class, () -> TenantContext.resolve("UNKNOWN"));
+        assertEquals("Unsupported tenant", error.getMessage());
+        assertThrows(IllegalArgumentException.class, () -> TenantContext.resolve(" "));
+    }
+
+    @Test
+    void alternatingTenantsOnSameThreadRestorePreviousTenant() {
+        try (TenantContext.Scope ar = TenantContext.open("AR")) {
+            try (TenantContext.Scope pnpg = TenantContext.open("PNPG")) {
+                assertEquals("PNPG", TenantContext.requiredTenant());
+            }
+            assertEquals("AR", TenantContext.requiredTenant());
+        }
+        try (TenantContext.Scope pnpg = TenantContext.open("PNPG")) {
+            assertEquals("PNPG", TenantContext.requiredTenant());
+        }
+        assertNull(TenantContext.currentTenant());
+    }
+
     private static HttpRequestMessage<?> requestWithHeaders(Map<String, String> headers) {
         HttpRequestMessage<?> request = mock(HttpRequestMessage.class);
         doReturn(headers).when(request).getHeaders();

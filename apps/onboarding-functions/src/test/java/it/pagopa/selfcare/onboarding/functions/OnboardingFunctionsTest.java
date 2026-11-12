@@ -378,6 +378,39 @@ class OnboardingFunctionsTest {
   }
 
   @Test
+  void onboardingsOrchestrator_rejectsOnboardingOfAnotherTenant() {
+    IllegalArgumentException exception = runOrchestratorForOnboardingTenant("PNPG");
+
+    assertEquals("Conflicting tenant context", exception.getMessage());
+  }
+
+  @Test
+  void onboardingsOrchestrator_attributesOnboardingWithoutTenantToInputTenant() {
+    // strict isolation off: the tenant check passes and the orchestration reaches the workflow
+    IllegalArgumentException exception = runOrchestratorForOnboardingTenant(null);
+
+    assertTrue(exception.getMessage().startsWith("Workflow options not found"));
+  }
+
+  private IllegalArgumentException runOrchestratorForOnboardingTenant(String onboardingTenant) {
+    final String onboardingId = "onboardingId";
+    TaskOrchestrationContext orchestrationContext = mock(TaskOrchestrationContext.class);
+    when(orchestrationContext.getInput(String.class))
+        .thenReturn(
+            orchestrationInput(new it.pagopa.selfcare.onboarding.dto.OnboardingOrchestrationInput(onboardingId, "AR")));
+
+    Onboarding onboarding = new Onboarding();
+    onboarding.setId(onboardingId);
+    onboarding.setTenantId(onboardingTenant);
+    onboarding.setWorkflowType(WorkflowType.USERS_IMPORT);
+    when(service.getOnboarding(onboardingId)).thenReturn(Optional.of(onboarding));
+
+    return assertThrows(
+        IllegalArgumentException.class,
+        () -> function.onboardingsOrchestrator(orchestrationContext, executionContext));
+  }
+
+  @Test
   void onboardingsOrchestratorContractUpdateRequest() {
     Onboarding onboarding = contractUpdateOnboarding(OnboardingStatus.REQUEST);
     TaskOrchestrationContext orchestrationContext = mockTaskOrchestrationContext(onboarding);

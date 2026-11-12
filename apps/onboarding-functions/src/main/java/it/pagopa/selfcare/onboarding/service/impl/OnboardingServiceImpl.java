@@ -5,6 +5,7 @@ import it.pagopa.selfcare.onboarding.common.OnboardingStatus;
 import it.pagopa.selfcare.onboarding.common.PartyRole;
 import it.pagopa.selfcare.onboarding.common.WorkflowType;
 import it.pagopa.selfcare.onboarding.context.TenantContext;
+import it.pagopa.selfcare.onboarding.context.TenantDataIsolation;
 import it.pagopa.selfcare.onboarding.dto.ManagingInstitutionSendEmail;
 import it.pagopa.selfcare.onboarding.dto.NotificationCountResult;
 import it.pagopa.selfcare.onboarding.dto.ResendNotificationsFilters;
@@ -59,6 +60,7 @@ public class OnboardingServiceImpl implements OnboardingService {
     private final OnboardingRepositoryService onboardingRepositoryService;
 
     private final DocumentBuilder documentBuilder;
+    private final TenantDataIsolation tenantDataIsolation;
 
     public OnboardingServiceImpl(
             ProductService productService,
@@ -67,7 +69,8 @@ public class OnboardingServiceImpl implements OnboardingService {
             DocumentBuilder documentBuilder,
             OnboardingRepositoryService onboardingRepositoryService,
             PdvUserRegistryService pdvUserRegistryService,
-            UserService userService) {
+            UserService userService,
+            TenantDataIsolation tenantDataIsolation) {
         this.productService = productService;
         this.notificationService = notificationService;
         this.documentService = documentService;
@@ -75,6 +78,7 @@ public class OnboardingServiceImpl implements OnboardingService {
         this.onboardingRepositoryService = onboardingRepositoryService;
         this.pdvUserRegistryService = pdvUserRegistryService;
         this.userService = userService;
+        this.tenantDataIsolation = tenantDataIsolation;
     }
 
     public Optional<Onboarding> getOnboarding(String onboardingId) {
@@ -380,8 +384,7 @@ public class OnboardingServiceImpl implements OnboardingService {
         if (Objects.nonNull(productId)) {
             query.append("productId", productId);
         }
-        // $in with null also matches onboardings created before tenantId was introduced
-        query.append("tenantId", new Document("$in", Arrays.asList(TenantContext.requiredTenant(), null)));
+        query.putAll(tenantDataIsolation.tenantFilter());
         query.append(
                 "status", new Document("$in", status.stream().map(OnboardingStatus::name).toList()));
         if (workflowTypeExist) {
