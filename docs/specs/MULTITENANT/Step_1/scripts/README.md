@@ -49,6 +49,12 @@ explicitly with `--allow-missing`.
 * **Verifies real coverage.** Collection discovery errors, unexpected missing collections and a run
   that inspects zero collections all fail; they cannot produce a successful `--verify`.
 * **Interruptible.** Each collection converges independently; re-running resumes where it stopped.
+* **Throttling-aware.** `--apply` tags documents in batches of `_id`s and retries a batch with
+  backoff when Cosmos DB answers 16500 (request rate too large). Success is decided by re-counting
+  the untagged documents, not by `modifiedCount`, which Cosmos under-reports after a retry.
+* **Cosmos-compatible filters.** "Untagged" is `{tenantId: null}` (missing or null) and "another
+  tenant" is `{tenantId: {$nin: [<tenant>, null]}}`. Filters built with `$or` + `$expr` are avoided:
+  on Cosmos DB `find`/`update` with them silently matches fewer documents than `count`.
 
 ## Usage
 
@@ -82,6 +88,8 @@ Run the three steps once per tenant, against that tenant's own connection string
 * `--allow-missing <database.collection>` — explicitly allow one expected collection to be absent;
   repeatable. This is deliberately per collection rather than a broad “ignore missing” switch.
 * `--apply` — perform the updates.
+* `--batch-size <n>` — documents tagged per update with `--apply` (default `500`); lower it if Cosmos
+  keeps throttling. In PROD run one `--database` at a time, outside peak hours.
 * `--verify` — report only, exiting non-zero while untagged, mismatched, inaccessible or unexpectedly
   absent data remains. This is the gate for dropping the `or tenantId is null` branch from the
   services: it must exit `0` for both tenants in an environment before that environment's reads can
