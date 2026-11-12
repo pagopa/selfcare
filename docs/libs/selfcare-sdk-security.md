@@ -5,7 +5,7 @@
 | | |
 |---|---|
 | Path | `libs/selfcare-sdk-security` |
-| Artifact | `it.pagopa.selfcare:selfcare-sdk-security:0.8.0` |
+| Artifact | `it.pagopa.selfcare:selfcare-sdk-security:0.8.1` |
 | Stack | Quarkus (`quarkus-smallrye-jwt`, `quarkus-rest-jackson`, `quarkus-rest-client-jackson`, BOM 3.11.2), Java 17, `java-jwt`, `jose4j`; parent [`selfcare-sdk-pom`](selfcare-sdk-pom.md); depends on [`selfcare-sdk-tenant`](selfcare-sdk-tenant.md) |
 | Used by | `document-ms`, `iam`, `onboarding-ms`, `product`, `user-ms`, `webhook` |
 
@@ -29,7 +29,7 @@ Package `it.pagopa.selfcare.security` (`libs/selfcare-sdk-security/src/main/java
 <dependency>
   <groupId>it.pagopa.selfcare</groupId>
   <artifactId>selfcare-sdk-security</artifactId>
-  <version>0.8.0</version>
+  <version>0.8.1</version>
 </dependency>
 ```
 

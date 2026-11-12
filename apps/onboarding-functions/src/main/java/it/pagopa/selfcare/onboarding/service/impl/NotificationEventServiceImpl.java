@@ -12,6 +12,7 @@ import com.microsoft.azure.functions.ExecutionContext;
 import it.pagopa.selfcare.onboarding.client.eventhub.EventHubRestClient;
 import it.pagopa.selfcare.onboarding.client.webhook.WebhookRestClient;
 import it.pagopa.selfcare.onboarding.context.TenantContext;
+import it.pagopa.selfcare.onboarding.context.TenantDataIsolation;
 import it.pagopa.selfcare.onboarding.config.NotificationConfig;
 import it.pagopa.selfcare.onboarding.dto.*;
 import it.pagopa.selfcare.onboarding.dto.webhook.NotificationRequest;
@@ -65,6 +66,7 @@ public class NotificationEventServiceImpl implements NotificationEventService {
     private final NotificationUserBuilderFactory notificationUserBuilderFactory;
     private final ObjectMapper mapper;
     private final QueueEventExaminer queueEventExaminer;
+    private final TenantDataIsolation tenantDataIsolation;
     private static final String NOTIFICATION_EVENT_STRING = "notificationEventTraceId";
 
     public NotificationEventServiceImpl(ProductService productService,
@@ -72,8 +74,10 @@ public class NotificationEventServiceImpl implements NotificationEventService {
             NotificationBuilderFactory notificationBuilderFactory,
             NotificationUserBuilderFactory notificationUserBuilderFactory,
             QueueEventExaminer queueEventExaminer,
-            TelemetryService telemetryService) {
+            TelemetryService telemetryService,
+            TenantDataIsolation tenantDataIsolation) {
         this.productService = productService;
+        this.tenantDataIsolation = tenantDataIsolation;
         this.notificationConfig = notificationConfig;
         this.notificationBuilderFactory = notificationBuilderFactory;
         this.notificationUserBuilderFactory = notificationUserBuilderFactory;
@@ -90,7 +94,7 @@ public class NotificationEventServiceImpl implements NotificationEventService {
     @Override
     public void send(ExecutionContext context, Onboarding onboarding, QueueEvent queueEvent,
             String notificationEventTraceId) {
-        String onboardingTenant = TenantContext.resolve(onboarding.getTenantId());
+        String onboardingTenant = tenantDataIsolation.ownerTenant(onboarding.getTenantId());
         String outerTenant = TenantContext.currentTenant();
         if (outerTenant != null && !outerTenant.equals(onboardingTenant)) {
             throw new IllegalArgumentException(CONFLICTING_TENANT_CONTEXT);

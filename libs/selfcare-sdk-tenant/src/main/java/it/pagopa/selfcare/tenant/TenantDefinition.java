@@ -88,10 +88,22 @@ public record TenantDefinition(
      * publicKeyEnvVar} names the environment variable holding either a raw PEM public key or a
      * JWK/JWKS JSON document for this tenant. Unlike {@link MongoDefinition}, this is not
      * mandatory: apps that don't need per-tenant JWT keys can omit it entirely and rely on the
-     * legacy {@code mp.jwt.verify.publickey} property instead.
+     * legacy {@code mp.jwt.verify.publickey} property instead. {@code session} is optional and
+     * only used by apps that issue JWTs for this tenant.
      */
     @JsonIgnoreProperties(ignoreUnknown = true)
-    public record JwtDefinition(@JsonProperty("publicKeyEnvVar") String publicKeyEnvVar) {
+    public record JwtDefinition(
+            @JsonProperty("publicKeyEnvVar") String publicKeyEnvVar,
+            @JsonProperty("session") JwtSessionDefinition session) {
+
+        public JwtDefinition(String publicKeyEnvVar) {
+            this(publicKeyEnvVar, null);
+        }
+    }
+
+    /** {@code audience} is the {@code aud} claim of the JWTs issued for this tenant. */
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    public record JwtSessionDefinition(@JsonProperty("audience") String audience) {
     }
 
     @JsonIgnoreProperties(ignoreUnknown = true)
