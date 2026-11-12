@@ -2,9 +2,9 @@ package it.pagopa.selfcare.commons.web.security;
 
 import io.kubernetes.client.openapi.ApiException;
 import io.kubernetes.client.openapi.apis.AuthenticationV1Api;
-import io.kubernetes.client.openapi.models.V1TokenReviewBuilder;
-import io.kubernetes.client.openapi.models.V1TokenReviewStatusBuilder;
-import io.kubernetes.client.openapi.models.V1UserInfoBuilder;
+import io.kubernetes.client.openapi.models.V1TokenReview;
+import io.kubernetes.client.openapi.models.V1TokenReviewStatus;
+import io.kubernetes.client.openapi.models.V1UserInfo;
 import it.pagopa.selfcare.commons.base.security.ServiceAccount;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -72,13 +72,13 @@ class K8sJwtAuthenticationStrategyTest {
         final JwtAuthenticationToken authentication = new JwtAuthenticationToken(token);
         doThrow(RuntimeException.class)
                 .when(apiClientMock)
-                .createTokenReview(any(), any(), any(), any());
+                .createTokenReview(any(), any(), any(), any(), any());
         // when
         final Executable executable = () -> k8sJwtAuthenticationStrategy.authenticate(authentication);
         // then
         assertThrows(JwtAuthenticationException.class, executable);
         verify(apiClientMock, times(1))
-                .createTokenReview(argThat(argument -> token.equals(argument.getSpec().getToken())), isNull(), isNull(), isNull());
+                .createTokenReview(argThat(argument -> token.equals(argument.getSpec().getToken())), isNull(), isNull(), isNull(), isNull());
         verifyNoMoreInteractions(apiClientMock);
     }
 
@@ -88,12 +88,9 @@ class K8sJwtAuthenticationStrategyTest {
         // given
         final String token = "token";
         final JwtAuthenticationToken authentication = new JwtAuthenticationToken(token);
-        when(apiClientMock.createTokenReview(any(), any(), any(), any()))
-                .thenReturn(new V1TokenReviewBuilder()
-                        .withStatus(new V1TokenReviewStatusBuilder()
-                                .withAuthenticated(false)
-                                .build())
-                        .build());
+        when(apiClientMock.createTokenReview(any(), any(), any(), any(), any()))
+                .thenReturn(new V1TokenReview()
+                        .status(new V1TokenReviewStatus().authenticated(false)));
         // when
         final Executable executable = () -> k8sJwtAuthenticationStrategy.authenticate(authentication);
         // then
@@ -101,7 +98,7 @@ class K8sJwtAuthenticationStrategyTest {
         assertNotNull(exception.getCause());
         assertEquals("Invalid token status", exception.getCause().getMessage());
         verify(apiClientMock, times(1))
-                .createTokenReview(argThat(argument -> token.equals(argument.getSpec().getToken())), isNull(), isNull(), isNull());
+                .createTokenReview(argThat(argument -> token.equals(argument.getSpec().getToken())), isNull(), isNull(), isNull(), isNull());
         verifyNoMoreInteractions(apiClientMock);
     }
 
@@ -111,14 +108,11 @@ class K8sJwtAuthenticationStrategyTest {
         // given
         final String token = "token";
         final JwtAuthenticationToken authentication = new JwtAuthenticationToken(token);
-        when(apiClientMock.createTokenReview(any(), any(), any(), any()))
-                .thenReturn(new V1TokenReviewBuilder()
-                        .withStatus(new V1TokenReviewStatusBuilder()
-                                .withAuthenticated(true)
-                                .withUser(new V1UserInfoBuilder()
-                                        .build())
-                                .build())
-                        .build());
+        when(apiClientMock.createTokenReview(any(), any(), any(), any(), any()))
+                .thenReturn(new V1TokenReview()
+                        .status(new V1TokenReviewStatus()
+                                .authenticated(true)
+                                .user(new V1UserInfo())));
         // when
         final Executable executable = () -> k8sJwtAuthenticationStrategy.authenticate(authentication);
         // then
@@ -126,7 +120,7 @@ class K8sJwtAuthenticationStrategyTest {
         assertNotNull(exception.getCause());
         assertEquals("Service Account id is required", exception.getCause().getMessage());
         verify(apiClientMock, times(1))
-                .createTokenReview(argThat(argument -> token.equals(argument.getSpec().getToken())), isNull(), isNull(), isNull());
+                .createTokenReview(argThat(argument -> token.equals(argument.getSpec().getToken())), isNull(), isNull(), isNull(), isNull());
         verifyNoMoreInteractions(apiClientMock);
     }
 
@@ -138,16 +132,13 @@ class K8sJwtAuthenticationStrategyTest {
         final String uid = UUID.randomUUID().toString();
         final String username = "service-account";
         final JwtAuthenticationToken notAuthenticatedToken = new JwtAuthenticationToken(token);
-        when(apiClientMock.createTokenReview(any(), any(), any(), any()))
-                .thenReturn(new V1TokenReviewBuilder()
-                        .withStatus(new V1TokenReviewStatusBuilder()
-                                .withAuthenticated(true)
-                                .withUser(new V1UserInfoBuilder()
-                                        .withUid(uid)
-                                        .withUsername(username)
-                                        .build())
-                                .build())
-                        .build());
+        when(apiClientMock.createTokenReview(any(), any(), any(), any(), any()))
+                .thenReturn(new V1TokenReview()
+                        .status(new V1TokenReviewStatus()
+                                .authenticated(true)
+                                .user(new V1UserInfo()
+                                        .uid(uid)
+                                        .username(username))));
         // when
         final JwtAuthenticationToken authenticatedToken = k8sJwtAuthenticationStrategy.authenticate(notAuthenticatedToken);
         // then
@@ -159,7 +150,7 @@ class K8sJwtAuthenticationStrategyTest {
         assertEquals(username, ((ServiceAccount) authenticatedToken.getPrincipal()).getUsername());
         assertNotNull(authenticatedToken.getAuthorities());
         verify(apiClientMock, times(1))
-                .createTokenReview(argThat(argument -> token.equals(argument.getSpec().getToken())), isNull(), isNull(), isNull());
+                .createTokenReview(argThat(argument -> token.equals(argument.getSpec().getToken())), isNull(), isNull(), isNull(), isNull());
         verifyNoMoreInteractions(apiClientMock);
     }
 
