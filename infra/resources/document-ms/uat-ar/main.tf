@@ -143,6 +143,10 @@ locals {
     {
       name  = "TENANT_SUPPORTED_TENANTS"
       value = "AR"
+    },
+    {
+      name  = "SELFCARE_TENANT_STRICT_DATA_ISOLATION"
+      value = tostring(module.local.config.strict_tenant_data_isolation)
     }
   ]
 

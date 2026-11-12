@@ -3,6 +3,7 @@ package it.pagopa.selfcare.onboarding.context;
 import com.microsoft.azure.functions.ExecutionContext;
 import com.microsoft.azure.functions.HttpRequestMessage;
 import io.quarkus.arc.Arc;
+import it.pagopa.selfcare.tenant.JwtTenantClaimResolver;
 import it.pagopa.selfcare.tenant.TenantRegistry;
 import it.pagopa.selfcare.tenant.UnknownTenantException;
 
@@ -18,7 +19,7 @@ import java.util.Objects;
 public final class TenantContext {
 
     public static final String TENANT_HEADER = "X-Tenant-Id";
-    public static final String TENANT_CLAIM = "tenant_id";
+    public static final String TENANT_CLAIM = JwtTenantClaimResolver.TENANT_CLAIM;
 
     private static final String TENANT_REQUIRED = "Tenant context is required";
     private static final ThreadLocal<String> CURRENT_TENANT = new ThreadLocal<>();

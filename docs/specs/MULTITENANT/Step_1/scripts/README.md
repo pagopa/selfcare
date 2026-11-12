@@ -114,9 +114,10 @@ strict_tenant_data_isolation_by_env = {
 
 The example is illustrative: do not enable DEV until the verification actually succeeds. Apply only after
 every participating service has been wired to `module.local.config.strict_tenant_data_isolation`
-and verified in that environment. Currently `infra/resources/auth/{dev,uat,prod}-ar/auth.tf` injects
-`SELFCARE_TENANT_STRICT_DATA_ISOLATION` for `auth`; wiring the other services remains a separate rollout
-gate. The property name is `selfcare.tenant.strict-data-isolation`.
+and verified in that environment. `SELFCARE_TENANT_STRICT_DATA_ISOLATION` is currently injected from
+that flag for `auth`, `iam`, `onboarding-functions` (all stacks) and `document-ms` (`{dev,uat,prod}-ar`);
+`institution-ms` and `user-group-ms` use the Spring `TENANT_STRICT_DATA_ISOLATION` property and are not
+wired to the shared flag yet, which remains a separate rollout gate. The property name is `selfcare.tenant.strict-data-isolation`.
 
 In `auth`, strict mode drops the `or tenantId is null` branch for OTP reads. Before consolidation,
 `document-ms`, `iam`, `user-ms`, `onboarding-ms`, `user-group-ms`, `institution-ms`,
