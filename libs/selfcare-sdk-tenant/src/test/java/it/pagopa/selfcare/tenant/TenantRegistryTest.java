@@ -286,6 +286,27 @@ class TenantRegistryTest {
     }
 
     @Test
+    void jwtSessionAudience_readsTenantAudienceAndIsEmptyWhenMissing() {
+        TenantRegistry registry = newRegistry("{\"AR\":{" + AR_MONGO
+                + ",\"jwt\":{\"publicKeyEnvVar\":\"JWT_PUBLIC_KEY_AR\","
+                + "\"session\":{\"audience\":\" api.dev.selfcare.pagopa.it \"}}},"
+                + "\"PNPG\":{" + PNPG_MONGO + ",\"jwt\":{\"publicKeyEnvVar\":\"JWT_PUBLIC_KEY_PNPG\"}}}",
+                "AR,PNPG", "");
+        System.setProperty("SDK_TENANT_TEST_MONGO_AR", "mongodb://ar");
+        System.setProperty("SDK_TENANT_TEST_MONGO_PNPG", "mongodb://pnpg");
+        try {
+            registry.initialize();
+        } finally {
+            System.clearProperty("SDK_TENANT_TEST_MONGO_AR");
+            System.clearProperty("SDK_TENANT_TEST_MONGO_PNPG");
+        }
+
+        assertEquals(Optional.of("api.dev.selfcare.pagopa.it"), registry.jwtSessionAudience("ar"));
+        assertEquals(Optional.empty(), registry.jwtSessionAudience("PNPG"));
+        assertThrows(UnknownTenantException.class, () -> registry.jwtSessionAudience("OTHER"));
+    }
+
+    @Test
     void initialize_parsesMultipleStorageBindingsPerTenant() {
         String json =
                 "{\"AR\":{\"mongo\":{\"account\":\"cosmos-ar\",\"database\":\"selcOnboarding\","

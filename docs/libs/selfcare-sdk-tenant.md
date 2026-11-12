@@ -5,7 +5,7 @@
 | | |
 |---|---|
 | Path | `libs/selfcare-sdk-tenant` |
-| Artifact | `it.pagopa.selfcare:selfcare-sdk-tenant:0.5.0` |
+| Artifact | `it.pagopa.selfcare:selfcare-sdk-tenant:0.6.0` |
 | Stack | Plain Java 17 + CDI (Jakarta), MicroProfile Config, Jackson; parent [`selfcare-sdk-pom`](selfcare-sdk-pom.md) (Quarkus BOM 3.11.2) |
 | Used by | `auth`, `document-ms`, `iam`, `onboarding-ms`, `product`, `product-cdc`; transitively through [`selfcare-sdk-security`](selfcare-sdk-security.md) and [`selfcare-sdk-tenant-mongodb`](selfcare-sdk-tenant-mongodb.md) |
 
@@ -34,7 +34,7 @@ The jar ships `META-INF/beans.xml` (`bean-discovery-mode="annotated"`), so beans
 <dependency>
   <groupId>it.pagopa.selfcare</groupId>
   <artifactId>selfcare-sdk-tenant</artifactId>
-  <version>0.5.0</version>
+  <version>0.6.0</version>
 </dependency>
 ```
 
@@ -55,8 +55,11 @@ Shape of a registry entry (abridged from `apps/iam/src/main/resources/applicatio
 ```json
 {"AR": {"mongo": {"account": "cosmos-ar", "database": "selcIam",
                   "connectionStringEnvVar": "MONGODB_CONNECTION_STRING_AR"},
-        "jwt":   {"publicKeyEnvVar": "..."}}}
+        "jwt":   {"publicKeyEnvVar": "...",
+                  "session": {"audience": "api.dev.selfcare.pagopa.it"}}}}
 ```
+
+`jwt.session.audience` (optional, since 0.6.0) is the `aud` claim of the JWTs an app issues for the tenant: read it with `TenantRegistry.jwtSessionAudience(tenantId)`.
 
 Real examples: `apps/iam`, `apps/onboarding-ms`, `apps/document-ms`, `apps/product-cdc` (`src/main/resources/application.properties`), `apps/auth` (`TENANT_REGISTRY_JSON`).
 Request filters that populate `TenantContext` are provided by [`selfcare-sdk-security`](selfcare-sdk-security.md).
