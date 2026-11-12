@@ -54,6 +54,11 @@ class OnboardingProductDtoTest {
     }
 
     @Test
+    void rtpServiceTypesPresent_prodRepositoryConsultation_isValid() {
+        assertTrue(rtpViolations(dto("prod-rtp", List.of(RtpServiceTypeDto.REPOSITORY_CONSULTATION))).isEmpty());
+    }
+
+    @Test
     void rtpServiceTypesMissing_otherProduct_isValid() {
         assertTrue(rtpViolations(dto("prod-pagopa", null)).isEmpty());
         assertTrue(rtpViolations(dto(null, null)).isEmpty());
