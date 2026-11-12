@@ -25,6 +25,8 @@ import java.util.*;
 import lombok.extern.slf4j.Slf4j;
 import org.bson.Document;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
+import org.eclipse.microprofile.rest.client.inject.RestClient;
+import org.openapi.quarkus.core_json.api.InstitutionApi;
 import org.openapi.quarkus.product_json.model.ProductResponse;
 import org.openapi.quarkus.product_json.model.RoleMapping;
 
@@ -54,6 +56,10 @@ public class OnboardingPersistenceHelper {
     OnboardingRepository onboardingRepository;
     @Inject
     ProductService productService;
+
+    @RestClient
+    @Inject
+    InstitutionApi institutionApi;
 
     // -------------------------------------------------------------------------
     // Persistenza onboarding
@@ -159,7 +165,7 @@ public class OnboardingPersistenceHelper {
                         ? Uni.createFrom().failure(new InvalidRequestException(String.format(
                                 "Contract update not required for onboarding %s", prev.getId())))
                         : Uni.createFrom().voidItem())
-                .invoke(prev -> {
+                .call(prev -> {
                     onboarding.setReferenceOnboardingId(prev.getId());
                     onboarding.setBilling(prev.getBilling());
                     if (CONTRACT_UPDATE.equals(onboarding.getWorkflowType())) {
@@ -168,7 +174,9 @@ public class OnboardingPersistenceHelper {
                     }
                     if (inheritReferencedInstitution) {
                         inheritInstitutionFromReferenced(onboarding, prev);
+                        return refreshDigitalAddress(onboarding);
                     }
+                    return Uni.createFrom().voidItem();
                 });
 
         return current
@@ -198,6 +206,31 @@ public class OnboardingPersistenceHelper {
             referencedInstitution.setInstitutionType(requestedInstitution.getInstitutionType());
         }
         onboarding.setInstitution(referencedInstitution);
+    }
+
+    /**
+     * Updates the inherited institution's PEC (digitalAddress) with its current value from institution-ms,
+     * which may have changed since the referenced onboarding.
+     * If the request fails or no PEC is available, the inherited value is retained.
+     */
+    private Uni<Void> refreshDigitalAddress(Onboarding onboarding) {
+        Institution institution = onboarding.getInstitution();
+        if (Objects.isNull(institution) || Objects.isNull(institution.getId())) {
+            return Uni.createFrom().voidItem();
+        }
+        return Uni.createFrom().deferred(() -> institutionApi.retrieveInstitutionByIdUsingGET(institution.getId(), null))
+                .onItem().invoke(response -> {
+                    if (Objects.nonNull(response) && Objects.nonNull(response.getDigitalAddress())
+                            && !response.getDigitalAddress().isBlank()) {
+                        institution.setDigitalAddress(response.getDigitalAddress());
+                    }
+                })
+                .onFailure().recoverWithItem(throwable -> {
+                    log.warn("Unable to refresh digitalAddress for institution {}: {}",
+                            institution.getId(), throwable.getMessage());
+                    return null;
+                })
+                .replaceWithVoid();
     }
 
     // -------------------------------------------------------------------------
