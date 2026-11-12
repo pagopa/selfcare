@@ -102,6 +102,7 @@ From `apps/onboarding-functions/src/main/resources/application.properties`, `app
 - The tenant is passed as orchestration input and reopened in the orchestrator (`TenantContext.open`); a mismatch with the onboarding's `tenantId` fails the orchestration ("Conflicting tenant context").
 - Contract storage is selected per tenant; each stack sets `TENANT_SUPPORTED_TENANTS`/`DEFAULT_TENANT` to its own tenant and loads only its tenant public key.
 - `SELFCARE_TENANT_STRICT_DATA_ISOLATION` defaults to `false` (documents without `tenantId` are attributed to the current tenant), unlike onboarding-ms which is always strict on the same `onboardings` collection. Enable it only after `backfill_tenant_id.py --verify` (Step 1) is clean on `onboardings`/`tokens` and no pre-migration Durable orchestration is in flight.
+- Whole-entity writes (`OnboardingRepository.persist/persistOrUpdate/update`) stamp the current tenant on an onboarding without `tenantId` and reject one of another tenant (`TenantDataIsolation.tenantForWrite`, like `validateTenant` in onboarding-ms). Without a tenant in context the value is left unchanged. This keeps new aggregate onboardings (`CONFIRMATION_AGGREGATE`) tagged even if their aggregator is a legacy untagged document.
 
 See [multitenancy](../multitenancy.md), [MULTITENANT Step 2](../specs/MULTITENANT/Step_2/ARCHITECTURE.md) and [Storage identification](../specs/MULTITENANT/Step_2/Storage_identification.md).
 
