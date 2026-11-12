@@ -98,7 +98,7 @@ From `apps/onboarding-functions/src/main/resources/application.properties`, `app
 
 ## Multitenancy
 
-- Every HTTP call must carry `X-Tenant-Id` (case-insensitive lookup, `context/TenantContext`) that is in `TENANT_SUPPORTED_TENANTS`; the JWT `tenant_id` claim must match it (or `JWT_DEFAULT_TENANT` is assumed when the claim is absent and not required).
+- Every HTTP call must carry `X-Tenant-Id` (case-insensitive lookup, `context/TenantContext`) that is in `TENANT_SUPPORTED_TENANTS`; the JWT `tenant_id` claim must match it (or `JWT_DEFAULT_TENANT` is assumed when the claim is absent and not required). The claim rules (normalization, supported tenants, default tenant) are the shared `JwtTenantClaimResolver` of [selfcare-sdk-tenant](../libs/selfcare-sdk-tenant.md), the same used by `selfcare-sdk-security`.
 - The tenant is passed as orchestration input and reopened in the orchestrator (`TenantContext.open`); a mismatch with the onboarding's `tenantId` fails the orchestration ("Conflicting tenant context").
 - Contract storage is selected per tenant; each stack sets `TENANT_SUPPORTED_TENANTS`/`DEFAULT_TENANT` to its own tenant and loads only its tenant public key.
 - `SELFCARE_TENANT_STRICT_DATA_ISOLATION` defaults to `false` (documents without `tenantId` are attributed to the current tenant), unlike onboarding-ms which is always strict on the same `onboardings` collection. Enable it only after `backfill_tenant_id.py --verify` (Step 1) is clean on `onboardings`/`tokens` and no pre-migration Durable orchestration is in flight.
