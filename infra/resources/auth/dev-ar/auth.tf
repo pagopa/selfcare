@@ -13,7 +13,8 @@ module "local" {
   private_dns_name_domain        = "whitemoss-eb7ef327.westeurope.azurecontainerapps.io"
   container_app_environment_name = "selc-d-cae-002"
   ca_resource_group_name         = "selc-d-container-app-002-rg"
-  container_app_min_replicas     = 0
+  # Keep the additional TCP listener available independently of primary HTTP traffic.
+  container_app_min_replicas = 1
 }
 
 ###############################################################################
@@ -123,7 +124,7 @@ module "collection_auth_otp_flows" {
 ###############################################################################
 
 locals {
-  m2m_enabled      = false
+  m2m_enabled      = true
   m2m_tenants      = {}
   m2m_secret_names = {}
 
@@ -135,6 +136,10 @@ locals {
     {
       name  = "M2M_INTERNAL_PORT"
       value = "8082"
+    },
+    {
+      name  = "M2M_TLS_ENABLED"
+      value = "false"
     },
     {
       name  = "JAVA_TOOL_OPTIONS"

@@ -52,16 +52,29 @@ public class MachineTokenListener {
     if (config.port() < 1 || config.port() > 65535 || config.port() == mainPort) {
       throw new IllegalStateException("M2M requires a distinct internal port");
     }
-    String cert =
-        config
-            .certificatePem()
-            .filter(value -> !value.isBlank())
-            .orElseThrow(() -> new IllegalStateException("M2M TLS certificate is required"));
-    String key =
-        config
-            .privateKeyPem()
-            .filter(value -> !value.isBlank())
-            .orElseThrow(() -> new IllegalStateException("M2M TLS private key is required"));
+    HttpServerOptions options =
+        new HttpServerOptions().setHost("0.0.0.0").setPort(config.port()).setIdleTimeout(10);
+    if (config.tlsEnabled()) {
+      String cert =
+          config
+              .certificatePem()
+              .filter(value -> !value.isBlank())
+              .orElseThrow(() -> new IllegalStateException("M2M TLS certificate is required"));
+      String key =
+          config
+              .privateKeyPem()
+              .filter(value -> !value.isBlank())
+              .orElseThrow(() -> new IllegalStateException("M2M TLS private key is required"));
+      options
+          .setSsl(true)
+          .setEnabledSecureTransportProtocols(Set.of("TLSv1.2", "TLSv1.3"))
+          .setPemKeyCertOptions(
+              new PemKeyCertOptions()
+                  .setCertValue(Buffer.buffer(cert))
+                  .setKeyValue(Buffer.buffer(key)));
+    } else {
+      LOGGER.warn("event=machine_listener_insecure_http_enabled port={}", config.port());
+    }
     Router router = Router.router(vertx);
     router
         .route()
@@ -90,22 +103,10 @@ public class MachineTokenListener {
               problem(
                   context, status, status == 500 ? "Internal server error" : "Request rejected");
             });
-    server =
-        vertx
-            .createHttpServer(
-                new HttpServerOptions()
-                    .setHost("0.0.0.0")
-                    .setPort(config.port())
-                    .setSsl(true)
-                    .setEnabledSecureTransportProtocols(Set.of("TLSv1.2", "TLSv1.3"))
-                    .setPemKeyCertOptions(
-                        new PemKeyCertOptions()
-                            .setCertValue(Buffer.buffer(cert))
-                            .setKeyValue(Buffer.buffer(key)))
-                    .setIdleTimeout(10))
-            .requestHandler(router);
+    server = vertx.createHttpServer(options).requestHandler(router);
     server.listen().toCompletionStage().toCompletableFuture().get(15, TimeUnit.SECONDS);
-    LOGGER.info("event=machine_listener_started port={}", config.port());
+    LOGGER.info(
+        "event=machine_listener_started port={} tls={}", config.port(), config.tlsEnabled());
   }
 
   private void issue(RoutingContext context) {

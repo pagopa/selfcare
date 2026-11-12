@@ -16,7 +16,7 @@
 - Validate SAML responses posted to the Assertion Consumer Service (`SAMLServiceImpl`, `util/SamlValidator`).
 - Run the OTP flow (create, verify, resend), send OTP e-mails through OneMail and enforce attempts/daily limits (`OtpFlowServiceImpl`, `OtpNotificationServiceImpl`).
 - Sign the session JWT with the per-tenant private key and `kid` (`JwtServiceImpl`, `conf/TenantSessionKeyProvider`).
-- Issue short-lived `PAGOPA` tokens for a configured IAM UID per tenant through `/token/service` on the opt-in internal TLS listener, after an explicit M2M grant and IAM permission check. CAE network isolation replaces caller credentials/Entra.
+- Issue short-lived `PAGOPA` tokens for a configured IAM UID per tenant through `/token/service` on the opt-in internal listener (HTTPS by default), after an explicit M2M grant and IAM permission check. CAE network isolation replaces caller credentials/Entra.
 - Resolve and enforce the tenant on every login entry point (`filter/TenantResolutionFilter`).
 
 ## Architecture
@@ -68,13 +68,14 @@ sequenceDiagram
 | GET | `/otp/mail-info/{mailRequestId}` | `getOtpMailInfo` (tag `support`) | no |
 | GET | `/otp/info` | OTP info by `userId`/`status` (tag `support`) | no |
 | POST | `/saml/acs` | SAML ACS callback | yes |
-| POST | `/token/service` (internal TLS port 8082 only) | `issueMachineToken` | no |
+| POST | `/token/service` (internal port 8082 only) | `issueMachineToken` | no |
 
 APIM exposure:
 
 - Application API `selc-<env>-api-auth`, base path `auth`, module `infra/resources/_modules/apim_api`, built from `openapi-apim.json`, with tenant enforcement enabled and JWT-based tenant resolution disabled (`infra/resources/auth/dev-ar/auth.tf`).
 - Operations tagged `support` are merged into the external support API (`infra/resources/_modules/apim_external_api/api/selfcare_support_service/v1/openapi_merge/openapi_merge.json`, input `selfcare-auth-ms`).
 - The machine endpoint is absent from the primary listener and its generated specification. Its separate `openapi-m2m.yaml` must never be imported into APIM. Terraform maps its additional TCP port with `external=false`; auth terminates TLS using separate certificate/key secrets.
+- DEV explicitly uses plaintext HTTP (`M2M_TLS_ENABLED=false`), keeps one minimum auth replica, and does not enable CAE peer-to-peer encryption. Its listener is enabled but tenant policies remain empty, denying AR and PNPG issuance. Clients require `selfcare.m2m.allow-insecure-http=true`; UAT/PROD remain unchanged.
 
 ## Data and messaging
 
@@ -119,7 +120,8 @@ stays in secret-backed environment variables. A PNPG entry may declare these
 references with `auth_enabled=false`, without login credentials or resources.
 Signing-key loading is independent of login enablement; user-session generation
 still requires `auth_enabled=true`. M2M issuance additionally requires the global
-listener flag, TLS secrets, per-tenant `m2m.enabled`, UID, IAM base URL, JWT groups
+listener flag, TLS secrets unless HTTP is explicitly selected, per-tenant
+`m2m.enabled`, UID, IAM base URL, JWT groups
 and destination/scope/product grants. Scope maps to an existing IAM permission.
 Auth uses a separate 30-second bootstrap JWT to query IAM and only returns a
 five-minute token after authorization succeeds. Issued tokens remain valid until

@@ -37,18 +37,27 @@ public class MachineTokenClient {
   @Inject
   public MachineTokenClient(
       @ConfigProperty(name = "selfcare.m2m.enabled", defaultValue = "false") boolean enabled,
-      @ConfigProperty(name = "selfcare.m2m.endpoint") Optional<String> endpoint) {
+      @ConfigProperty(name = "selfcare.m2m.endpoint") Optional<String> endpoint,
+      @ConfigProperty(name = "selfcare.m2m.allow-insecure-http", defaultValue = "false")
+          boolean allowInsecureHttp) {
     this.enabled = enabled;
     this.clock = Clock.systemUTC();
     if (enabled) {
-      this.endpoint = requireHttps(endpoint.orElseThrow(
-          () -> new IllegalStateException("M2M endpoint is required")));
+      this.endpoint = requireEndpoint(endpoint.orElseThrow(
+          () -> new IllegalStateException("M2M endpoint is required")), allowInsecureHttp);
+      if ("http".equals(this.endpoint.getScheme())) {
+        LOGGER.warn("event=machine_client_insecure_http_enabled");
+      }
       this.http = HttpClient.newBuilder().connectTimeout(TIMEOUT)
           .followRedirects(HttpClient.Redirect.NEVER).build();
     } else {
       this.endpoint = null;
       this.http = null;
     }
+  }
+
+  public MachineTokenClient(boolean enabled, Optional<String> endpoint) {
+    this(enabled, endpoint, false);
   }
 
   MachineTokenClient(HttpClient http, URI endpoint, Clock clock) {
@@ -129,10 +138,17 @@ public class MachineTokenClient {
   }
 
   static URI requireHttps(String value) {
+    return requireEndpoint(value, false);
+  }
+
+  private static URI requireEndpoint(String value, boolean allowInsecureHttp) {
     URI uri = URI.create(value);
-    if (!"https".equals(uri.getScheme()) || uri.getHost() == null
+    boolean allowedScheme = "https".equals(uri.getScheme())
+        || (allowInsecureHttp && "http".equals(uri.getScheme()));
+    if (!allowedScheme || uri.getHost() == null
         || uri.getUserInfo() != null || uri.getFragment() != null) {
-      throw new IllegalArgumentException("M2M endpoint must be an absolute HTTPS URI");
+      throw new IllegalArgumentException(
+          "M2M endpoint must be an absolute HTTPS URI; HTTP requires explicit opt-in");
     }
     return uri;
   }

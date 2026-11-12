@@ -12,6 +12,9 @@ public interface MachineTokenConfig {
   @WithDefault("8082")
   int port();
 
+  @WithDefault("true")
+  boolean tlsEnabled();
+
   Optional<String> certificatePem();
 
   Optional<String> privateKeyPem();

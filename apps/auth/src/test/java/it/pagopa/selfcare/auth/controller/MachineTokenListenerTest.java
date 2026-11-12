@@ -22,6 +22,7 @@ class MachineTokenListenerTest {
     listener.config = mock(MachineTokenConfig.class);
     listener.mainPort = 8080;
     when(listener.config.enabled()).thenReturn(true);
+    when(listener.config.tlsEnabled()).thenReturn(true);
     when(listener.config.port()).thenReturn(8080);
     assertThrows(IllegalStateException.class, () -> listener.start(null));
     when(listener.config.port()).thenReturn(8082);

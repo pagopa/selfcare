@@ -133,6 +133,25 @@ class MachineTokenClientTest {
             .toCompletableFuture().join());
   }
 
+  @Test
+  void acquiresOverHttpOnlyWithExplicitOptIn() {
+    var endpoint = Optional.of(
+        "http://127.0.0.1:" + server.getAddress().getPort() + "/token/service");
+    assertThrows(IllegalArgumentException.class, () -> new MachineTokenClient(true, endpoint));
+    var insecureClient = new MachineTokenClient(true, endpoint, true);
+    assertEquals("AR-1",
+        insecureClient.token("AR", "user-ms", "user.read").toCompletableFuture().join());
+    assertEquals(1, calls.get());
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = {"ftp://auth/token/service", "http://auth/token/service#fragment",
+      "http://user@auth/token/service"})
+  void httpOptInDoesNotAllowOtherProtocolsOrUnsafeUrls(String endpoint) {
+    assertThrows(IllegalArgumentException.class,
+        () -> new MachineTokenClient(true, Optional.of(endpoint), true));
+  }
+
   private String token(String tenant) {
     return client.token(tenant, "onboarding-functions", "onboarding-functions.invoke")
         .toCompletableFuture().join();
