@@ -4955,6 +4955,15 @@
           },
           "userRequester" : {
             "$ref" : "#/components/schemas/UserRequestDto"
+          },
+          "rtpServiceTypes" : {
+            "type" : "array",
+            "description" : "Required and non-empty when productId is prod-rtp.",
+            "items" : {
+              "type" : "string",
+              "description" : "Required and non-empty when productId is prod-rtp.",
+              "enum" : [ "RTP", "REPOSITORY_CONSULTATION" ]
+            }
           }
         }
       },
