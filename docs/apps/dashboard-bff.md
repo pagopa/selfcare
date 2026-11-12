@@ -124,6 +124,7 @@ mvn test -Dtest=it.pagopa.selfcare.dashboard.integration_test.CucumberSuite -Dsu
 ```
 
 - Cucumber runner `it.pagopa.selfcare.dashboard.integration_test.CucumberSuite`; features `Delegation`, `Document`, `Institution`, `Product`, `Support`, `Token`, `User`, `UserGroup` in `src/test/resources/features/`; the runner starts `apps/dashboard-bff/docker-compose.yml` via Testcontainers (supporting files in `integration-test-config/`).
+- `InstitutionV2ControllerSecurityTest` loads the production `MethodSecurityConfig` and permission evaluator to verify managed-institution access with and without a product filter. Unlike standalone MockMvc controller tests, it enforces `@PreAuthorize`: only `Selc:ViewManagedInstitutions` grants access; `Selc:ViewDelegations` alone does not.
 - CI: `.github/workflows/integration_tests_dashboard_bff.yml`. See [testing](../testing.md).
 
 ## Deployment
