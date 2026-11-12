@@ -10,6 +10,7 @@ import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import it.pagopa.selfcare.onboarding.config.JwtValidationConfig;
 import it.pagopa.selfcare.onboarding.context.TenantContext;
+import it.pagopa.selfcare.tenant.TenantRegistry;
 import jakarta.enterprise.context.ApplicationScoped;
 
 import java.nio.charset.StandardCharsets;
@@ -20,7 +21,6 @@ import java.util.Base64;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -34,10 +34,13 @@ public class HttpJwtValidator {
 
   private final JwtValidationConfig config;
   private final ObjectMapper objectMapper;
+  private final TenantRegistry tenantRegistry;
 
-  public HttpJwtValidator(JwtValidationConfig config, ObjectMapper objectMapper) {
+  public HttpJwtValidator(
+      JwtValidationConfig config, ObjectMapper objectMapper, TenantRegistry tenantRegistry) {
     this.config = config;
     this.objectMapper = objectMapper;
+    this.tenantRegistry = tenantRegistry;
   }
 
   /**
@@ -107,8 +110,9 @@ public class HttpJwtValidator {
       if (config.tenantClaimRequired()) {
         throw new JwtException("Missing tenant_id claim");
       }
-      return Optional.ofNullable(normalize(config.defaultTenant()))
-          .orElseThrow(() -> new IllegalArgumentException("No JWT default tenant configured"));
+      return config.defaultTenant()
+          .map(HttpJwtValidator::normalize)
+          .orElseThrow(() -> new JwtException("No JWT default tenant configured"));
     }
     String claimTenant = normalize(claims.get(TenantContext.TENANT_CLAIM, String.class));
     if (claimTenant == null) {
@@ -159,17 +163,11 @@ public class HttpJwtValidator {
     }
   }
 
+  /** Public key named by {@code <tenant>.jwt.publicKeyEnvVar} of {@code TENANT_REGISTRY_JSON}. */
   private PublicKey verificationKey(String tenant) {
-    JwtValidationConfig.TenantKey tenantKey =
-        config.tenants().entrySet().stream()
-            .filter(entry -> tenant.equals(normalize(entry.getKey())))
-            .map(Map.Entry::getValue)
-            .findFirst()
-            .orElseThrow(() -> new JwtException("No verification key configured for tenant"));
     String publicKey =
-        tenantKey
-            .publicKey()
-            .filter(value -> !value.isBlank())
+        tenantRegistry
+            .jwtPublicKey(tenant)
             .orElseThrow(() -> new JwtException("No verification key configured for tenant"));
     return toPublicKey(publicKey);
   }

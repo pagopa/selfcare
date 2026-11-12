@@ -9,6 +9,7 @@ import io.jsonwebtoken.SignatureAlgorithm;
 import it.pagopa.selfcare.onboarding.config.TokenConfig;
 import it.pagopa.selfcare.onboarding.context.TenantContext;
 import it.pagopa.selfcare.onboarding.service.*;
+import it.pagopa.selfcare.tenant.TenantRegistry;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import java.security.KeyFactory;
@@ -23,7 +24,6 @@ import java.util.Base64;
 import java.util.Date;
 import java.util.UUID;
 import org.bouncycastle.asn1.pkcs.RSAPrivateKey;
-import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.openapi.quarkus.user_registry_json.api.UserApi;
 import org.openapi.quarkus.user_registry_json.model.UserResource;
@@ -36,11 +36,7 @@ public class JwtSessionServiceImpl implements JwtSessionService {
   @Inject TokenConfig tokenConfig;
   @RestClient @Inject UserApi userRegistryApi;
 
-  @ConfigProperty(name = "onboarding-functions.jwt.audience.ar")
-  String audienceAr;
-
-  @ConfigProperty(name = "onboarding-functions.jwt.audience.pnpg")
-  String audiencePnpg;
+  @Inject TenantRegistry tenantRegistry;
 
   private static final String PRIVATE_KEY_HEADER_TEMPLATE = "-----BEGIN %s-----";
   private static final String PRIVATE_KEY_FOOTER_TEMPLATE = "-----END %s-----";
@@ -63,7 +59,7 @@ public class JwtSessionServiceImpl implements JwtSessionService {
           .claim("fiscal_number", userResource.getFiscalCode())
           .claim("name", userResource.getName().getValue())
           .claim("uid", userId)
-          .setAudience(audienceFor(tenant))
+          .setAudience(sessionAudience(tenant))
           .claim(TenantContext.TENANT_CLAIM, tenant)
           .signWith(SignatureAlgorithm.RS256, privateKey)
           .setHeaderParam(JwsHeader.KEY_ID, tokenConfig.kid())
@@ -88,7 +84,7 @@ public class JwtSessionServiceImpl implements JwtSessionService {
           .setExpiration(
               Date.from(new Date().toInstant().plus(Duration.parse(tokenConfig.duration()))))
           .claim("uid", MACHINE_UID)
-          .setAudience(audienceFor(tenant))
+          .setAudience(sessionAudience(tenant))
           .claim(TenantContext.TENANT_CLAIM, tenant)
           .signWith(SignatureAlgorithm.RS256, privateKey)
           .setHeaderParam(JwsHeader.KEY_ID, tokenConfig.kid())
@@ -98,10 +94,6 @@ public class JwtSessionServiceImpl implements JwtSessionService {
       logger.error("Impossible to create machine jwt token. Error: {}", e.getMessage(), e);
       return null;
     }
-  }
-
-  private String audienceFor(String tenant) {
-    return "PNPG".equals(tenant) ? audiencePnpg : audienceAr;
   }
 
   private PrivateKey getPrivateKey(String signingKey)
@@ -137,5 +129,13 @@ public class JwtSessionServiceImpl implements JwtSessionService {
 
     KeyFactory keyFactory = KeyFactory.getInstance("RSA");
     return keyFactory.generatePrivate(keySpec);
+  }
+
+  /** A tenant without {@code jwt.session.audience} is rejected: no fallback to another tenant. */
+  private String sessionAudience(String tenant) {
+    return tenantRegistry
+        .jwtSessionAudience(tenant)
+        .orElseThrow(
+            () -> new IllegalStateException("No JWT session audience configured for tenant " + tenant));
   }
 }
