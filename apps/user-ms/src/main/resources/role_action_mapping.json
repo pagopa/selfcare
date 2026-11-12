@@ -50,6 +50,9 @@
       "Selc:UpdateProductUsers",
       "Selc:DeleteProductUsers",
       "Selc:ListProductUsers",
+      "Selc:ManageProductGroups",
+      "Selc:ListAllProductGroups",
+      "Selc:ListProductGroups",
       "Selc:ViewInstitutionData"
     ],
     "prod-pn": [
@@ -430,6 +433,9 @@
       "Selc:UpdateProductUsers",
       "Selc:DeleteProductUsers",
       "Selc:ListProductUsers",
+      "Selc:ManageProductGroups",
+      "Selc:ListAllProductGroups",
+      "Selc:ListProductGroups",
       "Selc:ViewInstitutionData"
     ],
     "prod-pn": [
@@ -810,6 +816,9 @@
       "Selc:UpdateProductUsers",
       "Selc:DeleteProductUsers",
       "Selc:ListProductUsers",
+      "Selc:ManageProductGroups",
+      "Selc:ListAllProductGroups",
+      "Selc:ListProductGroups",
       "Selc:ViewInstitutionData"
     ],
     "prod-pn": [
@@ -1177,6 +1186,9 @@
       "Selc:UpdateProductUsers",
       "Selc:DeleteProductUsers",
       "Selc:ListProductUsers",
+      "Selc:ManageProductGroups",
+      "Selc:ListAllProductGroups",
+      "Selc:ListProductGroups",
       "Selc:ViewInstitutionData"
     ],
     "default": [
