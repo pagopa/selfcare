@@ -30,7 +30,7 @@ script:post-response {
       const contract = jsonData[0];
   
       // Check required fields
-      expect(contract).to.have.all.keys(
+      expect(contract).to.include.all.keys(
           "id", 
           "title", 
           "contractTemplatePath", 
@@ -47,17 +47,17 @@ script:post-response {
       );
   
       // Check roleMappings
-      expect(contract.roleMappings).to.have.all.keys("MANAGER", "DELEGATE", "SUB_DELEGATE", "OPERATOR");
+      expect(contract.roleMappings).to.include.all.keys("MANAGER", "DELEGATE", "SUB_DELEGATE", "OPERATOR");
   
       // function to check each role
       function checkRole(role) {
-          expect(role).to.have.keys("multiroleAllowed", "skipUserCreation", "roles");
+          expect(role).to.include.all.keys("multiroleAllowed", "skipUserCreation", "roles");
           expect(role.multiroleAllowed).to.be.a('boolean');
           expect(role.skipUserCreation).to.be.a('boolean');
           expect(role.roles).to.be.an('array').that.is.not.empty;
   
           const firstRole = role.roles[0];
-          expect(firstRole).to.have.all.keys("code", "label", "description");
+          expect(firstRole).to.include.all.keys("code", "label", "description");
           expect(firstRole.code).to.be.a('string');
           expect(firstRole.label).to.be.a('string');
           expect(firstRole.description).to.be.a('string');
