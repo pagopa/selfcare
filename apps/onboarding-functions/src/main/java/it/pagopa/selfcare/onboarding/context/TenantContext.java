@@ -20,6 +20,7 @@ public final class TenantContext {
     public static final String TENANT_HEADER = "X-Tenant-Id";
     public static final String TENANT_CLAIM = "tenant_id";
 
+    private static final String TENANT_REQUIRED = "Tenant context is required";
     private static final ThreadLocal<String> CURRENT_TENANT = new ThreadLocal<>();
 
     private TenantContext() {}
@@ -41,7 +42,11 @@ public final class TenantContext {
     }
 
     public static Scope open(HttpRequestMessage<?> request, ExecutionContext context) {
-        String tenant = resolve(tenantHeader(request));
+        String header = tenantHeader(request);
+        if (header == null) {
+            throw new IllegalArgumentException(TENANT_REQUIRED);
+        }
+        String tenant = resolve(header);
         context.getLogger().info(() -> "Function request tenant=" + tenant);
 
         return open(tenant);
@@ -61,7 +66,7 @@ public final class TenantContext {
     public static String requiredTenant() {
         String tenant = currentTenant();
         if (tenant == null || tenant.isBlank()) {
-            throw new IllegalArgumentException("Tenant context is required");
+            throw new IllegalArgumentException(TENANT_REQUIRED);
         }
         return tenant;
     }
@@ -73,7 +78,7 @@ public final class TenantContext {
      */
     public static String resolve(String tenant) {
         if (tenant == null || tenant.isBlank()) {
-            throw new IllegalArgumentException("Tenant context is required");
+            throw new IllegalArgumentException(TENANT_REQUIRED);
         }
         TenantRegistry registry = registry();
         String canonicalTenant = registry.normalizeTenantId(tenant);
