@@ -74,8 +74,7 @@ mvn --projects :selfcare-sdk-tenant --also-make-dependents clean package -DskipT
 ```
 
 Released to GitHub Packages (`https://maven.pkg.github.com/pagopa/selfcare`, from the parent POM) by
-`.github/workflows/release-sdk.yml` and `.github/workflows/release_sdk_pom.yml`: both run on push to `main`
-touching security/tenant/tenant-mongodb and on `workflow_dispatch` with a `module` input (`all` by default),
+`.github/workflows/release-sdk.yml`: run via `workflow_dispatch` with a `module` input (`all` by default),
 building with `mvn --projects :<module> --also-make clean install` and deploying with `mvn deploy -f libs/<module>/pom.xml`.
 PR checks: `.github/workflows/pr_libs.yml` (code review for `libs/**`).
 

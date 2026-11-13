@@ -1,0 +1,76 @@
+openapi: 3.0.3
+info:
+  title: Auth internal machine token API
+  version: 0.1.0
+  description: |
+    Dedicated internal listener, default port 8082, reachable only inside the CAE.
+    HTTPS is the application default. DEV/UAT/PROD Terraform explicitly selects
+    plaintext HTTP without changing CAE peer-to-peer encryption; the SDK also
+    requires explicit HTTP opt-in.
+    Never import this specification into APIM or expose it on the primary ingress.
+    No caller credentials are accepted or required: all reachable workloads share
+    the configured tenant identity. IAM permission is checked before issuance.
+paths:
+  /token/service:
+    post:
+      operationId: issueMachineToken
+      summary: Issue an internal IAM user token
+      description: |
+        Returns a short-lived PAGOPA token for the server-configured tenant UID.
+        Destination and scope must match a tenant grant. IAM must authorize that
+        UID for the scope and configured product. Legacy receivers may assign
+        SUPPORT and do not necessarily enforce token scopes.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [tenantId, audience, scope]
+              properties:
+                tenantId:
+                  type: string
+                  enum: [AR, PNPG]
+                audience:
+                  type: string
+                  pattern: '^[a-z][a-z0-9-]{0,63}$'
+                  description: Issuance destination, not the JWT session audience.
+                scope:
+                  type: string
+                  pattern: '^[a-z][a-z0-9.:-]{0,127}$'
+                  description: Permission checked against IAM for the configured product.
+      responses:
+        '200':
+          description: Token issued; Cache-Control no-store and Pragma no-cache.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [access_token, token_type, expires_in, scope]
+                properties:
+                  access_token:
+                    type: string
+                  token_type:
+                    type: string
+                    enum: [Bearer]
+                  expires_in:
+                    type: integer
+                    minimum: 60
+                    maximum: 900
+                  scope:
+                    type: string
+        '400':
+          description: Invalid JSON, request fields or unknown tenant.
+        '403':
+          description: Tenant/grant disabled or IAM permission denied.
+        '404':
+          description: Unknown route; the listener is not started when globally disabled.
+        '413':
+          description: Request exceeds 8192 bytes.
+        '415':
+          description: Unsupported content type.
+        '500':
+          description: Internal error; no token returned.
+        '503':
+          description: IAM unavailable or invalid IAM response; no token returned.

@@ -13,6 +13,8 @@ module "local" {
   private_dns_name_domain        = "mangopond-2a5d4d65.westeurope.azurecontainerapps.io"
   container_app_environment_name = "selc-u-cae-002"
   ca_resource_group_name         = "selc-u-container-app-002-rg"
+  # Keep the additional TCP listener available independently of primary HTTP traffic.
+  container_app_min_replicas = 1
 }
 
 ###############################################################################
@@ -122,7 +124,35 @@ module "collection_auth_otp_flows" {
 ###############################################################################
 
 locals {
+  m2m_enabled = true
+  m2m_tenants = {
+    AR = {
+      enabled   = false
+      uidEnvVar = "TENANT_AR_M2M_IAM_UID"
+    }
+    PNPG = {
+      enabled   = false
+      uidEnvVar = "TENANT_PNPG_M2M_IAM_UID"
+    }
+  }
+  m2m_secret_names = {
+    "TENANT_AR_M2M_IAM_UID"   = "auth-m2m-iam-uid-ar"
+    "TENANT_PNPG_M2M_IAM_UID" = "auth-m2m-iam-uid-pnpg"
+  }
+
   app_settings_auth_ms = [
+    {
+      name  = "M2M_ISSUER_ENABLED"
+      value = tostring(local.m2m_enabled)
+    },
+    {
+      name  = "M2M_INTERNAL_PORT"
+      value = "8082"
+    },
+    {
+      name  = "M2M_TLS_ENABLED"
+      value = "false"
+    },
     {
       name  = "JAVA_TOOL_OPTIONS"
       value = "-javaagent:applicationinsights-agent.jar"
@@ -141,7 +171,8 @@ locals {
             database               = "selcAuth"
             connectionStringEnvVar = "MONGODB_CONNECTION_STRING_AR"
           } : null
-          }, tenant.auth_enabled ? {
+          m2m = try(local.m2m_tenants[tenant_id], null)
+          }, tenant.auth_enabled || try(local.m2m_tenants[tenant_id].enabled, false) ? {
           jwt = {
             publicKeyEnvVar = "JWT_PUBLIC_KEY_${tenant_id}"
             session = {
@@ -251,7 +282,8 @@ locals {
 }
 
 module "container_app_auth_ms" {
-  source = "../../_modules/container_app_microservice"
+  source             = "../../_modules/container_app_microservice"
+  internal_tcp_ports = [8082]
 
   env_short                      = module.local.config.env_short
   resource_group_name            = module.local.config.ca_resource_group_name
@@ -261,7 +293,7 @@ module "container_app_auth_ms" {
   image_name                     = "selfcare-auth-ms"
   image_tag                      = var.image_tag
   app_settings                   = local.app_settings_auth_ms
-  secrets_names                  = local.secrets_names_auth_ms
+  secrets_names                  = merge(local.secrets_names_auth_ms, local.m2m_secret_names)
 
   key_vault_resource_group_name = module.local.config.key_vault_resource_group_name
   key_vault_name                = module.local.config.key_vault_name

@@ -192,6 +192,34 @@ resource "azurerm_container_app" "container_app" {
   }
 }
 
+# AzureRM does not expose additionalPortMappings; keep ownership of this property in AzAPI.
+resource "azapi_update_resource" "internal_tcp_ingress" {
+  count = var.internal_tcp_ports != null ? 1 : 0
+
+  type        = "Microsoft.App/containerApps@2024-03-01"
+  resource_id = azurerm_container_app.container_app.id
+  body = {
+    properties = {
+      configuration = {
+        ingress = {
+          additionalPortMappings = [
+            for port in sort([for value in var.internal_tcp_ports : tostring(value)]) : {
+              external    = false
+              exposedPort = tonumber(port)
+              targetPort  = tonumber(port)
+            }
+          ]
+        }
+      }
+    }
+  }
+  response_export_values = []
+
+  lifecycle {
+    replace_triggered_by = [azurerm_container_app.container_app]
+  }
+}
+
 resource "azurerm_monitor_metric_alert" "container_restart" {
   count = local.restart_alert_enabled ? 1 : 0
 

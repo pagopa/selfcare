@@ -35,8 +35,7 @@ class TenantSessionKeyProviderTest {
     }
     privateKeyPem = properties.getProperty("jwt.session.private.key");
 
-    when(tenantRegistry.enabledAuthenticationTenants())
-        .thenReturn(List.of(tenantWithSigningReferences("AR")));
+    when(tenantRegistry.signingTenants()).thenReturn(List.of(tenantWithSigningReferences("AR")));
 
     provider = new TenantSessionKeyProvider();
     provider.tenantRegistry = tenantRegistry;
@@ -115,10 +114,9 @@ class TenantSessionKeyProviderTest {
 
   @Test
   void loadSigningKeysWithoutCrossTenantFallback() {
-    when(tenantRegistry.enabledAuthenticationTenants())
+    when(tenantRegistry.signingTenants())
         .thenReturn(
-            List.of(
-                tenantWithSigningReferences("AR"), tenantWithSigningReferences("PNPG")));
+            List.of(tenantWithSigningReferences("AR"), tenantWithSigningReferences("PNPG")));
     when(config.getOptionalValue("TENANT_AR_JWT_SESSION_PRIVATE_KEY", String.class))
         .thenReturn(Optional.of(privateKeyPem));
     when(config.getOptionalValue("TENANT_AR_JWT_SESSION_KEY_ID", String.class))
@@ -138,15 +136,14 @@ class TenantSessionKeyProviderTest {
 
   @Test
   void failStartupWhenTenantRegistryDoesNotConfigureSessionSigningReferences() {
-    when(tenantRegistry.enabledAuthenticationTenants())
-        .thenReturn(List.of(tenantWithoutSigningReferences("AR")));
+    when(tenantRegistry.signingTenants()).thenReturn(List.of(tenantWithoutSigningReferences("AR")));
 
     assertThrows(IllegalStateException.class, provider::initialize);
   }
 
   @Test
-  void initializeSupportsNoEnabledAuthenticationTenants() {
-    when(tenantRegistry.enabledAuthenticationTenants()).thenReturn(List.of());
+  void initializeSupportsNoSigningTenants() {
+    when(tenantRegistry.signingTenants()).thenReturn(List.of());
 
     provider.initialize();
 
@@ -172,7 +169,6 @@ class TenantSessionKeyProviderTest {
 
   private TenantRegistry.Tenant tenantWithoutSigningReferences(String tenantId) {
     return new TenantRegistry.Tenant(
-        tenantId,
-        new TenantDefinition(null, null, List.of(), TenantRegistry.ONE_IDENTITY, true));
+        tenantId, new TenantDefinition(null, null, List.of(), TenantRegistry.ONE_IDENTITY, true));
   }
 }

@@ -126,6 +126,19 @@ variable "port" {
   description = "Container binding port"
 }
 
+variable "internal_tcp_ports" {
+  description = "Additional CAE-only TCP ports. Null leaves them unmanaged; an empty set clears previously managed mappings."
+  type        = set(number)
+  default     = null
+  validation {
+    condition = var.internal_tcp_ports == null ? true : length(var.internal_tcp_ports) <= 5 && alltrue([
+      for port in var.internal_tcp_ports :
+      port == floor(port) && port > 0 && port <= 65535 && !contains([80, 443, 8080, 36985], port)
+    ])
+    error_message = "Use at most five distinct integer ports, excluding the primary and reserved ports."
+  }
+}
+
 variable "workload_profile_name" {
   type        = string
   description = "Workload Profile name to use"
