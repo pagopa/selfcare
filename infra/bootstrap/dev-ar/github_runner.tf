@@ -9,7 +9,6 @@ module "github_runner" {
   key_vault = {
     name                = "${local.project}-kv"
     resource_group_name = "${local.project}-sec-rg"
-    pat_secret_name     = "github-runner-pat"
   }
 
   networking = {
