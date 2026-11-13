@@ -49,6 +49,7 @@
 | <a name="module_apim_product_io_premium"></a> [apim\_product\_io\_premium](#module\_apim\_product\_io\_premium) | github.com/pagopa/terraform-azurerm-v4.git//api_management_product | v10.9.0 |
 | <a name="module_apim_product_io_sign"></a> [apim\_product\_io\_sign](#module\_apim\_product\_io\_sign) | github.com/pagopa/terraform-azurerm-v4.git//api_management_product | v10.9.0 |
 | <a name="module_apim_product_pagopa"></a> [apim\_product\_pagopa](#module\_apim\_product\_pagopa) | github.com/pagopa/terraform-azurerm-v4.git//api_management_product | v10.9.0 |
+| <a name="module_apim_product_pagopa_pt"></a> [apim\_product\_pagopa\_pt](#module\_apim\_product\_pagopa\_pt) | github.com/pagopa/terraform-azurerm-v4.git//api_management_product | v10.9.0 |
 | <a name="module_apim_product_pn"></a> [apim\_product\_pn](#module\_apim\_product\_pn) | github.com/pagopa/terraform-azurerm-v4.git//api_management_product | v10.9.0 |
 | <a name="module_apim_product_pn_cert"></a> [apim\_product\_pn\_cert](#module\_apim\_product\_pn\_cert) | github.com/pagopa/terraform-azurerm-v4.git//api_management_product | v10.9.0 |
 | <a name="module_apim_product_pn_coll"></a> [apim\_product\_pn\_coll](#module\_apim\_product\_pn\_coll) | github.com/pagopa/terraform-azurerm-v4.git//api_management_product | v10.9.0 |
