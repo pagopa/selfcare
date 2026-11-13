@@ -119,11 +119,12 @@ mvn -f apps/dashboard-bff/pom.xml clean package     # build (generates clients f
 mvn -f apps/dashboard-bff/pom.xml test              # unit tests
 # regenerate src/main/resources/swagger/api-docs.json
 mvn -f apps/dashboard-bff/pom.xml test -Dtest=SwaggerConfigTest -Dsurefire.failIfNoSpecifiedTests=false
-# Cucumber (needs Docker; as in CI, from the repo root)
-mvn test -Dtest=it.pagopa.selfcare.dashboard.integration_test.CucumberSuite -Dsurefire.failIfNoSpecifiedTests=false
+# Cucumber (needs Docker; from the repo root)
+mvn -f apps/dashboard-bff/pom.xml test -Dtest=it.pagopa.selfcare.dashboard.integration_test.CucumberSuite
 ```
 
 - Cucumber runner `it.pagopa.selfcare.dashboard.integration_test.CucumberSuite`; features `Delegation`, `Document`, `Institution`, `Product`, `Support`, `Token`, `User`, `UserGroup` in `src/test/resources/features/`; the runner starts `apps/dashboard-bff/docker-compose.yml` via Testcontainers (supporting files in `integration-test-config/`).
+- The institution-ms test environment (`src/test/resources/institutionenv`) supplies dummy AR credentials for User Registry, OneMail and PEC, required by tenant registry validation at startup.
 - `InstitutionV2ControllerSecurityTest` loads the production `MethodSecurityConfig` and permission evaluator to verify managed-institution access with and without a product filter. Unlike standalone MockMvc controller tests, it enforces `@PreAuthorize`: only `Selc:ViewManagedInstitutions` grants access; `Selc:ViewDelegations` alone does not.
 - CI: `.github/workflows/integration_tests_dashboard_bff.yml`. See [testing](../testing.md).
 
