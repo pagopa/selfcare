@@ -41,6 +41,20 @@
       "Selc:ViewContract",
       "Selc:UpdateGeoTaxonomy"
     ],
+    "prod-pagopa-pt": [
+      "Selc:ViewBilling",
+      "Selc:ListActiveProducts",
+      "Selc:AccessProductBackoffice",
+      "Selc:ViewManagedInstitutions",
+      "Selc:CreateProductUsers",
+      "Selc:UpdateProductUsers",
+      "Selc:DeleteProductUsers",
+      "Selc:ListProductUsers",
+      "Selc:ManageProductGroups",
+      "Selc:ListAllProductGroups",
+      "Selc:ListProductGroups",
+      "Selc:ViewInstitutionData"
+    ],
     "prod-pn": [
       "Selc:UploadLogo",
       "Selc:ViewBilling",
@@ -409,6 +423,20 @@
       "Selc:ViewInstitutionData",
       "Selc:ViewContract",
       "Selc:UpdateGeoTaxonomy"
+    ],
+    "prod-pagopa-pt": [
+      "Selc:ViewBilling",
+      "Selc:ListActiveProducts",
+      "Selc:AccessProductBackoffice",
+      "Selc:ViewManagedInstitutions",
+      "Selc:CreateProductUsers",
+      "Selc:UpdateProductUsers",
+      "Selc:DeleteProductUsers",
+      "Selc:ListProductUsers",
+      "Selc:ManageProductGroups",
+      "Selc:ListAllProductGroups",
+      "Selc:ListProductGroups",
+      "Selc:ViewInstitutionData"
     ],
     "prod-pn": [
       "Selc:UploadLogo",
@@ -779,6 +807,20 @@
       "Selc:ViewContract",
       "Selc:UpdateGeoTaxonomy"
     ],
+    "prod-pagopa-pt": [
+      "Selc:ViewBilling",
+      "Selc:ListActiveProducts",
+      "Selc:AccessProductBackoffice",
+      "Selc:ViewManagedInstitutions",
+      "Selc:CreateProductUsers",
+      "Selc:UpdateProductUsers",
+      "Selc:DeleteProductUsers",
+      "Selc:ListProductUsers",
+      "Selc:ManageProductGroups",
+      "Selc:ListAllProductGroups",
+      "Selc:ListProductGroups",
+      "Selc:ViewInstitutionData"
+    ],
     "prod-pn": [
       "Selc:UploadLogo",
       "Selc:ViewBilling",
@@ -1134,6 +1176,20 @@
       "Selc:ListProductGroups",
       "Selc:ViewInstitutionData",
       "Selc:UpdateGeoTaxonomy"
+    ],
+    "prod-pagopa-pt": [
+      "Selc:ViewBilling",
+      "Selc:ListActiveProducts",
+      "Selc:AccessProductBackoffice",
+      "Selc:ViewManagedInstitutions",
+      "Selc:CreateProductUsers",
+      "Selc:UpdateProductUsers",
+      "Selc:DeleteProductUsers",
+      "Selc:ListProductUsers",
+      "Selc:ManageProductGroups",
+      "Selc:ListAllProductGroups",
+      "Selc:ListProductGroups",
+      "Selc:ViewInstitutionData"
     ],
     "default": [
       "Selc:UploadLogo",
