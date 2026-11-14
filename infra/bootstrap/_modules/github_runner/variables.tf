@@ -32,13 +32,6 @@ variable "location" {
   default = "westeurope"
 }
 
-variable "key_vault" {
-  type = object({
-    name                = string
-    resource_group_name = string
-  })
-}
-
 variable "networking" {
   type = object({
     vnet_resource_group_name = string

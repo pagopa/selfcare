@@ -28,9 +28,9 @@ module "container_app_job" {
   }
 
   key_vault = {
-    name                = data.azurerm_key_vault.key_vault_common.name
-    resource_group_name = data.azurerm_key_vault.key_vault_common.resource_group_name
-    use_rbac            = data.azurerm_key_vault.key_vault_common.enable_rbac_authorization
+    name                = data.azurerm_key_vault.project.name
+    resource_group_name = data.azurerm_key_vault.project.resource_group_name
+    use_rbac            = true
   }
 
   use_github_app = true

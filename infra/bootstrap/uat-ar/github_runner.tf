@@ -6,11 +6,6 @@ module "github_runner" {
   location  = local.location
   tags      = local.tags
 
-  key_vault = {
-    name                = "${local.project}-kv"
-    resource_group_name = "${local.project}-sec-rg"
-  }
-
   networking = {
     vnet_resource_group_name = "${local.project}-vnet-rg"
     vnet_name                = "${local.project}-vnet"

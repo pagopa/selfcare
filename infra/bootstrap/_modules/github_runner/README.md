@@ -3,7 +3,11 @@
 <!-- BEGIN_TF_DOCS -->
 ## Requirements
 
-No requirements.
+| Name | Version |
+| ---- | ------- |
+| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.15.0 |
+| <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) | ~> 4.64 |
+| <a name="requirement_dx"></a> [dx](#requirement\_dx) | ~> 0.12 |
 
 ## Providers
 
@@ -27,7 +31,7 @@ No requirements.
 | [azurerm_management_lock.lock_cae](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/management_lock) | resource |
 | [azurerm_resource_group.rg_github_runner](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/resource_group) | resource |
 | [azurerm_user_assigned_identity.cae_identity](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/user_assigned_identity) | resource |
-| [azurerm_key_vault.key_vault_common](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/key_vault) | data source |
+| [azurerm_key_vault.project](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/key_vault) | data source |
 | [azurerm_log_analytics_workspace.law](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/log_analytics_workspace) | data source |
 
 ## Inputs
@@ -36,7 +40,6 @@ No requirements.
 | ---- | ----------- | ---- | ------- | :------: |
 | <a name="input_container"></a> [container](#input\_container) | Job Container configuration | <pre>object({<br/>    cpu    = number<br/>    memory = string<br/>    image  = string<br/>  })</pre> | <pre>{<br/>  "cpu": 0.5,<br/>  "image": "ghcr.io/pagopa/github-self-hosted-runner-azure:latest",<br/>  "memory": "1Gi"<br/>}</pre> | no |
 | <a name="input_env_short"></a> [env\_short](#input\_env\_short) | n/a | `string` | n/a | yes |
-| <a name="input_key_vault"></a> [key\_vault](#input\_key\_vault) | n/a | <pre>object({<br/>    name                = string<br/>    resource_group_name = string<br/>  })</pre> | n/a | yes |
 | <a name="input_law"></a> [law](#input\_law) | n/a | <pre>object({<br/>    name                = string<br/>    resource_group_name = string<br/>  })</pre> | n/a | yes |
 | <a name="input_location"></a> [location](#input\_location) | n/a | `string` | `"westeurope"` | no |
 | <a name="input_networking"></a> [networking](#input\_networking) | n/a | <pre>object({<br/>    vnet_resource_group_name = string<br/>    vnet_name                = string<br/>    subnet_cidr_block        = string<br/>  })</pre> | n/a | yes |
@@ -51,6 +54,7 @@ No requirements.
 | <a name="output_ca_job_name"></a> [ca\_job\_name](#output\_ca\_job\_name) | Container App job name |
 | <a name="output_cae_id"></a> [cae\_id](#output\_cae\_id) | Container App Environment id |
 | <a name="output_cae_name"></a> [cae\_name](#output\_cae\_name) | Container App Environment name |
+| <a name="output_key_vault"></a> [key\_vault](#output\_key\_vault) | Project RBAC Key Vault used by the runner, populated outside Terraform |
 | <a name="output_subnet_id"></a> [subnet\_id](#output\_subnet\_id) | Subnet id |
 | <a name="output_subnet_name"></a> [subnet\_name](#output\_subnet\_name) | Subnet name |
 | <a name="output_user_assigned_identity"></a> [user\_assigned\_identity](#output\_user\_assigned\_identity) | Details about the user-assigned managed identity created to manage roles of the Container Apps of Selfcare Environment |
