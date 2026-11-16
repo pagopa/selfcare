@@ -19,13 +19,23 @@ output "cae_name" {
 }
 
 output "ca_job_id" {
-  value       = module.container_app_job.id
+  value       = module.container_app_job.container_app_job.id
   description = "Container App job id"
 }
 
 output "ca_job_name" {
-  value       = module.container_app_job.name
+  value       = module.container_app_job.container_app_job.name
   description = "Container App job name"
+}
+
+output "key_vault" {
+  value = {
+    id                  = data.azurerm_key_vault.project.id
+    name                = data.azurerm_key_vault.project.name
+    resource_group_name = data.azurerm_key_vault.project.resource_group_name
+    vault_uri           = data.azurerm_key_vault.project.vault_uri
+  }
+  description = "Project RBAC Key Vault used by the runner, populated outside Terraform"
 }
 
 output "user_assigned_identity" {
