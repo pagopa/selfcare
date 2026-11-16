@@ -31,7 +31,10 @@ ephemeral runner authenticate using a GitHub App, not a user PAT.
 
 Before applying, install the App on `pagopa/selfcare` with repository permissions
 **Actions: read** (queue discovery) and **Administration: write** (runner
-registration), and approve any permission changes on the organization's App
+registration) — plus **Contents: write** and **Pull requests: write** when the
+same App is used by workflows that push branches and open PRs (e.g.
+`call_openapi_merge.yml` via `GH_APP_CLIENT_ID` and `GH_APP_KEY` repository
+secrets) — and approve any permission changes on the organization's App
 installation. Populate these secrets outside Terraform in the new AR project RBAC
 Key Vault for each environment:
 
