@@ -28,6 +28,22 @@ variable "tenant_id" {
   description = "Microsoft Entra tenant ID"
 }
 
+variable "adgroup_admin" {
+  type = object({
+    object_id            = string
+    role_definition_name = string
+  })
+  description = "Microsoft Entra admin group and Key Vault RBAC role assigned on the vault"
+}
+
+variable "adgroup_developers" {
+  type = object({
+    object_id            = string
+    role_definition_name = string
+  })
+  description = "Microsoft Entra developers group and Key Vault RBAC role assigned on the vault"
+}
+
 variable "networking" {
   type = object({
     resource_group_name        = string

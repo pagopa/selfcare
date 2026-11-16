@@ -9,6 +9,16 @@ module "key_vault_rbac" {
   tenant_id           = module.key_vault.tenant_id
   tags                = local.tags
 
+  adgroup_admin = {
+    object_id            = module.key_vault.adgroup_admin_id
+    role_definition_name = "Key Vault Secrets Officer"
+  }
+
+  adgroup_developers = {
+    object_id            = module.key_vault.adgroup_developers_id
+    role_definition_name = "Key Vault Secrets User"
+  }
+
   networking = {
     resource_group_name        = module.network.rg_vnet_name
     virtual_network_id         = module.network.vnet_id

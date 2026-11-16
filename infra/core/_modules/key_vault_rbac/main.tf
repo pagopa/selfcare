@@ -29,6 +29,18 @@ resource "azurerm_key_vault" "this" {
   tags = var.tags
 }
 
+resource "azurerm_role_assignment" "admin_secrets" {
+  scope                = azurerm_key_vault.this.id
+  role_definition_name = var.adgroup_admin.role_definition_name
+  principal_id         = var.adgroup_admin.object_id
+}
+
+resource "azurerm_role_assignment" "developers_secrets" {
+  scope                = azurerm_key_vault.this.id
+  role_definition_name = var.adgroup_developers.role_definition_name
+  principal_id         = var.adgroup_developers.object_id
+}
+
 resource "azurerm_private_dns_zone" "key_vault" {
   name                = "privatelink.vaultcore.azure.net"
   resource_group_name = var.networking.resource_group_name
