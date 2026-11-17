@@ -196,6 +196,9 @@ public class OnboardingFunctionStep extends CucumberQuarkusTest {
 
     @Then("there is an active delegation from the aggregate to the aggregator")
     public void verifyAggregateDelegation() {
+        if (mongoClient == null) {
+            mongoClient = IntegrationFunctionProfile.getMongoClientConnection();
+        }
         Document delegation = IntegrationFunctionProfile.getInstitutionDatabase(mongoClient)
                 .getCollection("Delegations")
                 .find(Filters.and(
