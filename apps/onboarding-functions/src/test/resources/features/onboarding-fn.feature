@@ -151,6 +151,15 @@ Feature: Onboarding collection
 #    And the answer should contain "id,purgeHistoryDeleteUri,restartPostUri"
 #    And there is a document for onboarding with status "FAILED"
 
+  Scenario: Verify correct invocation of the StartOnboardingOrchestration for workflow IMPORT_AGGREGATION request
+    Given Preparing the invocation of "StartOnboardingOrchestration" HTTP call with onboardingId "3d8e6b10-2a4f-4c7e-9b51-8f0a1c2d3e01"
+    When I send a GET request with given onboardingId
+    Then the response should have status code 202
+    And the answer should contain "id,purgeHistoryDeleteUri,restartPostUri"
+    And there is a document for onboarding with status "COMPLETED"
+    And the aggregate onboarding with taxCode "90000000029" has status "COMPLETED"
+    And there is an active delegation from the aggregate to the aggregator
+
   Scenario: Verify correct invocation of the StartOnboardingOrchestration for correct workflow USERS_PG request
     Given Preparing the invocation of "StartOnboardingOrchestration" HTTP call with onboardingId "89ad7142-24bb-48ad-8504-9c9231137e102"
     When I send a GET request with given onboardingId
