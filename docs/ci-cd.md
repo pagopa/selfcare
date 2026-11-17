@@ -128,7 +128,7 @@ sequenceDiagram
 
 ## Secrets and variables (names only)
 
-`ARM_CLIENT_ID`, `ARM_SUBSCRIPTION_ID`, `ARM_TENANT_ID` (OIDC login), `GITHUB_TOKEN`, `GH_PAT_VARIABLES` (repo variables, merge PRs,
+`ARM_CLIENT_ID`, `ARM_SUBSCRIPTION_ID`, `ARM_TENANT_ID` (OIDC login), `GITHUB_TOKEN`, `GH_APP_CLIENT_ID` and `GH_APP_KEY` (GitHub App token for automated PRs such as `call_openapi_merge.yml`), `GH_PAT_VARIABLES` (repo variables,
 cross-repo dispatch), `SONAR_TOKEN`, `INTEGRATION_ENVIRONMENT_BRUNO` (Bruno environment), repo variables `<DOMAIN>_CURRENT_<ENV>_VERSION`.
 Frontend build variables live in `.github/workflows/env/fe_<env>[_pnpg].env`.
 
