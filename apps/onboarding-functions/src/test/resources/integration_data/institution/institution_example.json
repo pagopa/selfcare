@@ -196,5 +196,50 @@
     "county": "RM",
     "country": "IT",
     "imported": false
+  },
+  {
+    "id": "7c3f1a52-6d2e-4b8a-9f10-3e5d7a9b2c43",
+    "origin": "IPA",
+    "originId": "c_inc1",
+    "description": "Comune Aggregatore Incremento",
+    "institutionType": "PA",
+    "digitalAddress": "aggregatore-incremento@test.it",
+    "address": "Via Aggregatore, 3",
+    "zipCode": "00100",
+    "taxCode": "90000000037",
+    "city": "Roma",
+    "county": "RM",
+    "country": "IT",
+    "imported": false
+  },
+  {
+    "id": "7c3f1a52-6d2e-4b8a-9f10-3e5d7a9b2c44",
+    "origin": "IPA",
+    "originId": "c_inc2",
+    "description": "Comune Nuovo Aggregato",
+    "institutionType": "PA",
+    "digitalAddress": "nuovo-aggregato@test.it",
+    "address": "Via Aggregato, 4",
+    "zipCode": "00100",
+    "taxCode": "90000000045",
+    "city": "Roma",
+    "county": "RM",
+    "country": "IT",
+    "imported": false
+  },
+  {
+    "id": "7c3f1a52-6d2e-4b8a-9f10-3e5d7a9b2c45",
+    "origin": "IPA",
+    "originId": "c_inc3",
+    "description": "Comune Gia Aggregato",
+    "institutionType": "PA",
+    "digitalAddress": "gia-aggregato@test.it",
+    "address": "Via Aggregato, 5",
+    "zipCode": "00100",
+    "taxCode": "90000000052",
+    "city": "Roma",
+    "county": "RM",
+    "country": "IT",
+    "imported": false
   }
 ]
