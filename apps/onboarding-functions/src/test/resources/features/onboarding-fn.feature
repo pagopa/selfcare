@@ -160,6 +160,19 @@ Feature: Onboarding collection
     And the aggregate onboarding with taxCode "90000000029" has status "COMPLETED"
     And there is an active delegation from the aggregate to the aggregator
 
+  Scenario: Increment an aggregator with a new and an already delegated institution
+    Given Preparing the invocation of "StartOnboardingOrchestration" HTTP call with onboardingId "a14d68d1-1b61-4ea6-9ea1-716ea97f6866"
+    And the aggregate with taxCode "90000000052" already has an active delegation
+    When I send a GET request with given onboardingId
+    Then the response should have status code 202
+    And the answer should contain "id,purgeHistoryDeleteUri,restartPostUri"
+    And there is a document for onboarding with status "COMPLETED"
+    And the onboarding has an activation date
+    And the aggregator user is active for aggregates
+    And the aggregate onboarding with taxCode "90000000045" has status "COMPLETED"
+    And there is an active delegation from the aggregate to the aggregator
+    And the aggregate with taxCode "90000000052" has no new onboarding or delegation
+
   Scenario: Verify correct invocation of the StartOnboardingOrchestration for correct workflow USERS_PG request
     Given Preparing the invocation of "StartOnboardingOrchestration" HTTP call with onboardingId "89ad7142-24bb-48ad-8504-9c9231137e102"
     When I send a GET request with given onboardingId
