@@ -166,5 +166,35 @@
     ],
     "rea": "REA-13",
     "imported": false
+  },
+  {
+    "id": "7c3f1a52-6d2e-4b8a-9f10-3e5d7a9b2c41",
+    "origin": "IPA",
+    "originId": "c_agg1",
+    "description": "Comune Aggregatore",
+    "institutionType": "PA",
+    "digitalAddress": "aggregatore@test.it",
+    "address": "Via Aggregatore, 1",
+    "zipCode": "00100",
+    "taxCode": "90000000011",
+    "city": "Roma",
+    "county": "RM",
+    "country": "IT",
+    "imported": false
+  },
+  {
+    "id": "7c3f1a52-6d2e-4b8a-9f10-3e5d7a9b2c42",
+    "origin": "IPA",
+    "originId": "c_agg2",
+    "description": "Comune Aggregato",
+    "institutionType": "PA",
+    "digitalAddress": "aggregato@test.it",
+    "address": "Via Aggregato, 2",
+    "zipCode": "00100",
+    "taxCode": "90000000029",
+    "city": "Roma",
+    "county": "RM",
+    "country": "IT",
+    "imported": false
   }
 ]

@@ -17,6 +17,7 @@ import io.restassured.response.Response;
 import io.restassured.response.ValidatableResponse;
 import io.restassured.specification.RequestSpecification;
 import it.pagopa.selfcare.onboarding.common.OnboardingStatus;
+import it.pagopa.selfcare.onboarding.common.WorkflowType;
 import it.pagopa.selfcare.onboarding.context.TenantContext;
 import it.pagopa.selfcare.onboarding.entity.Institution;
 import it.pagopa.selfcare.onboarding.entity.Onboarding;
@@ -84,6 +85,7 @@ public class OnboardingFunctionStep extends CucumberQuarkusTest {
     private RequestSpecification request;
     private Response response;
     private Onboarding onboarding;
+    private Onboarding aggregateOnboarding;
 
     @Inject
     IntegrationOnboardingResources integrationOnboardingResources;
@@ -177,6 +179,36 @@ public class OnboardingFunctionStep extends CucumberQuarkusTest {
     @Then("the onboarding {string} has status {string}")
     public void verifyOnboardingStatus(String onboardingId, String status) throws InterruptedException {
         waitForStatus(onboardingId, status);
+    }
+
+    @Then("the aggregate onboarding with taxCode {string} has status {string}")
+    public void verifyAggregateOnboardingStatus(String taxCode, String status) throws InterruptedException {
+        long deadline = System.currentTimeMillis() + STATUS_POLL_TIMEOUT_MS;
+        Onboarding aggregate = findAggregateOnboarding(taxCode);
+        while (aggregate == null && System.currentTimeMillis() < deadline) {
+            Thread.sleep(STATUS_POLL_INTERVAL_MS);
+            aggregate = findAggregateOnboarding(taxCode);
+        }
+        assertNotNull(aggregate, "Aggregate onboarding not found for taxCode " + taxCode);
+        assertEquals(WorkflowType.CONFIRMATION_AGGREGATE, aggregate.getWorkflowType());
+        aggregateOnboarding = waitForStatus(aggregate.getId(), status);
+    }
+
+    @Then("there is an active delegation from the aggregate to the aggregator")
+    public void verifyAggregateDelegation() {
+        Document delegation = IntegrationFunctionProfile.getInstitutionDatabase(mongoClient)
+                .getCollection("Delegations")
+                .find(Filters.and(
+                        Filters.eq("from", aggregateOnboarding.getInstitution().getId()),
+                        Filters.eq("to", aggregateOnboarding.getAggregator().getId()),
+                        Filters.eq("productId", aggregateOnboarding.getProductId()),
+                        Filters.eq("status", "ACTIVE")))
+                .first();
+        assertNotNull(delegation, "Active delegation not found for aggregate onboarding " + aggregateOnboarding.getId());
+    }
+
+    private Onboarding findAggregateOnboarding(String taxCode) {
+        return integrationOperationUtils.findAggregateOnboarding(getOnboardingId(), taxCode);
     }
 
     @Then("the contract of the onboarding {string} has been moved to the deleted storage")
