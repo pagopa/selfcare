@@ -20,6 +20,7 @@ import it.pagopa.selfcare.commons.web.security.JwtAuthenticationToken;
 import it.pagopa.selfcare.onboarding.connector.exceptions.InvalidRequestException;
 import it.pagopa.selfcare.onboarding.connector.model.InstitutionLegalAddressData;
 import it.pagopa.selfcare.onboarding.connector.model.InstitutionOnboardingData;
+import it.pagopa.selfcare.onboarding.connector.model.institutions.InstitutionsSearchResponse;
 import it.pagopa.selfcare.onboarding.connector.model.institutions.MatchInfoResult;
 import it.pagopa.selfcare.onboarding.connector.model.institutions.infocamere.InstitutionInfoIC;
 import it.pagopa.selfcare.onboarding.core.InstitutionService;
@@ -161,6 +162,19 @@ public class InstitutionController {
         log.debug("getGeographicTaxonomiesByTaxCodeAndSubunitCode result = {}", geographicTaxonomies);
         log.trace("getGeographicTaxonomiesByTaxCodeAndSubunitCode end");
         return geographicTaxonomies;
+    }
+
+    @GetMapping(value = "/search")
+    @ResponseStatus(HttpStatus.OK)
+    @Operation(summary = "${swagger.onboarding.institutions.api.search.summary}",
+            description = "${swagger.onboarding.institutions.api.search.description}",
+            operationId = "searchInstitutions")
+    public InstitutionsSearchResponse searchInstitutions(@Parameter(description = "${swagger.onboarding.institutions.model.taxCode}")
+                                                        @RequestParam("taxCode") String taxCode) {
+        if (StringUtils.isBlank(taxCode))
+            throw new InvalidRequestException("taxCode must not be blank");
+
+        return institutionService.searchInstitutions(taxCode);
     }
 
     @GetMapping("")
