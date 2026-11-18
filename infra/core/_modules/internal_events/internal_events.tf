@@ -56,7 +56,7 @@ resource "azurerm_role_assignment" "internal_events_receiver_identity" {
 ## Topics ##
 
 resource "azurerm_servicebus_topic" "internal_events_topic" {
-  for_each     = local.topics
+  for_each = local.topics
 
   name         = each.key
   namespace_id = azurerm_servicebus_namespace.internal_events.id
@@ -65,7 +65,7 @@ resource "azurerm_servicebus_topic" "internal_events_topic" {
 ## Subscriptions ##
 
 resource "azurerm_servicebus_subscription" "internal_events_sub" {
-  for_each           = local.subscriptions
+  for_each = local.subscriptions
 
   name               = each.value.subscription_name
   topic_id           = azurerm_servicebus_topic.internal_events_topic[each.value.topic_name].id
