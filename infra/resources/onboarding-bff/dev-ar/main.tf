@@ -24,7 +24,7 @@ locals {
 
   app_settings_onboarding_bff = [
     { name = "APPLICATIONINSIGHTS_ROLE_NAME", value = "bff-onboarding" },
-    { name = "JAVA_TOOL_OPTIONS", value = "-javaagent:applicationinsights-agent.jar" },
+    { name = "JAVA_TOOL_OPTIONS", value = "-javaagent:applicationinsights-agent.jar -XX:-UseBASE64Intrinsics" },
     { name = "APPLICATIONINSIGHTS_INSTRUMENTATION_LOGGING_LEVEL", value = "OFF" },
     { name = "B4F_ONBOARDING_LOG_LEVEL", value = "DEBUG" },
     { name = "REST_CLIENT_LOGGER_LEVEL", value = "FULL" },
