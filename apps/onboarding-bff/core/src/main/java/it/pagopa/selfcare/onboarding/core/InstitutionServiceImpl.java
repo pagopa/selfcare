@@ -382,6 +382,11 @@ class InstitutionServiceImpl implements InstitutionService {
     }
 
     @Override
+    public InstitutionsSearchResponse searchInstitutions(String taxCode) {
+        return partyConnector.searchInstitutions(taxCode);
+    }
+
+    @Override
     public List<Institution> getActiveOnboarding(String taxCode, String productId, String subUnitCode) {
         log.trace("getActiveOnboarding start");
         log.debug("getActiveOnboarding taxCode = {}, productId = {}", Encode.forJava(taxCode), Encode.forJava(productId));

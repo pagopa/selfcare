@@ -20,6 +20,7 @@ import it.pagopa.selfcare.onboarding.common.InstitutionType;
 import it.pagopa.selfcare.onboarding.connector.model.InstitutionLegalAddressData;
 import it.pagopa.selfcare.onboarding.connector.model.InstitutionOnboardingData;
 import it.pagopa.selfcare.onboarding.connector.model.institutions.InstitutionInfo;
+import it.pagopa.selfcare.onboarding.connector.model.institutions.InstitutionsSearchResponse;
 import it.pagopa.selfcare.onboarding.connector.model.institutions.MatchInfoResult;
 import it.pagopa.selfcare.onboarding.connector.model.institutions.infocamere.BusinessInfoIC;
 import it.pagopa.selfcare.onboarding.connector.model.institutions.infocamere.InstitutionInfoIC;
@@ -28,6 +29,7 @@ import it.pagopa.selfcare.onboarding.connector.model.onboarding.GeographicTaxono
 import it.pagopa.selfcare.onboarding.connector.model.onboarding.OnboardingData;
 import it.pagopa.selfcare.onboarding.core.InstitutionService;
 import it.pagopa.selfcare.onboarding.web.config.WebTestConfig;
+import it.pagopa.selfcare.onboarding.web.handler.OnboardingExceptionHandler;
 import it.pagopa.selfcare.onboarding.web.model.*;
 import it.pagopa.selfcare.onboarding.web.model.mapper.*;
 import java.util.Collections;
@@ -46,7 +48,7 @@ import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 
 @WebMvcTest(value = {InstitutionController.class}, excludeAutoConfiguration = SecurityAutoConfiguration.class)
-@ContextConfiguration(classes = {InstitutionController.class, WebTestConfig.class, OnboardingResourceMapperImpl.class, OnboardingInstitutionInfoMapperImpl.class, GeographicTaxonomyMapperImpl.class, UserResourceMapperImpl.class, InstitutionResourceMapperImpl.class})
+@ContextConfiguration(classes = {InstitutionController.class, WebTestConfig.class, OnboardingResourceMapperImpl.class, OnboardingInstitutionInfoMapperImpl.class, GeographicTaxonomyMapperImpl.class, UserResourceMapperImpl.class, InstitutionResourceMapperImpl.class, OnboardingExceptionHandler.class})
 class InstitutionControllerTest {
 
     private static final String BASE_URL = "/v1/institutions";
@@ -193,6 +195,36 @@ class InstitutionControllerTest {
         assertNotNull(response);
         assertEquals(geographicTaxonomyListMock.get(0).getCode(), response.get(0).getCode());
         assertEquals(geographicTaxonomyListMock.get(0).getDesc(), response.get(0).getDesc());
+    }
+
+    @Test
+    void searchInstitutionsReturnsFullResponse() throws Exception {
+        String responseJson = """
+                {"institutions":[{"id":"institution-id","taxCode":"12345678901",
+                "rea":"REA-123","paymentServiceProvider":{"abiCode":"12345","vatNumberGroup":false},
+                "onboarding":[{"productId":"prod-pagopa","institutionType":"PSP","isPartnerTech":true},
+                {"productId":"prod-io","institutionType":"PA"}],
+                "isTest":true,"imported":false,"delegation":false}]}
+                """;
+        InstitutionsSearchResponse response = objectMapper.readValue(responseJson, InstitutionsSearchResponse.class);
+        when(institutionServiceMock.searchInstitutions("12345678901")).thenReturn(response);
+
+        mvc.perform(MockMvcRequestBuilders.get(BASE_URL + "/search")
+                        .queryParam("taxCode", "12345678901"))
+                .andExpect(status().isOk())
+                .andExpect(content().json(responseJson));
+
+        verify(institutionServiceMock).searchInstitutions("12345678901");
+    }
+
+    @Test
+    void searchInstitutionsRejectsMissingOrBlankTaxCode() throws Exception {
+        mvc.perform(MockMvcRequestBuilders.get(BASE_URL + "/search"))
+                .andExpect(status().isBadRequest());
+        mvc.perform(MockMvcRequestBuilders.get(BASE_URL + "/search").queryParam("taxCode", "  "))
+                .andExpect(status().isBadRequest());
+
+        verifyNoInteractions(institutionServiceMock);
     }
 
 
