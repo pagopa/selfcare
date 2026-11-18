@@ -3,6 +3,7 @@ package it.pagopa.selfcare.onboarding.connector.api;
 import it.pagopa.selfcare.onboarding.connector.model.RelationshipsResponse;
 import it.pagopa.selfcare.onboarding.connector.model.institutions.Institution;
 import it.pagopa.selfcare.onboarding.connector.model.institutions.InstitutionInfo;
+import it.pagopa.selfcare.onboarding.connector.model.institutions.InstitutionsSearchResponse;
 import it.pagopa.selfcare.onboarding.connector.model.institutions.OnboardingResource;
 import it.pagopa.selfcare.onboarding.connector.model.onboarding.OnboardingData;
 import it.pagopa.selfcare.onboarding.connector.model.onboarding.UserInfo;
@@ -22,6 +23,8 @@ public interface PartyConnector {
     Collection<UserInfo> getUsers(String externalInstitutionId, UserInfo.UserInfoFilter userInfoFilter);
 
     List<Institution> getInstitutionsByTaxCodeAndSubunitCode(String taxCode, String subunitCode);
+
+    InstitutionsSearchResponse searchInstitutions(String taxCode);
 
     Institution getInstitutionByExternalId(String externalInstitutionId);
 
