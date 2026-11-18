@@ -199,7 +199,7 @@ locals {
     },
     {
       name  = "JAVA_TOOL_OPTIONS"
-      value = "-javaagent:applicationinsights-agent.jar -XX:MaxRAMPercentage=75.0"
+      value = "-javaagent:applicationinsights-agent.jar -XX:-UseBASE64Intrinsics -XX:MaxRAMPercentage=75.0"
     },
     {
       name  = "APPLICATIONINSIGHTS_INSTRUMENTATION_LOGGING_LEVEL"
