@@ -3,24 +3,22 @@
 <!-- BEGIN_TF_DOCS -->
 ## Requirements
 
-| Name | Version |
-| ---- | ------- |
-| <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) | > 4.0.0 |
-| <a name="requirement_pkcs12"></a> [pkcs12](#requirement\_pkcs12) | 0.2.5 |
+No requirements.
 
 ## Providers
 
 | Name | Version |
 | ---- | ------- |
-| <a name="provider_azurerm"></a> [azurerm](#provider\_azurerm) | 4.72.0 |
-| <a name="provider_null"></a> [null](#provider\_null) | 3.3.0 |
-| <a name="provider_pkcs12"></a> [pkcs12](#provider\_pkcs12) | 0.2.5 |
+| <a name="provider_azurerm"></a> [azurerm](#provider\_azurerm) | n/a |
+| <a name="provider_null"></a> [null](#provider\_null) | n/a |
+| <a name="provider_pkcs12"></a> [pkcs12](#provider\_pkcs12) | n/a |
 
 ## Modules
 
 | Name | Source | Version |
 | ---- | ------ | ------- |
 | <a name="module_apim_billing_portal_v1"></a> [apim\_billing\_portal\_v1](#module\_apim\_billing\_portal\_v1) | github.com/pagopa/terraform-azurerm-v4.git//api_management_api | v10.9.0 |
+| <a name="module_apim_delegations_test_v1"></a> [apim\_delegations\_test\_v1](#module\_apim\_delegations\_test\_v1) | github.com/pagopa/terraform-azurerm-v4.git//api_management_api | v10.9.0 |
 | <a name="module_apim_external_api_contract_public_v1"></a> [apim\_external\_api\_contract\_public\_v1](#module\_apim\_external\_api\_contract\_public\_v1) | github.com/pagopa/terraform-azurerm-v4.git//api_management_api | v10.9.0 |
 | <a name="module_apim_external_api_contract_v1"></a> [apim\_external\_api\_contract\_v1](#module\_apim\_external\_api\_contract\_v1) | github.com/pagopa/terraform-azurerm-v4.git//api_management_api | v10.9.0 |
 | <a name="module_apim_external_api_ms_v2"></a> [apim\_external\_api\_ms\_v2](#module\_apim\_external\_api\_ms\_v2) | github.com/pagopa/terraform-azurerm-v4.git//api_management_api | v10.9.0 |
@@ -37,6 +35,7 @@
 | <a name="module_apim_pnpg_product_pn_pg"></a> [apim\_pnpg\_product\_pn\_pg](#module\_apim\_pnpg\_product\_pn\_pg) | git::https://github.com/pagopa/terraform-azurerm-v4.git//api_management_product | v10.9.0 |
 | <a name="module_apim_pnpg_support_service_v2"></a> [apim\_pnpg\_support\_service\_v2](#module\_apim\_pnpg\_support\_service\_v2) | git::https://github.com/pagopa/terraform-azurerm-v4.git//api_management_api | v10.9.0 |
 | <a name="module_apim_product_ced"></a> [apim\_product\_ced](#module\_apim\_product\_ced) | github.com/pagopa/terraform-azurerm-v4.git//api_management_product | v10.9.0 |
+| <a name="module_apim_product_delegations_test"></a> [apim\_product\_delegations\_test](#module\_apim\_product\_delegations\_test) | github.com/pagopa/terraform-azurerm-v4.git//api_management_product | v10.9.0 |
 | <a name="module_apim_product_fd"></a> [apim\_product\_fd](#module\_apim\_product\_fd) | github.com/pagopa/terraform-azurerm-v4.git//api_management_product | v10.9.0 |
 | <a name="module_apim_product_fd_garantito"></a> [apim\_product\_fd\_garantito](#module\_apim\_product\_fd\_garantito) | github.com/pagopa/terraform-azurerm-v4.git//api_management_product | v10.9.0 |
 | <a name="module_apim_product_idpay"></a> [apim\_product\_idpay](#module\_apim\_product\_idpay) | github.com/pagopa/terraform-azurerm-v4.git//api_management_product | v10.9.0 |
@@ -100,8 +99,8 @@
 | [null_resource.upload_internal_developer_index_v1](https://registry.terraform.io/providers/hashicorp/null/latest/docs/resources/resource) | resource |
 | [null_resource.upload_support_developer_index_v1](https://registry.terraform.io/providers/hashicorp/null/latest/docs/resources/resource) | resource |
 | [null_resource.upload_support_pnpg_developer_index_v1](https://registry.terraform.io/providers/hashicorp/null/latest/docs/resources/resource) | resource |
-| [pkcs12_from_pem.jwt_pkcs12](https://registry.terraform.io/providers/chilicat/pkcs12/0.2.5/docs/resources/from_pem) | resource |
-| [pkcs12_from_pem.jwt_pkcs12_pnpg](https://registry.terraform.io/providers/chilicat/pkcs12/0.2.5/docs/resources/from_pem) | resource |
+| [pkcs12_from_pem.jwt_pkcs12](https://registry.terraform.io/providers/hashicorp/pkcs12/latest/docs/resources/from_pem) | resource |
+| [pkcs12_from_pem.jwt_pkcs12_pnpg](https://registry.terraform.io/providers/hashicorp/pkcs12/latest/docs/resources/from_pem) | resource |
 | [azurerm_api_management.apim](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/api_management) | data source |
 | [azurerm_application_insights.ai](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/application_insights) | data source |
 | [azurerm_client_config.current](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/client_config) | data source |
