@@ -69,8 +69,7 @@ backstage tokens (`iss=PAGOPA`) used to approve onboardings, so the AR stacks se
 `JWT_DEFAULT_TENANT=AR`. This is safe because each stack only loads the public key
 of its own tenant, so a token without the claim must still be signed by that
 tenant's key. `JWT_DEFAULT_TENANT` has no code default: when it is unset, tokens
-without `tenant_id` are rejected with `401`. It is unrelated to `DEFAULT_TENANT` (tenant used
-when the header is absent). This fallback is temporary: once every issuer emits
+without `tenant_id` are rejected with `401`. This fallback is temporary: once every issuer emits
 `tenant_id`, enable `JWT_TENANT_CLAIM_REQUIRED`. Missing or unsupported
 tenant context returns `400`; JWT failures return `401` with
 `WWW-Authenticate: Bearer`. Validation runs before request parsing, telemetry with
@@ -114,8 +113,7 @@ hardcoded tenant list: with an empty registry every tenant is rejected (fail clo
 other microservices; a tenant without it fails with an error (no fallback to another
 tenant). `TENANT_SUPPORTED_TENANTS` (same variable as onboarding-ms, product and
 webhook; default `AR,PNPG`) restricts the registry tenants enabled
-on the stack. The legacy `SUPPORTED_TENANTS` is still read as a fallback until the
-SELC-9669 cleanup.
+on the stack.
 
 The registry is validated at startup (`config/TenantRegistryStartupValidator`, same
 pattern as document-ms): an invalid JSON, a supported tenant without the `contracts`
@@ -172,7 +170,7 @@ Before running you must set these properties as environment variables.
 | quarkus.openapi-generator.user_registry_json.auth.api_key.api-key<br/> | USER_REGISTRY_API_KEY      |             |     yes      |
 | quarkus.rest-client."*.user_registry_json.api.UserApi".url<br/>        | USER_REGISTRY_URL          |             |     yes      |
 | tenant.registry.json<br/>                                             | TENANT_REGISTRY_JSON       | `{}`        |     yes      |
-| tenant.supported-tenants<br/>                                         | TENANT_SUPPORTED_TENANTS (legacy fallback: SUPPORTED_TENANTS) | `AR,PNPG` | per stack |
+| tenant.supported-tenants<br/>                                         | TENANT_SUPPORTED_TENANTS | `AR,PNPG` | per stack |
 | selfcare.tenant.strict-data-isolation<br/>                            | SELFCARE_TENANT_STRICT_DATA_ISOLATION | false | no     |
 | (referenced by `jwt.publicKeyEnvVar`)                                 | JWT_PUBLIC_KEY_AR / JWT_PUBLIC_KEY_PNPG |  | per stack |
 | onboarding-functions.jwt.validation.allowed-issuers<br/>              | JWT_ALLOWED_ISSUERS        | SPID,PAGOPA | yes          |
