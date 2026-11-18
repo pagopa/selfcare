@@ -65,12 +65,9 @@ public class K8sJwtAuthenticationStrategy implements JwtAuthenticationStrategy {
 
         ServiceAccount user;
         try {
-            final V1TokenReview body = new V1TokenReviewBuilder()
-                    .withSpec(new V1TokenReviewSpecBuilder()
-                            .withToken(authentication.getCredentials())
-                            .build())
-                    .build();
-            final V1TokenReview tokenReview = apiClient.createTokenReview(body, null, null, null);
+            final V1TokenReview body = new V1TokenReview()
+                    .spec(new V1TokenReviewSpec().token(authentication.getCredentials()));
+            final V1TokenReview tokenReview = apiClient.createTokenReview(body, null, null, null, null);
             log.debug(LogUtils.CONFIDENTIAL_MARKER, "{}", tokenReview);
             final Optional<V1TokenReviewStatus> tokenStatus = Optional.ofNullable(tokenReview)
                     .map(V1TokenReview::getStatus);

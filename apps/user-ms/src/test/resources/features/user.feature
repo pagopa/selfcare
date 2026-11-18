@@ -5342,7 +5342,7 @@ Feature: User
       | products[0].env                   | ROOT                                        |
     And The response body contains the list "products" of size 1
     And The response body doesn't contain field "products[0].roleId"
-    And The response body contains the list "products[0].userProductActions" of size 17
+    And The response body contains the list "products[0].userProductActions" of size 18
     And The response body contains at path "products[0].userProductActions" the following list of values in any order:
       | Selc:UploadLogo                   |
       | Selc:ViewBilling                  |
@@ -5352,6 +5352,7 @@ Feature: User
       | Selc:AccessProductBackoffice      |
       | Selc:ViewManagedInstitutions      |
       | Selc:ViewDelegations              |
+      | Selc:CreateProductUsers           |
       | Selc:UpdateProductUsers           |
       | Selc:DeleteProductUsers           |
       | Selc:ListProductUsers             |
@@ -5382,7 +5383,7 @@ Feature: User
       | products[0].env                   | ROOT                                        |
     And The response body contains the list "products" of size 1
     And The response body doesn't contain field "products[0].roleId"
-    And The response body contains the list "products[0].userProductActions" of size 17
+    And The response body contains the list "products[0].userProductActions" of size 18
     And The response body contains at path "products[0].userProductActions" the following list of values in any order:
       | Selc:UploadLogo                   |
       | Selc:ViewBilling                  |
@@ -5392,6 +5393,7 @@ Feature: User
       | Selc:AccessProductBackoffice      |
       | Selc:ViewManagedInstitutions      |
       | Selc:ViewDelegations              |
+      | Selc:CreateProductUsers           |
       | Selc:UpdateProductUsers           |
       | Selc:DeleteProductUsers           |
       | Selc:ListProductUsers             |
@@ -5422,7 +5424,7 @@ Feature: User
       | products[0].env                   | ROOT                                        |
     And The response body contains the list "products" of size 1
     And The response body doesn't contain field "products[0].roleId"
-    And The response body contains the list "products[0].userProductActions" of size 17
+    And The response body contains the list "products[0].userProductActions" of size 18
     And The response body contains at path "products[0].userProductActions" the following list of values in any order:
       | Selc:UploadLogo                   |
       | Selc:ViewBilling                  |
@@ -5432,6 +5434,7 @@ Feature: User
       | Selc:AccessProductBackoffice      |
       | Selc:ViewManagedInstitutions      |
       | Selc:ViewDelegations              |
+      | Selc:CreateProductUsers           |
       | Selc:UpdateProductUsers           |
       | Selc:DeleteProductUsers           |
       | Selc:ListProductUsers             |

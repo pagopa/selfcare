@@ -1,0 +1,35 @@
+{
+  "id": "9f4b1c65-90ad-4b50-9dbb-686500000002",
+  "productId": "prod-io",
+  "workflowType": "CONFIRMATION_AGGREGATE",
+  "status": "PENDING",
+  "referenceOnboardingId": "a14d68d1-1b61-4ea6-9ea1-716ea97f6866",
+  "createdAt": "2024-03-05T15:23:33.861Z",
+  "updatedAt": "2025-05-22T18:14:27.008Z",
+  "institution": {
+    "origin": "IPA",
+    "originId": "c_confirm2",
+    "description": "Comune Aggregato senza Utenti",
+    "institutionType": "PA",
+    "digitalAddress": "aggregato-senza-utenti@test.it",
+    "address": "Via Aggregato, 7",
+    "zipCode": "00100",
+    "taxCode": "90000000076",
+    "city": "Roma",
+    "county": "RM",
+    "country": "IT",
+    "imported": false
+  },
+  "aggregator": {
+    "id": "7c3f1a52-6d2e-4b8a-9f10-3e5d7a9b2c43",
+    "taxCode": "90000000037",
+    "description": "Comune Aggregatore Incremento",
+    "originId": "c_inc1"
+  },
+  "billing": {
+    "publicServices": false,
+    "recipientCode": "c_inc1",
+    "vatNumber": "90000000037"
+  },
+  "users": []
+}

@@ -1002,6 +1002,30 @@ public class CompletionServiceDefaultTest {
     }
 
     @Test
+    void sendCompletedEmail_shouldSkipWhenDigitalAddressIsBlank() {
+        Onboarding onboarding = createOnboarding();
+        onboarding.getInstitution().setDigitalAddress("");
+        OnboardingWorkflow onboardingWorkflow = new OnboardingWorkflowInstitution(onboarding, "INSTITUTION");
+
+        completionServiceDefault.sendCompletedEmail(onboardingWorkflow);
+
+        verify(notificationService, never()).sendCompletedEmail(any(), any(), any());
+        verify(productService, never()).getValidProduct(any());
+    }
+
+    @Test
+    void sendDeletedEmail_shouldSkipWhenDigitalAddressIsBlank() {
+        Onboarding onboarding = createOnboarding();
+        onboarding.getInstitution().setDigitalAddress("");
+        when(onboardingRepository.findByIdOptional("onboardingId")).thenReturn(Optional.of(onboarding));
+
+        completionServiceDefault.sendDeletedEmail("onboardingId");
+
+        verify(notificationService, never()).sendDeletedEmail(any(), any(), any());
+        verify(productService, never()).getValidProduct(any());
+    }
+
+    @Test
     void sendDeletedEmail_shouldReadTemplateUnderTheTenantOfTheOnboarding() {
         Onboarding onboarding = createOnboarding();
         onboarding.setProductId(PROD_CED.getValue());

@@ -1,0 +1,42 @@
+{
+  "id": "9f4b1c65-90ad-4b50-9dbb-686500000001",
+  "productId": "prod-io",
+  "workflowType": "CONFIRMATION_AGGREGATE",
+  "status": "PENDING",
+  "referenceOnboardingId": "a14d68d1-1b61-4ea6-9ea1-716ea97f6866",
+  "createdAt": "2024-03-05T15:23:33.861Z",
+  "updatedAt": "2025-05-22T18:14:27.008Z",
+  "institution": {
+    "origin": "IPA",
+    "originId": "c_confirm1",
+    "description": "Comune Aggregato con Utente",
+    "institutionType": "PA",
+    "digitalAddress": "aggregato-utente@test.it",
+    "address": "Via Aggregato, 6",
+    "zipCode": "00100",
+    "taxCode": "90000000068",
+    "city": "Roma",
+    "county": "RM",
+    "country": "IT",
+    "imported": false
+  },
+  "aggregator": {
+    "id": "7c3f1a52-6d2e-4b8a-9f10-3e5d7a9b2c43",
+    "taxCode": "90000000037",
+    "description": "Comune Aggregatore Incremento",
+    "originId": "c_inc1"
+  },
+  "billing": {
+    "publicServices": false,
+    "recipientCode": "c_inc1",
+    "vatNumber": "90000000037"
+  },
+  "users": [
+    {
+      "id": "ec7ca4d5-c537-462a-8c06-e102e0c21c44",
+      "productRole": "referente amministrativo",
+      "role": "MANAGER",
+      "userMailUuid": "ID_MAIL#49e16aa5-bc28-40c7-9844-6886e4647e21"
+    }
+  ]
+}
