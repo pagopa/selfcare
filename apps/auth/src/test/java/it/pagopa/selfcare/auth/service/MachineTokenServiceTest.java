@@ -9,11 +9,13 @@ import it.pagopa.selfcare.auth.conf.TenantDefinition.*;
 import it.pagopa.selfcare.auth.controller.request.MachineTokenRequest;
 import it.pagopa.selfcare.auth.exception.ForbiddenException;
 import it.pagopa.selfcare.auth.exception.InternalException;
+import it.pagopa.selfcare.auth.exception.InvalidRequestException;
 import it.pagopa.selfcare.auth.exception.ResourceNotFoundException;
 import jakarta.ws.rs.ServiceUnavailableException;
 import java.security.KeyPairGenerator;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import org.eclipse.microprofile.config.Config;
 import org.jose4j.jwt.consumer.JwtConsumerBuilder;
 import org.junit.jupiter.api.BeforeEach;
@@ -31,6 +33,7 @@ class MachineTokenServiceTest {
     service = new MachineTokenService();
     service.config = mock(MachineTokenConfig.class);
     when(service.config.enabled()).thenReturn(true);
+    when(service.config.allowedTenants()).thenReturn(Set.of("AR", "PNPG"));
     service.tenants = mock(TenantRegistry.class);
     service.keys = mock(TenantSessionKeyProvider.class);
     service.sessions = new SessionServiceImpl();
@@ -96,6 +99,19 @@ class MachineTokenServiceTest {
   void rejectsUnconfiguredScopeBeforeSigningOrContactingIam() {
     assertThrows(ForbiddenException.class, () -> service.issue(request("admin")));
     verifyNoInteractions(service.keys, service.iam);
+  }
+
+  @Test
+  void enforcesConfiguredTenantListAndRejectsInvalidConfiguration() {
+    when(service.config.allowedTenants()).thenReturn(Set.of("AR"));
+    assertThrows(IllegalStateException.class, service::initialize);
+    assertThrows(InvalidRequestException.class, () -> service.issue(request("user.read")));
+    verifyNoInteractions(service.keys, service.iam, service.runtimeConfig);
+
+    when(service.config.allowedTenants()).thenReturn(Set.of());
+    assertThrows(IllegalStateException.class, service::initialize);
+    when(service.config.allowedTenants()).thenReturn(Set.of("AR&admin=true"));
+    assertThrows(IllegalStateException.class, service::initialize);
   }
 
   @Test

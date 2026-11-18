@@ -10,6 +10,7 @@ import it.pagopa.selfcare.auth.conf.TenantSessionKeyProvider;
 import it.pagopa.selfcare.auth.controller.request.MachineTokenRequest;
 import it.pagopa.selfcare.auth.controller.response.MachineTokenResponse;
 import it.pagopa.selfcare.auth.exception.ForbiddenException;
+import it.pagopa.selfcare.auth.exception.InvalidRequestException;
 import it.pagopa.selfcare.auth.exception.ResourceNotFoundException;
 import jakarta.annotation.PostConstruct;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -40,9 +41,14 @@ public class MachineTokenService {
     if (!config.enabled()) {
       return;
     }
+    if (config.allowedTenants().isEmpty()
+        || config.allowedTenants().stream()
+            .anyMatch(tenant -> !tenant.matches("[A-Za-z0-9_-]{1,64}"))) {
+      throw new IllegalStateException("Invalid M2M allowed tenants configuration");
+    }
     for (TenantRegistry.Tenant tenant : tenants.machineTenants()) {
       MachineDefinition machine = tenant.definition().m2m();
-      if (!tenant.id().matches("AR|PNPG")
+      if (!config.allowedTenants().contains(tenant.id())
           || machine.lifetimeSeconds() < 60
           || machine.lifetimeSeconds() > 900
           || machine.groups().size() > 32
@@ -70,6 +76,9 @@ public class MachineTokenService {
   public MachineTokenResponse issue(MachineTokenRequest request) {
     if (!config.enabled()) {
       throw new ResourceNotFoundException("Resource not found");
+    }
+    if (request.tenantId() == null || !config.allowedTenants().contains(request.tenantId())) {
+      throw new InvalidRequestException("Unknown tenant");
     }
     TenantRegistry.Tenant tenant = tenants.resolveTenant(request.tenantId());
     MachineDefinition machine = tenant.definition().m2m();

@@ -3,6 +3,7 @@ package it.pagopa.selfcare.auth.conf;
 import io.smallrye.config.ConfigMapping;
 import io.smallrye.config.WithDefault;
 import java.util.Optional;
+import java.util.Set;
 
 @ConfigMapping(prefix = "auth.m2m")
 public interface MachineTokenConfig {
@@ -11,6 +12,9 @@ public interface MachineTokenConfig {
 
   @WithDefault("8082")
   int port();
+
+  @WithDefault("AR,PNPG")
+  Set<String> allowedTenants();
 
   @WithDefault("true")
   boolean tlsEnabled();

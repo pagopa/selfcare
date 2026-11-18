@@ -15,6 +15,7 @@ import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
@@ -27,10 +28,12 @@ public class MachineTokenClient {
   private static final Duration TIMEOUT = Duration.ofSeconds(5);
   private static final Duration CACHE_TTL = Duration.ofMinutes(4);
   private static final Duration REFRESH_MARGIN = Duration.ofSeconds(30);
+  private static final String DEFAULT_ALLOWED_TENANTS = "AR,PNPG";
   private final boolean enabled;
   private final HttpClient http;
   private final URI endpoint;
   private final Clock clock;
+  private final Set<String> allowedTenants;
   private final ObjectMapper mapper = new ObjectMapper();
   private final Map<Request, CompletableFuture<CachedToken>> cache = new HashMap<>();
 
@@ -39,9 +42,12 @@ public class MachineTokenClient {
       @ConfigProperty(name = "selfcare.m2m.enabled", defaultValue = "false") boolean enabled,
       @ConfigProperty(name = "selfcare.m2m.endpoint") Optional<String> endpoint,
       @ConfigProperty(name = "selfcare.m2m.allow-insecure-http", defaultValue = "false")
-          boolean allowInsecureHttp) {
+          boolean allowInsecureHttp,
+      @ConfigProperty(name = "selfcare.m2m.allowed-tenants", defaultValue = DEFAULT_ALLOWED_TENANTS)
+          Set<String> allowedTenants) {
     this.enabled = enabled;
     this.clock = Clock.systemUTC();
+    this.allowedTenants = requireAllowedTenants(allowedTenants);
     if (enabled) {
       this.endpoint = requireEndpoint(endpoint.orElseThrow(
           () -> new IllegalStateException("M2M endpoint is required")), allowInsecureHttp);
@@ -60,11 +66,20 @@ public class MachineTokenClient {
     this(enabled, endpoint, false);
   }
 
+  public MachineTokenClient(boolean enabled, Optional<String> endpoint, boolean allowInsecureHttp) {
+    this(enabled, endpoint, allowInsecureHttp, Set.of(DEFAULT_ALLOWED_TENANTS.split(",")));
+  }
+
   MachineTokenClient(HttpClient http, URI endpoint, Clock clock) {
+    this(http, endpoint, clock, Set.of(DEFAULT_ALLOWED_TENANTS.split(",")));
+  }
+
+  MachineTokenClient(HttpClient http, URI endpoint, Clock clock, Set<String> allowedTenants) {
     this.enabled = true;
     this.http = http;
     this.endpoint = endpoint;
     this.clock = clock;
+    this.allowedTenants = requireAllowedTenants(allowedTenants);
   }
 
   public boolean isEnabled() {
@@ -75,7 +90,7 @@ public class MachineTokenClient {
     if (!enabled) {
       return CompletableFuture.failedFuture(new IllegalStateException("M2M client is disabled"));
     }
-    if (tenant == null || !tenant.matches("AR|PNPG")
+    if (tenant == null || !allowedTenants.contains(tenant)
         || audience == null || !audience.matches("[a-z][a-z0-9-]{0,63}")
         || scope == null || !scope.matches("[a-z][a-z0-9.:-]{0,127}")) {
       return CompletableFuture.failedFuture(new IllegalArgumentException("Invalid M2M request"));
@@ -139,6 +154,14 @@ public class MachineTokenClient {
 
   static URI requireHttps(String value) {
     return requireEndpoint(value, false);
+  }
+
+  private static Set<String> requireAllowedTenants(Set<String> tenants) {
+    if (tenants == null || tenants.isEmpty()
+        || tenants.stream().anyMatch(tenant -> tenant == null || !tenant.matches("[A-Za-z0-9_-]{1,64}"))) {
+      throw new IllegalArgumentException("Invalid M2M allowed tenants configuration");
+    }
+    return Set.copyOf(tenants);
   }
 
   private static URI requireEndpoint(String value, boolean allowInsecureHttp) {

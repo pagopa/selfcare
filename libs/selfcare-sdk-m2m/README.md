@@ -88,6 +88,13 @@ users and groups intended for that trust level.
 
 ## Per-tenant configuration
 
+Auth's `M2M_ALLOWED_TENANTS` (`auth.m2m.allowed-tenants`) is a comma-separated
+allowlist, defaulting to `AR,PNPG`. Tenant IDs are case-sensitive and must match
+`[A-Za-z0-9_-]{1,64}`. A tenant must also be present in `TENANT_REGISTRY_JSON`
+with `m2m.enabled`, signing credentials and grants; listing it alone does not
+enable issuance. An enabled M2M tenant outside the allowlist or an invalid
+allowlist causes startup to fail.
+
 Merge signing and M2M settings into the existing `TENANT_REGISTRY_JSON`; preserve
 the other AR login/resource fields. This PNPG example references the agreed UID
 environment variable; replace the example permission/product with actual IAM entries:
@@ -154,6 +161,7 @@ affects user sessions: verify AR compatibility before changing it.
 |---|---|
 | `M2M_ISSUER_ENABLED` | Global listener switch, default `false` |
 | `M2M_INTERNAL_PORT` | Dedicated listener port, default `8082` |
+| `M2M_ALLOWED_TENANTS` | Comma-separated M2M tenant allowlist, default `AR,PNPG` |
 | `M2M_TLS_ENABLED` | Default `true`; explicit `false` permits plaintext HTTP |
 | `M2M_TLS_CERTIFICATE_PEM` | TLS certificate chain, injected from Key Vault |
 | `M2M_TLS_PRIVATE_KEY_PEM` | Matching TLS private key, injected from Key Vault |
@@ -199,6 +207,10 @@ IAM. Rotation must retain verification overlap for outstanding tokens.
 
 Configure `selfcare.m2m.enabled=true` and
 `selfcare.m2m.endpoint=https://<certificate-matching-host>:8082/token/service`.
+The SDK's `selfcare.m2m.allowed-tenants` also defaults to `AR,PNPG`; configure it
+with the tenant IDs the client needs, and include those IDs in auth's allowlist.
+The client list is not an authorization boundary: auth independently enforces
+its own list, per-tenant policy and IAM.
 The SDK uses normal JVM TLS verification, bounded timeouts and no redirects.
 There is no Authorization header, Entra scope, identity client ID or client secret.
 

@@ -106,6 +106,32 @@ class MachineTokenTenantTest {
   }
 
   @Test
+  void issuesTokenForAdditionalConfiguredTenant() throws Exception {
+    var response =
+        post(
+            """
+        {"tenantId":"TENANT_3","audience":"user-ms","scope":"user.read"}
+        """);
+    assertEquals(200, response.statusCode());
+    var publicKey =
+        KeyFactory.getInstance("RSA")
+            .generatePublic(
+                new X509EncodedKeySpec(
+                    Base64.getDecoder()
+                        .decode(config.getValue("TEST_PNPG_PUBLIC_KEY", String.class))));
+    var claims =
+        new JwtConsumerBuilder()
+            .setVerificationKey(publicKey)
+            .setExpectedIssuer("PAGOPA")
+            .setExpectedAudience("api-pnpg.example.test")
+            .build()
+            .processToClaims(mapper.readTree(response.body()).path("access_token").asText());
+    assertEquals("TENANT_3", claims.getStringClaimValue("tenant_id"));
+    verify(iam)
+        .requirePermission(eq("TENANT_3"), eq(MachineTokenServiceTest.UID), any(), any(), any());
+  }
+
+  @Test
   void tokenRouteIsAbsentFromMainPortAndLoginIsAbsentFromInternalPort() throws Exception {
     given()
         .contentType("application/json")
@@ -170,6 +196,27 @@ class MachineTokenTenantTest {
             .statusCode());
     assertEquals(413, post(" ".repeat(9000)).statusCode());
     assertEquals(
+        400,
+        post(
+            """
+            {"tenantId":"UNCONFIGURED","audience":"user-ms","scope":"user.read"}
+            """)
+            .statusCode());
+    assertEquals(
+        400,
+        post(
+            """
+            {"tenantId":"NOT_IN_REGISTRY","audience":"user-ms","scope":"user.read"}
+            """)
+            .statusCode());
+    assertEquals(
+        400,
+        post(
+            """
+            {"tenantId":"PNPG&admin=true","audience":"user-ms","scope":"user.read"}
+            """)
+            .statusCode());
+    assertEquals(
         403,
         post(
             """
@@ -230,6 +277,7 @@ class MachineTokenTenantTest {
                "iamBaseUrl":"https://iam.example.test","groups":["SUPPORT"],
                "grants":[{"audience":"user-ms","scope":"user.read","productId":"prod-test"}]}}
             """));
+        registry.set("TENANT_3", registry.get("PNPG").deepCopy());
         var pair = KeyPairGenerator.getInstance("RSA").generateKeyPair();
         values.put("tenant.registry.json", mapper.writeValueAsString(registry));
         values.put(MachineTokenServiceTest.UID_ENV, MachineTokenServiceTest.UID);
@@ -241,6 +289,7 @@ class MachineTokenTenantTest {
             "TEST_PNPG_PUBLIC_KEY",
             Base64.getEncoder().encodeToString(pair.getPublic().getEncoded()));
         values.put("auth.m2m.enabled", "true");
+        values.put("M2M_ALLOWED_TENANTS", "AR,PNPG,TENANT_3,NOT_IN_REGISTRY");
         return values;
       } catch (Exception exception) {
         throw new IllegalStateException("Cannot configure internal token test", exception);

@@ -31,7 +31,8 @@ paths:
               properties:
                 tenantId:
                   type: string
-                  enum: [AR, PNPG]
+                  pattern: '^[A-Za-z0-9_-]{1,64}$'
+                  description: Must be listed in auth's configured M2M allowed tenants and tenant registry.
                 audience:
                   type: string
                   pattern: '^[a-z][a-z0-9-]{0,63}$'

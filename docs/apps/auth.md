@@ -122,7 +122,9 @@ Signing-key loading is independent of login enablement; user-session generation
 still requires `auth_enabled=true`. M2M issuance additionally requires the global
 listener flag, TLS secrets unless HTTP is explicitly selected, per-tenant
 `m2m.enabled`, `m2m.uidEnvVar`, IAM base URL, JWT groups
-and destination/scope/product grants. Scope maps to an existing IAM permission.
+and destination/scope/product grants. `M2M_ALLOWED_TENANTS` restricts the allowed
+tenant IDs (default `AR,PNPG`); the SDK's `selfcare.m2m.allowed-tenants` must
+include any additional tenant requested by the client. Scope maps to an existing IAM permission.
 Auth uses a separate 30-second bootstrap JWT to query IAM and only returns a
 five-minute token after authorization succeeds. Issued tokens remain valid until
 expiry after permission revocation.

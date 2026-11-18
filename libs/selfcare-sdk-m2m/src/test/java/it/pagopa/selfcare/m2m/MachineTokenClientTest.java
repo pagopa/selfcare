@@ -12,6 +12,7 @@ import java.time.Clock;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicInteger;
 import org.junit.jupiter.api.AfterEach;
@@ -77,6 +78,28 @@ class MachineTokenClientTest {
     client.token("AR", "onboarding-functions", "another.permission").toCompletableFuture().join();
     assertEquals(3, calls.get());
     assertEquals("AR-1", token("AR"));
+  }
+
+  @Test
+  void usesConfiguredTenantAllowlistAndRejectsOthersBeforeCallingAuth() {
+    var endpoint = URI.create("http://127.0.0.1:" + server.getAddress().getPort() + "/token/service");
+    var configured = new MachineTokenClient(HttpClient.newHttpClient(), endpoint, clock, Set.of("TENANT_3"));
+    assertEquals("TENANT_3-1",
+        configured.token("TENANT_3", "user-ms", "user.read").toCompletableFuture().join());
+    assertThrows(java.util.concurrent.CompletionException.class,
+        () -> configured.token("AR", "user-ms", "user.read").toCompletableFuture().join());
+    assertThrows(java.util.concurrent.CompletionException.class,
+        () -> client.token("TENANT_3", "user-ms", "user.read").toCompletableFuture().join());
+    assertEquals(1, calls.get());
+  }
+
+  @Test
+  void rejectsInvalidTenantAllowlist() {
+    assertThrows(IllegalArgumentException.class,
+        () -> new MachineTokenClient(true, Optional.of("https://auth/token/service"), false, Set.of()));
+    assertThrows(IllegalArgumentException.class,
+        () -> new MachineTokenClient(true, Optional.of("https://auth/token/service"), false,
+            Set.of("AR&admin=true")));
   }
 
   @ParameterizedTest
