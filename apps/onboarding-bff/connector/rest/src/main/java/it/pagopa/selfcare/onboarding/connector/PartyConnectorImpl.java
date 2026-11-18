@@ -9,6 +9,7 @@ import it.pagopa.selfcare.onboarding.connector.model.RelationshipInfo;
 import it.pagopa.selfcare.onboarding.connector.model.RelationshipsResponse;
 import it.pagopa.selfcare.onboarding.connector.model.institutions.Institution;
 import it.pagopa.selfcare.onboarding.connector.model.institutions.InstitutionInfo;
+import it.pagopa.selfcare.onboarding.connector.model.institutions.InstitutionsSearchResponse;
 import it.pagopa.selfcare.onboarding.connector.model.institutions.OnboardingResource;
 import it.pagopa.selfcare.onboarding.connector.model.onboarding.GeographicTaxonomy;
 import it.pagopa.selfcare.onboarding.connector.model.onboarding.OnboardingData;
@@ -242,6 +243,12 @@ class PartyConnectorImpl implements PartyConnector {
         log.debug("getInstitution result = {}", result);
         log.trace("getInstitution end");
         return result;
+    }
+
+    @Override
+    @Retry(name = "retryTimeout")
+    public InstitutionsSearchResponse searchInstitutions(String taxCode) {
+        return institutionMapper.toInstitutionsSearchResponse(restClient.getInstitutions(taxCode, null));
     }
 
     @Override

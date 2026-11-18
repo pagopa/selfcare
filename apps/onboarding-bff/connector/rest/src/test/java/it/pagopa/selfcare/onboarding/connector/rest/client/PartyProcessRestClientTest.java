@@ -1,5 +1,6 @@
 package it.pagopa.selfcare.onboarding.connector.rest.client;
 
+import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static it.pagopa.selfcare.commons.base.security.PartyRole.MANAGER;
 import static it.pagopa.selfcare.commons.base.security.PartyRole.OPERATOR;
 import static it.pagopa.selfcare.commons.utils.TestUtils.checkNotNullFields;
@@ -12,6 +13,7 @@ import com.github.tomakehurst.wiremock.junit5.WireMockExtension;
 import it.pagopa.selfcare.commons.base.security.PartyRole;
 import it.pagopa.selfcare.commons.connector.rest.BaseFeignRestClientTest;
 import it.pagopa.selfcare.commons.connector.rest.RestTestUtils;
+import it.pagopa.selfcare.onboarding.connector.exceptions.InvalidRequestException;
 import it.pagopa.selfcare.onboarding.connector.exceptions.ResourceNotFoundException;
 import it.pagopa.selfcare.onboarding.connector.model.RelationshipInfo;
 import it.pagopa.selfcare.onboarding.connector.model.RelationshipState;
@@ -19,6 +21,7 @@ import it.pagopa.selfcare.onboarding.connector.model.RelationshipsResponse;
 import it.pagopa.selfcare.onboarding.connector.model.onboarding.GeographicTaxonomy;
 import it.pagopa.selfcare.onboarding.connector.model.onboarding.User;
 import it.pagopa.selfcare.onboarding.connector.rest.config.PartyProcessRestClientTestConfig;
+import it.pagopa.selfcare.onboarding.connector.rest.decoder.FeignErrorDecoder;
 import it.pagopa.selfcare.onboarding.connector.rest.model.*;
 import java.util.*;
 import lombok.SneakyThrows;
@@ -42,7 +45,7 @@ import org.springframework.test.context.support.TestPropertySourceUtils;
         })
 @ContextConfiguration(
         initializers = PartyProcessRestClientTest.RandomPortInitializer.class,
-        classes = {PartyProcessRestClientTestConfig.class})
+        classes = {PartyProcessRestClientTestConfig.class, FeignErrorDecoder.class})
 class PartyProcessRestClientTest extends BaseFeignRestClientTest {
 
     @Order(1)
@@ -76,6 +79,50 @@ class PartyProcessRestClientTest extends BaseFeignRestClientTest {
 
     @Autowired
     private PartyProcessRestClient restClient;
+
+    @Test
+    void getInstitutionsForwardsTaxCodeAndPreservesDetails() {
+        String path = "/pdnd-interop-uservice-party-process/0.0.1/institutions";
+        wm.stubFor(get(urlPathEqualTo(path))
+                .withQueryParam("taxCode", equalTo("12345678901"))
+                .withQueryParam("subunitCode", absent())
+                .withQueryParam("origin", absent())
+                .withQueryParam("originId", absent())
+                .withQueryParam("productId", absent())
+                .withQueryParam("enableSubunits", absent())
+                .willReturn(okJson("""
+                        {"institutions":[{"id":"institution-id","taxCode":"12345678901","rea":"REA-123",
+                        "paymentServiceProvider":{"abiCode":"12345","vatNumberGroup":false},
+                        "onboarding":[{"productId":"prod-pagopa","institutionType":"PSP","isPartnerTech":true,
+                        "billing":{"vatNumber":"12345678901","recipientCode":"recipient"}},
+                        {"productId":"prod-io","institutionType":"PA"}],
+                        "rootParent":{"id":"root-id","description":"Root"},"isTest":true,
+                        "createdAt":"2024-01-01T10:00:00Z","imported":false,"delegation":false}]}
+                        """)));
+
+        InstitutionsResponse response = restClient.getInstitutions("12345678901", null);
+        InstitutionResponse institution = response.getInstitutions().get(0);
+        assertEquals("REA-123", institution.getRea());
+        assertEquals("12345", institution.getPaymentServiceProvider().getAbiCode());
+        assertEquals("PSP", institution.getOnboarding().get(0).getInstitutionType());
+        assertTrue(institution.getOnboarding().get(0).getIsPartnerTech());
+        assertEquals("recipient", institution.getOnboarding().get(0).getBilling().getRecipientCode());
+        assertEquals("prod-io", institution.getOnboarding().get(1).getProductId());
+        assertEquals("root-id", institution.getRootParent().getId());
+        assertTrue(institution.getIsTest());
+        assertNotNull(institution.getCreatedAt());
+
+        wm.stubFor(get(urlPathEqualTo(path))
+                .withQueryParam("taxCode", equalTo("12345678901"))
+                .withQueryParam("subunitCode", equalTo("AOO"))
+                .willReturn(okJson("{\"institutions\":[]}")));
+        assertTrue(restClient.getInstitutions("12345678901", "AOO").getInstitutions().isEmpty());
+
+        wm.stubFor(get(urlPathEqualTo(path))
+                .withQueryParam("taxCode", equalTo("invalid"))
+                .willReturn(aResponse().withStatus(400)));
+        assertThrows(InvalidRequestException.class, () -> restClient.getInstitutions("invalid", null));
+    }
 
     @Test
     void onboardingOrganization_fullyValued() {
