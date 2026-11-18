@@ -162,7 +162,7 @@ locals {
   app_settings_webhook_ms = [
     {
       name  = "JAVA_TOOL_OPTIONS"
-      value = "-javaagent:applicationinsights-agent.jar -XX:MaxRAMPercentage=50.0 -XX:MaxDirectMemorySize=1G"
+      value = "-javaagent:applicationinsights-agent.jar -XX:-UseBASE64Intrinsics -XX:MaxRAMPercentage=50.0 -XX:MaxDirectMemorySize=1G"
     },
     {
       name  = "APPLICATIONINSIGHTS_ROLE_NAME"
