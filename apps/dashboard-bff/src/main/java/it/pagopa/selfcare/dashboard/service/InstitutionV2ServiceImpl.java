@@ -22,7 +22,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.owasp.encoder.Encode;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.core.io.Resource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
@@ -44,14 +43,12 @@ public class InstitutionV2ServiceImpl implements InstitutionV2Service {
     static final String REQUIRED_INSTITUTION_MESSAGE = "An Institution id is required";
     private static final String REQUIRED_USER_ID = "A user id is required";
     private static final String A_USER_INFO_FILTER_OBJECT_IS_REQUIRED = "A UserInfoFilter object is required";
-    public static final String ISSUER_PAGOPA = "PAGOPA";
 
     private final List<RelationshipState> allowedStates;
     private final UserApiRestClient userApiRestClient;
     private final CoreInstitutionApiRestClient coreInstitutionApiRestClient;
     private final OnboardingRestClient onboardingRestClient;
     private final DocumentRestClient documentRestClient;
-    private final DocumentContentRestClient documentContentRestClient;
     private final IamExternalRestClient iamExternalRestClient;
     private final UserMapper userMapper;
     private final InstitutionMapper institutionMapper;
@@ -63,7 +60,6 @@ public class InstitutionV2ServiceImpl implements InstitutionV2Service {
                                     CoreInstitutionApiRestClient coreInstitutionApiRestClient,
                                     OnboardingRestClient onboardingRestClient,
                                     DocumentRestClient documentRestClient,
-                                    DocumentContentRestClient documentContentRestClient,
                                     IamExternalRestClient iamExternalRestClient,
                                     UserMapper userMapper,
                                     InstitutionMapper institutionMapper,
@@ -73,7 +69,6 @@ public class InstitutionV2ServiceImpl implements InstitutionV2Service {
         this.coreInstitutionApiRestClient = coreInstitutionApiRestClient;
         this.onboardingRestClient = onboardingRestClient;
         this.documentRestClient = documentRestClient;
-        this.documentContentRestClient = documentContentRestClient;
         this.iamExternalRestClient = iamExternalRestClient;
         this.userMapper = userMapper;
         this.institutionMapper = institutionMapper;
@@ -220,50 +215,6 @@ public class InstitutionV2ServiceImpl implements InstitutionV2Service {
                         }));
 
         return institution;
-    }
-
-
-    @Override
-    public OnboardingsResponse getOnboardingsInfoResponse(String institutionId, List<String> products) {
-        log.trace("getOnboardingsResponse start");
-
-        OnboardingsResponse onboardingsResponse = Optional.ofNullable(
-                coreInstitutionApiRestClient._getOnboardingsInstitutionUsingGET(institutionId, null).getBody()
-        ).orElse(new OnboardingsResponse());
-
-        List<OnboardingResponse> filteredOnboardings = Optional.ofNullable(products)
-                .filter(prods -> !prods.isEmpty())
-                .map(prods -> onboardingsResponse.getOnboardings().stream()
-                        .filter(onboarding -> prods.contains(onboarding.getProductId()) && OnboardingResponse.StatusEnum.ACTIVE.equals(onboarding.getStatus()))
-                        .toList())
-                .orElse(onboardingsResponse.getOnboardings().stream()
-                        .filter(onboarding -> OnboardingResponse.StatusEnum.ACTIVE.equals(onboarding.getStatus()))
-                        .toList());
-
-        OnboardingsResponse filteredResponse = new OnboardingsResponse();
-        filteredResponse.setOnboardings(filteredOnboardings);
-
-        log.trace("getOnboardingsResponse end");
-        return filteredResponse;
-    }
-
-    @Override
-    public Resource getContract(String institutionId, String productId) {
-        OnboardingResponse onboarding = getOnboardingResponse(institutionId, productId);
-
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        SelfCareUser selfCareUser = (SelfCareUser) authentication.getPrincipal();
-        String issuer = selfCareUser.getIssuer();
-
-        if (!ISSUER_PAGOPA.equalsIgnoreCase(issuer)
-                && onboarding.getInstitutionType() != OnboardingResponse.InstitutionTypeEnum.PSP) {
-            throw new AccessDeniedException(
-                    "Operation not allowed: institutionType " + onboarding.getInstitutionType()
-                            + " not permitted for issuer " + issuer
-            );
-        }
-
-        return documentContentRestClient._getContractSigned(onboarding.getTokenId(), null).getBody();
     }
 
 
