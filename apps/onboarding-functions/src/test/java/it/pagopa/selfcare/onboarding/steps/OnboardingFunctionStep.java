@@ -215,14 +215,60 @@ public class OnboardingFunctionStep extends CucumberQuarkusTest {
 
     @Then("there is an active delegation from the aggregate to the aggregator")
     public void verifyAggregateDelegation() {
+        Onboarding aggregate = onboarding.getWorkflowType() == WorkflowType.CONFIRMATION_AGGREGATE
+                ? onboarding : aggregateOnboarding;
+        assertNotNull(aggregate, "Aggregate onboarding not found");
         Document delegation = institutionDelegationsCollection()
                 .find(Filters.and(
-                        Filters.eq("from", aggregateOnboarding.getInstitution().getId()),
-                        Filters.eq("to", aggregateOnboarding.getAggregator().getId()),
-                        Filters.eq("productId", aggregateOnboarding.getProductId()),
+                        Filters.eq("from", aggregate.getInstitution().getId()),
+                        Filters.eq("to", aggregate.getAggregator().getId()),
+                        Filters.eq("productId", aggregate.getProductId()),
+                        Filters.eq("type", "EA"),
                         Filters.eq("status", "ACTIVE")))
                 .first();
-        assertNotNull(delegation, "Active delegation not found for aggregate onboarding " + aggregateOnboarding.getId());
+        assertNotNull(delegation, "Active delegation not found for aggregate onboarding " + aggregate.getId());
+    }
+
+    @Then("the institution {string} has an active onboarding for the product")
+    public void verifyInstitutionOnboarding(String institutionId) {
+        assertEquals(institutionId, onboarding.getInstitution().getId());
+        Document institution = IntegrationFunctionProfile.getInstitutionDatabase(mongoConnection())
+                .getCollection("Institution")
+                .find(Filters.and(
+                        Filters.eq("_id", institutionId),
+                        Filters.eq("tenantId", INTEGRATION_TEST_TENANT),
+                        Filters.elemMatch("onboarding", Filters.and(
+                                Filters.eq("productId", onboarding.getProductId()),
+                                Filters.eq("tokenId", onboarding.getId()),
+                                Filters.eq("status", "ACTIVE")))))
+                .first();
+        assertNotNull(institution, "Active product onboarding not found for institution " + institutionId);
+    }
+
+    @Then("the aggregate user is active for the product")
+    public void verifyAggregateUser() {
+        Document user = IntegrationFunctionProfile.getUserDatabase(mongoConnection())
+                .getCollection("userInstitutions")
+                .find(Filters.and(
+                        Filters.eq("institutionId", onboarding.getInstitution().getId()),
+                        Filters.eq("userId", onboarding.getUsers().get(0).getId()),
+                        Filters.elemMatch("products", Filters.and(
+                                Filters.eq("productId", onboarding.getProductId()),
+                                Filters.eq("tokenId", onboarding.getId()),
+                                Filters.eq("status", "ACTIVE"),
+                                Filters.eq("role", "MANAGER"),
+                                Filters.eq("productRole", onboarding.getUsers().get(0).getProductRole()),
+                                Filters.eq("toAddOnAggregates", false)))))
+                .first();
+        assertNotNull(user, "Active aggregate user not found");
+    }
+
+    @Then("the aggregate has no users")
+    public void verifyAggregateHasNoUsers() {
+        long count = IntegrationFunctionProfile.getUserDatabase(mongoConnection())
+                .getCollection("userInstitutions")
+                .countDocuments(Filters.eq("institutionId", onboarding.getInstitution().getId()));
+        assertEquals(0, count, "Unexpected users for aggregate " + onboarding.getInstitution().getId());
     }
 
     @Then("the aggregate with taxCode {string} has no new onboarding or delegation")

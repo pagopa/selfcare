@@ -241,5 +241,35 @@
     "county": "RM",
     "country": "IT",
     "imported": false
+  },
+  {
+    "id": "7c3f1a52-6d2e-4b8a-9f10-3e5d7a9b2c46",
+    "origin": "IPA",
+    "originId": "c_confirm1",
+    "description": "Comune Aggregato con Utente",
+    "institutionType": "PA",
+    "digitalAddress": "aggregato-utente@test.it",
+    "address": "Via Aggregato, 6",
+    "zipCode": "00100",
+    "taxCode": "90000000068",
+    "city": "Roma",
+    "county": "RM",
+    "country": "IT",
+    "imported": false
+  },
+  {
+    "id": "7c3f1a52-6d2e-4b8a-9f10-3e5d7a9b2c47",
+    "origin": "IPA",
+    "originId": "c_confirm2",
+    "description": "Comune Aggregato senza Utenti",
+    "institutionType": "PA",
+    "digitalAddress": "aggregato-senza-utenti@test.it",
+    "address": "Via Aggregato, 7",
+    "zipCode": "00100",
+    "taxCode": "90000000076",
+    "city": "Roma",
+    "county": "RM",
+    "country": "IT",
+    "imported": false
   }
 ]
