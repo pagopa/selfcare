@@ -28,7 +28,7 @@ locals {
   app_settings = [
     {
       name  = "JAVA_TOOL_OPTIONS"
-      value = "-javaagent:applicationinsights-agent.jar"
+      value = "-javaagent:applicationinsights-agent.jar -XX:-UseBASE64Intrinsics -XX:UseAVX=2"
     },
     {
       name  = "APPLICATIONINSIGHTS_ROLE_NAME"
