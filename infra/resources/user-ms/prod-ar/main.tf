@@ -94,7 +94,7 @@ locals {
   app_settings_user_ms = [
     {
       name  = "JAVA_TOOL_OPTIONS"
-      value = "-javaagent:applicationinsights-agent.jar",
+      value = "-javaagent:applicationinsights-agent.jar -XX:-UseBASE64Intrinsics",
     },
     {
       name  = "APPLICATIONINSIGHTS_ROLE_NAME"
@@ -217,7 +217,7 @@ locals {
       value = "selfcare_convention_request"
     },
     {
-      name = "CREATE_MULTI_ROLE_TEMPLATE_ID"
+      name  = "CREATE_MULTI_ROLE_TEMPLATE_ID"
       value = "selfcare_user_added_multi_role"
     },
     {

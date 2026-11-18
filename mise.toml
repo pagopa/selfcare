@@ -1,0 +1,5 @@
+[tools]
+aws-cli = { version = "2", symlink_bins = "true" }
+azure-cli = { version = "2", dependency_prereleases = "allow", depends = ['["uv"]'] }
+python = "3.14"
+uv = "latest"
