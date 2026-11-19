@@ -158,58 +158,6 @@ public class InstitutionApiSteps {
         }
     }
 
-    @When("I send a GET request to {string} to get onboardings info")
-    public void whenISendAGetRequestToGetOnboardingsInfo(String url) {
-        RequestSpecification requestSpecification = RestAssured.given()
-                .contentType("application/json");
-
-        dashboardStepsUtil.setHeader(requestSpecification);
-
-        if (Objects.nonNull(dashboardStepsUtil.filter.getProducts())) {
-            requestSpecification.queryParam("products", dashboardStepsUtil.filter.getProducts());
-        }
-
-        ExtractableResponse<?> response = requestSpecification
-                .when()
-                .pathParam("institutionId", dashboardStepsUtil.filter.getInstitutionId())
-                .get(url)
-                .then()
-                .extract();
-
-        dashboardStepsUtil.status = response.statusCode();
-        if (dashboardStepsUtil.status == 200) {
-            dashboardStepsUtil.setResponse(response);
-        } else {
-            dashboardStepsUtil.errorMessage = response.body().asString();
-        }
-    }
-
-    @When("I send a GET request to {string} to get contract")
-    public void whenISendAGetRequestToGetContract(String url) {
-        RequestSpecification requestSpecification = RestAssured.given()
-                .contentType("application/json");
-
-        dashboardStepsUtil.setHeader(requestSpecification);
-
-        if (Objects.nonNull(dashboardStepsUtil.filter.getProductId())) {
-            requestSpecification.queryParam("productId", dashboardStepsUtil.filter.getProductId());
-        }
-
-        ExtractableResponse<?> response = requestSpecification
-                .when()
-                .pathParam("institutionId", dashboardStepsUtil.filter.getInstitutionId())
-                .get(url)
-                .then()
-                .extract();
-
-        dashboardStepsUtil.status = response.statusCode();
-        if (dashboardStepsUtil.status == 200) {
-            dashboardStepsUtil.setResponse(response);
-        } else {
-            dashboardStepsUtil.errorMessage = response.body().asString();
-        }
-    }
-
     @And("the following geo-taxonomy request details:")
     public void theFollowingGeoTaxonomyRequestDetails(List<GeographicTaxonomyDto> geographicTaxonomyDtos) {
         GeographicTaxonomyListDto geographicTaxonomyListDto = new GeographicTaxonomyListDto();

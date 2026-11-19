@@ -26,6 +26,7 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
 
@@ -63,8 +64,10 @@ class InstitutionV2ControllerSecurityTest {
 
     @BeforeEach
     void setUp() {
-        SecurityContextHolder.getContext().setAuthentication(new UsernamePasswordAuthenticationToken(
+        SecurityContext context = SecurityContextHolder.createEmptyContext();
+        context.setAuthentication(new UsernamePasswordAuthenticationToken(
                 SelfCareUser.builder(USER_ID).build(), null, List.of()));
+        SecurityContextHolder.setContext(context);
     }
 
     @AfterEach

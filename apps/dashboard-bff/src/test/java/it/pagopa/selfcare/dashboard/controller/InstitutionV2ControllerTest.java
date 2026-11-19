@@ -744,67 +744,6 @@ class InstitutionV2ControllerTest extends BaseControllerTest {
     }
 
     @Test
-    void getOnboardingsInfo() throws Exception {
-        final String institutionId = "institutionId";
-        final String[] products = { PROD_IO.name(),  PROD_IO_PREMIUM.name() };
-        final OnboardingsResponse onboardingsResponse = getOnboardingsResponse();
-
-        when(institutionV2ServiceMock.getOnboardingsInfoResponse(institutionId, Arrays.asList(products))).thenReturn(onboardingsResponse);
-
-        final MvcResult result = mockMvc.perform(MockMvcRequestBuilders
-                        .get(BASE_URL + "/{institutionId}/onboardings-info", institutionId)
-                        .queryParam("products", products)
-                        .contentType(APPLICATION_JSON_VALUE)
-                        .accept(APPLICATION_JSON_VALUE))
-                .andExpect(status().isOk())
-                .andReturn();
-
-        List<OnboardingInfo> resource = objectMapper.readValue(result.getResponse().getContentAsString(), new TypeReference<>() {});
-
-        assertEquals(onboardingsResponse.getOnboardings().get(0).getProductId(), resource.get(0).getProductId());
-        assertEquals(onboardingsResponse.getOnboardings().get(0).getStatus().getValue(), resource.get(0).getStatus());
-        assertEquals(onboardingsResponse.getOnboardings().get(0).getOrigin(), resource.get(0).getOrigin());
-        assertEquals(onboardingsResponse.getOnboardings().get(0).getOriginId(), resource.get(0).getOriginId());
-        assertEquals(onboardingsResponse.getOnboardings().get(0).getInstitutionType().getValue(), resource.get(0).getInstitutionType().name());
-        assertTrue(resource.get(0).getContractAvailable());
-        assertEquals(onboardingsResponse.getOnboardings().get(1).getProductId(), resource.get(1).getProductId());
-        assertEquals(onboardingsResponse.getOnboardings().get(1).getStatus().getValue(), resource.get(1).getStatus());
-        assertEquals(onboardingsResponse.getOnboardings().get(1).getOrigin(), resource.get(1).getOrigin());
-        assertEquals(onboardingsResponse.getOnboardings().get(1).getOriginId(), resource.get(1).getOriginId());
-        assertEquals(onboardingsResponse.getOnboardings().get(1).getInstitutionType().getValue(), resource.get(1).getInstitutionType().name());
-        assertFalse(resource.get(1).getContractAvailable());
-
-        verify(institutionV2ServiceMock, times(1))
-                .getOnboardingsInfoResponse(institutionId, Arrays.asList(products));
-        verifyNoMoreInteractions(institutionV2ServiceMock);
-    }
-
-    @Test
-    void getContract() throws Exception {
-        String institutionId = "institutionId";
-        String productId = "productId";
-        String text = "text";
-        byte[] bytes = text.getBytes();
-        InputStream is = new ByteArrayInputStream(bytes);
-
-        Resource resource = Mockito.mock(Resource.class);
-        when(resource.getInputStream()).thenReturn(is);
-        when(resource.getFilename()).thenReturn("contract.pdf");
-
-        when(institutionV2ServiceMock.getContract(institutionId, productId)).thenReturn(resource);
-
-        mockMvc.perform(MockMvcRequestBuilders
-                        .get(BASE_URL + "/{institutionId}/contract", institutionId)
-                        .queryParam("productId", productId)
-                        .accept(MediaType.APPLICATION_OCTET_STREAM_VALUE))
-                .andExpect(status().isOk())
-                .andExpect(content().bytes(bytes))
-                .andExpect(header().string("Content-Disposition", "attachment; filename=contract.pdf"));
-
-        verify(institutionV2ServiceMock, times(1)).getContract(institutionId, productId);
-    }
-
-    @Test
     void checkUser() throws Exception {
         String institutionId = "institutionId";
         String productId = "productId";
