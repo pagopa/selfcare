@@ -127,7 +127,7 @@ locals {
   m2m_enabled = true
   m2m_tenants = {
     AR = {
-      enabled   = false
+      enabled   = true
       uidEnvVar = "TENANT_AR_M2M_IAM_UID"
     }
     PNPG = {
