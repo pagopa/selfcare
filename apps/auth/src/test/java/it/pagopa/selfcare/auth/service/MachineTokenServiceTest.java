@@ -11,7 +11,6 @@ import it.pagopa.selfcare.auth.exception.ForbiddenException;
 import it.pagopa.selfcare.auth.exception.InternalException;
 import it.pagopa.selfcare.auth.exception.InvalidRequestException;
 import it.pagopa.selfcare.auth.exception.ResourceNotFoundException;
-import jakarta.ws.rs.ServiceUnavailableException;
 import java.security.KeyPairGenerator;
 import java.util.List;
 import java.util.Optional;
@@ -38,19 +37,10 @@ class MachineTokenServiceTest {
     service.keys = mock(TenantSessionKeyProvider.class);
     service.sessions = new SessionServiceImpl();
     service.sessions.audience = "api.test";
-    service.iam = mock(MachineIamAuthorizer.class);
     service.runtimeConfig = mock(Config.class);
     when(service.runtimeConfig.getOptionalValue(UID_ENV, String.class))
         .thenReturn(Optional.of(UID));
-    tenant =
-        tenant(
-            new MachineDefinition(
-                true,
-                UID_ENV,
-                "https://iam.test",
-                List.of("SUPPORT"),
-                300,
-                List.of(new MachineGrant("user-ms", "user.read", "prod-test"))));
+    tenant = tenant(new MachineDefinition(true, UID_ENV, List.of("SUPPORT"), 300));
     when(service.tenants.machineTenants()).thenReturn(List.of(tenant));
     when(service.tenants.resolveTenant("PNPG")).thenReturn(tenant);
     var pair = KeyPairGenerator.getInstance("RSA").generateKeyPair();
@@ -59,12 +49,12 @@ class MachineTokenServiceTest {
   }
 
   @Test
-  void issuesConfiguredIamIdentityOnlyAfterPermissionCheck() throws Exception {
+  void issuesConfiguredSessionIdentityWithoutIamOrGrantConfiguration() throws Exception {
     service.initialize();
     var pair = KeyPairGenerator.getInstance("RSA").generateKeyPair();
     when(service.keys.getSigningKey("PNPG"))
         .thenReturn(new TenantSessionKeyProvider.SigningKey(pair.getPrivate(), "pnpg-kid"));
-    var response = service.issue(request("user.read"));
+    var response = service.issue(request());
     var claims =
         new JwtConsumerBuilder()
             .setVerificationKey(pair.getPublic())
@@ -79,34 +69,24 @@ class MachineTokenServiceTest {
     assertEquals(List.of("SUPPORT"), claims.getStringListClaimValue("groups"));
     assertEquals(300, claims.getExpirationTime().getValue() - claims.getIssuedAt().getValue());
     assertEquals(300, response.expiresIn());
-    var token = org.mockito.ArgumentCaptor.forClass(String.class);
-    verify(service.iam)
-        .requirePermission(
-            eq("PNPG"), eq(UID), eq(tenant.definition().m2m()), any(), token.capture());
-    assertNotEquals(response.accessToken(), token.getValue());
-    var bootstrap =
-        new JwtConsumerBuilder()
-            .setVerificationKey(pair.getPublic())
-            .setExpectedIssuer("PAGOPA")
-            .setExpectedAudience("api.test")
-            .build()
-            .processToClaims(token.getValue());
-    assertEquals(30, bootstrap.getExpirationTime().getValue() - bootstrap.getIssuedAt().getValue());
-    assertEquals(UID, bootstrap.getSubject());
+    assertFalse(claims.hasClaim("scope"));
+    verify(service.keys, times(2)).getSigningKey("PNPG");
   }
 
   @Test
-  void rejectsUnconfiguredScopeBeforeSigningOrContactingIam() {
-    assertThrows(ForbiddenException.class, () -> service.issue(request("admin")));
-    verifyNoInteractions(service.keys, service.iam);
+  void rejectsDisabledTenantBeforeSigning() {
+    var disabled = tenant(new MachineDefinition(false, UID_ENV, List.of(), 300));
+    when(service.tenants.resolveTenant("PNPG")).thenReturn(disabled);
+    assertThrows(ForbiddenException.class, () -> service.issue(request()));
+    verifyNoInteractions(service.keys, service.runtimeConfig);
   }
 
   @Test
   void enforcesConfiguredTenantListAndRejectsInvalidConfiguration() {
     when(service.config.allowedTenants()).thenReturn(Set.of("AR"));
     assertThrows(IllegalStateException.class, service::initialize);
-    assertThrows(InvalidRequestException.class, () -> service.issue(request("user.read")));
-    verifyNoInteractions(service.keys, service.iam, service.runtimeConfig);
+    assertThrows(InvalidRequestException.class, () -> service.issue(request()));
+    verifyNoInteractions(service.keys, service.runtimeConfig);
 
     when(service.config.allowedTenants()).thenReturn(Set.of());
     assertThrows(IllegalStateException.class, service::initialize);
@@ -118,20 +98,8 @@ class MachineTokenServiceTest {
   void disabledIssuerDoesNotResolveOrSign() {
     when(service.config.enabled()).thenReturn(false);
     service.initialize();
-    assertThrows(ResourceNotFoundException.class, () -> service.issue(request("user.read")));
-    verifyNoInteractions(service.keys, service.iam, service.runtimeConfig);
-  }
-
-  @Test
-  void failsClosedWhenIamDeniesOrIsUnavailable() {
-    doThrow(new ForbiddenException("Denied"))
-        .when(service.iam)
-        .requirePermission(any(), any(), any(), any(), any());
-    assertThrows(ForbiddenException.class, () -> service.issue(request("user.read")));
-    doThrow(new ServiceUnavailableException())
-        .when(service.iam)
-        .requirePermission(any(), any(), any(), any(), any());
-    assertThrows(ServiceUnavailableException.class, () -> service.issue(request("user.read")));
+    assertThrows(ResourceNotFoundException.class, () -> service.issue(request()));
+    verifyNoInteractions(service.keys, service.runtimeConfig);
   }
 
   @Test
@@ -139,31 +107,11 @@ class MachineTokenServiceTest {
     when(service.keys.getSigningKey("PNPG")).thenThrow(new InternalException("Missing key"));
     assertThrows(InternalException.class, service::initialize);
     when(service.tenants.machineTenants())
-        .thenReturn(
-            List.of(
-                tenant(
-                    new MachineDefinition(
-                        true, UID_ENV, "https://iam.test", List.of(), 3600, List.of()))));
+        .thenReturn(List.of(tenant(new MachineDefinition(true, UID_ENV, List.of(), 3600))));
     assertThrows(IllegalStateException.class, service::initialize);
     when(service.tenants.machineTenants())
         .thenReturn(
-            List.of(
-                tenant(
-                    new MachineDefinition(
-                        true, UID_ENV, "http://iam.test", List.of(), 300, List.of()))));
-    assertThrows(IllegalStateException.class, service::initialize);
-    var duplicate = new MachineGrant("user-ms", "user.read", "prod-test");
-    when(service.tenants.machineTenants())
-        .thenReturn(
-            List.of(
-                tenant(
-                    new MachineDefinition(
-                        true,
-                        UID_ENV,
-                        "https://iam.test",
-                        List.of(),
-                        300,
-                        List.of(duplicate, duplicate)))));
+            List.of(tenant(new MachineDefinition(true, UID_ENV, List.of("invalid group"), 300))));
     assertThrows(IllegalStateException.class, service::initialize);
   }
 
@@ -171,14 +119,10 @@ class MachineTokenServiceTest {
   void rejectsMissingUidReferenceAndDoesNotInterpretLiteralUidAsIdentity() {
     for (String reference : new String[] {null, "", UID}) {
       when(service.tenants.machineTenants())
-          .thenReturn(
-              List.of(
-                  tenant(
-                      new MachineDefinition(
-                          true, reference, "https://iam.test", List.of(), 300, List.of()))));
+          .thenReturn(List.of(tenant(new MachineDefinition(true, reference, List.of(), 300))));
       assertThrows(IllegalStateException.class, service::initialize);
     }
-    verifyNoInteractions(service.keys, service.iam);
+    verifyNoInteractions(service.keys);
   }
 
   @Test
@@ -190,22 +134,15 @@ class MachineTokenServiceTest {
       var failure = assertThrows(IllegalStateException.class, service::initialize);
       assertNull(failure.getCause());
       assertFalse(failure.getMessage().contains("not-a-valid-uid"));
-      assertThrows(IllegalStateException.class, () -> service.issue(request("user.read")));
+      assertThrows(IllegalStateException.class, () -> service.issue(request()));
     }
-    verifyNoInteractions(service.keys, service.iam);
+    verifyNoInteractions(service.keys);
   }
 
   @Test
   void resolvesDifferentTenantSecretsWithoutCrossTenantFallback() throws Exception {
     String arUid = "11111111-1111-4111-8111-111111111111";
-    var arMachine =
-        new MachineDefinition(
-            true,
-            "TEST_AR_M2M_IAM_UID",
-            "https://iam-ar.test",
-            List.of(),
-            300,
-            List.of(new MachineGrant("user-ms", "user.read", "prod-test")));
+    var arMachine = new MachineDefinition(true, "TEST_AR_M2M_IAM_UID", List.of(), 300);
     var arTenant =
         new TenantRegistry.Tenant(
             "AR", new TenantDefinition(null, null, List.of(), null, false, null, arMachine));
@@ -225,16 +162,14 @@ class MachineTokenServiceTest {
             .setExpectedAudience("api.test")
             .setRequireExpirationTime()
             .build();
-    var ar = service.issue(new MachineTokenRequest("AR", "user-ms", "user.read"));
-    var pnpg = service.issue(request("user.read"));
+    var ar = service.issue(new MachineTokenRequest("AR"));
+    var pnpg = service.issue(request());
     assertEquals(arUid, parser.processToClaims(ar.accessToken()).getStringClaimValue("uid"));
     assertEquals(UID, parser.processToClaims(pnpg.accessToken()).getStringClaimValue("uid"));
-    verify(service.iam).requirePermission(eq("AR"), eq(arUid), any(), any(), any());
-    verify(service.iam).requirePermission(eq("PNPG"), eq(UID), any(), any(), any());
 
     when(service.runtimeConfig.getOptionalValue(UID_ENV, String.class))
         .thenReturn(Optional.empty());
-    assertThrows(IllegalStateException.class, () -> service.issue(request("user.read")));
+    assertThrows(IllegalStateException.class, () -> service.issue(request()));
   }
 
   private TenantRegistry.Tenant tenant(MachineDefinition machine) {
@@ -242,7 +177,7 @@ class MachineTokenServiceTest {
         "PNPG", new TenantDefinition(null, null, List.of(), null, false, null, machine));
   }
 
-  private MachineTokenRequest request(String scope) {
-    return new MachineTokenRequest("PNPG", "user-ms", scope);
+  private MachineTokenRequest request() {
+    return new MachineTokenRequest("PNPG");
   }
 }

@@ -16,7 +16,7 @@
 - Validate SAML responses posted to the Assertion Consumer Service (`SAMLServiceImpl`, `util/SamlValidator`).
 - Run the OTP flow (create, verify, resend), send OTP e-mails through OneMail and enforce attempts/daily limits (`OtpFlowServiceImpl`, `OtpNotificationServiceImpl`).
 - Sign the session JWT with the per-tenant private key and `kid` (`JwtServiceImpl`, `conf/TenantSessionKeyProvider`).
-- Issue short-lived `PAGOPA` tokens for a configured IAM UID per tenant through `/token/service` on the opt-in internal listener (HTTPS by default), after an explicit M2M grant and IAM permission check. CAE network isolation replaces caller credentials/Entra.
+- Issue short-lived `PAGOPA` session tokens for a configured technical UID per tenant through `/token/service` on the opt-in internal listener (HTTPS by default). No grant or IAM precheck is required; downstream services enforce permissions. CAE network isolation replaces caller credentials/Entra.
 - Resolve and enforce the tenant on every login entry point (`filter/TenantResolutionFilter`).
 
 ## Architecture
@@ -121,13 +121,15 @@ references with `auth_enabled=false`, without login credentials or resources.
 Signing-key loading is independent of login enablement; user-session generation
 still requires `auth_enabled=true`. M2M issuance additionally requires the global
 listener flag, TLS secrets unless HTTP is explicitly selected, per-tenant
-`m2m.enabled`, `m2m.uidEnvVar`, IAM base URL, JWT groups
-and destination/scope/product grants. `M2M_ALLOWED_TENANTS` restricts the allowed
+`m2m.enabled`, `m2m.uidEnvVar` and signing configuration; JWT groups and lifetime
+are server-configured. `M2M_ALLOWED_TENANTS` restricts the allowed
 tenant IDs (default `AR,PNPG`); the SDK's `selfcare.m2m.allowed-tenants` must
-include any additional tenant requested by the client. Scope maps to an existing IAM permission.
-Auth uses a separate 30-second bootstrap JWT to query IAM and only returns a
-five-minute token after authorization succeeds. Issued tokens remain valid until
-expiry after permission revocation.
+include any additional tenant requested by the client. Requests contain only
+`tenantId`; auth issues a five-minute session without contacting IAM or checking
+that the UID exists in IAM. No bootstrap token or scope is generated.
+Downstream services must check roles/permissions through IAM where required.
+Legacy `PAGOPA`/`SUPPORT` authorization can bypass IAM; this change does not
+modify recipient authorization. Tokens remain valid until expiry.
 Each environment resolves `TENANT_AR_M2M_IAM_UID` and `TENANT_PNPG_M2M_IAM_UID`
 from the `auth-m2m-iam-uid-ar` and `auth-m2m-iam-uid-pnpg` secrets in its own
 Key Vault: `selc-d-kv`, `selc-u-kv` or `selc-p-kv`.

@@ -86,16 +86,14 @@ public class MachineTokenClient {
     return enabled;
   }
 
-  public synchronized CompletionStage<String> token(String tenant, String audience, String scope) {
+  public synchronized CompletionStage<String> token(String tenant) {
     if (!enabled) {
       return CompletableFuture.failedFuture(new IllegalStateException("M2M client is disabled"));
     }
-    if (tenant == null || !allowedTenants.contains(tenant)
-        || audience == null || !audience.matches("[a-z][a-z0-9-]{0,63}")
-        || scope == null || !scope.matches("[a-z][a-z0-9.:-]{0,127}")) {
+    if (tenant == null || !allowedTenants.contains(tenant)) {
       return CompletableFuture.failedFuture(new IllegalArgumentException("Invalid M2M request"));
     }
-    Request request = new Request(tenant, audience, scope);
+    Request request = new Request(tenant);
     CompletableFuture<CachedToken> current = cache.get(request);
     if (current != null && !current.isCompletedExceptionally() && !current.isCancelled()) {
       if (!current.isDone() || current.join().refreshAt().isAfter(clock.instant())) {
@@ -121,16 +119,15 @@ public class MachineTokenClient {
             .header("Accept", "application/json")
             .POST(HttpRequest.BodyPublishers.ofString(body)).build(),
             HttpResponse.BodyHandlers.ofString())
-        .thenApply(response -> decode(response.statusCode(), response.body(), request.scope(), started))
+        .thenApply(response -> decode(response.statusCode(), response.body(), started))
         .whenComplete((token, failure) -> {
           if (failure != null) {
-            LOGGER.warn("event=machine_token_acquisition_failed tenant={} audience={}",
-                request.tenantId(), request.audience());
+            LOGGER.warn("event=machine_token_acquisition_failed tenant={}", request.tenantId());
           }
         });
   }
 
-  private CachedToken decode(int status, String body, String scope, Instant started) {
+  private CachedToken decode(int status, String body, Instant started) {
     if (status != 200) {
       throw new IllegalStateException("M2M token endpoint returned HTTP " + status);
     }
@@ -142,7 +139,7 @@ public class MachineTokenClient {
       long lifetime = json.path("expires_in").asLong();
       String value = json.path("access_token").asText();
       if (!"Bearer".equals(json.path("token_type").asText()) || value.isBlank()
-          || !scope.equals(json.path("scope").asText()) || lifetime < 60 || lifetime > 900) {
+          || lifetime < 60 || lifetime > 900) {
         throw new IllegalStateException("Invalid M2M token response");
       }
       long cacheSeconds = Math.min(CACHE_TTL.toSeconds(), lifetime - REFRESH_MARGIN.toSeconds());
@@ -176,6 +173,6 @@ public class MachineTokenClient {
     return uri;
   }
 
-  private record Request(String tenantId, String audience, String scope) {}
+  private record Request(String tenantId) {}
   private record CachedToken(String value, Instant refreshAt) {}
 }

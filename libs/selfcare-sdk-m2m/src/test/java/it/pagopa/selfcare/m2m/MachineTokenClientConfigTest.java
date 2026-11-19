@@ -22,9 +22,9 @@ class MachineTokenClientConfigTest {
 
   @Test
   void injectsConfiguredTenantList() {
-    assertEquals("TENANT_3", client.token("TENANT_3", "user-ms", "user.read").toCompletableFuture().join());
+    assertEquals("TENANT_3", client.token("TENANT_3").toCompletableFuture().join());
     assertThrows(CompletionException.class,
-        () -> client.token("AR", "user-ms", "user.read").toCompletableFuture().join());
+        () -> client.token("AR").toCompletableFuture().join());
   }
 
   @AfterAll
@@ -46,7 +46,7 @@ class MachineTokenClientConfigTest {
           var request = mapper.readTree(exchange.getRequestBody());
           byte[] response = mapper.writeValueAsBytes(Map.of(
               "access_token", request.path("tenantId").asText(),
-              "token_type", "Bearer", "expires_in", 300, "scope", request.path("scope").asText()));
+              "token_type", "Bearer", "expires_in", 300));
           exchange.sendResponseHeaders(200, response.length);
           exchange.getResponseBody().write(response);
           exchange.close();

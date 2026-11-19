@@ -45,18 +45,10 @@ public record TenantDefinition(
       @JsonProperty("audience") String audience) {}
 
   public record MachineDefinition(
-      boolean enabled,
-      String uidEnvVar,
-      String iamBaseUrl,
-      List<String> groups,
-      Integer lifetimeSeconds,
-      List<MachineGrant> grants) {
+      boolean enabled, String uidEnvVar, List<String> groups, Integer lifetimeSeconds) {
     public MachineDefinition {
       lifetimeSeconds = lifetimeSeconds == null ? 300 : lifetimeSeconds;
       groups = groups == null ? List.of() : List.copyOf(groups);
-      grants = grants == null ? List.of() : List.copyOf(grants);
     }
   }
-
-  public record MachineGrant(String audience, String scope, String productId) {}
 }

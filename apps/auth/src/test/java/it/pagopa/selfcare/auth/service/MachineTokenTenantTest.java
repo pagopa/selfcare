@@ -2,11 +2,9 @@ package it.pagopa.selfcare.auth.service;
 
 import static io.restassured.RestAssured.given;
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import io.quarkus.test.InjectMock;
 import io.quarkus.test.junit.QuarkusTest;
 import io.quarkus.test.junit.QuarkusTestProfile;
 import io.quarkus.test.junit.TestProfile;
@@ -14,7 +12,6 @@ import it.pagopa.selfcare.auth.conf.TenantRegistry;
 import it.pagopa.selfcare.auth.exception.ForbiddenException;
 import it.pagopa.selfcare.auth.model.UserClaims;
 import jakarta.inject.Inject;
-import jakarta.ws.rs.ServiceUnavailableException;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.net.ServerSocket;
@@ -37,7 +34,6 @@ import org.junit.jupiter.api.Test;
 @QuarkusTest
 @TestProfile(MachineTokenTenantTest.PnpgProfile.class)
 class MachineTokenTenantTest {
-  @InjectMock MachineIamAuthorizer iam;
   @Inject TenantRegistry tenants;
   @Inject SessionService sessions;
   @Inject Config config;
@@ -75,7 +71,7 @@ class MachineTokenTenantTest {
     var response =
         post(
             """
-        {"tenantId":"PNPG","audience":"user-ms","scope":"user.read"}
+        {"tenantId":"PNPG"}
         """);
     assertEquals(200, response.statusCode());
     assertEquals("no-store", response.headers().firstValue("Cache-Control").orElseThrow());
@@ -98,7 +94,8 @@ class MachineTokenTenantTest {
     assertEquals("PNPG", claims.getStringClaimValue("tenant_id"));
     assertEquals(List.of("SUPPORT"), claims.getStringListClaimValue("groups"));
     assertEquals(300, claims.getExpirationTime().getValue() - claims.getIssuedAt().getValue());
-    verify(iam).requirePermission(eq("PNPG"), eq(MachineTokenServiceTest.UID), any(), any(), any());
+    assertFalse(claims.hasClaim("scope"));
+    assertFalse(mapper.readTree(response.body()).has("scope"));
     assertThrows(ForbiddenException.class, () -> tenants.resolveEnabledTenant("PNPG"));
     UserClaims user = UserClaims.builder().uid("user").tenantId("PNPG").build();
     assertThrows(ForbiddenException.class, () -> sessions.generateSessionToken(user));
@@ -110,7 +107,7 @@ class MachineTokenTenantTest {
     var response =
         post(
             """
-        {"tenantId":"TENANT_3","audience":"user-ms","scope":"user.read"}
+        {"tenantId":"TENANT_3"}
         """);
     assertEquals(200, response.statusCode());
     var publicKey =
@@ -127,8 +124,6 @@ class MachineTokenTenantTest {
             .build()
             .processToClaims(mapper.readTree(response.body()).path("access_token").asText());
     assertEquals("TENANT_3", claims.getStringClaimValue("tenant_id"));
-    verify(iam)
-        .requirePermission(eq("TENANT_3"), eq(MachineTokenServiceTest.UID), any(), any(), any());
   }
 
   @Test
@@ -137,7 +132,7 @@ class MachineTokenTenantTest {
         .contentType("application/json")
         .body(
             """
-            {"tenantId":"PNPG","audience":"user-ms","scope":"user.read"}
+            {"tenantId":"PNPG"}
             """)
         .post("/token/service")
         .then()
@@ -149,7 +144,6 @@ class MachineTokenTenantTest {
                 .build(),
             HttpResponse.BodyHandlers.ofString());
     assertEquals(404, response.statusCode());
-    verifyNoInteractions(iam);
   }
 
   @Test
@@ -178,7 +172,7 @@ class MachineTokenTenantTest {
         400,
         post(
             """
-        {"tenantId":"PNPG","audience":"user-ms","scope":"user.read","uid":"someone-else"}
+        {"tenantId":"PNPG","uid":"someone-else"}
         """)
             .statusCode());
     assertEquals(400, post("{}").statusCode());
@@ -199,49 +193,39 @@ class MachineTokenTenantTest {
         400,
         post(
             """
-            {"tenantId":"UNCONFIGURED","audience":"user-ms","scope":"user.read"}
+            {"tenantId":"UNCONFIGURED"}
             """)
             .statusCode());
     assertEquals(
         400,
         post(
             """
-            {"tenantId":"NOT_IN_REGISTRY","audience":"user-ms","scope":"user.read"}
+            {"tenantId":"NOT_IN_REGISTRY"}
             """)
             .statusCode());
     assertEquals(
         400,
         post(
             """
-            {"tenantId":"PNPG&admin=true","audience":"user-ms","scope":"user.read"}
+            {"tenantId":"PNPG&admin=true"}
             """)
             .statusCode());
     assertEquals(
         403,
         post(
             """
-        {"tenantId":"AR","audience":"user-ms","scope":"user.read"}
+        {"tenantId":"AR"}
         """)
             .statusCode());
-    verifyNoInteractions(iam);
   }
 
   @Test
-  void refusesTokenWhenIamDeniesOrFails() throws Exception {
-    String request =
-        """
-        {"tenantId":"PNPG","audience":"user-ms","scope":"user.read"}
-        """;
-    doThrow(new ForbiddenException("Denied"))
-        .when(iam)
-        .requirePermission(any(), any(), any(), any(), any());
-    var denied = post(request);
-    assertEquals(403, denied.statusCode());
-    assertFalse(denied.body().contains("access_token"));
-    doThrow(new ServiceUnavailableException())
-        .when(iam)
-        .requirePermission(any(), any(), any(), any(), any());
-    assertEquals(503, post(request).statusCode());
+  void rejectsRemovedGrantFieldsInsteadOfSilentlyIgnoringThem() throws Exception {
+    for (String field : List.of("audience", "scope", "productId")) {
+      var response = post("{\"tenantId\":\"PNPG\",\"" + field + "\":\"value\"}");
+      assertEquals(400, response.statusCode());
+      assertFalse(response.body().contains("access_token"));
+    }
   }
 
   private HttpResponse<String> post(String body) throws Exception {
@@ -273,9 +257,7 @@ class MachineTokenTenantTest {
             {"auth_enabled":false,
              "jwt":{"session":{"privateKeyEnvVar":"TEST_PNPG_PRIVATE_KEY",
                "keyIdEnvVar":"TEST_PNPG_KEY_ID","audience":"api-pnpg.example.test"}},
-             "m2m":{"enabled":true,"uidEnvVar":"TEST_PNPG_M2M_IAM_UID",
-               "iamBaseUrl":"https://iam.example.test","groups":["SUPPORT"],
-               "grants":[{"audience":"user-ms","scope":"user.read","productId":"prod-test"}]}}
+             "m2m":{"enabled":true,"uidEnvVar":"TEST_PNPG_M2M_IAM_UID","groups":["SUPPORT"]}}
             """));
         registry.set("TENANT_3", registry.get("PNPG").deepCopy());
         var pair = KeyPairGenerator.getInstance("RSA").generateKeyPair();

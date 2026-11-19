@@ -2,9 +2,7 @@ package it.pagopa.selfcare.auth.service;
 
 import static io.restassured.RestAssured.given;
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
 
-import io.quarkus.test.InjectMock;
 import io.quarkus.test.junit.QuarkusTest;
 import io.quarkus.test.junit.TestProfile;
 import jakarta.inject.Inject;
@@ -20,11 +18,10 @@ import org.junit.jupiter.api.Test;
 @QuarkusTest
 @TestProfile(MachineTokenHttpTest.HttpProfile.class)
 class MachineTokenHttpTest {
-  @InjectMock MachineIamAuthorizer iam;
   @Inject Config config;
 
   @Test
-  void explicitlyEnabledHttpWorksWithoutTlsSecretsAndStillChecksIam() throws Exception {
+  void explicitlyEnabledHttpIssuesSessionWithoutTlsSecretsOrGrants() throws Exception {
     var response =
         HttpClient.newHttpClient()
             .send(
@@ -38,14 +35,14 @@ class MachineTokenHttpTest {
                     .POST(
                         HttpRequest.BodyPublishers.ofString(
                             """
-                            {"tenantId":"PNPG","audience":"user-ms","scope":"user.read"}
+                            {"tenantId":"PNPG"}
                             """))
                     .build(),
                 HttpResponse.BodyHandlers.ofString());
     assertEquals(200, response.statusCode());
     assertEquals("no-store", response.headers().firstValue("Cache-Control").orElseThrow());
     assertTrue(response.body().contains("access_token"));
-    verify(iam).requirePermission(eq("PNPG"), eq(MachineTokenServiceTest.UID), any(), any(), any());
+    assertFalse(response.body().contains("\"scope\""));
   }
 
   @Test
@@ -54,12 +51,11 @@ class MachineTokenHttpTest {
         .contentType("application/json")
         .body(
             """
-            {"tenantId":"PNPG","audience":"user-ms","scope":"user.read"}
+            {"tenantId":"PNPG"}
             """)
         .post("/token/service")
         .then()
         .statusCode(404);
-    verifyNoInteractions(iam);
   }
 
   public static class HttpProfile extends MachineTokenTenantTest.PnpgProfile {

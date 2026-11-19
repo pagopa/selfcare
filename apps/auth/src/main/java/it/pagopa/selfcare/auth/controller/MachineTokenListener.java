@@ -24,7 +24,6 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.event.Observes;
 import jakarta.inject.Inject;
 import jakarta.validation.Validator;
-import jakarta.ws.rs.ServiceUnavailableException;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
@@ -131,8 +130,6 @@ public class MachineTokenListener {
       problem(context, 403, exception.getMessage());
     } catch (ResourceNotFoundException exception) {
       problem(context, 404, "Resource not found");
-    } catch (ServiceUnavailableException exception) {
-      problem(context, 503, "IAM authorization is unavailable");
     } catch (Exception exception) {
       LOGGER.error(
           "event=machine_request_failed exception={}", exception.getClass().getSimpleName());

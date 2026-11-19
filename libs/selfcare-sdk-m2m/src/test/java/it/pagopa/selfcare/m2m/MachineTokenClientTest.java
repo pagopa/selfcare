@@ -38,10 +38,11 @@ class MachineTokenClientTest {
       int number = calls.incrementAndGet();
       var request = mapper.readTree(exchange.getRequestBody());
       int responseStatus = exchange.getRequestHeaders().getFirst("Authorization") == null
+          && request.size() == 1 && request.hasNonNull("tenantId")
           ? status.get() : 400;
       byte[] body = mapper.writeValueAsBytes(java.util.Map.of(
           "access_token", request.path("tenantId").asText() + "-" + number,
-          "token_type", "Bearer", "expires_in", lifetime.get(), "scope", request.path("scope").asText()));
+          "token_type", "Bearer", "expires_in", lifetime.get()));
       exchange.getResponseHeaders().set("Content-Type", "application/json");
       exchange.sendResponseHeaders(responseStatus, body.length);
       exchange.getResponseBody().write(body);
@@ -61,7 +62,7 @@ class MachineTokenClientTest {
   void cachesAndCoalescesWithoutCredentialsOrMixingTenants() {
     var pending = new ArrayList<CompletableFuture<String>>();
     for (int i = 0; i < 10; i++) {
-      pending.add(client.token("AR", "onboarding-functions", "onboarding-functions.invoke")
+      pending.add(client.token("AR")
           .toCompletableFuture());
     }
     CompletableFuture.allOf(pending.toArray(CompletableFuture[]::new)).join();
@@ -72,11 +73,10 @@ class MachineTokenClientTest {
   }
 
   @Test
-  void cacheSeparatesAudiencesAndPermissions() {
+  void reusesTenantSessionAcrossRequests() {
     assertEquals("AR-1", token("AR"));
-    client.token("AR", "another-service", "another.invoke").toCompletableFuture().join();
-    client.token("AR", "onboarding-functions", "another.permission").toCompletableFuture().join();
-    assertEquals(3, calls.get());
+    client.token("AR").toCompletableFuture().join();
+    assertEquals(1, calls.get());
     assertEquals("AR-1", token("AR"));
   }
 
@@ -85,11 +85,11 @@ class MachineTokenClientTest {
     var endpoint = URI.create("http://127.0.0.1:" + server.getAddress().getPort() + "/token/service");
     var configured = new MachineTokenClient(HttpClient.newHttpClient(), endpoint, clock, Set.of("TENANT_3"));
     assertEquals("TENANT_3-1",
-        configured.token("TENANT_3", "user-ms", "user.read").toCompletableFuture().join());
+        configured.token("TENANT_3").toCompletableFuture().join());
     assertThrows(java.util.concurrent.CompletionException.class,
-        () -> configured.token("AR", "user-ms", "user.read").toCompletableFuture().join());
+        () -> configured.token("AR").toCompletableFuture().join());
     assertThrows(java.util.concurrent.CompletionException.class,
-        () -> client.token("TENANT_3", "user-ms", "user.read").toCompletableFuture().join());
+        () -> client.token("TENANT_3").toCompletableFuture().join());
     assertEquals(1, calls.get());
   }
 
@@ -152,7 +152,7 @@ class MachineTokenClientTest {
     MachineTokenClient disabled = new MachineTokenClient(false, Optional.empty());
     assertFalse(disabled.isEnabled());
     assertThrows(java.util.concurrent.CompletionException.class,
-        () -> disabled.token("AR", "onboarding-functions", "onboarding-functions.invoke")
+        () -> disabled.token("AR")
             .toCompletableFuture().join());
   }
 
@@ -163,7 +163,7 @@ class MachineTokenClientTest {
     assertThrows(IllegalArgumentException.class, () -> new MachineTokenClient(true, endpoint));
     var insecureClient = new MachineTokenClient(true, endpoint, true);
     assertEquals("AR-1",
-        insecureClient.token("AR", "user-ms", "user.read").toCompletableFuture().join());
+        insecureClient.token("AR").toCompletableFuture().join());
     assertEquals(1, calls.get());
   }
 
@@ -176,7 +176,7 @@ class MachineTokenClientTest {
   }
 
   private String token(String tenant) {
-    return client.token(tenant, "onboarding-functions", "onboarding-functions.invoke")
+    return client.token(tenant)
         .toCompletableFuture().join();
   }
 }

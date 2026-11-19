@@ -4,7 +4,6 @@ import io.quarkus.runtime.Startup;
 import io.smallrye.jwt.build.Jwt;
 import it.pagopa.selfcare.auth.conf.MachineTokenConfig;
 import it.pagopa.selfcare.auth.conf.TenantDefinition.MachineDefinition;
-import it.pagopa.selfcare.auth.conf.TenantDefinition.MachineGrant;
 import it.pagopa.selfcare.auth.conf.TenantRegistry;
 import it.pagopa.selfcare.auth.conf.TenantSessionKeyProvider;
 import it.pagopa.selfcare.auth.controller.request.MachineTokenRequest;
@@ -17,7 +16,6 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import java.time.Instant;
 import java.util.HashSet;
-import java.util.List;
 import java.util.UUID;
 import org.eclipse.microprofile.config.Config;
 import org.slf4j.Logger;
@@ -33,7 +31,6 @@ public class MachineTokenService {
   @Inject TenantSessionKeyProvider keys;
   @Inject TenantRegistry tenants;
   @Inject SessionServiceImpl sessions;
-  @Inject MachineIamAuthorizer iam;
   @Inject Config runtimeConfig;
 
   @PostConstruct
@@ -56,19 +53,6 @@ public class MachineTokenService {
         throw new IllegalStateException("Invalid M2M configuration for tenant " + tenant.id());
       }
       resolveUid(tenant);
-      MachineIamAuthorizer.requireHttps(machine.iamBaseUrl());
-      var requests = new HashSet<List<String>>();
-      for (MachineGrant grant : machine.grants()) {
-        if (grant.audience() == null
-            || !grant.audience().matches("[a-z][a-z0-9-]{0,63}")
-            || grant.scope() == null
-            || !grant.scope().matches("[a-z][a-z0-9.:-]{0,127}")
-            || grant.productId() == null
-            || !grant.productId().matches("[a-zA-Z0-9._-]{1,128}")
-            || !requests.add(List.of(grant.audience(), grant.scope()))) {
-          throw new IllegalStateException("Invalid M2M grant for tenant " + tenant.id());
-        }
-      }
       keys.getSigningKey(tenant.id());
     }
   }
@@ -85,27 +69,10 @@ public class MachineTokenService {
     if (machine == null || !machine.enabled()) {
       throw new ForbiddenException("Machine token issuance is not enabled for tenant");
     }
-    MachineGrant grant =
-        machine.grants().stream()
-            .filter(
-                value ->
-                    value.audience().equals(request.audience())
-                        && value.scope().equals(request.scope()))
-            .findFirst()
-            .orElseThrow(() -> new ForbiddenException("Machine token request is not authorized"));
-
-    // IAM requires a signed identity. This short-lived bootstrap token is never returned to
-    // callers.
     String uid = resolveUid(tenant);
-    String bootstrap = sign(tenant, uid, grant.scope(), 30);
-    iam.requirePermission(tenant.id(), uid, machine, grant, bootstrap);
-    String token = sign(tenant, uid, grant.scope(), machine.lifetimeSeconds());
-    LOGGER.info(
-        "event=machine_token_issued tenant={} destination={} scope={}",
-        tenant.id(),
-        grant.audience(),
-        grant.scope());
-    return new MachineTokenResponse(token, "Bearer", machine.lifetimeSeconds(), grant.scope());
+    String token = sign(tenant, uid, machine.lifetimeSeconds());
+    LOGGER.info("event=machine_token_issued tenant={}", tenant.id());
+    return new MachineTokenResponse(token, "Bearer", machine.lifetimeSeconds());
   }
 
   private String resolveUid(TenantRegistry.Tenant tenant) {
@@ -125,7 +92,7 @@ public class MachineTokenService {
     return uid;
   }
 
-  private String sign(TenantRegistry.Tenant tenant, String uid, String scope, int lifetime) {
+  private String sign(TenantRegistry.Tenant tenant, String uid, int lifetime) {
     var key = keys.getSigningKey(tenant.id());
     var machine = tenant.definition().m2m();
     Instant now = Instant.now();
@@ -137,7 +104,6 @@ public class MachineTokenService {
         .claim("client_id", "selfcare-m2m")
         .claim("tenant_id", tenant.id())
         .claim("token_use", "service")
-        .claim("scope", scope)
         .groups(new HashSet<>(machine.groups()))
         .audience(sessions.resolveAudience(tenant.definition()))
         .claim("jti", UUID.randomUUID().toString())

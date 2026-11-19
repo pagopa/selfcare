@@ -9,7 +9,8 @@ info:
     requires explicit HTTP opt-in.
     Never import this specification into APIM or expose it on the primary ingress.
     No caller credentials are accepted or required: all reachable workloads share
-    the configured tenant identity. IAM permission is checked before issuance.
+    the configured tenant identity. Authorization is enforced by downstream services,
+    using IAM where required; auth does not contact IAM during issuance.
 paths:
   /token/service:
     post:
@@ -17,9 +18,10 @@ paths:
       summary: Issue an internal IAM user token
       description: |
         Returns a short-lived PAGOPA token for the server-configured tenant UID.
-        Destination and scope must match a tenant grant. IAM must authorize that
-        UID for the scope and configured product. Legacy receivers may assign
-        SUPPORT and do not necessarily enforce token scopes.
+        No destination, scope, product or grant is required. The token authenticates
+        the technical identity; it does not attest an IAM permission check.
+        Downstream services must enforce authorization. Legacy receivers may assign
+        SUPPORT to PAGOPA tokens without contacting IAM.
       requestBody:
         required: true
         content:
@@ -27,20 +29,12 @@ paths:
             schema:
               type: object
               additionalProperties: false
-              required: [tenantId, audience, scope]
+              required: [tenantId]
               properties:
                 tenantId:
                   type: string
                   pattern: '^[A-Za-z0-9_-]{1,64}$'
                   description: Must be listed in auth's configured M2M allowed tenants and tenant registry.
-                audience:
-                  type: string
-                  pattern: '^[a-z][a-z0-9-]{0,63}$'
-                  description: Issuance destination, not the JWT session audience.
-                scope:
-                  type: string
-                  pattern: '^[a-z][a-z0-9.:-]{0,127}$'
-                  description: Permission checked against IAM for the configured product.
       responses:
         '200':
           description: Token issued; Cache-Control no-store and Pragma no-cache.
@@ -48,7 +42,7 @@ paths:
             application/json:
               schema:
                 type: object
-                required: [access_token, token_type, expires_in, scope]
+                required: [access_token, token_type, expires_in]
                 properties:
                   access_token:
                     type: string
@@ -59,12 +53,10 @@ paths:
                     type: integer
                     minimum: 60
                     maximum: 900
-                  scope:
-                    type: string
         '400':
           description: Invalid JSON, request fields or unknown tenant.
         '403':
-          description: Tenant/grant disabled or IAM permission denied.
+          description: Machine token issuance is disabled for the tenant.
         '404':
           description: Unknown route; the listener is not started when globally disabled.
         '413':
@@ -73,5 +65,3 @@ paths:
           description: Unsupported content type.
         '500':
           description: Internal error; no token returned.
-        '503':
-          description: IAM unavailable or invalid IAM response; no token returned.

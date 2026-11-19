@@ -6,15 +6,15 @@ Managed Identity authentication have been removed from this flow.
 
 No existing caller is migrated. DEV/UAT/PROD Terraform enables the internal listener in
 explicit plaintext HTTP mode; tenant issuance remains denied until real IAM
-identities and grants are configured. No environment has been deployed by this change.
+identities and signing keys are configured. No environment has been deployed by this change.
 The older caller/receiver integration in #1126 needs alignment with this contract.
 
 ## Trust boundary
 
-The caller supplies only `tenantId`, destination `audience` and `scope`.
+The caller supplies only `tenantId`.
 Its identity is **not authenticated**: the trust boundary is the Container Apps
 Environment (CAE). Any workload able to reach port 8082 can request any configured
-tenant/grant. Do not enable this service in a CAE containing untrusted workloads,
+tenant identity. Do not enable this service in a CAE containing untrusted workloads,
 or expose/proxy this port through APIM, a gateway or an environment route.
 
 Terraform adds `additionalPortMappings` with `external=false` to auth in
@@ -42,62 +42,47 @@ The existing public HTTP ingress/TLS configuration is unchanged.
 ## Tenant identity, IAM and privileges
 
 Each tenant's `m2m` configuration supplies an IAM `uidEnvVar` reference, JWT
-`groups`, token lifetime and allowed destination/scope/product mappings. The request cannot
+`groups` and token lifetime. The request cannot
 override any of these identity/privilege fields.
 
 Auth resolves the UID from that environment variable using the same configuration
 mechanism as tenant signing-key references. Enabled tenants fail startup if the
 reference/value is missing, blank or the value is not a canonical UUID. There is
 no literal `m2m.uid`, global-UID or cross-tenant fallback. A single resolved UID is
-used for both JWTs and the IAM check in each acquisition; invalid configuration
+used for the session JWT in each acquisition; invalid configuration
 errors do not include its value. Secret updates require restarting the revision
 to refresh its environment. The UID still appears in the signed JWT claims and
-IAM permission URL; secret-backed configuration does not encrypt JWT contents.
+secret-backed configuration does not encrypt JWT contents.
 
-For every acquisition, auth checks the existing IAM endpoint:
-
-```text
-GET <iamBaseUrl>/iam/users/<uid>/permissions/<scope>?productId=<productId>&tenantId=<tenant>
-X-Tenant-Id: <tenant>
-```
-
-IAM evaluates the user's roles/permissions for that product and tenant. An
-explicit `hasPermission=true` is required; denial/missing user returns 403,
-and IAM failures or invalid responses return 503 without a caller token.
-Configure an existing permission as the scope and associate it with the technical
-user's IAM roles. This release does not provision IAM users, roles or permissions.
-`iamBaseUrl` is the HTTPS base before `/iam`, selected by server configuration,
-never by the caller. The route must preserve the Authorization and tenant
-headers and must support IAM's permission-check operation.
-
-IAM itself requires a JWT. Auth signs a separate 30-second bootstrap token using
-the configured tenant UID/key and sends it only to IAM; it is never returned to
-callers. After a successful check, auth creates the five-minute caller token.
-The IAM endpoint must trust the configured tenant signing key and session audience.
+Auth issues a five-minute session token without contacting IAM or checking
+whether the UID exists or has permissions. No bootstrap token is created.
+The receiving service must authorize the requested operation using the technical
+user's roles/permissions, querying IAM where required. This release does not
+provision IAM users or add IAM checks to recipients.
 
 Tokens contain `iss=PAGOPA`, `sub`/`uid` equal to the configured IAM user,
 `name=auth`, `client_id=selfcare-m2m`, `tenant_id`, configured `groups`,
-`token_use=service`, `scope`, `jti`, `iat` and `exp`. No user PII or SPID assurance
+`token_use=service`, `jti`, `iat` and `exp`. No scope, user PII or SPID assurance
 is invented. The existing security SDK grants `SUPPORT` for `PAGOPA` even if
 `groups` is empty, and skips its SPID-specific tenant validation.
 
-**Destination and scope restrict issuance, not all downstream use.** Legacy
-receivers may accept the token elsewhere in the same trust domain and may not
-enforce its scope. The IAM check does not change this. Configure only technical
-users and groups intended for that trust level.
+**A session token is not proof of an IAM permission check.** Legacy receivers
+may accept `PAGOPA`/`SUPPORT` tokens without IAM. Configured groups are not
+retrieved from IAM. Configure only technical users and groups intended for this
+trust level, and verify recipient authorization before rollout.
 
 ## Per-tenant configuration
 
 Auth's `M2M_ALLOWED_TENANTS` (`auth.m2m.allowed-tenants`) is a comma-separated
 allowlist, defaulting to `AR,PNPG`. Tenant IDs are case-sensitive and must match
 `[A-Za-z0-9_-]{1,64}`. A tenant must also be present in `TENANT_REGISTRY_JSON`
-with `m2m.enabled`, signing credentials and grants; listing it alone does not
+with `m2m.enabled` and signing credentials; listing it alone does not
 enable issuance. An enabled M2M tenant outside the allowlist or an invalid
 allowlist causes startup to fail.
 
 Merge signing and M2M settings into the existing `TENANT_REGISTRY_JSON`; preserve
 the other AR login/resource fields. This PNPG example references the agreed UID
-environment variable; replace the example permission/product with actual IAM entries:
+environment variable:
 
 ```json
 {
@@ -113,12 +98,8 @@ environment variable; replace the example permission/product with actual IAM ent
     "m2m": {
       "enabled": true,
       "uidEnvVar": "TENANT_PNPG_M2M_IAM_UID",
-      "iamBaseUrl": "https://iam-pnpg.example.internal",
-      "groups": ["SUPPORT"],
-      "lifetimeSeconds": 300,
-      "grants": [
-        {"audience": "user-ms", "scope": "user.read", "productId": "prod-example"}
-      ]
+      "groups": [],
+      "lifetimeSeconds": 300
     }
   }
 }
@@ -126,8 +107,9 @@ environment variable; replace the example permission/product with actual IAM ent
 
 AR can declare a different `m2m` object and signing references. The default
 lifetime is 300 seconds, permitted range 60-900. Missing/disabled `m2m` denies
-issuance; an empty grants list denies all requests. Duplicate destination/scope
-grants, invalid policy and missing signing keys fail initialization.
+issuance. Invalid lifetime/groups and missing signing keys fail initialization.
+`iamBaseUrl` and `grants` are no longer used and should be removed from existing
+M2M configuration.
 
 Each environment maps these versionless references from its own Key Vault:
 
@@ -182,7 +164,7 @@ have been removed from the Container App module. This prevents new UID values
 from being fetched into Terraform state by this module; it does not purge secret
 values from historical state versions.
 
-Before enabling tenant issuance, provision signing secrets and IAM user/permissions
+Before enabling tenant issuance, provision signing secrets and the technical IAM user/permissions
 and, for HTTPS deployments, the TLS certificate/key. Verify the configured
 transport from an actual caller and that port 8082 cannot be reached outside the CAE. No plan/apply,
 deployment, secret provisioning or IAM data changes are performed by this PR.
@@ -199,9 +181,10 @@ not depend on primary HTTP traffic to wake the app. This increases DEV's baselin
 running cost; UAT/PROD already inherited a minimum of one. Existing maximum
 replicas, cron scaling and CPU/memory settings are preserved.
 
-Disabling the issuer or revoking the IAM permission prevents future acquisitions.
-Already-issued tokens remain valid until expiry; caller cache reads do not query
-IAM. Rotation must retain verification overlap for outstanding tokens.
+Disabling the issuer or tenant prevents future acquisitions. IAM revocation does
+not prevent issuance: its effect depends on downstream permission checks and
+their caches. Already-issued tokens remain valid until expiry. Rotation must
+retain verification overlap for outstanding tokens.
 
 ## Client configuration and caching
 
@@ -210,9 +193,15 @@ Configure `selfcare.m2m.enabled=true` and
 The SDK's `selfcare.m2m.allowed-tenants` also defaults to `AR,PNPG`; configure it
 with the tenant IDs the client needs, and include those IDs in auth's allowlist.
 The client list is not an authorization boundary: auth independently enforces
-its own list, per-tenant policy and IAM.
+its own list and per-tenant enablement.
 The SDK uses normal JVM TLS verification, bounded timeouts and no redirects.
 There is no Authorization header, Entra scope, identity client ID or client secret.
+
+The request is `{"tenantId":"AR"}` and the response contains only `access_token`,
+`token_type` and `expires_in`. Removed `audience`, `scope` and `productId` request
+fields are rejected with 400; update clients together with auth.
+Use `MachineTokenClient.token(tenantId)`; the old three-argument method and
+`selfcare.m2m.audience` / `selfcare.m2m.scope` settings have been removed.
 
 For the explicit HTTP mode, configure (DEV example):
 
@@ -232,11 +221,11 @@ Use the endpoint and CAE for the target environment:
 
 Each app-name endpoint is for callers in that auth CAE only.
 It can request either tenant once policies are configured; it does not make
-the listener reachable from the separate PNPG CAE. IAM calls still use HTTPS,
-and tenant JWT signing keys are required even when caller transport is HTTP.
+the listener reachable from the separate PNPG CAE. Tenant JWT signing keys are
+required even when caller transport is HTTP; auth makes no IAM call for issuance.
 No consumer deployment is changed automatically by these settings.
 
-Cache entries are separated by tenant/destination/scope. Concurrent requests
+Cache entries are separated by tenant and shared across destinations. Concurrent requests
 share one acquisition. The deadline is `min(240, expires_in - 30)` seconds from
 acquisition start and does not slide on reads. Failures never return stale tokens
 or fall back to a static JWT. The REST-client filter remains asynchronous.
@@ -250,11 +239,11 @@ Consumer adapters from #1126 require updating before adoption.
 
 ```shell
 mvn -B -f libs/selfcare-sdk-m2m/pom.xml verify
-mvn -B -f apps/auth/pom.xml package -Dtest=MachineTokenServiceTest,MachineTokenTenantTest,MachineTokenHttpTest,MachineIamAuthorizerTest,MachineTokenListenerTest,SessionServiceTest,SessionServiceImplTest,TenantRegistryTest,TenantSessionKeyProviderTest,TenantResolutionFilterTest,TenantOutboundMailConfigTest
+mvn -B -f apps/auth/pom.xml package -Dtest=MachineTokenServiceTest,MachineTokenTenantTest,MachineTokenHttpTest,MachineTokenListenerTest,SessionServiceTest,SessionServiceImplTest,TenantRegistryTest,TenantSessionKeyProviderTest,TenantResolutionFilterTest,TenantOutboundMailConfigTest
 ```
 
 Tests generate temporary signing/TLS keys (using the JDK's keytool), verify HTTPS
 defaults, explicit HTTP opt-in without TLS secrets, main-port isolation,
 PNPG without login, secret-backed tenant identities, missing/invalid UID rejection,
-IAM failures and SDK caching. They do
+tenant-only issuance without IAM/grants, removed-field rejection and SDK caching. They do
 not validate actual Azure reachability or deployed recipient authorization.

@@ -15,10 +15,10 @@ specifications when its APIs change, and update the internal contract separately
 DEV/UAT/PROD enable plaintext HTTP explicitly, without changing CAE peer-to-peer encryption.
 Its tenant policies remain disabled, so neither tenant can obtain tokens yet.
 It requires no caller credentials: CAE network isolation is the trust boundary.
-An explicit tenant grant and successful IAM permission check are required.
+The request contains only `tenantId`. Auth does not check IAM permissions or
+require grants during issuance; downstream services must authorize operations.
 It emits `PAGOPA` tokens with the tenant's IAM UID resolved through the
 secret-backed `m2m.uidEnvVar` reference, session key/audience
-and a default five-minute lifetime. Grant destination/scope restrict issuance,
-not downstream access in legacy receivers; the legacy security SDK grants
+and a default five-minute lifetime. No scope is included. The legacy security SDK grants
 `SUPPORT` for `PAGOPA` and skips SPID-specific tenant validation. See the
 [M2M rollout guide](../../../../../libs/selfcare-sdk-m2m/README.md).

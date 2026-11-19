@@ -4,7 +4,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.*;
 
 import jakarta.ws.rs.core.MultivaluedHashMap;
-import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import org.jboss.resteasy.reactive.client.spi.ResteasyReactiveClientRequestContext;
 import org.junit.jupiter.api.BeforeEach;
@@ -20,10 +19,8 @@ class MachineTokenRequestFilterTest {
     filter = new MachineTokenRequestFilter();
     filter.tokens = mock(MachineTokenClient.class);
     when(filter.tokens.isEnabled()).thenReturn(true);
-    filter.audience = Optional.of("onboarding-functions");
-    filter.scope = Optional.of("onboarding-functions.invoke");
     token = new CompletableFuture<>();
-    when(filter.tokens.token("AR", "onboarding-functions", "onboarding-functions.invoke")).thenReturn(token);
+    when(filter.tokens.token("AR")).thenReturn(token);
     context = mock(ResteasyReactiveClientRequestContext.class);
     when(context.getHeaderString("X-Tenant-Id")).thenReturn("AR");
     when(context.getHeaders()).thenReturn(new MultivaluedHashMap<>());
@@ -53,6 +50,6 @@ class MachineTokenRequestFilterTest {
     when(context.getHeaderString("Authorization")).thenReturn("Bearer user-jwt");
     filter.filter(context);
     verify(context, never()).suspend();
-    verify(filter.tokens, never()).token(anyString(), anyString(), anyString());
+    verify(filter.tokens, never()).token(anyString());
   }
 }
