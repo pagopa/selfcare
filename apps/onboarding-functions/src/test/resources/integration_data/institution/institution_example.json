@@ -271,5 +271,35 @@
     "county": "RM",
     "country": "IT",
     "imported": false
+  },
+  {
+    "id": "7c3f1a52-6d2e-4b8a-9f10-3e5d7a9b2c48",
+    "origin": "IPA",
+    "originId": "c_crag1",
+    "description": "Comune Aggregatore Registrazione",
+    "institutionType": "PA",
+    "digitalAddress": "aggregatore-registrazione@test.it",
+    "address": "Via Aggregatore, 8",
+    "zipCode": "00100",
+    "taxCode": "90000000084",
+    "city": "Roma",
+    "county": "RM",
+    "country": "IT",
+    "imported": false
+  },
+  {
+    "id": "7c3f1a52-6d2e-4b8a-9f10-3e5d7a9b2c49",
+    "origin": "IPA",
+    "originId": "c_crag2",
+    "description": "Comune Aggregato Registrazione",
+    "institutionType": "PA",
+    "digitalAddress": "aggregato-registrazione@test.it",
+    "address": "Via Aggregato, 9",
+    "zipCode": "00100",
+    "taxCode": "90000000092",
+    "city": "Roma",
+    "county": "RM",
+    "country": "IT",
+    "imported": false
   }
 ]

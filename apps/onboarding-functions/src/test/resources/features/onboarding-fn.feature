@@ -195,6 +195,21 @@ Feature: Onboarding collection
     And there is an active delegation from the aggregate to the aggregator
     And the aggregate has no users
 
+  Scenario: Register an aggregator contract and complete the aggregator onboarding
+    Given Preparing the invocation of "StartOnboardingOrchestration" HTTP call with onboardingId "5b2e8f40-6c1d-4a7b-9e35-686400000001"
+    When I send a GET request with given onboardingId
+    Then the response should have status code 202
+    And the answer should contain "id,purgeHistoryDeleteUri,restartPostUri"
+    And there is a document for onboarding with status "PENDING"
+    And the contract document of the onboarding is created
+    When I send a GET request with given onboardingId
+    Then the response should have status code 202
+    And there is a document for onboarding with status "COMPLETED"
+    And the institution "7c3f1a52-6d2e-4b8a-9f10-3e5d7a9b2c48" has an active onboarding for the product
+    And the aggregator user is active for aggregates
+    And the aggregate onboarding with taxCode "90000000092" has status "COMPLETED"
+    And there is an active delegation from the aggregate to the aggregator
+
   Scenario: Verify correct invocation of the StartOnboardingOrchestration for correct workflow USERS_PG request
     Given Preparing the invocation of "StartOnboardingOrchestration" HTTP call with onboardingId "89ad7142-24bb-48ad-8504-9c9231137e102"
     When I send a GET request with given onboardingId
