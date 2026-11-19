@@ -118,6 +118,9 @@ module "container_app_product_cdc" {
   secrets_names                  = local.secrets_names
   key_vault_resource_group_name  = module.local.config.key_vault_resource_group_name
   key_vault_name                 = module.local.config.key_vault_name
-  probes                         = module.local.config.quarkus_health_probes
-  tags                           = module.local.config.tags
+  probes = [
+    for probe in module.local.config.quarkus_health_probes :
+    merge(probe, { failureThreshold = probe.type == "Startup" ? 12 : probe.failureThreshold })
+  ]
+  tags = module.local.config.tags
 }
