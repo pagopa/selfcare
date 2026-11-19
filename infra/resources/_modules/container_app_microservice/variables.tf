@@ -171,3 +171,10 @@ variable "additional_user_assigned_identity_ids" {
   type        = list(string)
   default     = []
 }
+
+variable "enable_java4shell_mitigation" {
+  description = "Inject -XX:-UseBASE64Intrinsics into JAVA_TOOL_OPTIONS to mitigate CVE-2026-114938 (Java4Shell)"
+  type        = bool
+  default     = true
+}
+
