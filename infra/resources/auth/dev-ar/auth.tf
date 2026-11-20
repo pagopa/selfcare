@@ -143,7 +143,7 @@ locals {
   app_settings_auth_ms = [
     {
       name                = "TENANT_PNPG_JWT_SESSION_PRIVATE_KEY"
-      key_vault_secret_id = "https://selc-d-pnpg-kv.vault.azure.net/secrets/jwt-private-key"
+      key_vault_secret_id = "https://selc-d-pnpg-kv.vault.azure.net/secrets/jwt-private-key-pkcs8"
     },
     {
       name                = "TENANT_PNPG_JWT_SESSION_KEY_ID"
