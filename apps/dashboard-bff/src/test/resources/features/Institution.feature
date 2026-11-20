@@ -376,6 +376,71 @@ Feature: Institution
     Then the response status should be 400
     And the response should contain an error message "taxCode,must not be blank"
 
+  Scenario: Successfully request a contract update by institutionId and productId
+    Given user login with username "j.doe" and password "test"
+    And the institutionId is "067327d3-bdd6-408d-8655-87e8f1960046"
+    And the productId is "prod-io"
+    And the following contract update institution details:
+      | institutionType | origin | originId | taxCode     |
+      | PT              | IPA    | c_d277   | 99000870064 |
+    And the following contract update users:
+      | name  | surname | taxCode          | email      | role     |
+      | Rocky | Balboa  | blbrki80A41H401T | rb@test.it | MANAGER  |
+      | Carlo | Pietro  | PTRCRT80A41H401T | cp@test.it | DELEGATE |
+    When I send a POST request to "/v2/institutions/{institutionId}/products/{productId}/contract-update" to request a contract update
+    Then the response status should be 201
+
+  Scenario: Attempt to request a contract update without permissions (OPERATOR)
+    Given user login with username "j.doe" and password "test"
+    And the institutionId is "467ac77d-7faa-47bf-a60e-38ea74bd5fd2"
+    And the productId is "prod-interop"
+    And the following contract update institution details:
+      | institutionType | origin | originId | taxCode     |
+      | PA              | IPA    | c_d277   | 99000870064 |
+    And the following contract update users:
+      | name  | surname | taxCode          | email      | role    |
+      | Rocky | Balboa  | blbrki80A41H401T | rb@test.it | MANAGER |
+    When I send a POST request to "/v2/institutions/{institutionId}/products/{productId}/contract-update" to request a contract update
+    Then the response status should be 403
+
+  Scenario: Attempt to request a contract update for a product without a completed onboarding
+    Given user login with username "j.doe" and password "test"
+    And the institutionId is "067327d3-bdd6-408d-8655-87e8f1960046"
+    And the productId is "prod-pn"
+    And the following contract update institution details:
+      | institutionType | origin | originId | taxCode     |
+      | PT              | IPA    | c_d277   | 99000870064 |
+    And the following contract update users:
+      | name  | surname | taxCode          | email      | role    |
+      | Rocky | Balboa  | blbrki80A41H401T | rb@test.it | MANAGER |
+    When I send a POST request to "/v2/institutions/{institutionId}/products/{productId}/contract-update" to request a contract update
+    Then the response status should be 404
+
+  Scenario: Attempt to request a contract update without users
+    Given user login with username "j.doe" and password "test"
+    And the institutionId is "067327d3-bdd6-408d-8655-87e8f1960046"
+    And the productId is "prod-io"
+    And the following contract update institution details:
+      | institutionType | origin | originId | taxCode     |
+      | PT              | IPA    | c_d277   | 99000870064 |
+    When I send a POST request to "/v2/institutions/{institutionId}/products/{productId}/contract-update" to request a contract update
+    Then the response status should be 400
+    And the response should contain an error message "users,must not be empty"
+
+  Scenario: Attempt to request a contract update without origin
+    Given user login with username "j.doe" and password "test"
+    And the institutionId is "067327d3-bdd6-408d-8655-87e8f1960046"
+    And the productId is "prod-io"
+    And the following contract update institution details:
+      | institutionType | origin | originId | taxCode     |
+      | PT              |        | c_d277   | 99000870064 |
+    And the following contract update users:
+      | name  | surname | taxCode          | email      | role    |
+      | Rocky | Balboa  | blbrki80A41H401T | rb@test.it | MANAGER |
+    When I send a POST request to "/v2/institutions/{institutionId}/products/{productId}/contract-update" to request a contract update
+    Then the response status should be 400
+    And the response should contain an error message "origin,must not be blank"
+
   Scenario: Successfully add user by institutionId, productId and userId
     Given user login with username "j.doe" and password "test"
     And the institutionId is "c9a50656-f345-4c81-84be-5b2474470544"
@@ -468,77 +533,6 @@ Feature: Institution
     Given user login with username "r.balboa" and password "test"
     And the institution ID is "067327d3-bdd6-408d-8655-87e8f1960046" and the product ID is "prod-interop"
     When I send a GET request to "/v2/institutions/{institutionId}/products/{productId}/users/count" to get users count
-    Then the response status should be 404
-
-  Scenario: Successfully get Onboardings Info without products filter
-    Given user login with username "j.doe" and password "test"
-    And the institution ID is "067327d3-bdd6-408d-8655-87e8f1960046"
-    When I send a GET request to "/v2/institutions/{institutionId}/onboardings-info" to get onboardings info
-    Then the response status should be 200
-    And The dashboard response body contains:
-      | [0].productId         | prod-io      |
-      | [0].status            | ACTIVE       |
-      | [0].contractAvailable | true         |
-      | [0].institutionType   | PSP          |
-      | [0].origin            | IPA          |
-      | [0].originId          | c_d277       |
-      | [1].productId         | prod-pagopa  |
-      | [1].status            | ACTIVE       |
-      | [1].contractAvailable | true         |
-      | [1].institutionType   | PSP          |
-      | [1].origin            | IPA          |
-      | [1].originId          | c_d277       |
-      | [2].productId         | prod-interop |
-      | [2].status            | ACTIVE       |
-      | [2].contractAvailable | true         |
-      | [2].institutionType   | PT           |
-      | [2].origin            | IPA          |
-      | [2].originId          | c_d277       |
-    And The response body is a list of size 3
-
-  Scenario: Successfully get Onboardings Info with products filter
-    Given user login with username "j.doe" and password "test"
-    And the institution ID is "067327d3-bdd6-408d-8655-87e8f1960046"
-    And the products are "prod-io,prod-pagopa"
-    When I send a GET request to "/v2/institutions/{institutionId}/onboardings-info" to get onboardings info
-    Then the response status should be 200
-    And The dashboard response body contains:
-    | [0].productId         | prod-io     |
-    | [0].status            | ACTIVE      |
-    | [0].contractAvailable | true        |
-    | [0].institutionType   | PSP         |
-    | [0].origin            | IPA         |
-    | [0].originId          | c_d277      |
-    | [1].productId         | prod-pagopa |
-    | [1].status            | ACTIVE      |
-    | [1].contractAvailable | true        |
-    | [1].institutionType   | PSP         |
-    | [1].origin            | IPA         |
-    | [1].originId          | c_d277      |
-    And The response body is a list of size 2
-
-  Scenario: Attempt to get Onboardings Info without permission
-    Given user login with username "r.balboa" and password "test"
-    And the institution ID is "c9a50656-f345-4c81-84be-5b2474470544"
-    When I send a GET request to "/v2/institutions/{institutionId}/onboardings-info" to get onboardings info
-    Then the response status should be 403
-
-  Scenario: Successfully get Contract
-    Given user login with username "j.doe" and password "test"
-    And the institution ID is "067327d3-bdd6-408d-8655-87e8f1960046" and the product ID is "prod-pagopa"
-    When I send a GET request to "/v2/institutions/{institutionId}/contract" to get contract
-    Then the response status should be 200
-
-  Scenario: Attempt to get Contract without permission
-    Given user login with username "r.balboa" and password "test"
-    And the institution ID is "c9a50656-f345-4c81-84be-5b2474470544" and the product ID is "prod-io"
-    When I send a GET request to "/v2/institutions/{institutionId}/contract" to get contract
-    Then the response status should be 403
-
-  Scenario: Attempt to get a non-available contract
-    Given user login with username "r.balboa" and password "test"
-    And the institution ID is "467ac77d-7faa-47bf-a60e-38ea74bd5fd2" and the product ID is "prod-pagopa"
-    When I send a GET request to "/v2/institutions/{institutionId}/contract" to get contract
     Then the response status should be 404
 
   Scenario: Successfully check user when user is already onboarded to this institution and product with status ACTIVE

@@ -44,7 +44,9 @@ module "collection_onboardings" {
     { keys = ["taxCode"], unique = false },
     { keys = ["subunitCode"], unique = false },
     { keys = ["productId"], unique = false },
-    { keys = ["status"], unique = false }
+    { keys = ["status"], unique = false },
+    { keys = ["activatedAt"], unique = false },
+    { keys = ["deletedAt"], unique = false }
   ]
 }
 
@@ -142,7 +144,7 @@ locals {
   app_settings_onboarding_ms = [
     {
       name  = "JAVA_TOOL_OPTIONS"
-      value = "-javaagent:applicationinsights-agent.jar"
+      value = "-javaagent:applicationinsights-agent.jar -XX:-UseBASE64Intrinsics"
     },
     {
       name  = "APPLICATIONINSIGHTS_ROLE_NAME"

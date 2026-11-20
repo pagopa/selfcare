@@ -72,6 +72,7 @@ services:
       - develop-network
     depends_on:
       - mongodb
+      - productms
 
   documentms:
     image: ghcr.io/pagopa/selfcare-document-ms:latest
@@ -120,6 +121,17 @@ services:
       - "8085:8080"
     env_file:
       - "./src/test/resources/iamenv"
+    networks:
+      - develop-network
+    depends_on:
+      - mongodb
+
+  productms:
+    image: ghcr.io/pagopa/selfcare-product-ms:latest
+    pull_policy: always
+    platform: linux/amd64
+    env_file:
+      - "./src/test/resources/productenv"
     networks:
       - develop-network
     depends_on:

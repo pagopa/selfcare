@@ -15,6 +15,8 @@ import it.pagopa.selfcare.dashboard.model.mapper.InstitutionResourceMapperImpl;
 import it.pagopa.selfcare.dashboard.model.mapper.OnboardingMapperImpl;
 import it.pagopa.selfcare.dashboard.model.mapper.UserMapperImpl;
 import it.pagopa.selfcare.dashboard.model.mapper.UserMapperV2Impl;
+import it.pagopa.selfcare.dashboard.model.onboarding.ContractUpdateUserDto;
+import it.pagopa.selfcare.dashboard.model.onboarding.OnboardingContractUpdateDto;
 import it.pagopa.selfcare.dashboard.model.user.*;
 import it.pagopa.selfcare.dashboard.service.DelegationService;
 import it.pagopa.selfcare.dashboard.service.InstitutionV2Service;
@@ -473,6 +475,76 @@ class InstitutionV2ControllerTest extends BaseControllerTest {
     }
 
     @Test
+    void onboardingContractUpdate_happyPath() throws Exception {
+        // given
+        final String institutionId = "institutionId";
+        final String productId = "prod-io";
+        ContractUpdateUserDto manager = new ContractUpdateUserDto();
+        manager.setName("John");
+        manager.setSurname("Doe");
+        manager.setTaxCode("TAXCODE1");
+        manager.setEmail("john.doe@example.com");
+        manager.setRole(it.pagopa.selfcare.onboarding.common.PartyRole.MANAGER);
+        ContractUpdateUserDto delegate = new ContractUpdateUserDto();
+        delegate.setName("Jane");
+        delegate.setSurname("Roe");
+        delegate.setTaxCode("TAXCODE2");
+        delegate.setEmail("jane.roe@example.com");
+        delegate.setRole(it.pagopa.selfcare.onboarding.common.PartyRole.DELEGATE);
+        OnboardingContractUpdateDto request = new OnboardingContractUpdateDto();
+        request.setInstitutionType(it.pagopa.selfcare.onboarding.common.InstitutionType.PA);
+        request.setOrigin("IPA");
+        request.setOriginId("originId");
+        request.setTaxCode("institutionTaxCode");
+        request.setSubunitCode("subunitCode");
+        request.setUsers(List.of(manager, delegate));
+
+        // when
+        mockMvc.perform(MockMvcRequestBuilders
+                        .post(BASE_URL + "/{institutionId}/products/{productId}/contract-update", institutionId, productId)
+                        .contentType(APPLICATION_JSON_VALUE)
+                        .content(objectMapper.writeValueAsString(request))
+                        .accept(APPLICATION_JSON_VALUE))
+                .andExpect(status().isCreated());
+
+        // then
+        verify(institutionV2ServiceMock, times(1)).onboardingContractUpdate(argThat(req ->
+                productId.equals(req.getProductId())
+                        && it.pagopa.selfcare.onboarding.generated.openapi.v1.dto.InstitutionType.PA.equals(req.getInstitutionType())
+                        && "IPA".equals(req.getOrigin())
+                        && "originId".equals(req.getOriginId())
+                        && "institutionTaxCode".equals(req.getTaxCode())
+                        && "subunitCode".equals(req.getSubunitCode())
+                        && req.getUsers().size() == 2
+                        && "TAXCODE1".equals(req.getUsers().get(0).getTaxCode())
+                        && it.pagopa.selfcare.onboarding.generated.openapi.v1.dto.PartyRole.MANAGER.equals(req.getUsers().get(0).getRole())
+                        && "jane.roe@example.com".equals(req.getUsers().get(1).getEmail())
+                        && it.pagopa.selfcare.onboarding.generated.openapi.v1.dto.PartyRole.DELEGATE.equals(req.getUsers().get(1).getRole())));
+        verifyNoMoreInteractions(institutionV2ServiceMock);
+    }
+
+    @Test
+    void onboardingContractUpdate_whenUsersAreEmpty_returnsBadRequest() throws Exception {
+        // given
+        OnboardingContractUpdateDto request = new OnboardingContractUpdateDto();
+        request.setOrigin("IPA");
+        request.setOriginId("originId");
+        request.setUsers(List.of());
+
+        // when
+        MvcResult result = mockMvc.perform(MockMvcRequestBuilders
+                        .post(BASE_URL + "/{institutionId}/products/{productId}/contract-update", "institutionId", "prod-io")
+                        .contentType(APPLICATION_JSON_VALUE)
+                        .content(objectMapper.writeValueAsString(request))
+                        .accept(APPLICATION_JSON_VALUE))
+                .andReturn();
+
+        // then
+        assertEquals(HttpStatus.BAD_REQUEST.value(), result.getResponse().getStatus());
+        verifyNoInteractions(institutionV2ServiceMock);
+    }
+
+    @Test
     void getDelegationsUsingTo_shouldGetDataWithoutFilters() throws Exception {
         // Given
         DelegationWithInfo expectedDelegation = dummyDelegation();
@@ -669,67 +741,6 @@ class InstitutionV2ControllerTest extends BaseControllerTest {
         verify(userServiceMock, times(1))
                 .getUserCount(institutionId, productId, Collections.emptyList(), Collections.emptyList());
         verifyNoMoreInteractions(userServiceMock);
-    }
-
-    @Test
-    void getOnboardingsInfo() throws Exception {
-        final String institutionId = "institutionId";
-        final String[] products = { PROD_IO.name(),  PROD_IO_PREMIUM.name() };
-        final OnboardingsResponse onboardingsResponse = getOnboardingsResponse();
-
-        when(institutionV2ServiceMock.getOnboardingsInfoResponse(institutionId, Arrays.asList(products))).thenReturn(onboardingsResponse);
-
-        final MvcResult result = mockMvc.perform(MockMvcRequestBuilders
-                        .get(BASE_URL + "/{institutionId}/onboardings-info", institutionId)
-                        .queryParam("products", products)
-                        .contentType(APPLICATION_JSON_VALUE)
-                        .accept(APPLICATION_JSON_VALUE))
-                .andExpect(status().isOk())
-                .andReturn();
-
-        List<OnboardingInfo> resource = objectMapper.readValue(result.getResponse().getContentAsString(), new TypeReference<>() {});
-
-        assertEquals(onboardingsResponse.getOnboardings().get(0).getProductId(), resource.get(0).getProductId());
-        assertEquals(onboardingsResponse.getOnboardings().get(0).getStatus().getValue(), resource.get(0).getStatus());
-        assertEquals(onboardingsResponse.getOnboardings().get(0).getOrigin(), resource.get(0).getOrigin());
-        assertEquals(onboardingsResponse.getOnboardings().get(0).getOriginId(), resource.get(0).getOriginId());
-        assertEquals(onboardingsResponse.getOnboardings().get(0).getInstitutionType().getValue(), resource.get(0).getInstitutionType().name());
-        assertTrue(resource.get(0).getContractAvailable());
-        assertEquals(onboardingsResponse.getOnboardings().get(1).getProductId(), resource.get(1).getProductId());
-        assertEquals(onboardingsResponse.getOnboardings().get(1).getStatus().getValue(), resource.get(1).getStatus());
-        assertEquals(onboardingsResponse.getOnboardings().get(1).getOrigin(), resource.get(1).getOrigin());
-        assertEquals(onboardingsResponse.getOnboardings().get(1).getOriginId(), resource.get(1).getOriginId());
-        assertEquals(onboardingsResponse.getOnboardings().get(1).getInstitutionType().getValue(), resource.get(1).getInstitutionType().name());
-        assertFalse(resource.get(1).getContractAvailable());
-
-        verify(institutionV2ServiceMock, times(1))
-                .getOnboardingsInfoResponse(institutionId, Arrays.asList(products));
-        verifyNoMoreInteractions(institutionV2ServiceMock);
-    }
-
-    @Test
-    void getContract() throws Exception {
-        String institutionId = "institutionId";
-        String productId = "productId";
-        String text = "text";
-        byte[] bytes = text.getBytes();
-        InputStream is = new ByteArrayInputStream(bytes);
-
-        Resource resource = Mockito.mock(Resource.class);
-        when(resource.getInputStream()).thenReturn(is);
-        when(resource.getFilename()).thenReturn("contract.pdf");
-
-        when(institutionV2ServiceMock.getContract(institutionId, productId)).thenReturn(resource);
-
-        mockMvc.perform(MockMvcRequestBuilders
-                        .get(BASE_URL + "/{institutionId}/contract", institutionId)
-                        .queryParam("productId", productId)
-                        .accept(MediaType.APPLICATION_OCTET_STREAM_VALUE))
-                .andExpect(status().isOk())
-                .andExpect(content().bytes(bytes))
-                .andExpect(header().string("Content-Disposition", "attachment; filename=contract.pdf"));
-
-        verify(institutionV2ServiceMock, times(1)).getContract(institutionId, productId);
     }
 
     @Test

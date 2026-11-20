@@ -7,6 +7,7 @@
     "contractVersion": "1.0.0",
     "contractTemplate": "contracts/dummy-accordo_di_adesione.html",
     "contractSigned": "parties/docs/21f73488-d0df-4a3d-9b6f-9adf634780b5/signed_PAGOPA_accordo_adesione.pdf",
+    "contractFilename": "Piattaforma_pagoPA_accordo_adesione.pdf",
     "createdAt": {
       "$date": "2022-10-26T16:33:39.220Z"
     },
@@ -29,6 +30,58 @@
     },
     "updatedAt": {
       "$date": "2022-10-26T16:34:39.908Z"
+    }
+  },
+  {
+    "_id": "21f73488-d0df-4a3d-9b6f-9adf634780b7",
+    "onboardingId": "21f73488-d0df-4a3d-9b6f-9adf634780b5",
+    "type": "ATTACHMENT",
+    "attachmentName": "Addendum",
+    "productId": "prod-pagopa",
+    "storageOrigin": "SYSTEM",
+    "contractVersion": "1.0.1",
+    "contractTemplate": "contracts/template/pagopa/attachments/1.0.1/addendum-v.1.0.1.pdf",
+    "contractSigned": "parties/docs/21f73488-d0df-4a3d-9b6f-9adf634780b5/attachments/Addendum.pdf",
+    "contractFilename": "signed_addendum.pdf",
+    "createdAt": {
+      "$date": "2022-10-26T16:33:39.220Z"
+    },
+    "updatedAt": {
+      "$date": "2022-10-26T16:34:39.908Z"
+    }
+  },
+  {
+    "_id": "4b8e2c1d-7f3a-4d5e-9c6b-0a1b2c3d4e5f",
+    "onboardingId": "4b8e2c1d-7f3a-4d5e-9c6b-0a1b2c3d4e50",
+    "rootOnboardingId": "21f73488-d0df-4a3d-9b6f-9adf634780b5",
+    "type": "USER",
+    "productId": "prod-pagopa",
+    "contractVersion": "1.0.0",
+    "contractTemplate": "contracts/dummy-accordo_di_adesione.html",
+    "contractSigned": "parties/docs/4b8e2c1d-7f3a-4d5e-9c6b-0a1b2c3d4e50/signed_PAGOPA_user_contract.pdf",
+    "contractFilename": "signed_PAGOPA_user_contract.pdf",
+    "createdAt": {
+      "$date": "2022-10-26T16:33:39.220Z"
+    },
+    "updatedAt": {
+      "$date": "2022-10-26T16:34:39.908Z"
+    }
+  },
+  {
+    "_id": "9f6a3b2c-5d4e-4f70-8b8c-2d3e4f5a6b72",
+    "onboardingId": "9f6a3b2c-5d4e-4f70-8b8c-2d3e4f5a6b71",
+    "rootOnboardingId": "21f73488-d0df-4a3d-9b6f-9adf634780b5",
+    "type": "INSTITUTION",
+    "productId": "prod-pagopa",
+    "contractVersion": "1.0.1",
+    "contractTemplate": "contracts/dummy-accordo_di_adesione.html",
+    "contractSigned": "parties/docs/9f6a3b2c-5d4e-4f70-8b8c-2d3e4f5a6b71/signed_PAGOPA_accordo_adesione_update.pdf",
+    "contractFilename": "signed_PAGOPA_accordo_adesione_update.pdf",
+    "createdAt": {
+      "$date": "2026-10-20T10:00:00.000Z"
+    },
+    "updatedAt": {
+      "$date": "2026-10-20T10:00:00.000Z"
     }
   }
 ]

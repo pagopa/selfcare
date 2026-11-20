@@ -1,6 +1,8 @@
 package it.pagopa.selfcare.onboarding.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
@@ -16,6 +18,7 @@ import io.jsonwebtoken.SignatureAlgorithm;
 import io.quarkus.test.junit.QuarkusTest;
 import it.pagopa.selfcare.onboarding.HttpResponseMessageMock;
 import it.pagopa.selfcare.onboarding.config.JwtValidationConfig;
+import it.pagopa.selfcare.tenant.TenantRegistry;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.util.Base64;
@@ -38,6 +41,8 @@ class HttpJwtValidatorTest {
   private static KeyPair unknownKeys;
 
   private JwtValidationConfig config;
+  private TenantRegistry registry;
+  private final Map<String, String> publicKeys = new HashMap<>();
   private HttpJwtValidator validator;
   private ExecutionContext context;
 
@@ -54,10 +59,15 @@ class HttpJwtValidatorTest {
   void setUp() {
     config = mock(JwtValidationConfig.class);
     when(config.allowedIssuers()).thenReturn(Set.of("SPID", "PAGOPA"));
-    JwtValidationConfig.TenantKey arKey = tenantKey(pem(arKeys));
-    JwtValidationConfig.TenantKey pnpgKey = tenantKey(pem(pnpgKeys));
-    when(config.tenants()).thenReturn(Map.of("AR", arKey, "PNPG", pnpgKey));
-    validator = new HttpJwtValidator(config, new ObjectMapper());
+    when(config.defaultTenant()).thenReturn(Optional.of("PNPG"));
+    publicKeys.clear();
+    publicKeys.put("AR", pem(arKeys));
+    publicKeys.put("PNPG", pem(pnpgKeys));
+    registry = mock(TenantRegistry.class);
+    when(registry.supportedTenantIds()).thenReturn(Set.of("AR", "PNPG"));
+    when(registry.jwtPublicKey(any()))
+        .thenAnswer(invocation -> Optional.ofNullable(publicKeys.get(invocation.<String>getArgument(0))));
+    validator = new HttpJwtValidator(config, new ObjectMapper(), registry);
     context = mock(ExecutionContext.class);
     when(context.getLogger()).thenReturn(Logger.getGlobal());
   }
@@ -68,10 +78,35 @@ class HttpJwtValidatorTest {
     String jwt = token(arKeys, claims("SPID", "user-id", "AR"), 60);
 
     // when
-    Optional<HttpResponseMessage> response = validate(jwt, "AR");
+    HttpAuthorization response = authenticate(jwt, "AR");
 
     // then
-    assertTrue(response.isEmpty());
+    assertFalse(response.isRejected());
+  }
+
+  @Test
+  void exposesCallerIdentityFromVerifiedClaims() {
+    // given
+    Map<String, Object> claims = claims("SPID", "token-uid", "AR");
+    claims.put("client_id", "apim");
+    claims.put("subscription_id", "subscription-id");
+    claims.put("product_id", " ");
+    String jwt = token(arKeys, claims, 60);
+    Map<String, String> headers =
+        Map.of("Authorization", "Bearer " + jwt, "X-Tenant-Id", "AR", "x-selfcare-uid", "pippo");
+
+    // when
+    HttpAuthorization response = validator.authenticate(request(headers), context);
+
+    // then
+    assertFalse(response.isRejected());
+    assertEquals("token-uid", response.caller().userId());
+    assertEquals("SPID", response.caller().issuer());
+    assertEquals("apim", response.caller().clientId());
+    assertEquals("subscription-id", response.caller().subscriptionId());
+    assertNull(response.caller().productId());
+    assertEquals("AR", response.caller().tenant());
+    assertEquals("claim", response.caller().tenantSource());
   }
 
   @Test
@@ -80,10 +115,10 @@ class HttpJwtValidatorTest {
     String jwt = token(pnpgKeys, claims("PAGOPA", "fake-pnpg-user", "PNPG"), 60);
 
     // when
-    Optional<HttpResponseMessage> response = validate(jwt, "PNPG");
+    HttpAuthorization response = authenticate(jwt, "PNPG");
 
     // then
-    assertTrue(response.isEmpty());
+    assertFalse(response.isRejected());
   }
 
   @Test
@@ -94,10 +129,10 @@ class HttpJwtValidatorTest {
         Map.of("authorization", "bearer " + jwt, "x-tenant-id", " ar ");
 
     // when
-    Optional<HttpResponseMessage> response = validator.validate(request(headers), context);
+    HttpAuthorization response = validator.authenticate(request(headers), context);
 
     // then
-    assertTrue(response.isEmpty());
+    assertFalse(response.isRejected());
   }
 
   @Test
@@ -107,15 +142,14 @@ class HttpJwtValidatorTest {
         "-----BEGIN PUBLIC KEY-----\n"
             + Base64.getMimeEncoder().encodeToString(arKeys.getPublic().getEncoded())
             + "\n-----END PUBLIC KEY-----";
-    JwtValidationConfig.TenantKey tenantKey = tenantKey(pem);
-    when(config.tenants()).thenReturn(Map.of("AR", tenantKey));
+    publicKeys.put("AR", pem);
 
     // when
-    Optional<HttpResponseMessage> response =
-        validate(token(arKeys, claims("SPID", "user-id", "AR"), 60), "AR");
+    HttpAuthorization response =
+        authenticate(token(arKeys, claims("SPID", "user-id", "AR"), 60), "AR");
 
     // then
-    assertTrue(response.isEmpty());
+    assertFalse(response.isRejected());
   }
 
   @Test
@@ -124,7 +158,7 @@ class HttpJwtValidatorTest {
     String jwt = token(arKeys, claims("SPID", "user-id", "AR"), 60);
 
     // when
-    Optional<HttpResponseMessage> response = validate(jwt, null);
+    HttpAuthorization response = authenticate(jwt, null);
 
     // then
     assertStatus(response, HttpStatus.BAD_REQUEST);
@@ -136,7 +170,7 @@ class HttpJwtValidatorTest {
     String jwt = token(arKeys, claims("SPID", "user-id", "AR"), 60);
 
     // when
-    Optional<HttpResponseMessage> response = validate(jwt, "UNKNOWN");
+    HttpAuthorization response = authenticate(jwt, "UNKNOWN");
 
     // then
     assertStatus(response, HttpStatus.BAD_REQUEST);
@@ -148,12 +182,12 @@ class HttpJwtValidatorTest {
     HttpRequestMessage<Optional<String>> request = request(Map.of("X-Tenant-Id", "AR"));
 
     // when
-    Optional<HttpResponseMessage> response = validator.validate(request, context);
+    HttpAuthorization response = validator.authenticate(request, context);
 
     // then
     assertStatus(response, HttpStatus.UNAUTHORIZED);
-    assertEquals("Bearer", response.orElseThrow().getHeader("WWW-Authenticate"));
-    assertEquals("Unauthorized", response.orElseThrow().getBody());
+    assertEquals("Bearer", response.rejection().getHeader("WWW-Authenticate"));
+    assertEquals("Unauthorized", response.rejection().getBody());
   }
 
   @Test
@@ -163,7 +197,7 @@ class HttpJwtValidatorTest {
         request(Map.of("X-Tenant-Id", "AR", "Authorization", "Basic credentials"));
 
     // when
-    Optional<HttpResponseMessage> response = validator.validate(request, context);
+    HttpAuthorization response = validator.authenticate(request, context);
 
     // then
     assertStatus(response, HttpStatus.UNAUTHORIZED);
@@ -179,8 +213,8 @@ class HttpJwtValidatorTest {
             .compact();
 
     // when
-    Optional<HttpResponseMessage> malformedResponse = validate("not-a-jwt", "AR");
-    Optional<HttpResponseMessage> unsignedResponse = validate(unsigned, "AR");
+    HttpAuthorization malformedResponse = authenticate("not-a-jwt", "AR");
+    HttpAuthorization unsignedResponse = authenticate(unsigned, "AR");
 
     // then
     assertStatus(malformedResponse, HttpStatus.UNAUTHORIZED);
@@ -198,7 +232,7 @@ class HttpJwtValidatorTest {
             .compact();
 
     // when
-    Optional<HttpResponseMessage> response = validate(jwt, "AR");
+    HttpAuthorization response = authenticate(jwt, "AR");
 
     // then
     assertStatus(response, HttpStatus.UNAUTHORIZED);
@@ -215,8 +249,8 @@ class HttpJwtValidatorTest {
             .compact();
 
     // when
-    Optional<HttpResponseMessage> expiredResponse = validate(expired, "AR");
-    Optional<HttpResponseMessage> withoutExpirationResponse = validate(withoutExpiration, "AR");
+    HttpAuthorization expiredResponse = authenticate(expired, "AR");
+    HttpAuthorization withoutExpirationResponse = authenticate(withoutExpiration, "AR");
 
     // then
     assertStatus(expiredResponse, HttpStatus.UNAUTHORIZED);
@@ -230,8 +264,8 @@ class HttpJwtValidatorTest {
     String otherTenantToken = token(pnpgKeys, claims("SPID", "user-id", "PNPG"), 60);
 
     // when
-    Optional<HttpResponseMessage> unknownKeyResponse = validate(unknownKeyToken, "AR");
-    Optional<HttpResponseMessage> otherTenantResponse = validate(otherTenantToken, "AR");
+    HttpAuthorization unknownKeyResponse = authenticate(unknownKeyToken, "AR");
+    HttpAuthorization otherTenantResponse = authenticate(otherTenantToken, "AR");
 
     // then
     assertStatus(unknownKeyResponse, HttpStatus.UNAUTHORIZED);
@@ -245,8 +279,8 @@ class HttpJwtValidatorTest {
     String missing = token(arKeys, claims(null, "user-id", "AR"), 60);
 
     // when
-    Optional<HttpResponseMessage> unexpectedResponse = validate(unexpected, "AR");
-    Optional<HttpResponseMessage> missingResponse = validate(missing, "AR");
+    HttpAuthorization unexpectedResponse = authenticate(unexpected, "AR");
+    HttpAuthorization missingResponse = authenticate(missing, "AR");
 
     // then
     assertStatus(unexpectedResponse, HttpStatus.UNAUTHORIZED);
@@ -254,18 +288,109 @@ class HttpJwtValidatorTest {
   }
 
   @Test
-  void rejectsMissingUidOrTenantClaim() {
+  void rejectsMissingUid() {
     // given
     String missingUid = token(arKeys, claims("SPID", null, "AR"), 60);
-    String missingTenant = token(arKeys, claims("SPID", "user-id", null), 60);
 
     // when
-    Optional<HttpResponseMessage> missingUidResponse = validate(missingUid, "AR");
-    Optional<HttpResponseMessage> missingTenantResponse = validate(missingTenant, "AR");
+    HttpAuthorization response = authenticate(missingUid, "AR");
 
     // then
-    assertStatus(missingUidResponse, HttpStatus.UNAUTHORIZED);
-    assertStatus(missingTenantResponse, HttpStatus.UNAUTHORIZED);
+    assertStatus(response, HttpStatus.UNAUTHORIZED);
+  }
+
+  @Test
+  void acceptsPnpgTokenWithoutTenantClaim() {
+    // given
+    String jwt = token(pnpgKeys, claims("SPID", "user-id", null), 60);
+
+    // when
+    HttpAuthorization response = authenticate(jwt, "PNPG");
+
+    // then
+    assertFalse(response.isRejected());
+    assertEquals("PNPG", response.caller().tenant());
+    assertEquals("default", response.caller().tenantSource());
+  }
+
+  @Test
+  void rejectsTokenWithoutTenantClaimForNonDefaultTenant() {
+    // given
+    String jwt = token(arKeys, claims("SPID", "user-id", null), 60);
+
+    // when
+    HttpAuthorization response = authenticate(jwt, "AR");
+
+    // then
+    assertStatus(response, HttpStatus.UNAUTHORIZED);
+  }
+
+  @Test
+  void rejectsTokenWithoutTenantClaimWhenNoDefaultTenantIsConfigured() {
+    // given
+    when(config.defaultTenant()).thenReturn(Optional.empty());
+    String jwt = token(pnpgKeys, claims("SPID", "user-id", null), 60);
+
+    // when
+    HttpAuthorization response = authenticate(jwt, "PNPG");
+
+    // then
+    assertStatus(response, HttpStatus.UNAUTHORIZED);
+  }
+
+  @Test
+  void rejectsTokenWithoutTenantClaimWhenClaimIsRequired() {
+    // given
+    when(config.tenantClaimRequired()).thenReturn(true);
+    String jwt = token(pnpgKeys, claims("SPID", "user-id", null), 60);
+
+    // when
+    HttpAuthorization response = authenticate(jwt, "PNPG");
+
+    // then
+    assertStatus(response, HttpStatus.UNAUTHORIZED);
+  }
+
+  @Test
+  void rejectsBlankOrNonStringTenantClaim() {
+    // given
+    Map<String, Object> numericTenant = claims("SPID", "user-id", null);
+    numericTenant.put("tenant_id", 1);
+    String blank = token(pnpgKeys, claims("SPID", "user-id", " "), 60);
+    String numeric = token(pnpgKeys, numericTenant, 60);
+
+    // when
+    HttpAuthorization blankResponse = authenticate(blank, "PNPG");
+    HttpAuthorization numericResponse = authenticate(numeric, "PNPG");
+
+    // then
+    assertStatus(blankResponse, HttpStatus.UNAUTHORIZED);
+    assertStatus(numericResponse, HttpStatus.UNAUTHORIZED);
+  }
+
+  @Test
+  void rejectsUnsupportedTenantClaim() {
+    // given
+    String jwt = token(arKeys, claims("SPID", "user-id", "XX"), 60);
+
+    // when
+    HttpAuthorization response = authenticate(jwt, "AR");
+
+    // then
+    assertStatus(response, HttpStatus.UNAUTHORIZED);
+  }
+
+  @Test
+  void rejectsTokenWithoutTenantClaimWhenDefaultTenantIsNotSupported() {
+    // given
+    when(registry.supportedTenantIds()).thenReturn(Set.of("AR"));
+    String jwt = token(arKeys, claims("SPID", "user-id", null), 60);
+
+    // when
+    HttpAuthorization response = authenticate(jwt, "AR");
+
+    // then
+    assertStatus(response, HttpStatus.UNAUTHORIZED);
   }
 
   @Test
@@ -274,7 +399,7 @@ class HttpJwtValidatorTest {
     String jwt = token(arKeys, claims("SPID", "user-id", "PNPG"), 60);
 
     // when
-    Optional<HttpResponseMessage> response = validate(jwt, "AR");
+    HttpAuthorization response = authenticate(jwt, "AR");
 
     // then
     assertStatus(response, HttpStatus.UNAUTHORIZED);
@@ -284,21 +409,19 @@ class HttpJwtValidatorTest {
   void failsClosedWhenTenantKeyIsMissingOrInvalid() {
     // given
     String jwt = token(arKeys, claims("SPID", "user-id", "AR"), 60);
-    JwtValidationConfig.TenantKey pnpgKey = tenantKey(pem(pnpgKeys));
-    when(config.tenants()).thenReturn(Map.of("PNPG", pnpgKey));
+    publicKeys.remove("AR");
 
     // when
-    Optional<HttpResponseMessage> missingKeyResponse = validate(jwt, "AR");
+    HttpAuthorization missingKeyResponse = authenticate(jwt, "AR");
 
     // then
     assertStatus(missingKeyResponse, HttpStatus.UNAUTHORIZED);
 
     // given
-    JwtValidationConfig.TenantKey invalidKey = tenantKey("not-a-key");
-    when(config.tenants()).thenReturn(Map.of("AR", invalidKey));
+    publicKeys.put("AR", "not-a-key");
 
     // when
-    Optional<HttpResponseMessage> invalidKeyResponse = validate(jwt, "AR");
+    HttpAuthorization invalidKeyResponse = authenticate(jwt, "AR");
 
     // then
     assertStatus(invalidKeyResponse, HttpStatus.UNAUTHORIZED);
@@ -311,25 +434,25 @@ class HttpJwtValidatorTest {
     String jwt = token(arKeys, claims("SPID", "user-id", "AR"), 60);
 
     // when
-    Optional<HttpResponseMessage> response = validate(jwt, "AR");
+    HttpAuthorization response = authenticate(jwt, "AR");
 
     // then
     assertStatus(response, HttpStatus.UNAUTHORIZED);
   }
 
-  private Optional<HttpResponseMessage> validate(String jwt, String tenant) {
+  private HttpAuthorization authenticate(String jwt, String tenant) {
     Map<String, String> headers = new HashMap<>();
     headers.put("Authorization", "Bearer " + jwt);
     if (tenant != null) {
       headers.put("X-Tenant-Id", tenant);
     }
-    return validator.validate(request(headers), context);
+    return validator.authenticate(request(headers), context);
   }
 
   private static void assertStatus(
-      Optional<HttpResponseMessage> response, HttpStatus expectedStatus) {
-    assertTrue(response.isPresent());
-    assertEquals(expectedStatus.value(), response.orElseThrow().getStatusCode());
+      HttpAuthorization response, HttpStatus expectedStatus) {
+    assertTrue(response.isRejected());
+    assertEquals(expectedStatus.value(), response.rejection().getStatusCode());
   }
 
   @SuppressWarnings("unchecked")
@@ -370,11 +493,5 @@ class HttpJwtValidatorTest {
 
   private static String pem(KeyPair keys) {
     return Base64.getEncoder().encodeToString(keys.getPublic().getEncoded());
-  }
-
-  private static JwtValidationConfig.TenantKey tenantKey(String publicKey) {
-    JwtValidationConfig.TenantKey key = mock(JwtValidationConfig.TenantKey.class);
-    when(key.publicKey()).thenReturn(Optional.ofNullable(publicKey));
-    return key;
   }
 }

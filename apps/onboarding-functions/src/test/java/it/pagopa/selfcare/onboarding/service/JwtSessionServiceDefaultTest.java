@@ -1,5 +1,7 @@
 package it.pagopa.selfcare.onboarding.service;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.quarkus.test.InjectMock;
 import io.quarkus.test.junit.QuarkusTest;
 import io.quarkus.test.junit.QuarkusTestProfile;
@@ -19,10 +21,12 @@ import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
+import java.util.Base64;
 import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
@@ -90,6 +94,23 @@ class JwtSessionServiceDefaultTest {
             jwt = tokenService.createMachineJwt();
         }
         assertTrue(Objects.nonNull(jwt));
+    }
+
+    @Test
+    void machineJwtUsesAudienceAndTenantOfCurrentTenant() throws Exception {
+        assertAudienceAndTenant("AR", "api.dev.selfcare.pagopa.it");
+        assertAudienceAndTenant("PNPG", "pnpg.dev.selfcare.pagopa.it");
+    }
+
+    private void assertAudienceAndTenant(String tenant, String expectedAudience) throws Exception {
+        String jwt;
+        try (TenantContext.Scope ignored = TenantContext.open(tenant)) {
+            jwt = tokenService.createMachineJwt();
+        }
+        JsonNode claims = new ObjectMapper()
+                .readTree(Base64.getUrlDecoder().decode(jwt.split("\\.")[1]));
+        assertEquals(expectedAudience, claims.get("aud").asText());
+        assertEquals(tenant, claims.get(TenantContext.TENANT_CLAIM).asText());
     }
 
 }

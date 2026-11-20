@@ -1,6 +1,7 @@
 package it.pagopa.selfcare.party.registry_proxy.connector.rest;
 
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import it.pagopa.selfcare.onboarding.crypto.utils.DataEncryptionUtils;
 import it.pagopa.selfcare.party.registry_proxy.connector.api.PDNDInfoCamereConnector;
@@ -65,8 +66,9 @@ public class PDNDInfoCamereConnectorImpl implements PDNDInfoCamereConnector {
           String encResult = PDNDCacheableService.getEncryptedPDNDImpresa(encTaxCode, secretValue);
           String decResult = DataEncryptionUtils.decrypt(encResult);
           impresa = new ObjectMapper().readValue(decResult, new TypeReference<>(){});
-      } catch (Exception e) {
-          log.error("Error during retrieveInstitutionPdndByTaxCode", e);
+      } catch (JsonProcessingException e) {
+          log.error("Unable to decode PDND institution response");
+          throw new IllegalStateException("Unable to decode PDND institution response", e);
       }
 
       return pdndBusinessMapper.toPDNDBusiness(impresa);

@@ -17,6 +17,7 @@ import io.quarkus.test.InjectMock;
 import io.quarkus.test.junit.QuarkusTest;
 import it.pagopa.selfcare.onboarding.HttpResponseMessageMock;
 import it.pagopa.selfcare.onboarding.service.FunctionInvocationLogger;
+import it.pagopa.selfcare.onboarding.service.HttpAuthorization;
 import it.pagopa.selfcare.onboarding.service.HttpJwtValidator;
 import jakarta.inject.Inject;
 import java.util.List;
@@ -59,7 +60,8 @@ class HttpTriggerJwtEnforcementTest {
         new HttpResponseMessageMock.HttpResponseMessageBuilderMock()
             .status(HttpStatus.UNAUTHORIZED)
             .build();
-    when(httpJwtValidator.validate(any(), any())).thenReturn(Optional.of(unauthorized));
+    when(httpJwtValidator.authenticate(any(), any()))
+        .thenReturn(HttpAuthorization.rejected(unauthorized));
   }
 
   @Test
@@ -78,7 +80,7 @@ class HttpTriggerJwtEnforcementTest {
 
     // then
     responses.forEach(HttpTriggerJwtEnforcementTest::assertUnauthorized);
-    verify(httpJwtValidator, times(4)).validate(request, context);
+    verify(httpJwtValidator, times(4)).authenticate(request, context);
     verifyNoInteractions(functionInvocationLogger);
   }
 
@@ -97,7 +99,7 @@ class HttpTriggerJwtEnforcementTest {
 
     // then
     responses.forEach(HttpTriggerJwtEnforcementTest::assertUnauthorized);
-    verify(httpJwtValidator, times(4)).validate(request, context);
+    verify(httpJwtValidator, times(4)).authenticate(request, context);
     verifyNoInteractions(functionInvocationLogger, durableContext);
   }
 
@@ -112,7 +114,7 @@ class HttpTriggerJwtEnforcementTest {
 
     // then
     assertUnauthorized(response);
-    verify(httpJwtValidator).validate(request, context);
+    verify(httpJwtValidator).authenticate(request, context);
     verifyNoInteractions(functionInvocationLogger, durableContext);
   }
 
@@ -130,7 +132,7 @@ class HttpTriggerJwtEnforcementTest {
 
     // then
     responses.forEach(HttpTriggerJwtEnforcementTest::assertUnauthorized);
-    verify(httpJwtValidator, times(3)).validate(request, context);
+    verify(httpJwtValidator, times(3)).authenticate(request, context);
     verifyNoInteractions(functionInvocationLogger, durableContext);
   }
 

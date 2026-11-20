@@ -28,6 +28,7 @@ public class ProductsMapper {
             resource.setStatus(model.getNode().getStatus());
             resource.setDelegable(model.getNode().isDelegable());
             resource.setInvoiceable(model.getNode().isInvoiceable());
+            resource.setContractEnabled(model.getNode().isContractEnabled());
             resource.setBackOfficeEnvironmentConfigurations(toProductBackOfficeConfigurations(model.getNode().getBackOfficeEnvironmentConfigurations()));
             if (model.getChildren() != null) {
                 resource.setChildren(model.getChildren().stream()
@@ -47,6 +48,7 @@ public class ProductsMapper {
             resource.setStatus(model.getStatus());
             resource.setDelegable(model.isDelegable());
             resource.setInvoiceable(model.isInvoiceable());
+            resource.setContractEnabled(model.isContractEnabled());
             resource.setTitle(model.getTitle());
             resource.setImageUrl(model.getDepictImageUrl());
             resource.setLogo(model.getLogo());

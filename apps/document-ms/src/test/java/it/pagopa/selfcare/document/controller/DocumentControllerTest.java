@@ -1,5 +1,6 @@
 package it.pagopa.selfcare.document.controller;
 
+import it.pagopa.selfcare.azurestorage.error.SelfcareAzureStorageNotFoundException;
 import io.quarkus.test.InjectMock;
 import io.quarkus.test.junit.QuarkusTest;
 import io.quarkus.test.security.TestSecurity;
@@ -409,6 +410,28 @@ class DocumentControllerTest {
         .post("/v1/documents")
         .then()
         .statusCode(500);
+  }
+
+  @Test
+  void saveDocument_shouldReturnNotFound_whenContractFileIsMissingInStorage() {
+    DocumentBuilderRequest request = DocumentBuilderRequest.builder()
+            .onboardingId(ONBOARDING_ID)
+            .productId("prod-123")
+            .documentType(DocumentType.INSTITUTION)
+            .build();
+
+    when(documentService.saveDocument(any(DocumentBuilderRequest.class)))
+        .thenReturn(Uni.createFrom().failure(new SelfcareAzureStorageNotFoundException(
+            "Error during download file contract.pdf", "0000", null)));
+
+    given()
+        .contentType(MediaType.APPLICATION_JSON)
+        .body(request)
+        .when()
+        .post("/v1/documents")
+        .then()
+        .statusCode(404)
+        .body("detail", org.hamcrest.Matchers.equalTo("Error during download file contract.pdf"));
   }
 
   @Test

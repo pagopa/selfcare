@@ -49,6 +49,8 @@ public class Onboarding {
     private String previousManagerId;
 
     private String referenceOnboardingId;
+    private Boolean contractUpdateRequired;
+    private LocalDateTime contractUpdateRequiredAt;
 
     @Override
     public String toString() {

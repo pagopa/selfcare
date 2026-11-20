@@ -19,11 +19,17 @@ STORAGE_CREDENTIAL_SECRET=Eby8vdM02xNOcqFlqUwJPLlmEtlCD9I1QhZT4gRjAAHEDPazjFIwtg
 STORAGE_ENDPOINT=localhost
 BLOB_STORAGE_PRODUCT_CONNECTION_STRING=DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtlCD9I1QhZT4gRjAAHEDPazjFIwtg==;BlobEndpoint=http://azurite:10000/devstoreaccount1;
 PRODUCT_STORAGE_CONTAINER=products
+INSTITUTION_PRODUCTS_STORAGE_CONNECTION_STRING=DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtlCD9I1QhZT4gRjAAHEDPazjFIwtg==;BlobEndpoint=http://azurite:10000/devstoreaccount1;
+INSTITUTION_MAIL_TEMPLATES_STORAGE_CONNECTION_STRING=DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtlCD9I1QhZT4gRjAAHEDPazjFIwtg==;BlobEndpoint=http://azurite:10000/devstoreaccount1;
 
 SELFCARE_USER_URL=http://userms:8080
 USERVICE_USER_REGISTRY_URL=http://mockserver:1080/user-registry-mock/v1
 USERVICE_PARTY_REGISTRY_PROXY_URL=http://mockserver:1080/party-registry-mock
 USER_REGISTRY_API_KEY=123
+USER_REGISTRY_API_KEY_AR=123
+ONE_MAIL_API_KEY_AR=test
+SMTP_USR_AR=test
+SMTP_PSW_AR=test
 
 INFOCAMERE_ENABLE=true
 LOGO_URL=test-logo-url/

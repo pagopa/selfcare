@@ -7,6 +7,7 @@ import it.pagopa.selfcare.mscore.api.InstitutionConnector;
 import it.pagopa.selfcare.mscore.api.PartyRegistryProxyConnector;
 import it.pagopa.selfcare.mscore.api.UserApiConnector;
 import it.pagopa.selfcare.mscore.config.CoreConfig;
+import it.pagopa.selfcare.mscore.constant.CustomError;
 import it.pagopa.selfcare.mscore.constant.RelationshipState;
 import it.pagopa.selfcare.mscore.constant.SearchMode;
 import it.pagopa.selfcare.mscore.core.mapper.InstitutionMapper;
@@ -650,9 +651,11 @@ class InstitutionServiceImplTest {
         institutionUpdate.setSupportPhone("6625550144");
         institutionUpdate.setTaxCode("Tax Code");
         institutionUpdate.setZipCode("21654");
-        assertThrows(MsCoreException.class,
+        InvalidRequestException ex = assertThrows(InvalidRequestException.class,
                 () -> institutionServiceImpl.updateInstitution("42", institutionUpdate, "42"));
+        assertEquals(CustomError.GEO_TAXONOMY_CODE_NOT_FOUND.getCode(), ex.getCode());
         verify(partyRegistryProxyConnector).getExtByCode(any());
+        verify(institutionConnector, never()).findAndUpdate(any(), any(), any());
     }
 
     /**

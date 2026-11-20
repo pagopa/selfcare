@@ -5,6 +5,7 @@ import static it.pagopa.selfcare.onboarding.common.ProductId.PROD_FD_GARANTITO;
 
 import it.pagopa.selfcare.onboarding.common.InstitutionType;
 import it.pagopa.selfcare.onboarding.common.DocumentType;
+import it.pagopa.selfcare.onboarding.common.WorkflowType;
 import it.pagopa.selfcare.onboarding.config.MailTemplatePathConfig;
 import it.pagopa.selfcare.onboarding.config.MailTemplatePlaceholdersConfig;
 import it.pagopa.selfcare.onboarding.utils.InstitutionUtils;
@@ -25,11 +26,14 @@ public class OnboardingWorkflowInstitution extends OnboardingWorkflow {
 
   @Override
   public String getEmailRegistrationPath(MailTemplatePathConfig config) {
-    return config.registrationPath();
+    return isContractUpdate() ? config.contractUpdateRequestPath() : config.registrationPath();
   }
 
   @Override
   public String getEmailCompletionPath(MailTemplatePathConfig config) {
+    if (isContractUpdate()) {
+      return config.contractUpdateCompletePath();
+    }
     if (InstitutionType.PT.equals(this.onboarding.getInstitution().getInstitutionType())) {
       return config.completePathPt();
     } else {
@@ -52,7 +56,13 @@ public class OnboardingWorkflowInstitution extends OnboardingWorkflow {
 
   @Override
   public String getConfirmTokenUrl(MailTemplatePlaceholdersConfig config) {
-    return config.confirmTokenPlaceholder();
+    return isContractUpdate()
+        ? config.confirmTokenContractUpdatePlaceholder()
+        : config.confirmTokenPlaceholder();
+  }
+
+  private boolean isContractUpdate() {
+    return WorkflowType.CONTRACT_UPDATE.equals(onboarding.getWorkflowType());
   }
 
   @Override

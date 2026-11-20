@@ -1,0 +1,42 @@
+name: Release Starter Parent
+
+permissions:
+  contents: read
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'libs/selfcare-starter-parent/pom.xml'
+
+  workflow_dispatch:
+
+concurrency:
+  group: release-starter-parent
+  cancel-in-progress: false
+
+jobs:
+  release:
+    name: Publish parent POM
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Set up Maven and JDK 17
+        uses: s4u/setup-maven-action@fa2c7e4517ed008b1f73e7e0195a9eecf5582cd4
+        with:
+          java-version: 17
+          java-distribution: 'temurin'
+          maven-version: '3.9.5'
+          cache-enabled: true
+
+      - uses: s4u/maven-settings-action@60912582505985be4cc55d2b890eb32767f8de5f # pin@v2.8.0
+        with:
+          servers: '[{"id": "selfcare", "username": "${{ github.actor }}", "password": "${{ secrets.GITHUB_TOKEN }}"}]'
+
+      - name: Publish to GitHub Packages
+        run: mvn -B -ntp -f libs/selfcare-starter-parent/pom.xml clean deploy

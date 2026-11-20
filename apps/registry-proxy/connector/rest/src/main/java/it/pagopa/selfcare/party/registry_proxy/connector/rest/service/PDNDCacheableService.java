@@ -30,9 +30,9 @@ public class PDNDCacheableService {
     }
 
 
-    @Cacheable(cacheNames = "pdndInfocamere", cacheManager = "redisCacheManager", key = "'retrieveInstitutionPdndByTaxCode:' + #pdndSecretValue.profile + ':' + #encryptedTaxCode")
+    @Cacheable(cacheNames = "pdndInfocamere", cacheManager = "redisCacheManager", key = "@tenantContext.requiredTenantId() + ':retrieveInstitutionPdndByTaxCode:' + #pdndSecretValue.profile + ':' + #encryptedTaxCode")
     public String getEncryptedPDNDImpresa(String encryptedTaxCode, PdndSecretValue pdndSecretValue) {
-        log.info("getEncryptedPDNDImpresa for {} START", encryptedTaxCode);
+        log.info("Retrieving institution from PDND");
         String taxCode = DataEncryptionUtils.decrypt(encryptedTaxCode);
 
         ClientCredentialsResponse tokenResponse = tokenProviderPDND.getTokenPdnd(pdndSecretValue);
@@ -44,7 +44,7 @@ public class PDNDCacheableService {
                 throw new ResourceNotFoundException("No institution found for taxCode: " + taxCode);
             }
             int lastUpdatedIndex = imprese.size() - 1;
-            log.info("InfoCamere returned {} records for taxCode {}, selecting last updated index {}", imprese.size(), taxCode, lastUpdatedIndex);
+            log.info("InfoCamere returned {} records, selecting last updated index {}", imprese.size(), lastUpdatedIndex);
             PDNDImpresa impresa = imprese.get(lastUpdatedIndex);
             return DataEncryptionUtils.encrypt(new ObjectMapper().writeValueAsString(impresa));
         } catch (ResourceNotFoundException e) {

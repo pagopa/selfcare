@@ -6,6 +6,8 @@ JWT-PUBLIC-KEY=MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAnpt9gVNzDW6FpBk/TwNCq
 USER_REGISTRY_URL=http://mockserver:1080/user-registry-mock/v1
 MS_CORE_URL=http://institutionms:8082
 MS_PARTY_REGISTRY_URL=http://mockserver:1080/party-registry-mock
+MS_PRODUCT_URL=http://productms:8080
+ONBOARDING_ORCHESTRATION_ENABLED=false
 
 ONBOARDING_ALLOWED_INSTITUTIONS_PRODUCTS={'prod-interop':['*'],'prod-pn':['*'],'prod-io':['*'],'prod-io-premium':['*'],'prod-pagopa':['*'],'prod-fd':['*'],'prod-fd-garantito': ['*']}
 STORAGE_CONTAINER_PRODUCT=products
@@ -17,3 +19,4 @@ JAVA_TOOL_OPTIONS=-Duser.timezone=GMT -Duser.language=en -Duser.country=US
 TENANT_SUPPORTED_TENANTS=AR
 TENANT_REGISTRY_JSON={"AR":{"mongo":{"account":"cosmos-ar","database":"selcOnboarding","connectionStringEnvVar":"MONGODB_CONNECTION_STRING_AR"},"jwt":{"publicKeyEnvVar":"JWT_PUBLIC_KEY_AR"},"storages":{"products":{"account":"devstoreaccount1","container":"products","pathPrefix":"","authentication":{"type":"CONNECTION_STRING","connectionStringEnvVar":"BLOB_STORAGE_CONN_STRING_PRODUCT"}}}}}
 tenant.supported-tenants=AR
+QUARKUS_PROFILE=integrationProfile

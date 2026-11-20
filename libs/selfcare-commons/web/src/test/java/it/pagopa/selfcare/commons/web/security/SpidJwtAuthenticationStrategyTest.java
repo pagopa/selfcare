@@ -39,6 +39,16 @@ class SpidJwtAuthenticationStrategyTest {
     @Mock
     private AuthoritiesRetriever authoritiesRetrieverMock;
 
+    @Test
+    void strictModeRejectsMissingTenantClaimWithoutUsingTheDefault() {
+        org.springframework.test.util.ReflectionTestUtils.setField(
+                spidJwtAuthenticationStrategy, "tenantClaimRequired", true);
+        when(jwtServiceMock.getClaims(any())).thenReturn(new DefaultClaims());
+        assertThrows(TenantValidationException.class,
+                () -> spidJwtAuthenticationStrategy.authenticate(
+                        new JwtAuthenticationToken("token", "PNPG")));
+        verifyNoInteractions(authoritiesRetrieverMock);
+    }
 
     @AfterEach
     void cleanUp() {

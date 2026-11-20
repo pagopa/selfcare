@@ -175,10 +175,19 @@ jobs:
           node ${{ env.INFRA_APIM_FOLDER }}/openapi_merge/remove_v_and_tags.cjs  ${{ env.INFRA_APIM_FOLDER }}/api_pnpg/internal_api_for_pnpg/v1/openapi.json ${{ env.INFRA_APIM_FOLDER }}/api_pnpg/internal_api_for_pnpg/v1/openapi.${{ inputs.env }}.json
           node ${{ env.INFRA_APIM_FOLDER }}/openapi_merge/retain_necessary_schemas_and_tags.cjs  ${{ env.INFRA_APIM_FOLDER }}/api_pnpg/internal_api_for_pnpg/v1/openapi.${{ inputs.env }}.json
 
+      - name: Generate GitHub App token
+        id: app-token
+        uses: actions/create-github-app-token@64ab729a6294000f5aa4a4bc0b73d1f32bc45510 # v3.3.0
+        with:
+          client-id: ${{ secrets.GH_APP_CLIENT_ID }}
+          private-key: ${{ secrets.GH_APP_KEY }}
+          permission-contents: write
+          permission-pull-requests: write
+
       - name: Create pull request
         uses: peter-evans/create-pull-request@d53f4d71fdd876f4f4b170d05ce7f1a7dd2bef03 #v6.0.5
         with:
-          token: ${{ secrets.GH_PAT_VARIABLES }}
+          token: ${{ steps.app-token.outputs.token }}
           commit-message: "Update openapi"
           branch: ${{ steps.create_branch.outputs.branch_name }}  # The current branch name
           title: "[Update OpenAPI] Merge openapi ${{ inputs.env }} using openapi-merge-cli"

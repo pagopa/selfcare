@@ -14,6 +14,10 @@
 
     <dependencies>
         <dependency>
+            <groupId>it.pagopa.selfcare</groupId>
+            <artifactId>selc-commons-tenant</artifactId>
+        </dependency>
+        <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-mail</artifactId>
         </dependency>

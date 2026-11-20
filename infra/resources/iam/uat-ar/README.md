@@ -16,7 +16,6 @@ No providers.
 
 | Name | Source | Version |
 | ---- | ------ | ------- |
-| <a name="module_apim_api"></a> [apim\_api](#module\_apim\_api) | ../../_modules/apim_api | n/a |
 | <a name="module_collection_iam_roles"></a> [collection\_iam\_roles](#module\_collection\_iam\_roles) | ../../_modules/cosmosdb_collection | n/a |
 | <a name="module_collection_iam_user"></a> [collection\_iam\_user](#module\_collection\_iam\_user) | ../../_modules/cosmosdb_collection | n/a |
 | <a name="module_container_app_iam_ms"></a> [container\_app\_iam\_ms](#module\_container\_app\_iam\_ms) | ../../_modules/container_app_microservice | n/a |

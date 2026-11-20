@@ -1,7 +1,8 @@
 package it.pagopa.selfcare.party.registry_proxy.connector.rest.service;
 
-import io.dapr.client.DaprClient;
-import it.pagopa.selfcare.onboarding.crypto.utils.DataEncryptionUtils;
+import com.azure.core.util.BinaryData;
+import it.pagopa.selfcare.commons.tenant.storage.TenantBlobClientProvider;
+import java.util.concurrent.CompletableFuture;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
@@ -10,28 +11,18 @@ import org.springframework.stereotype.Service;
 @Service
 public class StorageAsyncService {
 
-    private final DaprClient daprSelcClient;
+    static final String VISURE_STORAGE = "visure";
+    private final TenantBlobClientProvider blobClients;
 
-    public StorageAsyncService(DaprClient daprSelcClient) {
-        this.daprSelcClient = daprSelcClient;
+    public StorageAsyncService(TenantBlobClientProvider blobClients) {
+        this.blobClients = blobClients;
     }
 
     @Async("storageTaskExecutor")
-    public void saveStringToStorage(String document, String keyName) {
-        try {
-            daprSelcClient.saveState("blobstorage-state", keyName, document).block();
-            log.info("Document saved into Azure Storage with key: {}", sanitizeForLog(keyName));
-        } catch (Exception e) {
-            log.error("Impossible to store document with key {} into Azure Storage", sanitizeForLog(keyName), e);
-        }
-    }
-
-    /**
-     * Sanitize the input string by removing line breaks and carriage returns
-     * to prevent log injection.
-     */
-    private static String sanitizeForLog(String input) {
-        if (input == null) return null;
-        return input.replaceAll("[\\p{Cntrl}]", "");
+    public CompletableFuture<Void> saveStringToStorage(String tenantId, String document, String keyName) {
+        blobClients.clientFor(tenantId, VISURE_STORAGE)
+                .blob(keyName).upload(BinaryData.fromString(document), true);
+        log.info("Document archived for tenant {}", tenantId);
+        return CompletableFuture.completedFuture(null);
     }
 }

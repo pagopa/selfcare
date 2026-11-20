@@ -23,6 +23,10 @@ public class SessionServiceImpl implements SessionService {
   private static final String SPID_LEVEL_L2 = "https://www.spid.gov.it/SpidL2";
   private static final String ISSUER = "SPID";
   private static final String TENANT_CLAIM = "tenant_id";
+  // RFC 9068 client_id: lets backends tell which channel issued the session token.
+  static final String CLIENT_ID_CLAIM = "client_id";
+  static final String SPID_CLIENT_ID = "selfcare-fe";
+  static final String SAML_CLIENT_ID = "selfcare-saml";
 
   @ConfigProperty(name = "jwt.session.duration")
   Integer sessionDuration;
@@ -63,6 +67,7 @@ public class SessionServiceImpl implements SessionService {
                 .claim("uid", userClaims.getUid())
                 .claim(TENANT_CLAIM, userClaims.getTenantId())
                 .claim("spid_level", SPID_LEVEL_L2)
+                .claim(CLIENT_ID_CLAIM, SPID_CLIENT_ID)
                 .issuer(ISSUER)
                 .audience(resolveAudience(userClaims.getTenantId()))
                 .issuedAt(issuedAt)
@@ -82,6 +87,7 @@ public class SessionServiceImpl implements SessionService {
                 .claim("uid", userClaims.getUid())
                 .claim("email", userClaims.getEmail())
                 .claim(TENANT_CLAIM, userClaims.getTenantId())
+                .claim(CLIENT_ID_CLAIM, SAML_CLIENT_ID)
                 .issuer("PAGOPA")
                 .audience(resolveAudience(userClaims.getTenantId()))
                 .issuedAt(issuedAt)

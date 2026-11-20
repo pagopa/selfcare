@@ -34,5 +34,6 @@ public class DelegationsEntity extends ReactivePanacheMongoEntity {
     private String updatedAt;
     private String closedAt;
     private Boolean isTest;
+    private String tenantId;
 
 }

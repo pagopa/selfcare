@@ -9,5 +9,6 @@ public enum NotificationMailType {
     COMPLETED,
     DELETED,
     REJECTION,
-    COMPLETED_AGGREGATE
+    COMPLETED_AGGREGATE,
+    CONTRACT_UPDATE_CAMPAIGN
 }

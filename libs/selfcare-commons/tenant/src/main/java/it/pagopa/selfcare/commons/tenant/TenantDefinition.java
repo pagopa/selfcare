@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.LinkedHashMap;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public record TenantDefinition(
@@ -12,11 +13,28 @@ public record TenantDefinition(
         @JsonProperty("jwt") JwtDefinition jwt,
         @JsonProperty("storages") Map<String, StorageDefinition> storages,
         @JsonProperty("oneIdentity") OneIdentityDefinition oneIdentity,
-        @JsonProperty("userRegistry") UserRegistryDefinition userRegistry) {
+        @JsonProperty("userRegistry") UserRegistryDefinition userRegistry,
+        @JsonProperty("registryProxy") RegistryProxyDefinition registryProxy,
+        @JsonProperty("oneMail") OneMailDefinition oneMail,
+        @JsonProperty("pec") PecDefinition pec,
+        @JsonProperty("eventHub") EventHubDefinition eventHub) {
+
+    public TenantDefinition(
+            MongoDefinition mongo, JwtDefinition jwt, Map<String, StorageDefinition> storages,
+            OneIdentityDefinition oneIdentity, UserRegistryDefinition userRegistry,
+            RegistryProxyDefinition registryProxy) {
+        this(mongo, jwt, storages, oneIdentity, userRegistry, registryProxy, null, null, null);
+    }
 
     public TenantDefinition(
             MongoDefinition mongo, JwtDefinition jwt, Map<String, StorageDefinition> storages) {
-        this(mongo, jwt, storages, null, null);
+        this(mongo, jwt, storages, null, null, null);
+    }
+
+    public TenantDefinition(
+            MongoDefinition mongo, JwtDefinition jwt, Map<String, StorageDefinition> storages,
+            OneIdentityDefinition oneIdentity, UserRegistryDefinition userRegistry) {
+        this(mongo, jwt, storages, oneIdentity, userRegistry, null);
     }
 
     public TenantDefinition {
@@ -31,6 +49,54 @@ public record TenantDefinition(
 
     @JsonIgnoreProperties(ignoreUnknown = true)
     public record UserRegistryDefinition(@JsonProperty("apiKeyEnvVar") String apiKeyEnvVar) {
+    }
+
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    public record OneMailDefinition(String url, String sender, String apiKeyEnvVar) {
+    }
+
+    public record OneMailCredentials(String url, String sender, String apiKey) {
+        @Override
+        public String toString() {
+            return "OneMailCredentials[REDACTED]";
+        }
+    }
+
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    public record PecDefinition(
+            String host, Integer port, String sender, String usernameEnvVar, String passwordEnvVar) {
+    }
+
+    public record PecCredentials(
+            String host, int port, String sender, String username, String password) {
+        @Override
+        public String toString() {
+            return "PecCredentials[REDACTED]";
+        }
+    }
+
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    public record EventHubDefinition(
+            String namespaceUrl, String topic, EventHubAuthentication authentication) {
+    }
+
+    public enum EventHubAuthenticationType {
+        MANAGED_IDENTITY, SHARED_ACCESS_KEY
+    }
+
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    public record EventHubAuthentication(
+            EventHubAuthenticationType type, String managedIdentityClientIdEnvVar,
+            String keyName, String keyEnvVar) {
+    }
+
+    public record EventHubCredentials(
+            String namespaceUrl, String topic, EventHubAuthenticationType type,
+            String managedIdentityClientId, String keyName, String key) {
+        @Override
+        public String toString() {
+            return "EventHubCredentials[REDACTED]";
+        }
     }
 
     public record OneIdentityCredentials(String clientId, String clientSecret) {
@@ -55,7 +121,44 @@ public record TenantDefinition(
     }
 
     @JsonIgnoreProperties(ignoreUnknown = true)
-    public record JwtDefinition(@JsonProperty("publicKeyEnvVar") String publicKeyEnvVar) {
+    public record JwtDefinition(
+            @JsonProperty("publicKeyEnvVar") String publicKeyEnvVar,
+            Set<String> issuers, Set<String> audiences) {
+        public JwtDefinition(String publicKeyEnvVar) {
+            this(publicKeyEnvVar, Set.of(), Set.of());
+        }
+
+        public JwtDefinition {
+            issuers = issuers == null ? Set.of() : Set.copyOf(issuers);
+            audiences = audiences == null ? Set.of() : Set.copyOf(audiences);
+        }
+    }
+
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    public record RegistryProxyDefinition(
+            SearchDefinition search,
+            NationalRegistriesDefinition nationalRegistries,
+            PdndDefinition pdnd,
+            PdndDefinition pdndInvitalia,
+            Set<String> invitaliaProducts) {
+        public RegistryProxyDefinition {
+            invitaliaProducts = invitaliaProducts == null
+                    ? Set.of() : Set.copyOf(invitaliaProducts);
+        }
+    }
+
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    public record SearchDefinition(String endpoint, String onboardingIndex, String apiKeyEnvVar) {
+    }
+
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    public record NationalRegistriesDefinition(String endpoint, String apiKeyEnvVar) {
+    }
+
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    public record PdndDefinition(
+            String clientIdEnvVar, String privateKeyEnvVar, String kidEnvVar,
+            String purposeIdEnvVar, String audience) {
     }
 
     @JsonIgnoreProperties(ignoreUnknown = true)

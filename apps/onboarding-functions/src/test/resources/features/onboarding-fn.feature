@@ -151,6 +151,65 @@ Feature: Onboarding collection
 #    And the answer should contain "id,purgeHistoryDeleteUri,restartPostUri"
 #    And there is a document for onboarding with status "FAILED"
 
+  Scenario: Verify correct invocation of the StartOnboardingOrchestration for workflow IMPORT_AGGREGATION request
+    Given Preparing the invocation of "StartOnboardingOrchestration" HTTP call with onboardingId "3d8e6b10-2a4f-4c7e-9b51-8f0a1c2d3e01"
+    When I send a GET request with given onboardingId
+    Then the response should have status code 202
+    And the answer should contain "id,purgeHistoryDeleteUri,restartPostUri"
+    And there is a document for onboarding with status "COMPLETED"
+    And the aggregate onboarding with taxCode "90000000029" has status "COMPLETED"
+    And there is an active delegation from the aggregate to the aggregator
+
+  Scenario: Increment an aggregator with a new and an already delegated institution
+    Given Preparing the invocation of "StartOnboardingOrchestration" HTTP call with onboardingId "a14d68d1-1b61-4ea6-9ea1-716ea97f6866"
+    And the aggregate with taxCode "90000000052" already has an active delegation
+    When I send a GET request with given onboardingId
+    Then the response should have status code 202
+    And the answer should contain "id,purgeHistoryDeleteUri,restartPostUri"
+    And there is a document for onboarding with status "COMPLETED"
+    And the onboarding has an activation date
+    And the aggregator user is active for aggregates
+    And the aggregate onboarding with taxCode "90000000045" has status "COMPLETED"
+    And there is an active delegation from the aggregate to the aggregator
+    And the aggregate with taxCode "90000000052" has no new onboarding or delegation
+
+  Scenario: Complete an aggregate onboarding with an assigned manager
+    Given Preparing the invocation of "StartOnboardingOrchestration" HTTP call with onboardingId "9f4b1c65-90ad-4b50-9dbb-686500000001"
+    When I send a GET request with given onboardingId
+    Then the response should have status code 202
+    And the answer should contain "id,purgeHistoryDeleteUri,restartPostUri"
+    And there is a document for onboarding with status "COMPLETED"
+    And the onboarding has an activation date
+    And the institution "7c3f1a52-6d2e-4b8a-9f10-3e5d7a9b2c46" has an active onboarding for the product
+    And there is an active delegation from the aggregate to the aggregator
+    And the aggregate user is active for the product
+
+  Scenario: Complete an aggregate onboarding without assigned users
+    Given Preparing the invocation of "StartOnboardingOrchestration" HTTP call with onboardingId "9f4b1c65-90ad-4b50-9dbb-686500000002"
+    When I send a GET request with given onboardingId
+    Then the response should have status code 202
+    And the answer should contain "id,purgeHistoryDeleteUri,restartPostUri"
+    And there is a document for onboarding with status "COMPLETED"
+    And the onboarding has an activation date
+    And the institution "7c3f1a52-6d2e-4b8a-9f10-3e5d7a9b2c47" has an active onboarding for the product
+    And there is an active delegation from the aggregate to the aggregator
+    And the aggregate has no users
+
+  Scenario: Register an aggregator contract and complete the aggregator onboarding
+    Given Preparing the invocation of "StartOnboardingOrchestration" HTTP call with onboardingId "5b2e8f40-6c1d-4a7b-9e35-686400000001"
+    When I send a GET request with given onboardingId
+    Then the response should have status code 202
+    And the answer should contain "id,purgeHistoryDeleteUri,restartPostUri"
+    And there is a document for onboarding with status "PENDING"
+    And the contract document of the onboarding is created
+    When I send a GET request with given onboardingId
+    Then the response should have status code 202
+    And there is a document for onboarding with status "COMPLETED"
+    And the institution "7c3f1a52-6d2e-4b8a-9f10-3e5d7a9b2c48" has an active onboarding for the product
+    And the aggregator user is active for aggregates
+    And the aggregate onboarding with taxCode "90000000092" has status "COMPLETED"
+    And there is an active delegation from the aggregate to the aggregator
+
   Scenario: Verify correct invocation of the StartOnboardingOrchestration for correct workflow USERS_PG request
     Given Preparing the invocation of "StartOnboardingOrchestration" HTTP call with onboardingId "89ad7142-24bb-48ad-8504-9c9231137e102"
     When I send a GET request with given onboardingId
@@ -205,6 +264,55 @@ Feature: Onboarding collection
       | PENDING_IN_REVIEW |
 #      | COMPLETED |
 
+  Scenario: Verify correct invocation of the StartOnboardingOrchestration for workflow CONTRACT_UPDATE request
+    Given The onboarding "5f1c7e2a-9b3d-4c8e-a1f0-2d6b8c4e9a01" is present
+    And Preparing the invocation of "StartOnboardingOrchestration" HTTP call with onboardingId "5f1c7e2a-9b3d-4c8e-a1f0-2d6b8c4e9a02"
+    When I send a GET request with given onboardingId
+    Then the response should have status code 202
+    And there is a document for onboarding with status "PENDING"
+    And the contract document of the onboarding has rootOnboardingId "5f1c7e2a-9b3d-4c8e-a1f0-2d6b8c4e9a01"
+    And the signed contract of the onboarding is uploaded
+    When I send a GET request with given onboardingId
+    Then the response should have status code 202
+    And there is a document for onboarding with status "COMPLETED"
+    And the referenced onboarding "5f1c7e2a-9b3d-4c8e-a1f0-2d6b8c4e9a01" is aligned with the completed contract update
+
+  Scenario: Completing a CONTRACT_UPDATE overrides only the other pending contract updates of the same adhesion
+    Given The onboarding "5f1c7e2a-9b3d-4c8e-a1f0-2d6b8c4e9b01" is present
+    And The onboarding "5f1c7e2a-9b3d-4c8e-a1f0-2d6b8c4e9b04" is present
+    And Preparing the invocation of "StartOnboardingOrchestration" HTTP call with onboardingId "5f1c7e2a-9b3d-4c8e-a1f0-2d6b8c4e9b02"
+    When I send a GET request with given onboardingId
+    Then there is a document for onboarding with status "PENDING"
+    Given Preparing the invocation of "StartOnboardingOrchestration" HTTP call with onboardingId "5f1c7e2a-9b3d-4c8e-a1f0-2d6b8c4e9b03"
+    When I send a GET request with given onboardingId
+    Then there is a document for onboarding with status "PENDING"
+    And the signed contract of the onboarding is uploaded
+    When I send a GET request with given onboardingId
+    Then there is a document for onboarding with status "COMPLETED"
+    And the onboarding "5f1c7e2a-9b3d-4c8e-a1f0-2d6b8c4e9b02" has status "OVERRIDDEN"
+    And the onboarding "5f1c7e2a-9b3d-4c8e-a1f0-2d6b8c4e9b04" has status "PENDING"
+    And the referenced onboarding "5f1c7e2a-9b3d-4c8e-a1f0-2d6b8c4e9b01" is aligned with the completed contract update
+
+  Scenario: Revoking an adhesion deletes the contracts of its contract updates and rejects the pending ones
+    Given The onboarding "5f1c7e2a-9b3d-4c8e-a1f0-2d6b8c4e9c01" is present
+    And Preparing the invocation of "StartOnboardingOrchestration" HTTP call with onboardingId "5f1c7e2a-9b3d-4c8e-a1f0-2d6b8c4e9c02"
+    When I send a GET request with given onboardingId
+    Then there is a document for onboarding with status "PENDING"
+    And the signed contract of the onboarding is uploaded
+    When I send a GET request with given onboardingId
+    Then there is a document for onboarding with status "COMPLETED"
+    Given Preparing the invocation of "StartOnboardingOrchestration" HTTP call with onboardingId "5f1c7e2a-9b3d-4c8e-a1f0-2d6b8c4e9c03"
+    When I send a GET request with given onboardingId
+    Then there is a document for onboarding with status "PENDING"
+    And the signed contract of the onboarding is uploaded
+    Given Preparing the invocation of "TriggerDeleteInstitutionAndUser" HTTP call with onboardingId "5f1c7e2a-9b3d-4c8e-a1f0-2d6b8c4e9c01"
+    When I send a GET request with given onboardingId
+    Then the response should have status code 202
+    And the onboarding "5f1c7e2a-9b3d-4c8e-a1f0-2d6b8c4e9c03" has status "REJECTED"
+    And the onboarding "5f1c7e2a-9b3d-4c8e-a1f0-2d6b8c4e9c02" has status "COMPLETED"
+    And the contract of the onboarding "5f1c7e2a-9b3d-4c8e-a1f0-2d6b8c4e9c02" has been moved to the deleted storage
+    And the contract of the onboarding "5f1c7e2a-9b3d-4c8e-a1f0-2d6b8c4e9c03" has been moved to the deleted storage
+
   Scenario: Reject StartOnboardingOrchestration without Authorization
     Given Preparing the invocation of "StartOnboardingOrchestration" HTTP call with onboardingId "89ad7142-24bb-48ad-8504-9c9231137e85"
     And the request has no Authorization header
@@ -242,3 +350,10 @@ Feature: Onboarding collection
     When I send a GET request with given onboardingId
     Then the response should have status code 400
     And the onboarding status should not change
+
+  Scenario: Accept StartOnboardingOrchestration with a token without tenant_id claim attributed to the default tenant
+    Given Preparing the invocation of "StartOnboardingOrchestration" HTTP call with onboardingId "89ad7142-24bb-48ad-8504-9c9231137e85"
+    And the request token has no tenant_id claim
+    When I send a GET request with given onboardingId
+    Then the response should have status code 202
+    And the answer should contain "id,purgeHistoryDeleteUri,restartPostUri"

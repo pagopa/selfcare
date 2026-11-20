@@ -3,20 +3,25 @@ package it.pagopa.selfcare.mscore.connector.rest.interceptor;
 import feign.RequestInterceptor;
 import feign.RequestTemplate;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
+import it.pagopa.selfcare.commons.tenant.TenantContext;
+import it.pagopa.selfcare.commons.tenant.TenantRegistry;
 
 @Slf4j
 public class UserRegistryAuthInterceptor implements RequestInterceptor {
 
-    private final String apiKey;
+    private final TenantRegistry tenantRegistry;
+    private final TenantContext tenantContext;
 
-    public UserRegistryAuthInterceptor(@Value("${rest-client.user-registry.x-api-key:}") String apiKey) {
-        this.apiKey = apiKey;
+    public UserRegistryAuthInterceptor(TenantRegistry tenantRegistry, TenantContext tenantContext) {
+        this.tenantRegistry = tenantRegistry;
+        this.tenantContext = tenantContext;
     }
 
     @Override
     public void apply(RequestTemplate template) {
-        template.header("x-api-key", apiKey);
+        template.removeHeader("x-api-key");
+        template.header("x-api-key",
+                tenantRegistry.userRegistryApiKey(tenantContext.requiredTenantId()));
     }
 
 }

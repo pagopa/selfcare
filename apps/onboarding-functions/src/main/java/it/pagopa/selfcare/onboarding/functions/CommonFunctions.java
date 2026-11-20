@@ -3,6 +3,7 @@ package it.pagopa.selfcare.onboarding.functions;
 import com.microsoft.azure.functions.ExecutionContext;
 import com.microsoft.azure.functions.annotation.FunctionName;
 import com.microsoft.azure.functions.annotation.TimerTrigger;
+import com.microsoft.durabletask.DurableTaskClient;
 import com.microsoft.durabletask.OrchestrationRuntimeStatus;
 import com.microsoft.durabletask.PurgeInstanceCriteria;
 import com.microsoft.durabletask.PurgeResult;
@@ -34,8 +35,10 @@ public class CommonFunctions {
                 .setCreatedTimeFrom(Instant.now().minus(Duration.ofDays(purgeConfig.completedFrom())))
                 .setCreatedTimeTo(Instant.now().minus(Duration.ofDays(purgeConfig.completedTo())))
                 .setRuntimeStatusList(List.of(OrchestrationRuntimeStatus.COMPLETED));
-        PurgeResult result = durableContext.getClient().purgeInstances(criteria);
-        context.getLogger().info(String.format("Purged %d instance(s)", result.getDeletedInstanceCount()));
+        try (DurableTaskClient client = durableContext.getClient()) {
+            PurgeResult result = client.purgeInstances(criteria);
+            context.getLogger().info(String.format("Purged %d instance(s)", result.getDeletedInstanceCount()));
+        }
     }
 
     @FunctionName("PurgeInstancesAll")
@@ -46,7 +49,9 @@ public class CommonFunctions {
         PurgeInstanceCriteria criteria = new PurgeInstanceCriteria()
                 .setCreatedTimeFrom(Instant.now().minus(Duration.ofDays(purgeConfig.allFrom())))
                 .setCreatedTimeTo(Instant.now().minus(Duration.ofDays(purgeConfig.allTo())));
-        PurgeResult result = durableContext.getClient().purgeInstances(criteria);
-        context.getLogger().info(String.format("Purged %d instance(s)", result.getDeletedInstanceCount()));
+        try (DurableTaskClient client = durableContext.getClient()) {
+            PurgeResult result = client.purgeInstances(criteria);
+            context.getLogger().info(String.format("Purged %d instance(s)", result.getDeletedInstanceCount()));
+        }
     }
 }

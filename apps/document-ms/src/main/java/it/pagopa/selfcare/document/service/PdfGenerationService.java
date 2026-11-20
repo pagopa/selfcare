@@ -3,6 +3,8 @@ package it.pagopa.selfcare.document.service;
 import it.pagopa.selfcare.document.model.dto.request.AttachmentPdfRequest;
 import it.pagopa.selfcare.document.model.dto.request.ContractPdfRequest;
 import it.pagopa.selfcare.document.model.dto.request.InstitutionPdfData;
+import it.pagopa.selfcare.document.model.dto.request.RtpContractPdfRequest;
+import it.pagopa.selfcare.document.exception.InvalidRequestException;
 import it.pagopa.selfcare.document.util.PdfBuilder;
 import it.pagopa.selfcare.document.util.PdfMapperData;
 import it.pagopa.selfcare.onboarding.common.InstitutionType;
@@ -53,7 +55,9 @@ public class PdfGenerationService {
         InstitutionPdfData institution = request.getInstitution();
         InstitutionType institutionType = institution.getInstitutionType();
 
-        if (isPspAndPagoPaOrDashboard(productId, institutionType)) {
+        if (PROD_RTP.getValue().equalsIgnoreCase(productId)) {
+            PdfMapperData.setupProdRtpData(data, asRtpContractPdfRequest(request));
+        } else if (isPspAndPagoPaOrDashboard(productId, institutionType)) {
             PdfMapperData.setupPSPData(data, request.getManager(), request);
         } else if (isPrvOrGpuAndPagoPaOrIdpay(productId, institutionType)) {
             PdfMapperData.setupPRVData(data, request);
@@ -65,6 +69,8 @@ public class PdfGenerationService {
             PdfMapperData.setupProdPNData(data, institution, request.getBilling());
         } else if (PROD_INTEROP.getValue().equalsIgnoreCase(productId)) {
             PdfMapperData.setupSAProdInteropData(data, institution);
+        } else if (PROD_CED.getValue().equalsIgnoreCase(productId)) {
+            PdfMapperData.setupProdCEDData(data, institution);
         }
     }
 
@@ -88,5 +94,12 @@ public class PdfGenerationService {
         return PROD_IO.getValue().equalsIgnoreCase(productId)
                 || PROD_IO_PREMIUM.getValue().equalsIgnoreCase(productId)
                 || PROD_IO_SIGN.getValue().equalsIgnoreCase(productId);
+    }
+
+    private RtpContractPdfRequest asRtpContractPdfRequest(ContractPdfRequest request) {
+        if (request instanceof RtpContractPdfRequest rtpContractPdfRequest) {
+            return rtpContractPdfRequest;
+        }
+        throw new InvalidRequestException("Request for prod-rtp must be of type RtpContractPdfRequest", "0000");
     }
 }

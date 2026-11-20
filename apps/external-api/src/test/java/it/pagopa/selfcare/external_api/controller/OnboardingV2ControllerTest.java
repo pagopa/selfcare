@@ -3,6 +3,10 @@ package it.pagopa.selfcare.external_api.controller;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import it.pagopa.selfcare.commons.base.security.SelfCareUser;
+import feign.Request;
+import feign.Response;
+import it.pagopa.selfcare.external_api.client.decoder.FeignErrorDecoder;
+import it.pagopa.selfcare.external_api.handler.ExternalApiExceptionHandler;
 import it.pagopa.selfcare.external_api.mapper.OnboardingResourceMapperImpl;
 import it.pagopa.selfcare.external_api.model.onboarding.BillingDataDto;
 import it.pagopa.selfcare.external_api.model.onboarding.OnboardingInstitutionUsersRequest;
@@ -14,6 +18,8 @@ import org.apache.commons.lang3.StringUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
@@ -21,13 +27,16 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.security.core.Authentication;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
+import java.io.ByteArrayInputStream;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.List;
 
 import static org.hamcrest.Matchers.hasSize;
+import static feign.Util.UTF_8;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
@@ -48,6 +57,36 @@ class OnboardingV2ControllerTest extends BaseControllerTest {
   @BeforeEach
   void setUp() {
     super.setUp(onboardingV2Controller);
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = {
+      "{\"status\":400,\"errors\":[{\"code\":\"0025\",\"detail\":\"Invalid users information provided\"}]}",
+      "{\"status\":400,\"errors\":[{\"code\":\"002-1010\",\"detail\":\"institution with institution type PRV and origin SELC is not allowed to onboard product prod-idpay-merchant\"}]}"
+  })
+  void onboardingPropagatesDownstreamError(String errorBody) throws Exception {
+    mockMvc = MockMvcBuilders.standaloneSetup(onboardingV2Controller)
+        .setControllerAdvice(new ExternalApiExceptionHandler())
+        .build();
+    Response response = Response.builder()
+        .status(400)
+        .reason("Bad Request")
+        .request(Request.create(Request.HttpMethod.POST, "/v1/onboarding", Collections.emptyMap(), null, UTF_8))
+        .body(new ByteArrayInputStream(errorBody.getBytes(UTF_8)), null)
+        .build();
+    doAnswer(invocation -> {
+      throw new FeignErrorDecoder().decode("onboarding", response);
+    }).when(onboardingServiceMock).autoApprovalOnboardingProductV2(any());
+    ClassPathResource request = new ClassPathResource("stubs/onboardingSubunitDto.json");
+
+    mockMvc.perform(MockMvcRequestBuilders.post(BASE_URL)
+            .content(Files.readAllBytes(request.getFile().toPath()))
+            .contentType(APPLICATION_JSON_VALUE))
+        .andExpect(status().isBadRequest())
+        .andExpect(content().contentTypeCompatibleWith("application/problem+json"))
+        .andExpect(jsonPath("$.detail").value(errorBody))
+        .andExpect(jsonPath("$.status").value(400))
+        .andExpect(jsonPath("$.instance").value(BASE_URL));
   }
 
   @Test

@@ -10,12 +10,13 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 
 import java.util.Map;
+import java.net.URI;
 
-@FeignClient(name = "${rest-client.event-hub.serviceCode}", url = "${rest-client.event-hub.base-url}", configuration = EventHubRestClientConfig.class)
+@FeignClient(name = "event-hub", url = "http://event-hub.invalid", configuration = EventHubRestClientConfig.class)
 public interface EventHubRestClient {
 
     @PostMapping(value = "/messages", consumes = MediaType.APPLICATION_JSON_VALUE)
-    ResponseEntity<Void> sendMessage(@RequestBody DelegationNotificationToSend notification,
+    ResponseEntity<Void> sendMessage(URI target, @RequestBody DelegationNotificationToSend notification,
                                      @RequestHeader Map<String, String> headers);
 
 }

@@ -65,6 +65,8 @@ public class SwaggerConfig {
                 .tags(List.of(
                         new Tag().name("delegations")
                                 .description(environment.getProperty("swagger.dashboard.delegations.api.description")),
+                        new Tag().name("documents")
+                                .description(environment.getProperty("swagger.dashboard.documents.api.description")),
                         new Tag().name("institutions")
                                 .description(environment.getProperty("swagger.dashboard.institutions.api.description")),
                         new Tag().name("onboarding")

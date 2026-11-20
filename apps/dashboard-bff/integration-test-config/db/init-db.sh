@@ -27,4 +27,7 @@ mongoimport --host localhost --db selcIam --collection roles --file /docker-entr
 echo "insert documents"
 mongoimport --host localhost --db selcDocument --collection documents --file /docker-entrypoint-initdb.d/documents.json --jsonArray
 
+echo "insert Products"
+mongoimport --host localhost --db selcProduct --collection products --file /docker-entrypoint-initdb.d/Products.json --jsonArray
+
 echo "Inizializzazione completata!"

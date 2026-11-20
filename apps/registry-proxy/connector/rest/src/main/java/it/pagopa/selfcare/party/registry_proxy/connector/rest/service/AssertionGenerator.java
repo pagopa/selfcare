@@ -16,7 +16,7 @@ import static it.pagopa.selfcare.party.registry_proxy.connector.rest.utils.Const
 @Slf4j
 @Component
 public class AssertionGenerator {
-    @Cacheable(value = PDND_CLIENT_ASSERTION_CACHE, key = "#jwtCfg.kid", cacheManager = PDND_CLIENT_ASSERTION_CACHE)
+    @Cacheable(value = PDND_CLIENT_ASSERTION_CACHE, key = "{@tenantContext.requiredTenantId(), #jwtCfg.issuer, #jwtCfg.kid, #jwtCfg.purposeId, #jwtCfg.audience}", cacheManager = PDND_CLIENT_ASSERTION_CACHE)
     public String generateClientAssertion(JwtConfig jwtCfg, String privateKey) {
         log.info("START - AssertionGenerator.generateClientAssertion");
         long startTime = System.currentTimeMillis();

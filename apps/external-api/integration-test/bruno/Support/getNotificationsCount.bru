@@ -1,0 +1,53 @@
+meta {
+  name: getNotificationsCount
+  type: http
+  seq: 11
+}
+
+get {
+  url: {{apiBaseUrl}}/external/support/v1/api/onboardings/notifications/count?from={{countFrom}}&to={{countTo}}
+  body: none
+  auth: inherit
+}
+
+params:query {
+  from: {{countFrom}}
+  to: {{countTo}}
+  ~productId: {{productId}}
+}
+
+headers {
+  Ocp-Apim-Subscription-Key: {{apimKeySupport}}
+}
+
+script:pre-request {
+  // Day-by-day range, as used by the real consumers
+  const day = (offset) => new Date(Date.now() + offset * 86400000).toISOString().slice(0, 10);
+  bru.setVar("countFrom", day(-1));
+  bru.setVar("countTo", day(0));
+}
+
+script:post-response {
+  test("getNotificationsCount ok", function() {
+    // 429 is a valid answer when the database is throttling: it must carry Retry-After
+    expect([200, 429]).to.include(res.getStatus());
+
+    if (res.getStatus() === 429) {
+      expect(Number(res.getHeader("retry-after"))).to.be.at.least(1);
+      return;
+    }
+
+    const jsonData = res.getBody();
+    expect(jsonData).to.be.an("array");
+
+    jsonData.forEach(item => {
+      expect(item).to.have.property("productId").that.is.a("string");
+      expect(item).to.have.property("notificationCount").that.is.a("number");
+      expect(item.notificationCount).to.be.at.least(0);
+    });
+  });
+}
+
+settings {
+  encodeUrl: true
+}

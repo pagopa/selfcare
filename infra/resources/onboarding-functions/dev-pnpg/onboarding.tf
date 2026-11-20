@@ -32,21 +32,43 @@ locals {
     nat_resource_group_name   = module.local.config.nat_rg_name
     nat_gateway_name          = module.local.config.nat_gw_name
     app_settings = {
-      "APPLICATIONINSIGHTS_CONNECTION_STRING"            = "@Microsoft.KeyVault(SecretUri=https://selc-d-pnpg-kv.vault.azure.net/secrets/appinsights-connection-string/)"
-      "USER_REGISTRY_URL"                                = "https://api.uat.pdv.pagopa.it/user-registry/v1"
-      "MONGODB_CONNECTION_URI"                           = "@Microsoft.KeyVault(SecretUri=https://selc-d-pnpg-kv.vault.azure.net/secrets/mongodb-connection-string/)"
-      "USER_REGISTRY_API_KEY"                            = "@Microsoft.KeyVault(SecretUri=https://selc-d-pnpg-kv.vault.azure.net/secrets/user-registry-api-key/)"
-      "BLOB_STORAGE_ACCOUNT_NAME_PRODUCT"                = data.azurerm_storage_account.product_storage.name
-      "BLOB_STORAGE_MANAGED_IDENTITY_CLIENT_ID_PRODUCT"  = data.azurerm_user_assigned_identity.product_storage_blob_identity.client_id
-      "STORAGE_CONTAINER_CONTRACT"                       = "selc-d-contracts-blob"
-      "STORAGE_CONTAINER_PRODUCT"                        = "selc-d-product"
-      "BLOB_STORAGE_ACCOUNT_NAME_CONTRACT"               = data.azurerm_storage_account.documents_storage.name
-      "BLOB_STORAGE_MANAGED_IDENTITY_CLIENT_ID_CONTRACT" = data.azurerm_user_assigned_identity.documents_storage_blob_identity.client_id
+      "APPLICATIONINSIGHTS_CONNECTION_STRING"           = "@Microsoft.KeyVault(SecretUri=https://selc-d-pnpg-kv.vault.azure.net/secrets/appinsights-connection-string/)"
+      "APPLICATIONINSIGHTS_ENABLE_AGENT"                = "true"
+      "JAVA_OPTS"                                       = "-XX:-UseBASE64Intrinsics"
+      "USER_REGISTRY_URL"                               = "https://api.uat.pdv.pagopa.it/user-registry/v1"
+      "MONGODB_CONNECTION_URI"                          = "@Microsoft.KeyVault(SecretUri=https://selc-d-pnpg-kv.vault.azure.net/secrets/mongodb-connection-string/)"
+      "USER_REGISTRY_API_KEY"                           = "@Microsoft.KeyVault(SecretUri=https://selc-d-pnpg-kv.vault.azure.net/secrets/user-registry-api-key/)"
+      "BLOB_STORAGE_ACCOUNT_NAME_PRODUCT"               = data.azurerm_storage_account.product_storage.name
+      "BLOB_STORAGE_MANAGED_IDENTITY_CLIENT_ID_PRODUCT" = data.azurerm_user_assigned_identity.product_storage_blob_identity.client_id
+      "STORAGE_CONTAINER_PRODUCT"                       = "selc-d-product"
 
-      # per-tenant contract storage binding (SELC-DMS-08.04), same values as the legacy settings above
-      "STORAGE_CONTAINER_CONTRACT_PNPG"                       = "selc-d-contracts-blob"
-      "BLOB_STORAGE_ACCOUNT_NAME_CONTRACT_PNPG"               = data.azurerm_storage_account.documents_storage.name
+      # managed identity referenced by TENANT_REGISTRY_JSON storages.contracts
       "BLOB_STORAGE_MANAGED_IDENTITY_CLIENT_ID_CONTRACT_PNPG" = data.azurerm_user_assigned_identity.documents_storage_blob_identity.client_id
+
+      # tenant registry consumed by selfcare-sdk-tenant (SELC-9668): JWT key/audience and contracts storage
+      "TENANT_REGISTRY_JSON" = jsonencode({
+        for tenant_id, tenant in module.local.config.tenant_registry :
+        tenant_id => {
+          jwt = {
+            publicKeyEnvVar = "JWT_PUBLIC_KEY_${tenant_id}"
+            session = {
+              audience = tenant.jwt_audience
+            }
+          }
+          storages = {
+            contracts = {
+              account    = data.azurerm_storage_account.documents_storage.name
+              container  = "selc-d-contracts-blob"
+              pathPrefix = ""
+              authentication = {
+                type                          = "MANAGED_IDENTITY"
+                managedIdentityClientIdEnvVar = "BLOB_STORAGE_MANAGED_IDENTITY_CLIENT_ID_CONTRACT_${tenant_id}"
+              }
+            }
+          }
+        } if tenant_id == upper(module.local.config.domain)
+      })
+      "SELFCARE_TENANT_STRICT_DATA_ISOLATION" = tostring(module.local.config.strict_tenant_data_isolation)
 
       "MAIL_DESTINATION_TEST_ADDRESS"                      = "pectest@pec.pagopa.it"
       "MAIL_TEMPLATE_REGISTRATION_REQUEST_PT_PATH"         = "contracts/template/mail/registration-request-pt/1.0.0.json"
@@ -75,13 +97,13 @@ locals {
       "SELFCARE_URL"                                       = "https://imprese.dev.notifichedigitali.it"
       "MAIL_ONBOARDING_CONFIRMATION_LINK"                  = "https://imprese.dev.notifichedigitali.it/onboarding/confirm?jwt="
       "MAIL_USER_CONFIRMATION_LINK"                        = "https://imprese.dev.notifichedigitali.it/onboarding/confirm?add-user=true&jwt="
+      "MAIL_CONTRACT_UPDATE_CONFIRMATION_LINK"             = "https://imprese.dev.notifichedigitali.it/onboarding/confirm?contract-update=true&jwt="
       "MAIL_ONBOARDING_REJECTION_LINK"                     = "https://imprese.dev.notifichedigitali.it/onboarding/cancel?jwt="
       "MAIL_ONBOARDING_URL"                                = "https://imprese.dev.notifichedigitali.it/onboarding/"
       "MS_USER_URL"                                        = "https://selc-${module.local.config.env_short}-${module.local.config.domain}-user-ms-ca.${module.local.config.private_dns_name_domain}"
       "MS_CORE_URL"                                        = "https://selc-${module.local.config.env_short}-${module.local.config.domain}-institution-ms-ca.${module.local.config.private_dns_name_domain}"
       "MS_DOCUMENT_URL"                                    = "https://selc-${module.local.config.env_short}-${module.local.config.domain}-document-ms-ca.${module.local.config.private_dns_name_domain}"
       "MS_PRODUCT_URL"                                     = "https://selc-${module.local.config.env_short}-pnpg-product-ms-ca.${module.local.config.private_dns_name_domain}"
-      "JWT_BEARER_TOKEN"                                   = "@Microsoft.KeyVault(SecretUri=https://selc-d-pnpg-kv.vault.azure.net/secrets/jwt-bearer-token-functions/)"
       "MS_PARTY_REGISTRY_URL"                              = "https://selc-${module.local.config.env_short}-${module.local.config.domain}-party-reg-proxy-ca.${module.local.config.private_dns_name_domain}"
       "PAGOPA_LOGO_ENABLE"                                 = "false"
       "USER_MS_SEND_MAIL"                                  = "false"
@@ -105,8 +127,8 @@ locals {
       "JWT_TOKEN_PRIVATE_KEY"                              = "@Microsoft.KeyVault(SecretUri=https://selc-d-pnpg-kv.vault.azure.net/secrets/jwt-private-key/)"
       "JWT_PUBLIC_KEY_PNPG"                                = "@Microsoft.KeyVault(SecretUri=https://selc-d-pnpg-kv.vault.azure.net/secrets/jwt-public-key/)"
       "JWT_TOKEN_KID"                                      = "@Microsoft.KeyVault(SecretUri=https://selc-d-pnpg-kv.vault.azure.net/secrets/jwt-kid/)"
-      "DEFAULT_TENANT"                                     = "PNPG"
-      "SUPPORTED_TENANTS"                                  = "PNPG"
+      "TENANT_SUPPORTED_TENANTS"                           = "PNPG"
+      "JWT_DEFAULT_TENANT"                                 = "PNPG"
     }
   }
 }

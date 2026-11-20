@@ -40,8 +40,7 @@ public class AzureBlobClient implements FileStorageConnector {
             throws URISyntaxException, InvalidKeyException {
         if (log.isDebugEnabled()) {
             log.trace("AzureBlobClient");
-            log.debug("AzureBlobClient storageConnectionString = {}, containerReference = {}",
-                    storageConnectionString, containerReference);
+            log.debug("AzureBlobClient containerReference = {}", containerReference);
         }
         final CloudStorageAccount storageAccount = CloudStorageAccount.parse(storageConnectionString);
         this.blobClient = storageAccount.createCloudBlobClient();

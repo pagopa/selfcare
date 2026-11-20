@@ -19,7 +19,10 @@
                 var aud = "${API_DOMAIN}";
                 var iss = "SPID";
                 var tenant_id = context.Variables.GetValueOrDefault("tenantId", "${APP_TENANT_ID}");
-                var payload = new { exp, uid, aud, iss, tenant_id };
+                var client_id = "apim";
+                var subscription_id = context.Subscription?.Id;
+                var product_id = context.Product?.Id;
+                var payload = new { exp, uid, aud, iss, tenant_id, client_id, subscription_id, product_id };
                 var jwtPayloadBase64UrlEncoded = Convert.ToBase64String(Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(payload))).Replace("/", "_").Replace("+", "-"). Replace("=", "");
 
                 // 3) Construct the Base64Url-encoded signature

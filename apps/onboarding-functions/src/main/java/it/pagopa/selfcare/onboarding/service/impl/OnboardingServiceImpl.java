@@ -3,6 +3,9 @@ package it.pagopa.selfcare.onboarding.service.impl;
 import com.microsoft.azure.functions.ExecutionContext;
 import it.pagopa.selfcare.onboarding.common.OnboardingStatus;
 import it.pagopa.selfcare.onboarding.common.PartyRole;
+import it.pagopa.selfcare.onboarding.common.WorkflowType;
+import it.pagopa.selfcare.onboarding.context.TenantContext;
+import it.pagopa.selfcare.onboarding.context.TenantDataIsolation;
 import it.pagopa.selfcare.onboarding.dto.ManagingInstitutionSendEmail;
 import it.pagopa.selfcare.onboarding.dto.NotificationCountResult;
 import it.pagopa.selfcare.onboarding.dto.ResendNotificationsFilters;
@@ -57,6 +60,7 @@ public class OnboardingServiceImpl implements OnboardingService {
     private final OnboardingRepositoryService onboardingRepositoryService;
 
     private final DocumentBuilder documentBuilder;
+    private final TenantDataIsolation tenantDataIsolation;
 
     public OnboardingServiceImpl(
             ProductService productService,
@@ -65,7 +69,8 @@ public class OnboardingServiceImpl implements OnboardingService {
             DocumentBuilder documentBuilder,
             OnboardingRepositoryService onboardingRepositoryService,
             PdvUserRegistryService pdvUserRegistryService,
-            UserService userService) {
+            UserService userService,
+            TenantDataIsolation tenantDataIsolation) {
         this.productService = productService;
         this.notificationService = notificationService;
         this.documentService = documentService;
@@ -73,6 +78,7 @@ public class OnboardingServiceImpl implements OnboardingService {
         this.onboardingRepositoryService = onboardingRepositoryService;
         this.pdvUserRegistryService = pdvUserRegistryService;
         this.userService = userService;
+        this.tenantDataIsolation = tenantDataIsolation;
     }
 
     public Optional<Onboarding> getOnboarding(String onboardingId) {
@@ -323,29 +329,35 @@ public class OnboardingServiceImpl implements OnboardingService {
                                 String.format(
                                         "Starting countOnboarding with filters productId: %s from: %s to: %s",
                                         productId, from, to));
-        return productService.getProducts(false, false).stream()
-                .filter(product -> Objects.isNull(productId) || product.getProductId().equals(productId))
-                .map(product -> countNotificationsByFilters(product.getProductId(), from, to, context))
+        List<String> productIds =
+                productService.getProducts(false, false).stream()
+                        .map(ProductResponse::getProductId)
+                        .filter(id -> Objects.isNull(productId) || id.equals(productId))
+                        .toList();
+        if (productIds.isEmpty()) {
+            return List.of();
+        }
+
+        Map<String, Long> addEvents =
+                onboardingRepositoryService.countByProduct(getQueryNotificationAdd(productId, from, to));
+        Map<String, Long> updateEvents =
+                onboardingRepositoryService.countByProduct(getQueryNotificationDelete(productId, from, to));
+
+        return productIds.stream()
+                .map(
+                        id -> {
+                            long countAddEvents = addEvents.getOrDefault(id, 0L);
+                            long countUpdateEvents = updateEvents.getOrDefault(id, 0L);
+                            context
+                                    .getLogger()
+                                    .info(
+                                            () ->
+                                                    String.format(
+                                                            "Counted onboardings for productId: %s add events: %s update events: %s",
+                                                            id, countAddEvents, countUpdateEvents));
+                            return new NotificationCountResult(id, countAddEvents + countUpdateEvents);
+                        })
                 .toList();
-    }
-
-    public NotificationCountResult countNotificationsByFilters(
-            String productId, String from, String to, ExecutionContext context) {
-        Document queryAddEvent = getQueryNotificationAdd(productId, from, to);
-        Document queryUpdateEvent = getQueryNotificationDelete(productId, from, to);
-
-        long countAddEvents = onboardingRepositoryService.countByQuery(queryAddEvent);
-        long countUpdateEvents = onboardingRepositoryService.countByQuery(queryUpdateEvent);
-        long total = countUpdateEvents + countAddEvents;
-
-        context
-                .getLogger()
-                .info(
-                        () ->
-                                String.format(
-                                        "Counted onboardings for productId: %s add events: %s update events: %s",
-                                        productId, countAddEvents, countUpdateEvents));
-        return new NotificationCountResult(productId, total);
     }
 
     private Document getQueryNotificationDelete(String productId, String from, String to) {
@@ -369,7 +381,10 @@ public class OnboardingServiceImpl implements OnboardingService {
             String dateField,
             boolean workflowTypeExist) {
         Document query = new Document();
-        query.append("productId", productId);
+        if (Objects.nonNull(productId)) {
+            query.append("productId", productId);
+        }
+        query.putAll(tenantDataIsolation.tenantFilter());
         query.append(
                 "status", new Document("$in", status.stream().map(OnboardingStatus::name).toList()));
         if (workflowTypeExist) {
@@ -531,6 +546,29 @@ public class OnboardingServiceImpl implements OnboardingService {
                 .collect(Collectors.toSet())
                 .stream()
                 .toList();
+    }
+
+    @Override
+    public List<String> findContractUpdateIdsWithContract(String referenceOnboardingId) {
+        return onboardingRepositoryService.findByQuery(contractUpdatesQuery(referenceOnboardingId,
+                        OnboardingStatus.PENDING, OnboardingStatus.COMPLETED))
+                .stream()
+                .map(Onboarding::getId)
+                .toList();
+    }
+
+    @Override
+    public void rejectPendingContractUpdates(String referenceOnboardingId) {
+        onboardingRepositoryService.updateStatusByQuery(
+                contractUpdatesQuery(referenceOnboardingId, OnboardingStatus.REQUEST, OnboardingStatus.PENDING),
+                OnboardingStatus.REJECTED.name(),
+                LocalDateTime.now());
+    }
+
+    private static Document contractUpdatesQuery(String referenceOnboardingId, OnboardingStatus... statuses) {
+        return new Document("referenceOnboardingId", referenceOnboardingId)
+                .append(WORKFLOW_TYPE, WorkflowType.CONTRACT_UPDATE.name())
+                .append("status", new Document("$in", Arrays.stream(statuses).map(Enum::name).toList()));
     }
 
 }

@@ -1,5 +1,6 @@
 package it.pagopa.selfcare.onboarding.mapper;
 
+import it.pagopa.selfcare.onboarding.common.WorkflowType;
 import it.pagopa.selfcare.onboarding.entity.Onboarding;
 import it.pagopa.selfcare.onboarding.entity.OnboardingWorkflow;
 import it.pagopa.selfcare.onboarding.dto.AttachmentTemplate;
@@ -20,8 +21,16 @@ public interface DocumentBuilderRequestMapper {
     @Mapping(target = "templatePath", expression = "java(onboardingWorkflow.getContractTemplatePath(product))")
     @Mapping(target = "templateVersion", expression = "java(onboardingWorkflow.getContractTemplateVersion(product))")
     @Mapping(target = "productTitle", source = "product.title")
-    @Mapping(target = "rootOnboardingId", source = "onboarding.referenceOnboardingId")
+    @Mapping(target = "rootOnboardingId", expression = "java(rootOnboardingId(onboarding, onboardingWorkflow))")
     DocumentBuilderRequest toRequest(Onboarding onboarding, ProductResponse product, OnboardingWorkflow onboardingWorkflow);
+
+    // Only user documents and contract updates are linked to their root onboarding: other flows (e.g. aggregator increments) keep their own id as root
+    default String rootOnboardingId(Onboarding onboarding, OnboardingWorkflow onboardingWorkflow) {
+        return it.pagopa.selfcare.onboarding.common.DocumentType.USER.equals(onboardingWorkflow.getDocumentType())
+                || WorkflowType.CONTRACT_UPDATE.equals(onboarding.getWorkflowType())
+                ? onboarding.getReferenceOnboardingId()
+                : null;
+    }
 
     @Mapping(target = "onboardingId", source = "onboarding.id")
     @Mapping(target = "productId", source = "onboarding.productId")

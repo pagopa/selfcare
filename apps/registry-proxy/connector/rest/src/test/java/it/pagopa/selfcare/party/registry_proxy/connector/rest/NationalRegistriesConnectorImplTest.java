@@ -2,6 +2,10 @@ package it.pagopa.selfcare.party.registry_proxy.connector.rest;
 
 import it.pagopa.selfcare.party.registry_proxy.connector.model.national_registries.*;
 import it.pagopa.selfcare.party.registry_proxy.connector.rest.client.NationalRegistriesRestClient;
+import it.pagopa.selfcare.party.registry_proxy.connector.rest.config.RegistryProxyTenantResources;
+import it.pagopa.selfcare.commons.tenant.TenantDefinition;
+import java.util.Set;
+import org.junit.jupiter.api.BeforeEach;
 import it.pagopa.selfcare.party.registry_proxy.connector.rest.model.AdELegalOKDto;
 import it.pagopa.selfcare.party.registry_proxy.connector.constant.AdEResultCodeEnum;
 import it.pagopa.selfcare.party.registry_proxy.connector.constant.AdEResultDetailEnum;
@@ -35,6 +39,16 @@ class NationalRegistriesConnectorImplTest {
     @MockBean
     private NationalRegistriesRestClient nationalRegistriesRestClient;
 
+    @MockBean
+    private RegistryProxyTenantResources tenantResources;
+
+    @BeforeEach
+    void configureTenant() {
+        when(tenantResources.current()).thenReturn(new TenantDefinition.RegistryProxyDefinition(
+                null, new TenantDefinition.NationalRegistriesDefinition(
+                        "https://national.example", "NATIONAL_KEY_AR"), null, null, Set.of()));
+        when(tenantResources.secret("NATIONAL_KEY_AR")).thenReturn("ar-key");
+    }
 
     @Test
     void testBusinessesByLegal() {
@@ -43,7 +57,7 @@ class NationalRegistriesConnectorImplTest {
         businesses.setBusinessList(new ArrayList<>());
         businesses.setLegalTaxId("42");
         businesses.setDateTimeExtraction("2020-03-01");
-        when(nationalRegistriesRestClient.getLegalInstitutions(any())).thenReturn(businesses);
+        when(nationalRegistriesRestClient.getLegalInstitutions(any(), any(), any())).thenReturn(businesses);
 
         assertSame(businesses, nationalRegistriesConnectorImpl.institutionsByLegalTaxId("42"));
     }
@@ -66,13 +80,13 @@ class NationalRegistriesConnectorImplTest {
                 .setDateTimeExtraction(Date.from(atStartOfDayResult.atZone(ZoneId.of("UTC")).toInstant()));
         legalAddressResponse.setProfessionalAddress(legalAddressProfessionalResponse);
         legalAddressResponse.setTaxId("42");
-        when(nationalRegistriesRestClient.getLegalAddress(any()))
+        when(nationalRegistriesRestClient.getLegalAddress(any(), any(), any()))
                 .thenReturn(legalAddressResponse);
         LegalAddressResponse actualLegalAddress = nationalRegistriesConnectorImpl
                 .getLegalAddress("Tax Code");
         assertEquals("42 Main St", actualLegalAddress.getProfessionalAddress().getAddress());
         assertEquals("21654", actualLegalAddress.getProfessionalAddress().getZip());
-        verify(nationalRegistriesRestClient).getLegalAddress(any());
+        verify(nationalRegistriesRestClient).getLegalAddress(any(), any(), any());
     }
 
     /**
@@ -86,7 +100,7 @@ class NationalRegistriesConnectorImplTest {
         Date fromResult = Date.from(atStartOfDayResult.atZone(ZoneId.of("UTC")).toInstant());
         getAddressRegistroImpreseOKDto.setDateTimeExtraction(fromResult);
         getAddressRegistroImpreseOKDto.setTaxId("42");
-        when(nationalRegistriesRestClient.getLegalAddress(any()))
+        when(nationalRegistriesRestClient.getLegalAddress(any(), any(), any()))
                 .thenReturn(getAddressRegistroImpreseOKDto);
         LegalAddressResponse response = nationalRegistriesConnectorImpl.getLegalAddress("Tax Code");
         Assertions.assertNull(response.getProfessionalAddress());
@@ -111,7 +125,7 @@ class NationalRegistriesConnectorImplTest {
         getAddressRegistroImpreseOKDto.setDateTimeExtraction(fromResult);
         getAddressRegistroImpreseOKDto.setProfessionalAddress(professionalAddressDto);
         getAddressRegistroImpreseOKDto.setTaxId("42");
-        when(nationalRegistriesRestClient.getLegalAddress(any()))
+        when(nationalRegistriesRestClient.getLegalAddress(any(), any(), any()))
                 .thenReturn(getAddressRegistroImpreseOKDto);
         LegalAddressResponse actualLegalAddress = nationalRegistriesConnectorImpl.getLegalAddress("Tax Code");
         assertSame(fromResult, actualLegalAddress.getDateTimeExtraction());
@@ -122,7 +136,7 @@ class NationalRegistriesConnectorImplTest {
         assertEquals("Province", professionalAddress.getProvince());
         assertEquals("Municipality", professionalAddress.getMunicipality());
         assertEquals("The characteristics of someone or something", professionalAddress.getDescription());
-        verify(nationalRegistriesRestClient).getLegalAddress(any());
+        verify(nationalRegistriesRestClient).getLegalAddress(any(), any(), any());
     }
 
     /**
@@ -135,12 +149,12 @@ class NationalRegistriesConnectorImplTest {
         adELegalOKDto.setResultDetail(AdEResultDetailEnum.XX00);
         adELegalOKDto.setResultDetailMessage("Detail Message");
         adELegalOKDto.setVerificationResult(true);
-        when(nationalRegistriesRestClient.verifyLegal(any())).thenReturn(adELegalOKDto);
+        when(nationalRegistriesRestClient.verifyLegal(any(), any(), any())).thenReturn(adELegalOKDto);
         VerifyLegalResponse actualVerifyLegalResult = nationalRegistriesConnectorImpl.verifyLegal("42", "42");
         assertEquals("00", actualVerifyLegalResult.getVerifyLegalResultCode().getValue());
         assertTrue(actualVerifyLegalResult.isVerificationResult());
         assertEquals("XX00", actualVerifyLegalResult.getVerifyLegalResultDetail().getValue());
-        verify(nationalRegistriesRestClient).verifyLegal(any());
+        verify(nationalRegistriesRestClient).verifyLegal(any(), any(), any());
     }
 
     /**
@@ -152,12 +166,11 @@ class NationalRegistriesConnectorImplTest {
         adELegalOKDto.setResultCode(AdEResultCodeEnum.CODE_00);
         adELegalOKDto.setResultDetail(AdEResultDetailEnum.XX00);
         adELegalOKDto.setResultDetailMessage("Detail Message");
-        when(nationalRegistriesRestClient.verifyLegal(any())).thenReturn(adELegalOKDto);
+        when(nationalRegistriesRestClient.verifyLegal(any(), any(), any())).thenReturn(adELegalOKDto);
         VerifyLegalResponse actualVerifyLegalResult = nationalRegistriesConnectorImpl.verifyLegal("42", "42");
         assertEquals("00", actualVerifyLegalResult.getVerifyLegalResultCode().getValue());
         assertFalse(actualVerifyLegalResult.isVerificationResult());
         assertEquals("XX00", actualVerifyLegalResult.getVerifyLegalResultDetail().getValue());
-        verify(nationalRegistriesRestClient).verifyLegal(any());
+        verify(nationalRegistriesRestClient).verifyLegal(any(), any(), any());
     }
 }
-

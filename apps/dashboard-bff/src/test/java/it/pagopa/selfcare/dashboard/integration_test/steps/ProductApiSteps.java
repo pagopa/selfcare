@@ -95,6 +95,9 @@ public class ProductApiSteps{
                 .extract();
 
         dashboardStepsUtil.status = response.statusCode();
+        if (dashboardStepsUtil.status == 200) {
+            dashboardStepsUtil.setResponse(response);
+        }
     }
 
     @When("I send a GET request to {string} to retrieve back-office URL")

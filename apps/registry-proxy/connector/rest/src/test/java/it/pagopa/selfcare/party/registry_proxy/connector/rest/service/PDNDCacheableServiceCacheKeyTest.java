@@ -1,12 +1,14 @@
 package it.pagopa.selfcare.party.registry_proxy.connector.rest.service;
 
 import it.pagopa.selfcare.onboarding.crypto.utils.DataEncryptionUtils;
+import it.pagopa.selfcare.commons.tenant.TenantContext;
 import it.pagopa.selfcare.party.registry_proxy.connector.rest.client.PDNDInfoCamereRestClient;
 import it.pagopa.selfcare.party.registry_proxy.connector.rest.model.ClientCredentialsResponse;
 import it.pagopa.selfcare.party.registry_proxy.connector.rest.model.PDNDImpresa;
 import it.pagopa.selfcare.party.registry_proxy.connector.rest.model.PdndProfile;
 import it.pagopa.selfcare.party.registry_proxy.connector.rest.model.PdndSecretValue;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.MockedStatic;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -45,6 +47,10 @@ class PDNDCacheableServiceCacheKeyTest {
     @EnableCaching
     static class TestConfig {
 
+        @Bean
+        TenantContext tenantContext() {
+            return new TenantContext();
+        }
         @Bean(name = "redisCacheManager")
         CacheManager redisCacheManager() {
             return new ConcurrentMapCacheManager("pdndInfocamere");
@@ -74,9 +80,12 @@ class PDNDCacheableServiceCacheKeyTest {
     private TokenProvider tokenProviderPDND;
     @Autowired
     private CacheManager redisCacheManager;
+    @Autowired
+    private TenantContext tenantContext;
 
     @BeforeEach
     void setup() {
+        tenantContext.setTenantId("AR");
         reset(pdndInfoCamereRestClient, tokenProviderPDND);
         Optional.ofNullable(redisCacheManager.getCache("pdndInfocamere")).ifPresent(Cache::clear);
 
@@ -89,6 +98,26 @@ class PDNDCacheableServiceCacheKeyTest {
                 .thenReturn(list);
     }
 
+    @AfterEach
+    void clearTenant() {
+        tenantContext.clear();
+    }
+
+    @Test
+    void interleavedTenantsDoNotShareCachedResults() {
+        PdndSecretValue selfcare = PdndSecretValue.builder().profile(PdndProfile.SELFCARE).build();
+        try (MockedStatic<DataEncryptionUtils> utils = mockStatic(DataEncryptionUtils.class)) {
+            utils.when(() -> DataEncryptionUtils.decrypt(ENCRYPTED_TAX_CODE)).thenReturn(DECRYPTED_TAX_CODE);
+            utils.when(() -> DataEncryptionUtils.encrypt(anyString())).thenReturn("encrypted");
+            pdndCacheableService.getEncryptedPDNDImpresa(ENCRYPTED_TAX_CODE, selfcare);
+            tenantContext.setTenantId("PNPG");
+            pdndCacheableService.getEncryptedPDNDImpresa(ENCRYPTED_TAX_CODE, selfcare);
+            tenantContext.setTenantId("AR");
+            pdndCacheableService.getEncryptedPDNDImpresa(ENCRYPTED_TAX_CODE, selfcare);
+            verify(pdndInfoCamereRestClient, times(2))
+                    .retrieveInstitutionPdndByTaxCode(DECRYPTED_TAX_CODE, BEARER);
+        }
+    }
     @Test
     void sameProfileSameTaxCode_hitsCacheAndCallsUpstreamOnce() {
         PdndSecretValue selfcare = PdndSecretValue.builder().profile(PdndProfile.SELFCARE).build();
@@ -126,4 +155,3 @@ class PDNDCacheableServiceCacheKeyTest {
         }
     }
 }
-

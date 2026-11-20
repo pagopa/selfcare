@@ -3,7 +3,8 @@ package it.pagopa.selfcare.mscore.connector.email;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import it.pagopa.selfcare.mscore.api.FileStorageConnector;
-import it.pagopa.selfcare.mscore.config.CoreConfig;
+import it.pagopa.selfcare.commons.tenant.UnresolvedTenantException;
+import it.pagopa.selfcare.mscore.constant.GenericError;
 import it.pagopa.selfcare.mscore.exception.MsCoreException;
 import it.pagopa.selfcare.mscore.model.onboarding.MailTemplate;
 import org.junit.jupiter.api.Assertions;
@@ -11,7 +12,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.mail.javamail.JavaMailSenderImpl;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import jakarta.mail.internet.MimeMessage;
@@ -40,13 +41,13 @@ class EmailConnectorImplTest {
     private FileStorageConnector fileStorageConnector;
 
     @Mock
-    private JavaMailSender javaMailSender;
+    private JavaMailSenderImpl javaMailSender;
 
     @Mock
-    private CoreConfig coreConfig;
+    private TenantMailSenderProvider mailSenderProvider;
 
     @Test
-    void testSendMail() throws IOException {
+    void testSendMail() throws IOException, jakarta.mail.MessagingException {
         when(fileStorageConnector.getTemplateFile(any())).thenReturn("templateFile");
         MailTemplate mailTemplate = new MailTemplate();
         Path path = Files.createTempFile("contratto", ".pdf");
@@ -60,11 +61,15 @@ class EmailConnectorImplTest {
 
         MimeMessage mimeMessage = mock(MimeMessage.class);
         when(javaMailSender.createMimeMessage()).thenReturn(mimeMessage);
-        when(coreConfig.getSenderMail()).thenReturn("senderMail");
+        when(mailSenderProvider.currentSender()).thenReturn(javaMailSender);
+        when(mailSenderProvider.currentFrom()).thenReturn("sender@test.it");
 
         ArrayList<String> destinationMail = new ArrayList<>();
 
         Assertions.assertDoesNotThrow(() -> emailConnector.sendMail("Template Name", destinationMail, pdf, "Product Name", new HashMap<>(), "foo.txt"));
+        verify(mimeMessage).setFrom(new jakarta.mail.internet.InternetAddress("sender@test.it"));
+        verify(javaMailSender).send(mimeMessage);
+        Files.delete(path);
     }
 
     @Test
@@ -77,7 +82,8 @@ class EmailConnectorImplTest {
 
         MimeMessage mimeMessage = mock(MimeMessage.class);
         when(javaMailSender.createMimeMessage()).thenReturn(mimeMessage);
-        when(coreConfig.getSenderMail()).thenReturn("senderMail");
+        when(mailSenderProvider.currentSender()).thenReturn(javaMailSender);
+        when(mailSenderProvider.currentFrom()).thenReturn("sender@test.it");
 
         ArrayList<String> destinationMail = new ArrayList<>();
         Assertions.assertDoesNotThrow(() -> emailConnector.sendMail("Template Name", destinationMail, null, "Product Name", new HashMap<>(), null));
@@ -88,8 +94,9 @@ class EmailConnectorImplTest {
         FileStorageConnector fileStorageConnector = mock(FileStorageConnector.class);
         when(fileStorageConnector.getTemplateFile(any())).thenReturn("Template File");
         ObjectMapper mapper = new ObjectMapper();
-        EmailConnectorImpl emailConnectorImpl = new EmailConnectorImpl(null, fileStorageConnector, mapper,
-                new CoreConfig());
+        when(mailSenderProvider.currentSender()).thenReturn(javaMailSender);
+        when(mailSenderProvider.currentFrom()).thenReturn("sender@test.it");
+        EmailConnectorImpl emailConnectorImpl = new EmailConnectorImpl(mailSenderProvider, fileStorageConnector, mapper);
         ArrayList<String> destinationMail = new ArrayList<>();
         File pdf = Paths.get(System.getProperty("java.io.tmpdir"), "test.txt").toFile();
         assertThrows(MsCoreException.class, () -> emailConnectorImpl.sendMail("Template Name", destinationMail, pdf,
@@ -97,5 +104,16 @@ class EmailConnectorImplTest {
         verify(fileStorageConnector).getTemplateFile(any());
     }
 
+    @Test
+    void missingTenantOrDefinitionUsesExistingMailErrorPath() {
+        for (RuntimeException failure : new RuntimeException[] {
+                new UnresolvedTenantException(), new IllegalStateException("Missing PEC")}) {
+            doThrow(failure).when(mailSenderProvider).currentSender();
+            MsCoreException exception = assertThrows(MsCoreException.class,
+                    () -> emailConnector.sendMail("template", new ArrayList<>(), null,
+                            "product", new HashMap<>(), null));
+            Assertions.assertEquals(GenericError.ERROR_DURING_SEND_MAIL.getMessage(), exception.getMessage());
+        }
+        verifyNoInteractions(fileStorageConnector, javaMailSender);
+    }
 }
-

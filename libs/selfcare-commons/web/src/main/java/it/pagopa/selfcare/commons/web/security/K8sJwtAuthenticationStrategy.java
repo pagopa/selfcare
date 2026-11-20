@@ -29,6 +29,11 @@ public class K8sJwtAuthenticationStrategy implements JwtAuthenticationStrategy {
     private final TenantRegistry tenantRegistry;
     private final String defaultTenantId;
 
+    @Value("${jwt.tenant-claim-required:false}")
+    private boolean tenantClaimRequired;
+
+    @Value("${jwt.tenant-audience-resolution-enabled:false}")
+    private boolean tenantAudienceResolutionEnabled;
 
     @Autowired
     public K8sJwtAuthenticationStrategy(
@@ -53,16 +58,16 @@ public class K8sJwtAuthenticationStrategy implements JwtAuthenticationStrategy {
     @Override
     public JwtAuthenticationToken authenticate(JwtAuthenticationToken authentication) throws AuthenticationException {
         log.trace("authenticate start");
+        if (tenantClaimRequired || tenantAudienceResolutionEnabled) {
+            throw new TenantValidationException();
+        }
         log.debug(LogUtils.CONFIDENTIAL_MARKER, "authenticate authentication = {}", authentication);
 
         ServiceAccount user;
         try {
-            final V1TokenReview body = new V1TokenReviewBuilder()
-                    .withSpec(new V1TokenReviewSpecBuilder()
-                            .withToken(authentication.getCredentials())
-                            .build())
-                    .build();
-            final V1TokenReview tokenReview = apiClient.createTokenReview(body, null, null, null);
+            final V1TokenReview body = new V1TokenReview()
+                    .spec(new V1TokenReviewSpec().token(authentication.getCredentials()));
+            final V1TokenReview tokenReview = apiClient.createTokenReview(body, null, null, null, null);
             log.debug(LogUtils.CONFIDENTIAL_MARKER, "{}", tokenReview);
             final Optional<V1TokenReviewStatus> tokenStatus = Optional.ofNullable(tokenReview)
                     .map(V1TokenReview::getStatus);

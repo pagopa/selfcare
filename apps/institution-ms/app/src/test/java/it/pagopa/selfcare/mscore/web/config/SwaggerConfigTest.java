@@ -30,6 +30,10 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 @SpringBootTest
 @TestPropertySource(properties = {
+        "USER_REGISTRY_API_KEY_AR=test-registry-key",
+        "ONE_MAIL_API_KEY_AR=test-mail-key",
+        "SMTP_USR_AR=test-smtp-user",
+        "SMTP_PSW_AR=test-smtp-password",
         "INSTITUTION_PRODUCTS_STORAGE_CONNECTION_STRING=DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtlCD9I1QhZT4gRjAAHEDPazjFIwtg==;BlobEndpoint=http://localhost:10000/devstoreaccount1;",
         "INSTITUTION_MAIL_TEMPLATES_STORAGE_CONNECTION_STRING=DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtlCD9I1QhZT4gRjAAHEDPazjFIwtg==;BlobEndpoint=http://localhost:10000/devstoreaccount1;"
 })

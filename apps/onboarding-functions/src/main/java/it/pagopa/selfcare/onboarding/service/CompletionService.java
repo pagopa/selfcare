@@ -22,6 +22,12 @@ public interface CompletionService {
 
     void overridePendingOnboardings(Onboarding onboarding);
 
+    void syncProductUsers(Onboarding onboarding);
+
+    void activateContract(Onboarding onboarding);
+
+    void clearContractUpdateRequired(Onboarding onboarding);
+
     void sendCompletedEmail(OnboardingWorkflow onboardingWorkflow);
 
     void sendDeletedEmail(String  onboardingId);

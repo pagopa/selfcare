@@ -33,6 +33,28 @@ every environment and verify that the replacement is signed by the key matching
 the stack's `JWT_PUBLIC_KEY_<TENANT>` configuration. An expired or mismatched token
 surfaces as a `401` from onboarding-functions.
 
+### Tracing context propagation (Application Insights agent)
+
+Telemetry is collected by the Application Insights Java agent. The agent keeps the
+OpenTelemetry context in a ThreadLocal. When concurrent requests share the same
+Vert.x event loop, continuations of the reactive REST client and the Mongo driver
+can resume with another request's context, or with none. Outgoing dependencies,
+including the call to onboarding-functions, then get the wrong `operation_Id`, or
+become roots of their own operation (SELC-9675, see
+[microsoft/ApplicationInsights-Java#1980](https://github.com/microsoft/ApplicationInsights-Java/issues/1980)).
+
+`OpenTelemetryContextProvider` is registered through
+`META-INF/services/org.eclipse.microprofile.context.spi.ThreadContextProvider`.
+It plugs the agent's context into SmallRye Context Propagation, so every Mutiny
+callback runs with the context of the request that assembled it. It only needs
+`opentelemetry-api`, which the agent bridges, as in `webhook`. Do not add
+`quarkus-opentelemetry`: it would install a second SDK next to the agent.
+
+Remove the provider only if the agent fixes the issue upstream, or if the app moves
+to Quarkus' native OpenTelemetry support. Before removing it, confirm with the
+concurrent load test that requests keep their full route name and their own
+dependencies.
+
 ### Disable starting async onboarding workflow
 
 ````properties

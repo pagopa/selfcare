@@ -34,7 +34,7 @@ on:
           API_NOTIFICATION_TRIGGERS_ID_EXTERNAL, API_NOTIFICATION_TRIGGERS_ID_SUPPORT,
           API_NOTIFICATION_TRIGGERS_ID_INTERNAL, API_NOTIFICATION_TRIGGERS_ID_BILLING_PORTAL.
           The caller must use "secrets: inherit" so that environment secrets
-          (ARM_CLIENT_ID on "<env>-cd") are available too.
+          (ARM_CLIENT_ID, ARM_SUBSCRIPTION_ID on "<env>-cd") are available too.
         required: true
 
 env:
@@ -52,7 +52,7 @@ jobs:
       id-token: write
       contents: read
     env:
-      ARM_SUBSCRIPTION_ID: ${{ vars.ARM_SUBSCRIPTION_ID }}
+      ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
       ARM_TENANT_ID: ${{ vars.ARM_TENANT_ID }}
       ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
 

@@ -35,9 +35,11 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.BadRequestException;
 import jakarta.ws.rs.NotFoundException;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -52,6 +54,8 @@ public class ProductServiceImpl implements ProductService {
   public static final String GETTING_INFO_FROM_PRODUCT = "Getting info from product {}";
   private static final String MISSING_PRODUCT_BY_ID = "Missing product by productId: %s";
   private static final String PRODUCT_NOT_FOUND = "Product %s not found";
+  private static final Set<ProductStatus> NOT_VALID_STATUSES =
+      EnumSet.of(ProductStatus.INACTIVE, ProductStatus.PHASE_OUT, ProductStatus.DELETED);
   private static final String PRODUCT_STATUS_NOT_VALID = "Product with id %s has status %s";
   private static final String PARENT_PRODUCT_NOT_FOUND = "Parent product %s not found";
   private static final String PARENT_CANNOT_BE_CHILD =
@@ -452,8 +456,7 @@ public class ProductServiceImpl implements ProductService {
   }
 
   private static boolean statusIsNotValid(ProductStatus status) {
-    return List.of(ProductStatus.INACTIVE, ProductStatus.PHASE_OUT, ProductStatus.DELETED)
-        .contains(status);
+    return Objects.nonNull(status) && NOT_VALID_STATUSES.contains(status);
   }
 
   @Override

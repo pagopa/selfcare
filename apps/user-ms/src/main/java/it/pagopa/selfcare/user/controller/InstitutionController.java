@@ -168,7 +168,6 @@ public class InstitutionController {
     @PUT
     @Path(value = "/{institutionId}/products/{productId}/users")
     @Consumes(MediaType.APPLICATION_JSON)
-    @Produces(MediaType.APPLICATION_JSON)
     public Uni<Response> updateProductUsers(@PathParam(value = "institutionId") String institutionId,
                                             @ProductId @PathParam(value = "productId") String productId,
                                             @jakarta.validation.constraints.NotNull @Valid UpdateProductUsersDto updateProductUsersDto,

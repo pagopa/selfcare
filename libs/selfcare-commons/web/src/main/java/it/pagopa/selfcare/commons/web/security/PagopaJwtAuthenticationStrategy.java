@@ -38,6 +38,11 @@ public class PagopaJwtAuthenticationStrategy implements JwtAuthenticationStrateg
     private final TenantRegistry tenantRegistry;
     private final String defaultTenantId;
 
+    @Value("${jwt.tenant-claim-required:false}")
+    private boolean tenantClaimRequired;
+
+    @Value("${jwt.tenant-audience-resolution-enabled:false}")
+    private boolean tenantAudienceResolutionEnabled;
 
     @Autowired
     public PagopaJwtAuthenticationStrategy(
@@ -74,7 +79,8 @@ public class PagopaJwtAuthenticationStrategy implements JwtAuthenticationStrateg
                     ? jwtService.getClaims(
                             authentication.getCredentials(), authentication.getTenantId())
                     : jwtService.getClaims(authentication.getCredentials());
-            tenantId = tenantRegistry != null && tenantRegistry.isConfigured()
+            tenantId = tenantAudienceResolutionEnabled
+                    || (tenantRegistry != null && tenantRegistry.isConfigured())
                     ? resolveTenant(authentication.getTenantId(), claims)
                     : authentication.getTenantId();
             log.debug(LogUtils.CONFIDENTIAL_MARKER, "authenticate user with id = {}", claims.get(CLAIMS_UID, String.class));
@@ -112,7 +118,13 @@ public class PagopaJwtAuthenticationStrategy implements JwtAuthenticationStrateg
     }
 
     private String resolveTenant(String headerTenantId, Claims claims) {
+        if (tenantAudienceResolutionEnabled) {
+            return jwtService.resolveTenantFromAudience(claims, headerTenantId, tenantClaimRequired);
+        }
         String claimTenantId = claims.get(CLAIM_TENANT_ID, String.class);
+        if (tenantClaimRequired && !org.springframework.util.StringUtils.hasText(claimTenantId)) {
+            throw new TenantValidationException();
+        }
         String effectiveTenant =
                 org.springframework.util.StringUtils.hasText(claimTenantId)
                         ? normalizeAndValidate(claimTenantId)

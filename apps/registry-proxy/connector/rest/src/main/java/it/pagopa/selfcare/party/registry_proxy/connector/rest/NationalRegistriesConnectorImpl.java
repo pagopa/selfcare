@@ -4,6 +4,8 @@ import io.github.resilience4j.retry.annotation.Retry;
 import it.pagopa.selfcare.party.registry_proxy.connector.api.NationalRegistriesConnector;
 import it.pagopa.selfcare.party.registry_proxy.connector.model.national_registries.*;
 import it.pagopa.selfcare.party.registry_proxy.connector.rest.client.NationalRegistriesRestClient;
+import it.pagopa.selfcare.commons.tenant.TenantDefinition;
+import it.pagopa.selfcare.party.registry_proxy.connector.rest.config.RegistryProxyTenantResources;
 import it.pagopa.selfcare.party.registry_proxy.connector.rest.model.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -14,23 +16,33 @@ import org.springframework.util.Assert;
 public class NationalRegistriesConnectorImpl implements NationalRegistriesConnector {
 
     private final NationalRegistriesRestClient nationalRegistriesRestClient;
+    private final RegistryProxyTenantResources tenantResources;
 
-    public NationalRegistriesConnectorImpl(NationalRegistriesRestClient nationalRegistriesRestClient) {
+    public NationalRegistriesConnectorImpl(
+            NationalRegistriesRestClient nationalRegistriesRestClient,
+            RegistryProxyTenantResources tenantResources) {
         this.nationalRegistriesRestClient = nationalRegistriesRestClient;
+        this.tenantResources = tenantResources;
     }
 
     @Override
     @Retry(name = "retryServiceUnavailable")
     public LegalAddressResponse getLegalAddress(String taxCode) {
         LegalAddressRequest legalAddressRequest = createLegalAddressRequest(taxCode);
-        return toLegalAddressResponse(nationalRegistriesRestClient.getLegalAddress(legalAddressRequest));
+        var resource = nationalRegistries();
+        return toLegalAddressResponse(nationalRegistriesRestClient.getLegalAddress(
+                RegistryProxyTenantResources.endpoint(resource.endpoint()),
+                tenantResources.secret(resource.apiKeyEnvVar()), legalAddressRequest));
     }
 
     @Override
     @Retry(name = "retryServiceUnavailable")
     public VerifyLegalResponse verifyLegal(String taxId, String vatNumber) {
         AdELegalRequestBodyDto request = createRequest(taxId, vatNumber);
-        return toVerifyLegalResponse(nationalRegistriesRestClient.verifyLegal(request));
+        var resource = nationalRegistries();
+        return toVerifyLegalResponse(nationalRegistriesRestClient.verifyLegal(
+                RegistryProxyTenantResources.endpoint(resource.endpoint()),
+                tenantResources.secret(resource.apiKeyEnvVar()), request));
     }
 
     @Override
@@ -38,9 +50,19 @@ public class NationalRegistriesConnectorImpl implements NationalRegistriesConnec
     public Businesses institutionsByLegalTaxId(String legalTaxId) {
         log.info("start institutionsByLegalTaxId");
         LegalInstitutionsRequestBody request = createLegalInstitutionsRequest(legalTaxId);
-        return nationalRegistriesRestClient.getLegalInstitutions(request);
+        var resource = nationalRegistries();
+        return nationalRegistriesRestClient.getLegalInstitutions(
+                RegistryProxyTenantResources.endpoint(resource.endpoint()),
+                tenantResources.secret(resource.apiKeyEnvVar()), request);
     }
 
+    private TenantDefinition.NationalRegistriesDefinition nationalRegistries() {
+        var resource = tenantResources.current().nationalRegistries();
+        if (resource == null) {
+            throw new IllegalStateException("National registries are not configured for the current tenant");
+        }
+        return resource;
+    }
 
     private LegalAddressResponse toLegalAddressResponse(GetAddressRegistroImpreseOKDto legalAddress) {
         LegalAddressResponse legalAddressResponse = new LegalAddressResponse();

@@ -168,6 +168,7 @@ module "apim_external_api_ms_v2" {
     module.apim_product_pn_prod.product_id,
     module.apim_product_pn_test.product_id,
     module.apim_product_pagopa.product_id,
+    module.apim_product_pagopa_pt.product_id,
     module.apim_product_idpay.product_id,
     module.apim_product_idpay_merchant.product_id,
     module.apim_product_io_sign.product_id,
@@ -1480,6 +1481,23 @@ module "apim_product_pagopa" {
   approval_required     = false
 
   policy_xml = file("${path.module}/api_product/pagopa/policy.xml")
+}
+
+module "apim_product_pagopa_pt" {
+  source = "github.com/pagopa/terraform-azurerm-v4.git//api_management_product?ref=v10.9.0"
+
+  product_id   = "pagopa-pt"
+  display_name = "PAGOPA PT"
+  description  = "Pagamenti pagoPA - Partner Tecnologico"
+
+  api_management_name = data.azurerm_api_management.apim.name
+  resource_group_name = local.rg_apim_name
+
+  published             = true
+  subscription_required = true
+  approval_required     = false
+
+  policy_xml = file("${path.module}/api_product/pagopa-pt/policy.xml")
 }
 
 module "apim_product_idpay" {

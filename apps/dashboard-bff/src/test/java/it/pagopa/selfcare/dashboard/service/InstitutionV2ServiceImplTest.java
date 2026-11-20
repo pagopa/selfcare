@@ -16,8 +16,10 @@ import it.pagopa.selfcare.dashboard.model.product.mapper.ProductMapper;
 import it.pagopa.selfcare.dashboard.model.user.UserInfo;
 import it.pagopa.selfcare.iam.generated.openapi.v1.dto.ProductRolePermissions;
 import it.pagopa.selfcare.iam.generated.openapi.v1.dto.ProductRolePermissionsList;
+import it.pagopa.selfcare.onboarding.generated.openapi.v1.dto.OnboardingContractUpdateRequest;
 import it.pagopa.selfcare.onboarding.generated.openapi.v1.dto.OnboardingGet;
 import it.pagopa.selfcare.onboarding.generated.openapi.v1.dto.OnboardingGetResponse;
+import it.pagopa.selfcare.onboarding.generated.openapi.v1.dto.OnboardingStatus;
 import it.pagopa.selfcare.product.service.ProductService;
 import it.pagopa.selfcare.user.generated.openapi.v1.dto.OnboardedProductResponse;
 import it.pagopa.selfcare.user.generated.openapi.v1.dto.UserDataWithProductInfoResponse;
@@ -88,6 +90,25 @@ class InstitutionV2ServiceImplTest extends BaseServiceTest {
     @BeforeEach
     void init() {
         super.setUp();
+    }
+
+    @Test
+    void onboardingContractUpdate_callsOnboardingMs() {
+        OnboardingContractUpdateRequest request = new OnboardingContractUpdateRequest();
+        request.setProductId(PROD_IO.getValue());
+        when(onboardingRestClient._onboardingContractUpdate(request))
+                .thenReturn(ResponseEntity.ok(new it.pagopa.selfcare.onboarding.generated.openapi.v1.dto.OnboardingResponse()));
+
+        institutionV2Service.onboardingContractUpdate(request);
+
+        verify(onboardingRestClient, times(1))._onboardingContractUpdate(request);
+        verifyNoMoreInteractions(onboardingRestClient);
+    }
+
+    @Test
+    void onboardingContractUpdate_withNullRequest_throwsIllegalArgument() {
+        assertThrows(IllegalArgumentException.class, () -> institutionV2Service.onboardingContractUpdate(null));
+        verifyNoInteractions(onboardingRestClient);
     }
 
     @Test
@@ -532,21 +553,21 @@ class InstitutionV2ServiceImplTest extends BaseServiceTest {
         onboardingGetResponse.setItems(List.of(new OnboardingGet().productId(productId)));
         onboardingGetResponse.setCount((long) onboardingGetResponse.getItems().size());
 
-        when(onboardingRestClient._getOnboardingWithFilter(null, null, null, null, productId, null,1, null, status, subunitCode, taxCode, null, null))
+        when(onboardingRestClient._getOnboardingWithFilter(null, null, null, null, productId, null,1, null, OnboardingStatus.fromValue(status), subunitCode, taxCode, null, null, null))
                 .thenReturn(ResponseEntity.of(Optional.of(onboardingGetResponse)));
 
         Boolean actualResponse = institutionV2Service.verifyIfExistsPendingOnboarding(taxCode, subunitCode, productId);
 
         assertTrue(actualResponse);
         verify(onboardingRestClient, Mockito.times(1))
-                ._getOnboardingWithFilter(null, null, null, null, productId, null, 1, null, PENDING.name(), subunitCode, taxCode, null, null);
+                ._getOnboardingWithFilter(null, null, null, null, productId, null, 1, null, OnboardingStatus.fromValue(PENDING.name()), subunitCode, taxCode, null, null, null);
     }
 
     @Test
     void getOnboardingWithFilterOk() {
         String taxCode = "taxCode";
         String productId = "productId";
-        String status = "status";
+        String status = PENDING.name();
 
         OnboardingGet onboardingGet = new OnboardingGet();
         onboardingGet.setProductId(productId);
@@ -556,9 +577,9 @@ class InstitutionV2ServiceImplTest extends BaseServiceTest {
 
         doReturn(ResponseEntity.of(Optional.of(onboardingGetResponse)))
                 .when(onboardingRestClient)
-                ._getOnboardingWithFilter(null, null, null, null, productId, null,1, null, status, null, taxCode, null, null);
+                ._getOnboardingWithFilter(null, null, null, null, productId, null,1, null, OnboardingStatus.fromValue(status), null, taxCode, null, null, null);
 
-        boolean onboardingGetInfo = onboardingRestClient._getOnboardingWithFilter(null, null, null, null, productId, null, 1, null, status, null, taxCode, null, null).getBody() != null;
+        boolean onboardingGetInfo = onboardingRestClient._getOnboardingWithFilter(null, null, null, null, productId, null, 1, null, OnboardingStatus.fromValue(status), null, taxCode, null, null, null).getBody() != null;
         Assertions.assertTrue(onboardingGetInfo);
     }
 
@@ -568,18 +589,18 @@ class InstitutionV2ServiceImplTest extends BaseServiceTest {
         onboardingGetResponse.setItems(List.of(new OnboardingGet().productId("test-product")));
         onboardingGetResponse.setCount((long) onboardingGetResponse.getItems().size());
 
-        when(onboardingRestClient._getOnboardingWithFilter(null, null, null, null, "test-product", null,1, null, PENDING.name(), null, "test-institution", null, null))
+        when(onboardingRestClient._getOnboardingWithFilter(null, null, null, null, "test-product", null,1, null, OnboardingStatus.fromValue(PENDING.name()), null, "test-institution", null, null, null))
                 .thenReturn(ResponseEntity.ok().build());
-        when(onboardingRestClient._getOnboardingWithFilter(null, null, null, null, "test-product", null, 1, null, TOBEVALIDATED.name(), null, "test-institution", null, null))
+        when(onboardingRestClient._getOnboardingWithFilter(null, null, null, null, "test-product", null, 1, null, OnboardingStatus.fromValue(TOBEVALIDATED.name()), null, "test-institution", null, null, null))
                 .thenReturn(ResponseEntity.of(Optional.of(onboardingGetResponse)));
 
         Boolean actualResponse = institutionV2Service.verifyIfExistsPendingOnboarding("test-institution", null, "test-product");
 
         assertTrue(actualResponse);
         verify(onboardingRestClient, Mockito.times(1))
-                ._getOnboardingWithFilter(null, null, null, null, "test-product", null, 1, null, PENDING.name(), null, "test-institution", null, null);
+                ._getOnboardingWithFilter(null, null, null, null, "test-product", null, 1, null, OnboardingStatus.fromValue(PENDING.name()), null, "test-institution", null, null, null);
         verify(onboardingRestClient, Mockito.times(1))
-                ._getOnboardingWithFilter(null, null, null, null, "test-product", null, 1, null, TOBEVALIDATED.name(), null, "test-institution", null, null);
+                ._getOnboardingWithFilter(null, null, null, null, "test-product", null, 1, null, OnboardingStatus.fromValue(TOBEVALIDATED.name()), null, "test-institution", null, null, null);
     }
 
     @Test
@@ -587,220 +608,14 @@ class InstitutionV2ServiceImplTest extends BaseServiceTest {
         OnboardingGetResponse onboardingGetResponse = new OnboardingGetResponse();
         onboardingGetResponse.setItems(List.of(new OnboardingGet().productId("test-product")));
         onboardingGetResponse.setCount((long) onboardingGetResponse.getItems().size());
-        when(onboardingRestClient._getOnboardingWithFilter(null, null, null, null, "test-product", null, 1, null, PENDING.name(), null, "test-institution", null, null))
+        when(onboardingRestClient._getOnboardingWithFilter(null, null, null, null, "test-product", null, 1, null, OnboardingStatus.fromValue(PENDING.name()), null, "test-institution", null, null, null))
                 .thenReturn(ResponseEntity.ok().build());
-        when(onboardingRestClient._getOnboardingWithFilter(null, null, null, null, "test-product", null, 1, null, TOBEVALIDATED.name(), null, "test-institution", null, null))
+        when(onboardingRestClient._getOnboardingWithFilter(null, null, null, null, "test-product", null, 1, null, OnboardingStatus.fromValue(TOBEVALIDATED.name()), null, "test-institution", null, null, null))
                 .thenReturn(ResponseEntity.ok().build());
 
         Boolean actualResponse = institutionV2Service.verifyIfExistsPendingOnboarding("test-institution", null, "test-product");
 
         assertFalse(actualResponse);
-    }
-
-    @Test
-    void getOnboardingsInfo_WithoutFilter() {
-        String institutionId = "institutionId";
-
-        OnboardingResponse onboardingResponsePagopa = new OnboardingResponse();
-        onboardingResponsePagopa.setProductId(PROD_PAGOPA.name());
-        onboardingResponsePagopa.setStatus(OnboardingResponse.StatusEnum.ACTIVE);
-        OnboardingResponse onboardingResponseIo = new OnboardingResponse();
-        onboardingResponseIo.setProductId(PROD_IO.name());
-        onboardingResponseIo.setStatus(OnboardingResponse.StatusEnum.ACTIVE);
-
-        OnboardingsResponse onboardingsResponse = new OnboardingsResponse();
-        onboardingsResponse.setOnboardings(List.of(onboardingResponsePagopa, onboardingResponseIo));
-
-        doReturn(ResponseEntity.of(Optional.of(onboardingsResponse)))
-                .when(coreInstitutionApiRestClient)
-                ._getOnboardingsInstitutionUsingGET(institutionId, null);
-
-        OnboardingsResponse response = institutionV2Service.getOnboardingsInfoResponse(institutionId, null);
-        Assertions.assertEquals(2, response.getOnboardings().size());
-    }
-
-
-    @Test
-    void getOnboardingsInfo_WithFilter() {
-        String institutionId = "institutionId";
-        List<String> products = List.of(PROD_PAGOPA.name(), PROD_DASHBOARD_PSP.name());
-
-        OnboardingResponse onboardingResponsePagopa = new OnboardingResponse();
-        onboardingResponsePagopa.setProductId(PROD_PAGOPA.name());
-        onboardingResponsePagopa.setStatus(OnboardingResponse.StatusEnum.ACTIVE);
-        OnboardingResponse onboardingResponseDashboard = new OnboardingResponse();
-        onboardingResponseDashboard.setProductId(PROD_DASHBOARD_PSP.name());
-        onboardingResponseDashboard.setStatus(OnboardingResponse.StatusEnum.DELETED);
-        OnboardingResponse onboardingResponseIo = new OnboardingResponse();
-        onboardingResponseIo.setProductId(PROD_IO.name());
-        onboardingResponseIo.setStatus(OnboardingResponse.StatusEnum.ACTIVE);
-
-        OnboardingsResponse onboardingsResponse = new OnboardingsResponse();
-        onboardingsResponse.setOnboardings(List.of(onboardingResponsePagopa, onboardingResponseDashboard, onboardingResponseIo));
-
-        doReturn(ResponseEntity.of(Optional.of(onboardingsResponse)))
-                .when(coreInstitutionApiRestClient)
-                ._getOnboardingsInstitutionUsingGET(institutionId, null);
-
-        OnboardingsResponse response = institutionV2Service.getOnboardingsInfoResponse(institutionId, products);
-        Assertions.assertEquals(1, response.getOnboardings().size());
-    }
-
-    @Test
-    void getContract_shouldReturnContract_whenActiveOnboardingExists() {
-        String institutionId = "inst1";
-        String productId = "prod1";
-        String tokenId = "token123";
-        Resource expectedContract = new ByteArrayResource("contract".getBytes());
-
-        OnboardingResponse onboarding = new OnboardingResponse();
-        onboarding.setStatus(OnboardingResponse.StatusEnum.ACTIVE);
-        onboarding.setProductId(productId);
-        onboarding.setCreatedAt(OffsetDateTime.now());
-        onboarding.setTokenId(tokenId);
-        onboarding.setInstitutionType(OnboardingResponse.InstitutionTypeEnum.PSP);
-
-        OnboardingsResponse onboardingsResponse = new OnboardingsResponse();
-        onboardingsResponse.setOnboardings(List.of(onboarding));
-
-        when(coreInstitutionApiRestClient._getOnboardingsInstitutionUsingGET(institutionId, null))
-                .thenReturn(ResponseEntity.ok(onboardingsResponse));
-        when(documentContentRestClient._getContractSigned(tokenId))
-                .thenReturn(ResponseEntity.ok(expectedContract));
-
-        Resource result = institutionV2Service.getContract(institutionId, productId);
-
-        assertEquals(expectedContract, result);
-    }
-
-    @Test
-    void getContract_shouldThrowException_whenActiveOnboardingExists_noPSP() {
-        String institutionId = "inst1";
-        String productId = "prod1";
-        String tokenId = "token123";
-
-        OnboardingResponse onboarding = new OnboardingResponse();
-        onboarding.setStatus(OnboardingResponse.StatusEnum.ACTIVE);
-        onboarding.setCreatedAt(OffsetDateTime.now());
-        onboarding.setProductId(productId);
-        onboarding.setTokenId(tokenId);
-        onboarding.setInstitutionType(OnboardingResponse.InstitutionTypeEnum.GSP);
-
-        OnboardingsResponse onboardingsResponse = new OnboardingsResponse();
-        onboardingsResponse.setOnboardings(List.of(onboarding));
-
-        when(coreInstitutionApiRestClient._getOnboardingsInstitutionUsingGET(institutionId, null))
-                .thenReturn(ResponseEntity.ok(onboardingsResponse));
-
-        assertThrows(AccessDeniedException.class, () ->
-                institutionV2Service.getContract(institutionId, productId)
-        );
-    }
-
-    @Test
-    void getContract_shouldThrowException_whenActiveOnboardingExists_noPSP_issuerPAGOPA() {
-        String institutionId = "inst1";
-        String productId = "prod1";
-        String tokenId = "token123";
-        Resource expectedContract = new ByteArrayResource("contract".getBytes());
-
-        OnboardingResponse onboarding = new OnboardingResponse();
-        onboarding.setStatus(OnboardingResponse.StatusEnum.ACTIVE);
-        onboarding.setCreatedAt(OffsetDateTime.now());
-        onboarding.setProductId(productId);
-        onboarding.setTokenId(tokenId);
-        onboarding.setInstitutionType(OnboardingResponse.InstitutionTypeEnum.GSP);
-
-        OnboardingsResponse onboardingsResponse = new OnboardingsResponse();
-        onboardingsResponse.setOnboardings(List.of(onboarding));
-
-        // Mock SelfCareUser with issuer = PAGOPA
-        SelfCareUser principal = Mockito.mock(SelfCareUser.class);
-        when(principal.getIssuer()).thenReturn("PAGOPA");
-
-        TestingAuthenticationToken authentication = new TestingAuthenticationToken(principal, null);
-        SecurityContextHolder.getContext().setAuthentication(authentication);
-
-        when(coreInstitutionApiRestClient._getOnboardingsInstitutionUsingGET(institutionId, null))
-                .thenReturn(ResponseEntity.ok(onboardingsResponse));
-        when(documentContentRestClient._getContractSigned(tokenId))
-                .thenReturn(ResponseEntity.ok(expectedContract));
-
-        Resource result = institutionV2Service.getContract(institutionId, productId);
-
-        assertEquals(expectedContract, result);
-    }
-
-    @Test
-    void getContract_shouldThrowException_whenNoActiveOnboarding() {
-        String institutionId = "inst1";
-        String productId = "prod1";
-
-        OnboardingResponse onboarding = new OnboardingResponse();
-        onboarding.setStatus(OnboardingResponse.StatusEnum.DELETED);
-        onboarding.setProductId(productId);
-
-        OnboardingsResponse onboardingsResponse = new OnboardingsResponse();
-        onboardingsResponse.setOnboardings(List.of(onboarding));
-
-        when(coreInstitutionApiRestClient._getOnboardingsInstitutionUsingGET(institutionId, null))
-                .thenReturn(ResponseEntity.ok(onboardingsResponse));
-
-        assertThrows(ResourceNotFoundException.class, () ->
-                institutionV2Service.getContract(institutionId, productId)
-        );
-    }
-
-    @Test
-    void getContract_shouldHandleNullResponseBody() {
-        String institutionId = "inst1";
-        String productId = "prod1";
-
-        when(coreInstitutionApiRestClient._getOnboardingsInstitutionUsingGET(institutionId, null))
-                .thenReturn(ResponseEntity.ok(null));
-
-        assertThrows(ResourceNotFoundException.class, () ->
-                institutionV2Service.getContract(institutionId, productId)
-        );
-    }
-
-    @Test
-    void getContract_shouldReturnMostRecentActiveOnboarding() {
-        String institutionId = "inst1";
-        String productId = "prod1";
-        String tokenId = "token-latest";
-        Resource expectedContract = new ByteArrayResource("contract".getBytes());
-
-        OnboardingResponse older = new OnboardingResponse();
-        older.setStatus(OnboardingResponse.StatusEnum.ACTIVE);
-        older.setCreatedAt(OffsetDateTime.now().minusDays(1));
-        older.setTokenId("token-old");
-        older.setProductId(productId);
-
-        OnboardingResponse newer = new OnboardingResponse();
-        newer.setStatus(OnboardingResponse.StatusEnum.ACTIVE);
-        newer.setCreatedAt(OffsetDateTime.now());
-        newer.setTokenId(tokenId);
-        newer.setProductId(productId);
-        newer.setInstitutionType(OnboardingResponse.InstitutionTypeEnum.PSP);
-
-        OnboardingsResponse onboardingsResponse = new OnboardingsResponse();
-        onboardingsResponse.setOnboardings(List.of(older, newer));
-
-        SelfCareUser principal = Mockito.mock(SelfCareUser.class);
-        when(principal.getIssuer()).thenReturn("PAGOPA");
-
-        TestingAuthenticationToken authentication = new TestingAuthenticationToken(principal, null);
-        SecurityContextHolder.getContext().setAuthentication(authentication);
-
-        when(coreInstitutionApiRestClient._getOnboardingsInstitutionUsingGET(institutionId, null))
-                .thenReturn(ResponseEntity.ok(onboardingsResponse));
-        when(documentContentRestClient._getContractSigned(tokenId))
-                .thenReturn(ResponseEntity.ok(expectedContract));
-
-        Resource result = institutionV2Service.getContract(institutionId, productId);
-
-        assertEquals(expectedContract, result);
     }
 
     @Test

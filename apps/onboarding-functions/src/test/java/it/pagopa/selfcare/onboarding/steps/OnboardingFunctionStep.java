@@ -2,7 +2,11 @@ package it.pagopa.selfcare.onboarding.steps;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mongodb.client.MongoClient;
+import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
+import com.mongodb.client.model.Filters;
+import com.mongodb.client.model.ReplaceOptions;
+import com.mongodb.client.model.Updates;
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
@@ -13,6 +17,8 @@ import io.restassured.RestAssured;
 import io.restassured.response.Response;
 import io.restassured.response.ValidatableResponse;
 import io.restassured.specification.RequestSpecification;
+import it.pagopa.selfcare.onboarding.common.OnboardingStatus;
+import it.pagopa.selfcare.onboarding.common.WorkflowType;
 import it.pagopa.selfcare.onboarding.context.TenantContext;
 import it.pagopa.selfcare.onboarding.entity.Institution;
 import it.pagopa.selfcare.onboarding.entity.Onboarding;
@@ -21,6 +27,8 @@ import jakarta.inject.Inject;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.extern.slf4j.Slf4j;
+import org.bson.Document;
+import org.bson.conversions.Bson;
 import org.hamcrest.Matcher;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -37,6 +45,8 @@ import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.allOf;
 import static org.hamcrest.Matchers.hasKey;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @EqualsAndHashCode(callSuper = true)
@@ -58,6 +68,9 @@ public class OnboardingFunctionStep extends CucumberQuarkusTest {
     private static final long STATUS_POLL_INTERVAL_MS = 1_000L;
     private static final String INTEGRATION_TEST_CALLER_ID = "m2m:onboarding-functions-it";
     static final String INTEGRATION_TEST_TENANT = "AR";
+    // document-ms blob paths (document-ms.blob-storage.path-contracts / path-deleted)
+    private static final String CONTRACTS_PATH = "parties/docs/";
+    private static final String DELETED_CONTRACTS_PATH = "parties/deleted/";
 
     private ValidatableResponse validatableResponse;
     private static ObjectMapper objectMapper;
@@ -74,6 +87,7 @@ public class OnboardingFunctionStep extends CucumberQuarkusTest {
     private RequestSpecification request;
     private Response response;
     private Onboarding onboarding;
+    private Onboarding aggregateOnboarding;
 
     @Inject
     IntegrationOnboardingResources integrationOnboardingResources;
@@ -123,21 +137,231 @@ public class OnboardingFunctionStep extends CucumberQuarkusTest {
         RestAssured.baseURI = "http://localhost:8090";
         RestAssured.basePath = String.format("/api/%s", functionName);
 
-        onboarding = integrationOperationUtils.findIntoMongoOnboarding(onboardingId);
+        onboarding = loadOnboarding(onboardingId);
+        setOnboardingId(onboarding.getId());
+    }
 
-        if (Objects.isNull(onboarding)) {
-            onboarding = integrationOnboardingResources.getOnboardingJsonTemplate(onboardingId);
+    @Given("The onboarding {string} is present")
+    public void ensureOnboardingIsPresent(String onboardingId) {
+        loadOnboarding(onboardingId);
+    }
 
-            if (!Objects.isNull(onboarding)) {
-                if (onboarding.getTenantId() == null || onboarding.getTenantId().isBlank()) {
-                    onboarding.setTenantId(INTEGRATION_TEST_TENANT);
+    private Onboarding loadOnboarding(String onboardingId) {
+        Onboarding current = integrationOperationUtils.findIntoMongoOnboarding(onboardingId);
+
+        if (Objects.isNull(current)) {
+            current = integrationOnboardingResources.getOnboardingJsonTemplate(onboardingId);
+
+            if (!Objects.isNull(current)) {
+                if (current.getTenantId() == null || current.getTenantId().isBlank()) {
+                    current.setTenantId(INTEGRATION_TEST_TENANT);
                 }
-                integrationOperationUtils.persistIntoMongo(onboarding);
+                integrationOperationUtils.persistIntoMongo(current);
             } else {
                 throw new IllegalStateException("Errore nel caricamento del json di test per " + onboardingId);
             }
         }
-        setOnboardingId(onboarding.getId());
+        return current;
+    }
+
+    @Then("the contract document of the onboarding has rootOnboardingId {string}")
+    public void verifyContractRootOnboardingId(String rootOnboardingId) {
+        Document contract = findContractDocument(getOnboardingId());
+        assertEquals(rootOnboardingId, contract.getString("rootOnboardingId"));
+    }
+
+    @Then("the contract document of the onboarding is created")
+    public void verifyContractCreated() {
+        assertNotNull(findContractDocument(getOnboardingId()).getString("contractFilename"), "Contract filename not set");
+    }
+
+    // The contract generated by BuildContract is marked as signed, so that a later deletion has a real blob to move
+    @Given("the signed contract of the onboarding is uploaded")
+    public void uploadSignedContract() {
+        Document contract = findContractDocument(getOnboardingId());
+        String contractPath = CONTRACTS_PATH + getOnboardingId() + "/" + contract.getString("contractFilename");
+        contractDocumentsCollection().updateOne(contractDocumentFilter(getOnboardingId()), Updates.set("contractSigned", contractPath));
+    }
+
+    @Then("the onboarding {string} has status {string}")
+    public void verifyOnboardingStatus(String onboardingId, String status) throws InterruptedException {
+        waitForStatus(onboardingId, status);
+    }
+
+    @Given("the aggregate with taxCode {string} already has an active delegation")
+    public void seedActiveDelegation(String taxCode) {
+        Institution aggregate = integrationOnboardingResources.getInstitutionJsonTemplate(taxCode);
+        assertNotNull(aggregate, "Institution not found for taxCode " + taxCode);
+        Document delegation = new Document("_id", aggregate.getId())
+                .append("tenantId", INTEGRATION_TEST_TENANT)
+                .append("from", aggregate.getId())
+                .append("fromTaxCode", taxCode)
+                .append("fromType", aggregate.getInstitutionType().name())
+                .append("institutionFromName", aggregate.getDescription())
+                .append("to", onboarding.getInstitution().getId())
+                .append("toTaxCode", onboarding.getInstitution().getTaxCode())
+                .append("toType", onboarding.getInstitution().getInstitutionType().name())
+                .append("institutionToName", onboarding.getInstitution().getDescription())
+                .append("productId", onboarding.getProductId())
+                .append("type", "EA")
+                .append("status", "ACTIVE");
+        institutionDelegationsCollection().replaceOne(
+                Filters.eq("_id", aggregate.getId()), delegation, new ReplaceOptions().upsert(true));
+    }
+
+    @Then("the aggregate onboarding with taxCode {string} has status {string}")
+    public void verifyAggregateOnboardingStatus(String taxCode, String status) {
+        Onboarding aggregate = findAggregateOnboarding(taxCode);
+        assertNotNull(aggregate, "Aggregate onboarding not found for taxCode " + taxCode);
+        assertEquals(WorkflowType.CONFIRMATION_AGGREGATE, aggregate.getWorkflowType());
+        assertEquals(OnboardingStatus.valueOf(status), aggregate.getStatus());
+        aggregateOnboarding = aggregate;
+    }
+
+    @Then("there is an active delegation from the aggregate to the aggregator")
+    public void verifyAggregateDelegation() {
+        Onboarding aggregate = onboarding.getWorkflowType() == WorkflowType.CONFIRMATION_AGGREGATE
+                ? onboarding : aggregateOnboarding;
+        assertNotNull(aggregate, "Aggregate onboarding not found");
+        Document delegation = institutionDelegationsCollection()
+                .find(Filters.and(
+                        Filters.eq("from", aggregate.getInstitution().getId()),
+                        Filters.eq("to", aggregate.getAggregator().getId()),
+                        Filters.eq("productId", aggregate.getProductId()),
+                        Filters.eq("type", "EA"),
+                        Filters.eq("status", "ACTIVE")))
+                .first();
+        assertNotNull(delegation, "Active delegation not found for aggregate onboarding " + aggregate.getId());
+    }
+
+    @Then("the institution {string} has an active onboarding for the product")
+    public void verifyInstitutionOnboarding(String institutionId) {
+        assertEquals(institutionId, onboarding.getInstitution().getId());
+        Document institution = IntegrationFunctionProfile.getInstitutionDatabase(mongoConnection())
+                .getCollection("Institution")
+                .find(Filters.and(
+                        Filters.eq("_id", institutionId),
+                        Filters.eq("tenantId", INTEGRATION_TEST_TENANT),
+                        Filters.elemMatch("onboarding", Filters.and(
+                                Filters.eq("productId", onboarding.getProductId()),
+                                Filters.eq("tokenId", onboarding.getId()),
+                                Filters.eq("status", "ACTIVE")))))
+                .first();
+        assertNotNull(institution, "Active product onboarding not found for institution " + institutionId);
+    }
+
+    @Then("the aggregate user is active for the product")
+    public void verifyAggregateUser() {
+        Document user = IntegrationFunctionProfile.getUserDatabase(mongoConnection())
+                .getCollection("userInstitutions")
+                .find(Filters.and(
+                        Filters.eq("institutionId", onboarding.getInstitution().getId()),
+                        Filters.eq("userId", onboarding.getUsers().get(0).getId()),
+                        Filters.elemMatch("products", Filters.and(
+                                Filters.eq("productId", onboarding.getProductId()),
+                                Filters.eq("tokenId", onboarding.getId()),
+                                Filters.eq("status", "ACTIVE"),
+                                Filters.eq("role", "MANAGER"),
+                                Filters.eq("productRole", onboarding.getUsers().get(0).getProductRole()),
+                                Filters.eq("toAddOnAggregates", false)))))
+                .first();
+        assertNotNull(user, "Active aggregate user not found");
+    }
+
+    @Then("the aggregate has no users")
+    public void verifyAggregateHasNoUsers() {
+        long count = IntegrationFunctionProfile.getUserDatabase(mongoConnection())
+                .getCollection("userInstitutions")
+                .countDocuments(Filters.eq("institutionId", onboarding.getInstitution().getId()));
+        assertEquals(0, count, "Unexpected users for aggregate " + onboarding.getInstitution().getId());
+    }
+
+    @Then("the aggregate with taxCode {string} has no new onboarding or delegation")
+    public void verifyExistingDelegationIsPreserved(String taxCode) {
+        assertNull(findAggregateOnboarding(taxCode), "Unexpected onboarding for aggregate " + taxCode);
+        long count = institutionDelegationsCollection().countDocuments(Filters.and(
+                Filters.eq("tenantId", INTEGRATION_TEST_TENANT),
+                Filters.eq("fromTaxCode", taxCode),
+                Filters.eq("to", onboarding.getInstitution().getId()),
+                Filters.eq("productId", onboarding.getProductId()),
+                Filters.eq("status", "ACTIVE")));
+        assertEquals(1, count, "Expected exactly one active delegation for aggregate " + taxCode);
+    }
+
+    @Then("the onboarding has an activation date")
+    public void verifyActivationDate() {
+        assertNotNull(onboarding.getActivatedAt(), "Onboarding activation date was not set");
+    }
+
+    @Then("the aggregator user is active for aggregates")
+    public void verifyAggregatorUser() {
+        Document user = IntegrationFunctionProfile.getUserDatabase(mongoConnection())
+                .getCollection("userInstitutions")
+                .find(Filters.and(
+                        Filters.eq("institutionId", onboarding.getInstitution().getId()),
+                        Filters.eq("userId", onboarding.getUsers().get(0).getId()),
+                        Filters.elemMatch("products", Filters.and(
+                                Filters.eq("productId", onboarding.getProductId()),
+                                Filters.eq("status", "ACTIVE"),
+                                Filters.eq("role", "MANAGER"),
+                                Filters.eq("toAddOnAggregates", true)))))
+                .first();
+        assertNotNull(user, "Active aggregator user not found");
+    }
+
+    private Onboarding findAggregateOnboarding(String taxCode) {
+        return integrationOperationUtils.findAggregateOnboarding(getOnboardingId(), taxCode);
+    }
+
+    private MongoCollection<Document> institutionDelegationsCollection() {
+        return IntegrationFunctionProfile.getInstitutionDatabase(mongoConnection()).getCollection("Delegations");
+    }
+
+    private MongoClient mongoConnection() {
+        if (mongoClient == null) {
+            mongoClient = IntegrationFunctionProfile.getMongoClientConnection();
+        }
+        return mongoClient;
+    }
+
+    @Then("the contract of the onboarding {string} has been moved to the deleted storage")
+    public void verifyContractDeleted(String onboardingId) throws InterruptedException {
+        long deadline = System.currentTimeMillis() + STATUS_POLL_TIMEOUT_MS;
+        String contractSigned = null;
+        while (System.currentTimeMillis() < deadline) {
+            contractSigned = findContractDocument(onboardingId).getString("contractSigned");
+            if (contractSigned != null && contractSigned.startsWith(DELETED_CONTRACTS_PATH)) {
+                return;
+            }
+            Thread.sleep(STATUS_POLL_INTERVAL_MS);
+        }
+        assertTrue(contractSigned != null && contractSigned.startsWith(DELETED_CONTRACTS_PATH),
+                "Contract of onboarding " + onboardingId + " not moved to deleted storage, contractSigned=" + contractSigned);
+    }
+
+    @Then("the referenced onboarding {string} is aligned with the completed contract update")
+    public void verifyReferencedOnboardingAligned(String referenceOnboardingId) {
+        Onboarding contractUpdate = integrationOperationUtils.findIntoMongoOnboarding(getOnboardingId());
+        Onboarding adhesion = integrationOperationUtils.findIntoMongoOnboarding(referenceOnboardingId);
+        assertNotNull(contractUpdate.getActivatedAt(), "Contract update activatedAt not set");
+        assertEquals(Boolean.FALSE, adhesion.getContractUpdateRequired());
+        assertEquals(contractUpdate.getActivatedAt(), adhesion.getUpdatedAt());
+        assertNotNull(adhesion.getContractUpdateRequiredAt(), "contractUpdateRequiredAt must be preserved");
+        assertEquals(OnboardingStatus.COMPLETED, adhesion.getStatus());
+    }
+
+    private Document findContractDocument(String onboardingId) {
+        Document contract = contractDocumentsCollection().find(contractDocumentFilter(onboardingId)).first();
+        assertNotNull(contract, "Contract document not found for onboarding " + onboardingId);
+        return contract;
+    }
+
+    private MongoCollection<Document> contractDocumentsCollection() {
+        return IntegrationFunctionProfile.getDocumentDatabase(mongoConnection()).getCollection("documents");
+    }
+
+    private static Bson contractDocumentFilter(String onboardingId) {
+        return Filters.and(Filters.eq("onboardingId", onboardingId), Filters.eq("type", "INSTITUTION"));
     }
 
     @Given("the request has no Authorization header")
@@ -158,6 +382,12 @@ public class OnboardingFunctionStep extends CucumberQuarkusTest {
         rememberOnboardingStatus();
     }
 
+    @Given("the request token has no tenant_id claim")
+    public void useTokenWithoutTenantClaim() {
+        authorizationHeader = "Bearer " + testBearerToken(null);
+        rememberOnboardingStatus();
+    }
+
     @Given("the request has no tenant header")
     public void removeTenantHeader() {
         tenantHeader = null;
@@ -172,7 +402,11 @@ public class OnboardingFunctionStep extends CucumberQuarkusTest {
 
     private static String testBearerToken(String tenant) {
         Map<String, String> payload = new HashMap<>(IntegrationFunctionProfile.buildJwtPayload());
-        payload.put(TenantContext.TENANT_CLAIM, tenant);
+        if (tenant == null) {
+            payload.remove(TenantContext.TENANT_CLAIM);
+        } else {
+            payload.put(TenantContext.TENANT_CLAIM, tenant);
+        }
         payload.put("uid", "fake-onboarding-functions-it-user");
         payload.put("fiscal_number", "FAKE-FISCAL-NUMBER");
         payload.put("name", "Test");
@@ -252,24 +486,29 @@ public class OnboardingFunctionStep extends CucumberQuarkusTest {
 
     @Then("there is a document for onboarding with status {string}")
     public void theResponseShouldHaveFieldWithValue(String status) throws InterruptedException {
+        onboarding = waitForStatus(getOnboardingId(), status);
+    }
+
+    private Onboarding waitForStatus(String onboardingId, String status) throws InterruptedException {
         long deadline = System.currentTimeMillis() + STATUS_POLL_TIMEOUT_MS;
 
         while (System.currentTimeMillis() < deadline) {
-            onboarding = integrationOperationUtils.findIntoMongoOnboarding(getOnboardingId());
+            Onboarding current = integrationOperationUtils.findIntoMongoOnboarding(onboardingId);
 
-            if (Objects.nonNull(onboarding)
-                    && Objects.nonNull(onboarding.getStatus())
-                    && status.equals(onboarding.getStatus().name())) {
-                return;
+            if (Objects.nonNull(current)
+                    && Objects.nonNull(current.getStatus())
+                    && status.equals(current.getStatus().name())) {
+                return current;
             }
 
             Thread.sleep(STATUS_POLL_INTERVAL_MS);
         }
 
-        onboarding = integrationOperationUtils.findIntoMongoOnboarding(getOnboardingId());
-        assertTrue(Objects.nonNull(onboarding), "Onboarding not found after polling timeout");
-        assertTrue(Objects.nonNull(onboarding.getStatus()), "Onboarding status is null after polling timeout");
-        assertEquals(status, onboarding.getStatus().name());
+        Onboarding current = integrationOperationUtils.findIntoMongoOnboarding(onboardingId);
+        assertTrue(Objects.nonNull(current), "Onboarding not found after polling timeout");
+        assertTrue(Objects.nonNull(current.getStatus()), "Onboarding status is null after polling timeout");
+        assertEquals(status, current.getStatus().name());
+        return current;
     }
 
     @AfterAll

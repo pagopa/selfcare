@@ -1,9 +1,13 @@
 package it.pagopa.selfcare.external_api.client;
 
 import com.github.tomakehurst.wiremock.junit5.WireMockExtension;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import it.pagopa.selfcare.commons.connector.rest.BaseFeignRestClientTest;
 import it.pagopa.selfcare.commons.connector.rest.RestTestUtils;
 import it.pagopa.selfcare.commons.utils.TestUtils;
+import it.pagopa.selfcare.commons.tenant.TenantContext;
+import it.pagopa.selfcare.commons.tenant.TenantRegistry;
+import it.pagopa.selfcare.external_api.client.interceptor.UserRegistryAuthInterceptor;
 import it.pagopa.selfcare.external_api.client.config.UserRegistryRestClientTestConfig;
 import it.pagopa.selfcare.external_api.client.decoder.FeignErrorDecoder;
 import it.pagopa.selfcare.external_api.exception.ResourceNotFoundException;
@@ -14,6 +18,8 @@ import it.pagopa.selfcare.external_api.model.user.UserId;
 import it.pagopa.selfcare.external_api.model.user_registry.EmbeddedExternalId;
 import lombok.SneakyThrows;
 import org.junit.jupiter.api.Order;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.api.function.Executable;
@@ -24,6 +30,7 @@ import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.support.TestPropertySourceUtils;
+import org.springframework.mock.env.MockEnvironment;
 
 import java.util.EnumSet;
 import java.util.UUID;
@@ -35,7 +42,10 @@ import static org.junit.jupiter.api.Assertions.*;
         properties = {
                 "logging.level.it.pagopa.selfcare.external_api.connector.rest=DEBUG",
                 "spring.application.name=selc-external-api-connector-rest",
-                "spring.cloud.openfeign.okhttp.enabled=true"
+                "spring.cloud.openfeign.okhttp.enabled=true",
+                "tenant.mongodb.required=false",
+                "tenant.registry.json={\"AR\":{\"userRegistry\":{\"apiKeyEnvVar\":\"USER_REGISTRY_API_KEY_AR\"}}}",
+                "USER_REGISTRY_API_KEY_AR=api-key"
         }
 )
 @ContextConfiguration(
@@ -64,6 +74,29 @@ class UserRegistryRestClientTest extends BaseFeignRestClientTest {
 
     @Autowired
     private UserRegistryRestClient restClient;
+
+    @Autowired
+    private TenantContext tenantContext;
+
+    @BeforeEach
+    void setTenant() {
+        tenantContext.setTenantId("AR");
+    }
+
+    @AfterEach
+    void clearTenant() {
+        tenantContext.clear();
+    }
+
+    @Test
+    void missingTenantCredentialCannotFallBackToTheLegacyGlobalKey() {
+        TenantRegistry registry = new TenantRegistry(new ObjectMapper(),
+                new MockEnvironment().withProperty("tenant.mongodb.required", "false")
+                        .withProperty("USERVICE_USER_REGISTRY_API_KEY", "legacy-key"),
+                "{\"AR\":{},\"PNPG\":{}}", "AR,PNPG", "");
+        registry.initialize();
+        assertThrows(IllegalStateException.class, () -> new UserRegistryAuthInterceptor(registry, tenantContext));
+    }
 
     @Test
     void getUserByInternalId_nullFieldList() {

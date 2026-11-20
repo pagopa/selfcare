@@ -484,6 +484,12 @@ locals {
           listen = true
           send   = false
           manage = false
+        },
+        {
+          name   = "pn"
+          listen = true
+          send   = false
+          manage = false
         }
       ]
     }

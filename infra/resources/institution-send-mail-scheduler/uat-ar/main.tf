@@ -47,7 +47,7 @@ locals {
   app_settings_institution_send_mail_scheduler = [
     {
       name  = "JAVA_TOOL_OPTIONS"
-      value = "-javaagent:applicationinsights-agent.jar",
+      value = "-javaagent:applicationinsights-agent.jar -XX:-UseBASE64Intrinsics",
     },
     {
       name  = "APPLICATIONINSIGHTS_ROLE_NAME"

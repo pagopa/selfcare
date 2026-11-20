@@ -3,7 +3,6 @@ package it.pagopa.selfcare.mscore.connector.email;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import it.pagopa.selfcare.mscore.api.EmailConnector;
 import it.pagopa.selfcare.mscore.api.FileStorageConnector;
-import it.pagopa.selfcare.mscore.config.CoreConfig;
 import it.pagopa.selfcare.mscore.exception.MsCoreException;
 import it.pagopa.selfcare.mscore.model.onboarding.MailTemplate;
 import lombok.extern.slf4j.Slf4j;
@@ -33,26 +32,25 @@ import static it.pagopa.selfcare.mscore.constant.GenericError.ERROR_DURING_SEND_
 @Service
 public class EmailConnectorImpl implements EmailConnector {
 
-    private final JavaMailSender mailSender;
+    private final TenantMailSenderProvider mailSenderProvider;
     private final FileStorageConnector fileStorageConnector;
     private final ObjectMapper mapper;
-    private final CoreConfig coreConfig;
 
     @Autowired
-    public EmailConnectorImpl(JavaMailSender javaMailSender,
+    public EmailConnectorImpl(TenantMailSenderProvider mailSenderProvider,
                               FileStorageConnector fileStorageConnector,
-                              ObjectMapper mapper,
-                              CoreConfig coreConfig) {
-        this.mailSender = javaMailSender;
+                              ObjectMapper mapper) {
+        this.mailSenderProvider = mailSenderProvider;
         this.fileStorageConnector = fileStorageConnector;
         this.mapper = mapper;
-        this.coreConfig = coreConfig;
     }
 
     @Override
     public void sendMail(String templateName, List<String> destinationMail, File pdf, String productName, Map<String, String> mailParameters, String fileName) {
         try {
             log.info("START - sendMail to {}, for product {}", destinationMail, productName);
+            JavaMailSender mailSender = mailSenderProvider.currentSender();
+            String from = mailSenderProvider.currentFrom();
             String template = fileStorageConnector.getTemplateFile(templateName);
             MailTemplate mailTemplate = mapper.readValue(template, MailTemplate.class);
             String html = StringSubstitutor.replace(mailTemplate.getBody(), mailParameters);
@@ -62,7 +60,7 @@ public class EmailConnectorImpl implements EmailConnector {
             MimeMessageHelper message = new MimeMessageHelper(mimeMessage, true, "UTF-8");
 
             message.setSubject(productName + ": " + mailTemplate.getSubject());
-            message.setFrom(coreConfig.getSenderMail());
+            message.setFrom(from);
             message.setTo(destinationMail.toArray(new String[0]));
             message.setText(html, true);
             if(pdf != null && StringUtils.hasText(fileName)) {
@@ -97,4 +95,3 @@ public class EmailConnectorImpl implements EmailConnector {
             }
         }
 }
-

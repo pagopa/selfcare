@@ -4,13 +4,15 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.microsoft.azure.functions.ExecutionContext;
 import com.microsoft.azure.functions.HttpRequestMessage;
-import com.microsoft.azure.functions.HttpResponseMessage;
 import com.microsoft.azure.functions.HttpStatus;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import it.pagopa.selfcare.onboarding.config.JwtValidationConfig;
 import it.pagopa.selfcare.onboarding.context.TenantContext;
+import it.pagopa.selfcare.tenant.InvalidTenantClaimException;
+import it.pagopa.selfcare.tenant.JwtTenantClaimResolver;
+import it.pagopa.selfcare.tenant.TenantRegistry;
 import jakarta.enterprise.context.ApplicationScoped;
 
 import java.nio.charset.StandardCharsets;
@@ -18,10 +20,8 @@ import java.security.KeyFactory;
 import java.security.PublicKey;
 import java.security.spec.X509EncodedKeySpec;
 import java.util.Base64;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -30,30 +30,31 @@ import java.util.stream.Collectors;
 public class HttpJwtValidator {
 
   static final String AUTHORIZATION_HEADER = "Authorization";
-  static final String UID_CLAIM = "uid";
   private static final String BEARER_PREFIX = "Bearer ";
   private static final String EXPECTED_ALGORITHM = "RS256";
 
   private final JwtValidationConfig config;
   private final ObjectMapper objectMapper;
+  private final TenantRegistry tenantRegistry;
 
-  public HttpJwtValidator(JwtValidationConfig config, ObjectMapper objectMapper) {
+  public HttpJwtValidator(
+      JwtValidationConfig config, ObjectMapper objectMapper, TenantRegistry tenantRegistry) {
     this.config = config;
     this.objectMapper = objectMapper;
+    this.tenantRegistry = tenantRegistry;
   }
 
   /**
-   * Validates both the tenant header and the JWT. The returned response must be sent immediately;
-   * an empty result means that the request is authenticated.
+   * Validates both the tenant header and the JWT. A rejected result carries the response that must
+   * be sent immediately; otherwise it carries the caller identity built from the verified claims.
    */
-  public Optional<HttpResponseMessage> validate(
-      HttpRequestMessage<?> request, ExecutionContext context) {
+  public HttpAuthorization authenticate(HttpRequestMessage<?> request, ExecutionContext context) {
     final String headerTenant;
     try {
       headerTenant = TenantContext.resolve(TenantContext.tenantHeader(request));
     } catch (IllegalArgumentException exception) {
       context.getLogger().warning("Rejected request with missing or unsupported tenant");
-      return Optional.of(
+      return HttpAuthorization.rejected(
           request
               .createResponseBuilder(HttpStatus.BAD_REQUEST)
               .body("Invalid tenant context")
@@ -61,11 +62,10 @@ public class HttpJwtValidator {
     }
 
     try {
-      authenticate(request, headerTenant);
-      return Optional.empty();
-    } catch (JwtException | IllegalArgumentException exception) {
+      return HttpAuthorization.authorized(verifiedCaller(request, headerTenant));
+    } catch (JwtException | InvalidTenantClaimException | IllegalArgumentException exception) {
       context.getLogger().warning(() -> "Rejected request with invalid JWT: " + exception.getMessage());
-      return Optional.of(
+      return HttpAuthorization.rejected(
           request
               .createResponseBuilder(HttpStatus.UNAUTHORIZED)
               .header("WWW-Authenticate", "Bearer")
@@ -74,7 +74,7 @@ public class HttpJwtValidator {
     }
   }
 
-  private void authenticate(HttpRequestMessage<?> request, String headerTenant) {
+  private CallerIdentity verifiedCaller(HttpRequestMessage<?> request, String headerTenant) {
     String token = extractBearerToken(request);
     requireAlgorithm(token);
 
@@ -90,17 +90,32 @@ public class HttpJwtValidator {
     if (isBlank(claims.getIssuer()) || !allowedIssuers().contains(claims.getIssuer())) {
       throw new JwtException("Unexpected issuer");
     }
-    if (isBlank(claims.get(UID_CLAIM, String.class))) {
+    if (isBlank(claims.get(CallerIdentity.UID_CLAIM, String.class))) {
       throw new JwtException("Missing uid claim");
     }
 
-    String claimTenant = normalize(claims.get(TenantContext.TENANT_CLAIM, String.class));
-    if (claimTenant == null) {
-      throw new JwtException("Missing tenant_id claim");
-    }
-    if (!claimTenant.equals(headerTenant)) {
+    JwtTenantClaimResolver.Resolution tokenTenant =
+        tenantClaimResolver().resolve(claims.get(JwtTenantClaimResolver.TENANT_CLAIM));
+    if (!tokenTenant.tenantId().equals(headerTenant)) {
       throw new JwtException("Tenant claim does not match tenant header");
     }
+    return CallerIdentity.fromClaims(
+        claims,
+        headerTenant,
+        tokenTenant.source() == JwtTenantClaimResolver.Source.CLAIM
+            ? CallerIdentity.TENANT_SOURCE_CLAIM
+            : CallerIdentity.TENANT_SOURCE_DEFAULT);
+  }
+
+  /**
+   * Built per request, like the issuer set, so that a misconfigured default tenant (not in {@code
+   * tenant.supported-tenants}) rejects the request with 401 instead of failing the bean creation.
+   */
+  private JwtTenantClaimResolver tenantClaimResolver() {
+    return JwtTenantClaimResolver.of(
+        config.defaultTenant().orElse(null),
+        tenantRegistry.supportedTenantIds(),
+        config.tenantClaimRequired());
   }
 
   private String extractBearerToken(HttpRequestMessage<?> request) {
@@ -145,17 +160,11 @@ public class HttpJwtValidator {
     }
   }
 
+  /** Public key named by {@code <tenant>.jwt.publicKeyEnvVar} of {@code TENANT_REGISTRY_JSON}. */
   private PublicKey verificationKey(String tenant) {
-    JwtValidationConfig.TenantKey tenantKey =
-        config.tenants().entrySet().stream()
-            .filter(entry -> tenant.equals(normalize(entry.getKey())))
-            .map(Map.Entry::getValue)
-            .findFirst()
-            .orElseThrow(() -> new JwtException("No verification key configured for tenant"));
     String publicKey =
-        tenantKey
-            .publicKey()
-            .filter(value -> !value.isBlank())
+        tenantRegistry
+            .jwtPublicKey(tenant)
             .orElseThrow(() -> new JwtException("No verification key configured for tenant"));
     return toPublicKey(publicKey);
   }
@@ -181,10 +190,6 @@ public class HttpJwtValidator {
       throw new IllegalArgumentException("No JWT issuer configured");
     }
     return issuers;
-  }
-
-  private static String normalize(String tenant) {
-    return isBlank(tenant) ? null : tenant.trim().toUpperCase(Locale.ROOT);
   }
 
   private static boolean isBlank(String value) {

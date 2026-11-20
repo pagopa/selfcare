@@ -41,6 +41,7 @@ public interface ProductMapper {
   @Mapping(
       target = "requiresParentOnboarding",
       source = "features.requiresParentOnboarding")
+  @Mapping(target = "contractEnabled", source = "features.contractEnabled")
   @Mapping(target = "parentId", source = "parentId")
   @Mapping(target = "institutionTypesAllowed", source = "institutionTypesAllowed")
   @Mapping(target = "allowedInstitutionTaxCode", source = "features.allowedInstitutionTaxCode")

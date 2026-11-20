@@ -3,6 +3,8 @@ package it.pagopa.selfcare.delegation.event;
 import com.azure.data.tables.TableClient;
 import com.azure.data.tables.models.TableEntity;
 import com.azure.data.tables.models.TableServiceException;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.microsoft.applicationinsights.TelemetryClient;
 import com.mongodb.client.model.Aggregates;
 import com.mongodb.client.model.Filters;
@@ -23,6 +25,7 @@ import it.pagopa.selfcare.delegation.event.entity.DelegationsEntity;
 import it.pagopa.selfcare.delegation.event.entity.Institution;
 import it.pagopa.selfcare.delegation.event.entity.OnboardingEntity;
 import it.pagopa.selfcare.delegation.event.mapper.DelegationMapper;
+import it.pagopa.selfcare.delegation.event.model.DelegationNotificationToSend;
 import it.pagopa.selfcare.delegation.event.repository.DelegationRepository;
 import it.pagopa.selfcare.delegation.event.repository.InstitutionRepository;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -32,6 +35,8 @@ import org.bson.BsonDocument;
 import org.bson.conversions.Bson;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
+import org.openapi.quarkus.webhook_ms_json.api.WebhookApi;
+import org.openapi.quarkus.webhook_ms_json.model.NotificationRequest;
 
 import java.time.Duration;
 import java.time.OffsetDateTime;
@@ -74,6 +79,22 @@ public class DelegationCdcService {
     @RestClient
     @Inject
     private EventHubRestClient eventHubRestClient;
+
+    @RestClient
+    @Inject
+    WebhookApi webhookApi;
+
+    @Inject
+    ObjectMapper objectMapper;
+
+    @ConfigProperty(name = "delegation-cdc.webhook.enabled")
+    boolean webhookEnabled;
+
+    @ConfigProperty(name = "delegation-cdc.webhook.tenant-id")
+    String webhookTenantId;
+
+    @ConfigProperty(name = "delegation-cdc.webhook.topic")
+    String webhookTopic;
 
     public DelegationCdcService(ReactiveMongoClient mongoClient,
                                 @ConfigProperty(name = "quarkus.mongodb.database") String mongodbDatabase,
@@ -175,13 +196,14 @@ public class DelegationCdcService {
         }
 
         if (sendEventsEnabled) {
-            sendEventsUni = eventHubRestClient.sendMessage(delegationMapper.toDelegationNotificationToSend(insertedDelegation))
+            DelegationNotificationToSend notification = delegationMapper.toDelegationNotificationToSend(insertedDelegation);
+            sendEventsUni = eventHubRestClient.sendMessage(notification)
                     .onFailure().retry().withBackOff(Duration.ofSeconds(retryMinBackOff), Duration.ofSeconds(retryMaxBackOff)).atMost(maxRetry)
                     .onItem().invoke(result -> {
                         log.info("Notification for delegationId {} sent", delegationId);
                         constructMapAndTrackEvent(document.getDocumentKey().toJson(), "TRUE", DELEGATION_EVENT_SUCCESS);
                     })
-                    .onItem().transformToUni(result -> Uni.createFrom().item(true))
+                    .onItem().transformToUni(result -> sendWebhookNotification(notification).replaceWith(true))
                     .onFailure().invoke(failure -> {
                         log.error("Error while sending notification for delegationId {}: {}", delegationId, failure.getMessage());
                         constructMapAndTrackEvent(document.getDocumentKey().toJson(), "FALSE", DELEGATION_EVENT_FAILURE);
@@ -203,6 +225,35 @@ public class DelegationCdcService {
                         },
                         failure -> log.error("Error while processing delegation document having id {}: {}", delegationId, failure.getMessage())
                 );
+    }
+
+    /**
+     * Forwards the notification already sent to the SC-Delegations event hub to the webhook service.
+     * Best effort: failures are logged and never block the CDC flow.
+     */
+    public Uni<Void> sendWebhookNotification(DelegationNotificationToSend notification) {
+        if (!webhookEnabled) {
+            return Uni.createFrom().voidItem();
+        }
+
+        final NotificationRequest notificationRequest;
+        try {
+            notificationRequest = NotificationRequest.builder()
+                    .productId(notification.getProductId())
+                    .tenantId(webhookTenantId)
+                    .topic(webhookTopic)
+                    .payload(objectMapper.writeValueAsString(notification))
+                    .build();
+        } catch (JsonProcessingException e) {
+            log.warn("Error serializing webhook notification for delegationId {}: {}", notification.getDelegationId(), e.getMessage(), e);
+            return Uni.createFrom().voidItem();
+        }
+
+        return Uni.createFrom().deferred(() -> webhookApi.sendNotification(notificationRequest))
+                .onItem().invoke(() -> log.info("Webhook notification for delegationId {} sent", notification.getDelegationId()))
+                .onFailure().invoke(failure -> log.warn("Error sending webhook notification for delegationId {}: {}", notification.getDelegationId(), failure.getMessage(), failure))
+                .onFailure().recoverWithNull()
+                .replaceWithVoid();
     }
 
     private Uni<Void> attemptToCreateAggregatesDelegations(DelegationsEntity insertedDelegation) {

@@ -1,53 +1,40 @@
 package it.pagopa.selfcare.party.registry_proxy.connector.rest.service;
 
-import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
-import static org.mockito.ArgumentMatchers.any;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.*;
 
-import io.dapr.client.DaprClient;
-import org.junit.jupiter.api.BeforeEach;
+import com.azure.core.util.BinaryData;
+import com.azure.storage.blob.BlobClient;
+import it.pagopa.selfcare.commons.tenant.UnknownStorageException;
+import it.pagopa.selfcare.commons.tenant.storage.TenantBlobClient;
+import it.pagopa.selfcare.commons.tenant.storage.TenantBlobClientProvider;
 import org.junit.jupiter.api.Test;
-import org.mockito.*;
-import org.springframework.boot.test.context.TestConfiguration;
-import org.springframework.scheduling.annotation.EnableAsync;
-import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
-import reactor.core.publisher.Mono;
 
-@SpringJUnitConfig
-@EnableAsync
-@TestConfiguration
 class StorageAsyncServiceTest {
 
-    @Mock
-    private DaprClient daprSelcClient;
+  @Test
+  void archivalUsesThePersistedTenantRatherThanAWorkerThreadContext() {
+    var provider = mock(TenantBlobClientProvider.class);
+    var ar = mock(TenantBlobClient.class);
+    var pnpg = mock(TenantBlobClient.class);
+    var arBlob = mock(BlobClient.class);
+    var pnpgBlob = mock(BlobClient.class);
+    when(provider.clientFor("AR", "visure")).thenReturn(ar);
+    when(provider.clientFor("PNPG", "visure")).thenReturn(pnpg);
+    when(ar.blob("document.xml")).thenReturn(arBlob);
+    when(pnpg.blob("document.xml")).thenReturn(pnpgBlob);
+    var service = new StorageAsyncService(provider);
+    service.saveStringToStorage("AR", "ar-document", "document.xml").join();
+    service.saveStringToStorage("PNPG", "pnpg-document", "document.xml").join();
+    verify(arBlob).upload(argThat((BinaryData data) -> "ar-document".equals(data.toString())), eq(true));
+    verify(pnpgBlob).upload(argThat((BinaryData data) -> "pnpg-document".equals(data.toString())), eq(true));
+  }
 
-    @InjectMocks
-    private StorageAsyncService storageAsyncService;
-
-    @BeforeEach
-    void setUp() {
-        MockitoAnnotations.openMocks(this);
-        storageAsyncService = new StorageAsyncService(daprSelcClient);
-    }
-
-    @Test
-    void testSaveStringToStorageSuccess() {
-        final String document = "<xml>test</xml>";
-        final String keyName = "document_ABC_2025.xml";
-
-        when(daprSelcClient.saveState(anyString(), anyString(), any()))
-                .thenReturn(Mono.empty());
-        storageAsyncService.saveStringToStorage(document, keyName);
-        verify(daprSelcClient, times(1))
-                .saveState("blobstorage-state", keyName, document);
-    }
-
-    @Test
-    void testSaveStringToStorageError() {
-        final String document = "<xml>broken</xml>";
-        final String keyName = "document_ERR_2025.xml";
-        when(daprSelcClient.saveState(any(), any(), any())).thenThrow(new IllegalArgumentException());
-        assertDoesNotThrow(() -> storageAsyncService.saveStringToStorage(document, keyName));
-        verify(daprSelcClient).saveState("blobstorage-state", keyName, document);
-    }
+  @Test
+  void missingBindingFailsInsteadOfUsingTheLegacyDaprStore() {
+    var provider = mock(TenantBlobClientProvider.class);
+    when(provider.clientFor("PNPG", "visure")).thenThrow(new UnknownStorageException("PNPG", "visure"));
+    assertThrows(UnknownStorageException.class,
+        () -> new StorageAsyncService(provider).saveStringToStorage("PNPG", "document", "document.xml"));
+  }
 }

@@ -17,8 +17,6 @@ import java.util.Objects;
 
 @ApplicationScoped
 public class NotificationService {
-    private static final String ONBOARDING_CDC_CALLER_ID = "m2m:onboarding-cdc";
-
     @Inject
     @RestClient
     NotificationsApi notificationsApi;
@@ -51,8 +49,7 @@ public class NotificationService {
 
         assert onboarding != null;
         QueueEvent queueEvent = determineEventType(onboarding);
-        return notificationsApi.apiNotificationPost(
-                        queueEvent.name(), ONBOARDING_CDC_CALLER_ID, onboardingMapper.toEntity(onboarding))
+        return notificationsApi.apiNotificationPost(queueEvent.name(), onboardingMapper.toEntity(onboarding))
                 .onFailure().retry().withBackOff(Duration.ofSeconds(retryMinBackOff), Duration.ofHours(retryMaxBackOff)).atMost(maxRetry);
     }
 

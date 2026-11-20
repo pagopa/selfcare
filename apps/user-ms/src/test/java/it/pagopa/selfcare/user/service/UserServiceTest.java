@@ -1099,6 +1099,19 @@ class UserServiceTest {
     }
 
     @Test
+    void sendMailUserRequest_shouldFailWithResourceNotFound_whenUserNotOnUserRegistry() {
+        when(userRegistryApi.findByIdUsingGET(USERS_WORKS_FIELD_LIST, "userId"))
+                .thenReturn(Uni.createFrom().failure(new WebApplicationException(Response.status(404).build())));
+
+        userService.sendMailUserRequest("userId", "userMailUuid", "institutionName", "productId", EmailType.USER_REQUEST, "institutionId")
+                .subscribe()
+                .withSubscriber(UniAssertSubscriber.create())
+                .assertFailedWith(ResourceNotFoundException.class, "User having userId userId not found");
+
+        verifyNoInteractions(productService, userNotificationService);
+    }
+
+    @Test
     void testSendMail_CONVENTION_REQUEST() {
         UserResource user = mock(UserResource.class);
         when(userRegistryApi.findByIdUsingGET(USERS_WORKS_FIELD_LIST, "userId"))

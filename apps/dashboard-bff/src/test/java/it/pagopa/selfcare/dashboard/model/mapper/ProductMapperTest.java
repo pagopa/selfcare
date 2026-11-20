@@ -26,8 +26,10 @@ class ProductMapperTest {
         Product node = new Product();
         node.setId("Node");
         node.setBackOfficeEnvironmentConfigurations(Map.of("test", mockInstance(new BackOfficeConfigurations())));
+        node.setContractEnabled(true);
         Product children = new Product();
         children.setId("children");
+        children.setContractEnabled(true);
         product.setNode(node);
         product.setChildren(List.of(children));
         // when
@@ -41,8 +43,10 @@ class ProductMapperTest {
         assertEquals(product.getNode().getUrlPublic(), resource.getUrlPublic());
         assertEquals(product.getNode().getUrlBO(), resource.getUrlBO());
         assertEquals(product.getNode().isDelegable(), resource.isDelegable());
+        assertTrue(resource.isContractEnabled());
         assertNotNull(resource.getBackOfficeEnvironmentConfigurations());
         assertEquals(product.getChildren().get(0).getId(), resource.getChildren().get(0).getId());
+        assertTrue(resource.getChildren().get(0).isContractEnabled());
         assertEquals(product.getChildren().get(0).getTitle(), resource.getChildren().get(0).getTitle());
         assertEquals(product.getChildren().get(0).getStatus(), resource.getChildren().get(0).getStatus());
         assertEquals(product.getChildren().get(0).getDepictImageUrl(), resource.getChildren().get(0).getImageUrl());

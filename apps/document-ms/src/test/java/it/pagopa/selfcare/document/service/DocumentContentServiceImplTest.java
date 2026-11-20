@@ -34,6 +34,9 @@ import org.jboss.resteasy.reactive.RestResponse;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.NullAndEmptySource;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
@@ -198,6 +201,28 @@ class DocumentContentServiceImplTest {
 
         assertNotNull(response);
         assertEquals(RestResponse.Status.OK.getStatusCode(), response.getStatus());
+    }
+
+    @Test
+    void retrieveAttachment_shouldReturnOkResponse_whenLegacyDocumentHasNoStorageOrigin() {
+        Document doc = buildDocument();
+        doc.setType(DocumentType.ATTACHMENT);
+        doc.setAttachmentName("Addendum");
+        doc.setContractSigned("parties/docs/onboardingId/attachments/signed_addendum.pdf");
+        doc.setContractFilename("addendum.pdf");
+        doc.setStorageOrigin(null);
+        File mockFile = mock(File.class);
+
+        when(documentRepository.findAttachment(ONBOARDING_ID, DocumentType.ATTACHMENT.name(), "Addendum"))
+                .thenReturn(Uni.createFrom().item(doc));
+        when(azureBlobClient.getFileAsPdf("parties/docs/onboardingId/attachments/signed_addendum.pdf")).thenReturn(mockFile);
+
+        RestResponse<File> response = documentContentService.retrieveAttachment(ONBOARDING_ID, "Addendum")
+                .await().indefinitely();
+
+        assertEquals(RestResponse.Status.OK.getStatusCode(), response.getStatus());
+        assertEquals(DocumentContentServiceImpl.HTTP_HEADER_VALUE_ATTACHMENT_FILENAME + "addendum.pdf",
+                response.getHeaderString("Content-Disposition"));
     }
 
     @Test
@@ -1331,6 +1356,20 @@ class DocumentContentServiceImplTest {
     // ============================================
     // createContractPdf - Error scenarios
     // ============================================
+
+    @ParameterizedTest
+    @NullAndEmptySource
+    @ValueSource(strings = {"   "})
+    void createContractPdf_shouldThrowInvalidRequest_whenInstitutionDescriptionIsBlank(String description) {
+        ContractPdfRequest request = buildValidContractRequest();
+        request.getInstitution().setDescription(description);
+
+        var awaiter = documentContentService.createContractPdf(request).await();
+        InvalidRequestException ex = assertThrows(InvalidRequestException.class, awaiter::indefinitely);
+        assertEquals("002-1009", ex.getCode());
+        assertTrue(ex.getMessage().contains(ONBOARDING_ID));
+        verifyNoInteractions(azureBlobClient, signatureService);
+    }
 
     @Test
     void createContractPdf_shouldThrowInternalException_whenTemplateLoadFails() {
