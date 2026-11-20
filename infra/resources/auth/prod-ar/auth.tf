@@ -131,11 +131,11 @@ locals {
   m2m_enabled = true
   m2m_tenants = {
     AR = {
-      enabled   = false
+      enabled   = true
       uidEnvVar = "TENANT_AR_M2M_IAM_UID"
     }
     PNPG = {
-      enabled   = false
+      enabled   = true
       uidEnvVar = "TENANT_PNPG_M2M_IAM_UID"
     }
   }
@@ -145,6 +145,14 @@ locals {
   }
 
   app_settings_auth_ms = [
+    {
+      name                = "TENANT_PNPG_JWT_SESSION_PRIVATE_KEY"
+      key_vault_secret_id = "https://selc-p-pnpg-kv.vault.azure.net/secrets/jwt-private-key"
+    },
+    {
+      name                = "TENANT_PNPG_JWT_SESSION_KEY_ID"
+      key_vault_secret_id = "https://selc-p-pnpg-kv.vault.azure.net/secrets/jwt-kid"
+    },
     {
       name  = "M2M_ISSUER_ENABLED"
       value = tostring(local.m2m_enabled)

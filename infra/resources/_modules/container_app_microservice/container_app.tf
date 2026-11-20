@@ -61,8 +61,9 @@ resource "azurerm_container_app" "container_app" {
       dynamic "env" {
         for_each = var.app_settings
         content {
-          name  = env.value.name
-          value = env.value.value
+          name        = env.value.name
+          value       = env.value.key_vault_secret_id == null ? env.value.value : null
+          secret_name = env.value.key_vault_secret_id == null ? null : replace(lower(env.value.name), "_", "-")
         }
       }
 

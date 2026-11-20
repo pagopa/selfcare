@@ -102,7 +102,16 @@ variable "app_settings" {
     name                  = string
     value                 = optional(string, "")
     key_vault_secret_name = optional(string)
+    key_vault_secret_id   = optional(string)
   }))
+  validation {
+    condition = alltrue([
+      for setting in var.app_settings : setting.key_vault_secret_id == null ? true : (
+        setting.value == "" && can(regex("^https://[a-z0-9-]+\\.vault\\.azure\\.net/secrets/[a-zA-Z0-9-]+$", setting.key_vault_secret_id))
+      )
+    ])
+    error_message = "A Key Vault app setting requires a versionless secret URI and cannot also have a literal value."
+  }
 }
 
 variable "secrets_names" {
