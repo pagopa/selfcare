@@ -57,7 +57,7 @@ module "selc_onboarding_fn" {
   storage_account_info                      = local.storage_account_info
   enable_function_app_public_network_access = var.enable_function_app_public_network_access
 
-  app_settings = var.app_settings
+  app_settings = local.app_settings
 
   tags = var.tags
 }
@@ -125,6 +125,22 @@ data "azurerm_key_vault_secret" "appinsights_connection_string" {
 }
 
 locals {
+  # Workaround for CVE-2026-114938 (Java4Shell) - OpenJDK AVX-512 VBMI Base64 intrinsic bug.
+  # On Dedicated/Premium Azure Functions plans, JAVA_OPTS is expanded by worker.config.json (%JAVA_OPTS%).
+  java4shell_mitigation = {
+    name  = "JAVA_OPTS"
+    value = "-XX:-UseBASE64Intrinsics"
+  }
+
+  existing_java_opts = trimspace(tostring(lookup(var.app_settings, local.java4shell_mitigation.name, "")))
+
+  app_settings = merge(
+    var.app_settings,
+    {
+      (local.java4shell_mitigation.name) = strcontains(local.existing_java_opts, local.java4shell_mitigation.value) ? local.existing_java_opts : trimspace("${local.existing_java_opts} ${local.java4shell_mitigation.value}")
+    }
+  )
+
   resolved_appinsights_connection_string = var.application_insights_connection_string != null ? var.application_insights_connection_string : data.azurerm_key_vault_secret.appinsights_connection_string[0].value
   resolved_appinsights_key = var.application_insights_key != null ? var.application_insights_key : element([
     for part in split(";", local.resolved_appinsights_connection_string) : trimprefix(part, "InstrumentationKey=")
