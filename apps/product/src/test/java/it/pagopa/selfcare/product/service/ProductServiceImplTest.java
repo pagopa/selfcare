@@ -1946,7 +1946,7 @@ class ProductServiceImplTest {
                 WorkflowRule.builder()
                     .institutionType(InstitutionType.PRV)
                     .origin(Origin.SELC)
-                    .workflowType(WorkflowType.CONTRACT_REGISTRATION)
+                    .workflowType(WorkflowType.USERS)
                     .build()))
         .build();
   }

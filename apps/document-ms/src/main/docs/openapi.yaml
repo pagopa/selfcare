@@ -190,8 +190,8 @@ components:
         deletedAt:
           $ref: "#/components/schemas/LocalDateTime"
         activatedAt:
-          description: "Contract activation timestamp, set after the orchestration\
-            \ has completed successfully."
+          description: "Contract activation timestamp, set after the orchestration
+             has completed successfully."
           type: string
           allOf:
           - $ref: "#/components/schemas/LocalDateTime"

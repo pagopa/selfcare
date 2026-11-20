@@ -168,6 +168,8 @@ class OnboardingRulesTest {
     assertThat(
             onboardingRules.isWorkflowAllowedForOrigin(
                 root, Origin.SELC, WorkflowType.CONTRACT_REGISTRATION))
+        .isTrue();
+    assertThat(onboardingRules.isWorkflowAllowedForOrigin(root, Origin.SELC, WorkflowType.USERS))
         .isFalse();
     assertThat(
             onboardingRules.isWorkflowAllowedForOrigin(
@@ -217,7 +219,7 @@ class OnboardingRulesTest {
         Product.builder()
             .institutionOrigins(origins)
             .workflowRules(
-                List.of(rule(InstitutionType.GPU, Origin.SELC, WorkflowType.CONTRACT_REGISTRATION)))
+                List.of(rule(InstitutionType.GPU, Origin.SELC, WorkflowType.USERS)))
             .build();
 
     assertThat(onboardingRules.validate(product))
@@ -230,7 +232,7 @@ class OnboardingRulesTest {
             "institutionOrigins SA/IPA: InstitutionType 'SA' is not allowed for origin 'IPA'."
                 + " Allowed institution types: [GSP, PA, SCEC]",
             "institutionOrigins GSP/IPA is self-onboardable but has no workflow",
-            "institutionOrigins GPU/SELC resolves workflow CONTRACT_REGISTRATION not allowed for"
+            "institutionOrigins GPU/SELC resolves workflow USERS not allowed for"
                 + " origin SELC");
   }
 
