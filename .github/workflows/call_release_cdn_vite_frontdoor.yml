@@ -141,7 +141,7 @@ jobs:
           path: ./${{ env.BUNDLE_NAME }}
 
       - name: Cloud Login
-        uses: pagopa/dx/actions/csp-login@main
+        uses: pagopa/dx/actions/csp-login@1677605cbcd6fca87fba88b2ed5224b6b0ebede8 # main
 
       - name: Upload bundle to Blob
         run: |
