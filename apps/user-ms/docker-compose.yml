@@ -50,7 +50,7 @@ services:
       - develop-network
 
   usergroupms:
-    image: ghcr.io/pagopa/selfcare-user-group-ms:latest
+    image: ghcr.io/pagopa/selfcare-user-group-ms:latest@sha256:11f20b37f0726079ac9119382315ed3a5d4012d0eb12113bcada71ded4c61c96
     pull_policy: always
     platform: linux/amd64
     ports:
