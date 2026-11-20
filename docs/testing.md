@@ -102,6 +102,11 @@ the OpenAPI and APIM definition (see [external-api](./apps/external-api.md)).
   `mvn clean test --projects <changed> --also-make` (Java 17, Maven 3.9.5), collects every
   `target/**/jacoco.xml` and runs the Sonar scanner (Java 21) on the single project
   `pagopa_selfcare` (organization `pagopa`) with pull-request decoration.
+- `user-ms` and `institution-send-mail-scheduler` instrument their entire application package.
+  Like `onboarding-ms` and `document-ms`, they also use a Maven JaCoCo agent for plain JUnit tests:
+  it excludes `*QuarkusClassLoader` to avoid double instrumentation and appends to the same
+  `target/jacoco.exec` as `quarkus-jacoco`. Tests passing without their classes in the XML report
+  does not establish coverage; verify the report includes newly added packages.
 - New behaviour needs tests that keep the SonarCloud quality gate green.
 
 Related: [architecture.md](./architecture.md), [ci-cd.md](./ci-cd.md).

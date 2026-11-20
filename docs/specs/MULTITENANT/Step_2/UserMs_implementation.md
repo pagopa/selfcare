@@ -42,12 +42,17 @@ non attende OneMail. Non sono stati eseguiti deploy, modifiche ai segreti remoti
 
 | Verifica | Comando / perimetro | Esito |
 |---|---|---|
-| Unit test user-ms | `mvn -q -f apps/user-ms/pom.xml test` | **419 test passati**, nessun errore o test saltato |
-| Cucumber | `(cd apps/user-ms && mvn -q test -Dtest=CucumberSuite)` | **288 scenari passati**, 3120 step; AR e PNPG nello stesso processo |
+| Unit test dei due moduli, come nel build Sonar | `mvn -T 1C -q clean test --projects apps,apps/user-ms,apps/institution-send-mail-scheduler --also-make -Dquarkus.http.test-port=0 -Dquarkus.management.test-port=0 -Dquarkus.generate-code.serialize-test-model=false` | **421 test user-ms e 11 scheduler passati**, nessun errore o test saltato |
+| Cucumber, comando CI dalla root | `mvn --projects :user-ms --also-make test -Dtest=CucumberSuite -Dsurefire.failIfNoSpecifiedTests=false` | **291 scenari passati**, 3150 step; AR e PNPG nello stesso processo |
 | Packaging e controlli finali codec/worker | `mvn -q -f apps/user-ms/pom.xml package '-Dtest=MongoConfigTest,UserServiceTest#testSendMail'` | Passato |
 | Header scheduler | `mvn -q -f apps/institution-send-mail-scheduler/pom.xml test -Dtest=AuthenticationPropagationHeadersFactoryTest` | **2 test passati** |
 | Terraform | `terraform validate -no-color` in ciascuno dei sei stack; `terraform fmt -check infra/resources/user-ms/{dev,uat,prod}-{ar,pnpg}/main.tf` | Tutti validi/formattati; nessun apply |
 | Compatibilità | Diff OpenAPI; confronto dei valori app settings e riferimenti Key Vault prima/dopo la rinomina | OpenAPI invariata; valori esistenti preservati, nessun secret duplicato |
+
+Correzioni CI: cleanup delle fixture completato prima della chiusura del contesto tenant; raccolta
+JaCoCo estesa a tutti i package applicativi e ai test JUnit non Quarkus. La copertura locale di righe
+e condizioni nuove, dai soli unit test dopo `clean`, è **87,8%**; la soglia Sonar resta **80%**.
+Il valore del quality gate sulla PR richiede una nuova analisi SonarCloud.
 
 Maven è il fallback locale: Nx non è utilizzabile per la configurazione TypeScript del plugin del
 workspace. La verifica operativa dei token, i deploy e gli smoke test sugli ambienti restano da eseguire.

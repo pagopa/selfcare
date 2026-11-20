@@ -118,6 +118,9 @@ Cucumber runner: `it.pagopa.selfcare.user.integration_test.CucumberSuite`, inclu
 It starts `apps/user-ms/docker-compose.yml` (MongoDB, Azurite, Azure CLI, MockServer and `usergroupms`).
 The integration profile enables tenant enforcement, uses two Mongo databases and two product containers,
 and disables real notifications. Isolation fixtures are seeded/removed only for their tagged scenarios.
+Database cleanup hooks must finish before `MultitenancySteps` clears the scenario's tenant context;
+do not detach their reactive subscriptions. JaCoCo covers the entire app package and plain JUnit
+tests as described in [Testing](../testing.md#coverage-and-sonarcloud).
 
 ## Deployment
 
