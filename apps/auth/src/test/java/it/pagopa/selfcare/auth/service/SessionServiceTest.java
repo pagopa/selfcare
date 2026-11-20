@@ -10,7 +10,7 @@ import io.smallrye.jwt.auth.principal.JWTParser;
 import io.smallrye.mutiny.helpers.test.UniAssertSubscriber;
 import it.pagopa.selfcare.auth.conf.TenantRegistry;
 import it.pagopa.selfcare.auth.conf.TenantSessionKeyProvider;
-import it.pagopa.selfcare.auth.exception.InternalException;
+import it.pagopa.selfcare.auth.exception.ForbiddenException;
 import it.pagopa.selfcare.auth.model.UserClaims;
 import jakarta.inject.Inject;
 import java.nio.charset.StandardCharsets;
@@ -47,24 +47,16 @@ public class SessionServiceTest {
     assertEquals("AR", jwtParser.parseOnly(token).getClaim("tenant_id"));
     assertEquals("selfcare-fe", jwtParser.parseOnly(token).getClaim("client_id"));
     assertEquals("jwt_test_kid", tokenHeader(token).get("kid").asText());
-    assertEquals(
-        Set.of("api.dev.selfcare.pagopa.it"), jwtParser.parseOnly(token).getAudience());
+    assertEquals(Set.of("api.dev.selfcare.pagopa.it"), jwtParser.parseOnly(token).getAudience());
   }
 
   @Test
   void generateSessionTokenWithTenantAudienceWhenEnabled() throws Exception {
     SessionServiceImpl service = sessionService(true, "global.audience");
 
-    String token =
-        service
-            .generateSessionToken(fullClaims())
-            .await()
-            .indefinitely();
+    String token = service.generateSessionToken(fullClaims()).await().indefinitely();
     String internalToken =
-        service
-            .generateSessionTokenInternal(fullClaims())
-            .await()
-            .indefinitely();
+        service.generateSessionTokenInternal(fullClaims()).await().indefinitely();
 
     assertEquals(
         Set.of("api.test-tenant.selfcare.pagopa.it"), jwtParser.parseOnly(token).getAudience());
@@ -101,10 +93,12 @@ public class SessionServiceTest {
   }
 
   @Test
-  void rejectSessionTokenForTenantWithoutSigningKey() {
+  void rejectSessionTokenForTenantWithLoginDisabled() {
     UserClaims userClaims = UserClaims.builder().uid("uid").tenantId("PNPG").build();
 
-    assertThrows(InternalException.class, () -> sessionService.generateSessionToken(userClaims));
+    assertThrows(ForbiddenException.class, () -> sessionService.generateSessionToken(userClaims));
+    assertThrows(
+        ForbiddenException.class, () -> sessionService.generateSessionTokenInternal(userClaims));
   }
 
   private SessionServiceImpl sessionService(boolean tenantAudienceEnabled, String audience) {

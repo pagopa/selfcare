@@ -400,6 +400,19 @@ resource "azurerm_key_vault_access_policy" "container_app_environment_workload_p
   secret_permissions = ["Get", "List"]
 }
 
+# The PROD AR auth issuer resolves PNPG signing secrets using its CAE identity.
+data "azurerm_user_assigned_identity" "ar_cae_002" {
+  name                = "selc-p-cae-002-managed_identity"
+  resource_group_name = "selc-p-container-app-002-rg"
+}
+
+resource "azurerm_key_vault_access_policy" "ar_cae_002" {
+  key_vault_id       = module.key_vault.key_vault_id
+  tenant_id          = module.key_vault.tenant_id
+  object_id          = data.azurerm_user_assigned_identity.ar_cae_002.principal_id
+  secret_permissions = ["Get", "List"]
+}
+
 
 ### Network for new container app environment for workload profiles - end
 
