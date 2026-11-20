@@ -140,18 +140,22 @@ locals {
     }
   }
   m2m_secret_names = {
-    "TENANT_AR_M2M_IAM_UID"   = "auth-m2m-iam-uid-ar"
-    "TENANT_PNPG_M2M_IAM_UID" = "auth-m2m-iam-uid-pnpg"
+    "TENANT_AR_M2M_IAM_UID" = "auth-m2m-iam-uid-ar"
+    # "TENANT_PNPG_M2M_IAM_UID" = "auth-m2m-iam-uid-pnpg"
   }
 
   app_settings_auth_ms = [
     {
       name                = "TENANT_PNPG_JWT_SESSION_PRIVATE_KEY"
-      key_vault_secret_id = "https://selc-p-pnpg-kv.vault.azure.net/secrets/jwt-private-key"
+      key_vault_secret_id = "https://selc-${module.local.config.env_short}-pnpg-kv.vault.azure.net/secrets/jwt-private-key-pkcs8"
     },
     {
       name                = "TENANT_PNPG_JWT_SESSION_KEY_ID"
-      key_vault_secret_id = "https://selc-p-pnpg-kv.vault.azure.net/secrets/jwt-kid"
+      key_vault_secret_id = "https://selc-${module.local.config.env_short}-pnpg-kv.vault.azure.net/secrets/jwt-kid"
+    },
+    {
+      name                = "TENANT_PNPG_M2M_IAM_UID"
+      key_vault_secret_id = "https://selc-${module.local.config.env_short}-pnpg-kv.vault.azure.net/secrets/auth-m2m-iam-uid-pnpg"
     },
     {
       name  = "M2M_ISSUER_ENABLED"
