@@ -8,10 +8,13 @@ import it.pagopa.selfcare.onboarding.common.PricingPlan;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.ValueSource;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -592,6 +595,84 @@ class PdfMapperDataTest {
 
         // When & Then (should not throw)
         assertDoesNotThrow(() -> PdfMapperData.setupPSPData(map, manager, request));
+    }
+
+    @ParameterizedTest
+    @MethodSource("rtpServices")
+    void setupProdRtpData_shouldSelectServices(List<RtpServiceType> services) {
+        RtpContractPdfRequest request = buildRtpContractPdfRequest(new InstitutionPdfData(), new UserPdfData());
+        request.setRtpServiceTypes(services);
+        Map<String, Object> map = new HashMap<>();
+
+        PdfMapperData.setupProdRtpData(map, request);
+
+        assertEquals(services != null && services.contains(RtpServiceType.RTP) ? "X" : "",
+                map.get("rtpServiceCheckbox"));
+        assertEquals(services != null && services.contains(RtpServiceType.REPOSITORY_CONSULTATION) ? "X" : "",
+                map.get("rtpRepositoryServiceCheckbox"));
+        assertEquals("X", map.get("rtpDebtorServiceProviderCheckbox"));
+        assertEquals("X", map.get("rtpPagoPaMemberCheckbox"));
+        for (String key : List.of("rtpCreditorServiceProviderCheckbox", "rtpPagoPaNonMemberCheckbox")) {
+            assertEquals("", map.get(key), key);
+        }
+    }
+
+    static Stream<List<RtpServiceType>> rtpServices() {
+        return Stream.of(List.of(RtpServiceType.RTP), List.of(RtpServiceType.REPOSITORY_CONSULTATION),
+                List.of(RtpServiceType.RTP, RtpServiceType.REPOSITORY_CONSULTATION), List.of(), null);
+    }
+
+    private RtpContractPdfRequest buildRtpContractPdfRequest(InstitutionPdfData institution, UserPdfData manager) {
+        RtpContractPdfRequest request = new RtpContractPdfRequest();
+        request.setInstitution(institution);
+        request.setManager(manager);
+        return request;
+    }
+
+    @ParameterizedTest
+    @ValueSource(booleans = {false, true})
+    void setupProdRtpData_shouldFillMissingFields(boolean emptyNestedObjects) {
+        InstitutionPdfData institution = new InstitutionPdfData();
+        RtpContractPdfRequest request = buildRtpContractPdfRequest(institution, new UserPdfData());
+        if (emptyNestedObjects) {
+            institution.setPaymentServiceProvider(new PaymentServiceProviderPdfData());
+            institution.setDataProtectionOfficer(new DataProtectionOfficerPdfData());
+            request.setBilling(new BillingPdfData());
+        }
+        Map<String, Object> map = new HashMap<>();
+
+        PdfMapperData.setupProdRtpData(map, request);
+
+        for (String key : List.of("institutionAbi", "institutionRecipientCode", "dataProtectionOfficerEmail",
+                "dataProtectionOfficerPec", "institutionREA", "institutionShareCapital",
+                "institutionBusinessRegisterPlace")) {
+            assertEquals("_______________", map.get(key), key);
+        }
+    }
+
+    @Test
+    void setupProdRtpData_shouldPreserveProvidedFields() {
+        InstitutionPdfData institution = InstitutionPdfData.builder()
+                .paymentServiceProvider(PaymentServiceProviderPdfData.builder().abiCode("12345").build())
+                .dataProtectionOfficer(DataProtectionOfficerPdfData.builder()
+                        .email("dpo@test.it").pec("dpo@pec.it").build())
+                .rea("RM-123456")
+                .shareCapital("100000")
+                .businessRegisterPlace("Roma")
+                .build();
+        RtpContractPdfRequest request = buildRtpContractPdfRequest(institution, new UserPdfData());
+        request.setBilling(BillingPdfData.builder().recipientCode("ABC1234").build());
+        Map<String, Object> map = new HashMap<>();
+
+        PdfMapperData.setupProdRtpData(map, request);
+
+        assertEquals("12345", map.get("institutionAbi"));
+        assertEquals("ABC1234", map.get("institutionRecipientCode"));
+        assertEquals("dpo@test.it", map.get("dataProtectionOfficerEmail"));
+        assertEquals("dpo@pec.it", map.get("dataProtectionOfficerPec"));
+        assertEquals("RM-123456", map.get("institutionREA"));
+        assertEquals("100000", map.get("institutionShareCapital"));
+        assertEquals("Roma", map.get("institutionBusinessRegisterPlace"));
     }
 
     // ---- setECData ----
