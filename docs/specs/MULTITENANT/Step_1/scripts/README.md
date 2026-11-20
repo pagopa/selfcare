@@ -115,12 +115,12 @@ strict_tenant_data_isolation_by_env = {
 The example is illustrative: do not enable DEV until the verification actually succeeds. Apply only after
 every participating service has been wired to `module.local.config.strict_tenant_data_isolation`
 and verified in that environment. `SELFCARE_TENANT_STRICT_DATA_ISOLATION` is currently injected from
-that flag for `auth`, `iam`, `onboarding-functions` (all stacks) and `document-ms` (`{dev,uat,prod}-ar`);
+that flag for `auth`, `iam`, `onboarding-functions`, `user-ms` (all stacks) and `document-ms` (`{dev,uat,prod}-ar`);
 `institution-ms` and `user-group-ms` use the Spring `TENANT_STRICT_DATA_ISOLATION` property and are not
 wired to the shared flag yet, which remains a separate rollout gate. The property name is `selfcare.tenant.strict-data-isolation`.
 
 In `auth`, strict mode drops the `or tenantId is null` branch for OTP reads. Before consolidation,
-`document-ms`, `iam`, `user-ms`, `onboarding-ms`, `user-group-ms`, `institution-ms`,
+`document-ms`, `iam`, `onboarding-ms`, `user-group-ms`, `institution-ms`,
 `delegation-cdc`, `user-cdc` and any other tenant-owned service must use the same environment flag;
 flipping only `auth` would leave the environment partially strict.
 
@@ -132,5 +132,6 @@ so deploying the services changes nothing until the environment is switched.
 The flag is temporary. Once every environment runs strict, delete both the flag and the `or tenantId is null`
 branch, so isolation holds by construction rather than by configuration (Step_1/EPIC.md sub-task 2).
 
-Note that the flag does not affect callers with no resolvable tenant — schedulers and event consumers still
-read unscoped. Closing that gap is a separate decision from the backfill.
+In user-ms a missing runtime tenant fails closed, including background processing: Service Bus callbacks
+use their receiver's tenant and `ProductIdNormalizer` refreshes each tenant explicitly. Other schedulers
+and consumers must be checked separately; tagging data does not establish a trusted runtime tenant.

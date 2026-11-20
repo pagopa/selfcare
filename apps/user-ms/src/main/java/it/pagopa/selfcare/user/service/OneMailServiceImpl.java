@@ -1,6 +1,7 @@
 package it.pagopa.selfcare.user.service;
 
 import io.smallrye.mutiny.Uni;
+import it.pagopa.selfcare.user.conf.TenantNotificationConfig;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import lombok.extern.slf4j.Slf4j;
@@ -22,11 +23,7 @@ public class OneMailServiceImpl implements MailService {
     @Inject
     EmailsApi emailsApi;
 
-    @ConfigProperty(name = "user-ms.mail.no-reply")
-    String senderMail;
-
-    @ConfigProperty(name = "user-ms.mail.enabled")
-    boolean isSenderMailEnabled;
+    @Inject TenantNotificationConfig tenantConfig;
 
     @ConfigProperty(name = "user-ms.retry.min-backoff")
     Integer retryMinBackOff;
@@ -42,13 +39,14 @@ public class OneMailServiceImpl implements MailService {
 
       log.info("Sending email. userId={}, email={}, templateId={}", userId, email, templateId);
 
-      if (!isSenderMailEnabled) {
+      var settings = tenantConfig.current();
+      if (!settings.mailEnabled()) {
         log.info("Email sending is disabled. Skipping email for userId={}, email={}", userId, email);
         return Uni.createFrom().voidItem();
       }
 
       EmailHighPriorityBodyDTO emailRequest = EmailHighPriorityBodyDTO.builder()
-        .from(new EmailHighPriorityBodyDTOAllOfFrom().email(senderMail))
+        .from(new EmailHighPriorityBodyDTOAllOfFrom().email(settings.sender()))
         .to(new EmailHighPriorityBodyDTOAllOfTo().email(email))
         .templateContent(Map.of(
           "templateId", templateId,
@@ -72,4 +70,3 @@ public class OneMailServiceImpl implements MailService {
     }
 
 }
-

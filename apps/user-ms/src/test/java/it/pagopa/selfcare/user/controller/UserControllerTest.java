@@ -51,6 +51,8 @@ class UserControllerTest {
 
     @BeforeEach
     void setup() {
+        jakarta.enterprise.inject.spi.CDI.current().select(it.pagopa.selfcare.tenant.TenantContext.class)
+                .get().setTenantId("AR");
         ProductIdNormalizer.clearParentIds();
         ProductIdNormalizer.addParentId("prod-io-premium", "prod-io");
         ProductIdNormalizer.addParentId("prod-dashboard-psp", "prod-pagopa");

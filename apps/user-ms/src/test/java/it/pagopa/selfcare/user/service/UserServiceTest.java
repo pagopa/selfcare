@@ -14,6 +14,7 @@ import io.smallrye.mutiny.helpers.test.UniAssertSubscriber;
 import it.pagopa.selfcare.onboarding.common.PartyRole;
 import it.pagopa.selfcare.product.entity.Product;
 import it.pagopa.selfcare.product.service.ProductService;
+import it.pagopa.selfcare.tenant.TenantContext;
 import it.pagopa.selfcare.user.constant.PermissionTypeEnum;
 import it.pagopa.selfcare.user.controller.request.AddUserRoleDto;
 import it.pagopa.selfcare.user.controller.request.CreateUserDto;
@@ -46,6 +47,7 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
@@ -106,6 +108,8 @@ class UserServiceTest {
 
     @Inject
     UserService userService;
+    @Inject
+    TenantContext tenantContext;
     @InjectMock
     private UserInstitutionService userInstitutionService;
     @InjectMock
@@ -1066,8 +1070,11 @@ class UserServiceTest {
         assertEquals("User already has roles on Product prod-interop", exception.getMessage());
     }
 
-    @Test
-    void testSendMail() {
+    @ParameterizedTest
+    @ValueSource(strings = {"AR", "PNPG"})
+    void testSendMail(String tenant) {
+        tenantContext.setTenantId(tenant);
+        Thread caller = Thread.currentThread();
         UserResource user = mock(UserResource.class);
         when(userRegistryApi.findByIdUsingGET(USERS_WORKS_FIELD_LIST, "userId"))
                 .thenReturn(Uni.createFrom().item(user));
@@ -1077,7 +1084,11 @@ class UserServiceTest {
         loggedUser.setFamilyName(new FamilyNameCertifiableSchema(FamilyNameCertifiableSchema.CertificationEnum.SPID, "familyName"));
 
         Product product = mock(Product.class);
-        when(productService.getProduct(any())).thenReturn(product);
+        when(productService.getProduct(any())).thenAnswer(invocation -> {
+            assertEquals(tenant, tenantContext.requiredTenantId());
+            Assertions.assertNotEquals(caller, Thread.currentThread());
+            return product;
+        });
 
         when(userNotificationService.buildDataModelRequestAndSendEmail(
                 any(UserResource.class),

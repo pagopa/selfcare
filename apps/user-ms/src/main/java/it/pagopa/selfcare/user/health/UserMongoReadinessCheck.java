@@ -1,50 +1,47 @@
 package it.pagopa.selfcare.user.health;
 
-import io.quarkus.mongodb.reactive.ReactiveMongoClient;
+import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
-import it.pagopa.selfcare.commons.health.AbstractMongoReadinessCheck;
+import it.pagopa.selfcare.commons.health.AbstractAsyncReadinessCheck;
+import it.pagopa.selfcare.tenant.TenantRegistry;
+import it.pagopa.selfcare.tenant.mongodb.TenantMongoClientProducer;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
+import java.time.Duration;
+import java.util.Map;
+import java.util.stream.Collectors;
 import org.bson.Document;
-import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.eclipse.microprofile.health.Readiness;
+import lombok.extern.slf4j.Slf4j;
 
 @Readiness
 @ApplicationScoped
-public class UserMongoReadinessCheck extends AbstractMongoReadinessCheck {
+@Slf4j
+public class UserMongoReadinessCheck extends AbstractAsyncReadinessCheck {
+  @Inject TenantRegistry registry;
+  @Inject TenantMongoClientProducer clients;
 
-    private final ReactiveMongoClient mongoClient;
-    private final String databaseName;
-    private final String host;
+  @Override protected String checkName() { return "mongodb-user"; }
+  @Override protected Duration timeout() { return Duration.ofSeconds(3); }
 
-    @Inject
-    public UserMongoReadinessCheck(
-            ReactiveMongoClient mongoClient,
-            @ConfigProperty(name = "quarkus.mongodb.database") String databaseName,
-            @ConfigProperty(name = "quarkus.mongodb.connection-string") String connectionString) {
-        this.mongoClient = mongoClient;
-        this.databaseName = databaseName;
-        this.host = hostFromConnectionString(connectionString);
-    }
+  @Override protected Map<String, String> data() {
+    return registry.supportedTenantIds().stream().collect(Collectors.toMap(
+        tenant -> tenant + ".database", tenant -> registry.resolve(tenant).mongo().database()));
+  }
 
-    @Override
-    protected String checkName() {
-        return "mongodb-user";
-    }
-
-    @Override
-    protected String databaseName() {
-        return databaseName;
-    }
-
-    @Override
-    protected String host() {
-        return host;
-    }
-
-    @Override
-    protected Uni<?> probe() {
-        return mongoClient.getDatabase(databaseName)
-                .runCommand(new Document("ping", 1));
-    }
+  @Override protected Uni<?> probe() {
+    return Multi.createFrom().iterable(registry.supportedTenantIds())
+        .onItem().transformToUniAndMerge(tenant -> Uni.createFrom().deferred(() ->
+            clients.clientForTenant(tenant).getDatabase(registry.resolve(tenant).mongo().database())
+                .runCommand(new Document("ping", 1)))
+            .ifNoItem().after(Duration.ofSeconds(2)).fail()
+            .onFailure().invoke(failure -> log.warn("Mongo readiness failed for tenant {} ({})", tenant, failure.getClass().getSimpleName()))
+            .replaceWith("").onFailure().recoverWithItem(tenant))
+        .collect().asList().invoke(results -> {
+          var failures = results.stream().filter(tenant -> !tenant.isEmpty()).toList();
+          if (!failures.isEmpty()) {
+            throw new IllegalStateException("Mongo unavailable for tenants: " + failures);
+          }
+        });
+  }
 }

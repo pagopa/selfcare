@@ -6,16 +6,28 @@ It implements CRUD operations for the 'user' object and the business logic for t
 
 ## Configuration Properties
 
-Before running you must set these properties as environment variables.
+Requests require `X-Tenant-Id`; the security SDK resolves and validates the tenant before accessing
+MongoDB, PDV or product storage. The API response models do not expose the internal `tenantId`.
 
+| Configuration | Environment variable |
+|---|---|
+| Enabled tenants | `TENANT_SUPPORTED_TENANTS` (default `AR,PNPG`) |
+| Resource registry | `TENANT_REGISTRY_JSON`; JSON with `mongo`, `jwt`, `userRegistry` and logical storage `products` for each enabled tenant |
+| Mongo connection | `MONGODB_CONNECTION_STRING_<ID>` in the default registry |
+| JWT public key | `JWT_PUBLIC_KEY_<ID>` in the registry; `JWT-PUBLIC-KEY` remains a legacy fallback |
+| PDV API key | `USER_REGISTRY_API_KEY_<ID>` in the default registry |
+| Product blob authentication | Connection-string or managed-identity environment variable **names**, specified in the registry |
+| Legacy data compatibility | `SELFCARE_TENANT_STRICT_DATA_ISOLATION` (default `false`) |
+| Tenant enforcement | `TENANT_ENFORCEMENT_ENABLED` (default `true`; do not disable in deployed stacks) |
 
-| **Property**                                           | **Environment Variable**                 | **Default** | **Required** |
-|--------------------------------------------------------|------------------------------------------|-------------|:------------:|
-| quarkus.mongodb.connection-string<br/>                 | MONGODB-CONNECTION-STRING                |             |     yes      |
-| mp.jwt.verify.publickey<br/>                           | JWT-PUBLIC-KEY                           |             |     yes      |
+`<ID>` is `AR` or `PNPG`. Registry entries reference secret variable names, never secret values.
+See `src/main/resources/application.properties` for the registry structure and
+[the app documentation](../../docs/apps/user-ms.md) for deployment settings.
 
-
-> **_NOTE:_**  properties that contains secret must have the same name of its secret as uppercase.
+All six Terraform stacks still enable **one tenant per Container App**, using the existing database,
+storage account, identity and Key Vault. With strict mode disabled, reads include `tenantId=null`
+documents **only in that tenant's database**. Do not mix untagged AR and PNPG data in one database.
+Enable strict mode only after the documented backfill verification.
 
 
 ## Running the application in dev mode
@@ -62,31 +74,21 @@ Rest client are generated using a quarkus' extension.
 
 [Related guide section...](hhttps://github.com/quarkiverse/quarkus-openapi-generator)
 
-## Environment Variables
+## Notifications and downstream services
 
-| **Environment Variable**                | **Default** | **Required** |
-|-----------------------------------------|-------------|:------------:|
-| JWT-PUBLIC-KEY                          |             |     yes      |
-| EVENT_HUB_BASE_PATH                     |             |     yes      |
-| SHARED_ACCESS_KEY_NAME                  |             |     yes      |
-| EVENTHUB-SC-USERS-SELFCARE-WO-KEY-LC    |             |     yes      |
-| USER_MS_EVENTHUB_USERS_ENABLED          |             |     yes      |
-| MONGODB-CONNECTION-STRING               |             |     yes      |
-| STORAGE_CONTAINER_PRODUCT               |             |     yes      |
-| BLOB-STORAGE-PRODUCT-CONNECTION-STRING  |             |     yes      |
-| STORAGE_CONTAINER_TEMPLATES             |             |     yes      |
-| SUSER-REGISTRY-API-KEY                  |             |     yes      |
-| USER_REGISTRY_URL                       |             |     yes      |
-| MAIL_SUBJECT_PREFIX                     |             |     yes      |
-| ENV_TARGET                              |             |     yes      |
-| MAIL_SENDER_ADDRESS                     |             |     yes      |
-| AWS_SES_ACCESS_KEY_ID                   |             |     yes      |
-| AWS_SES_SECRET_ACCESS_KEY               |             |     yes      |
-| AWS_SES_REGION                          |             |     yes      |
-| MAIL_SENDER_ADDRESS                     |             |     yes      |
-| USER_MS_RETRY_MIN_BACKOFF               | 5           |     yes      |
-| USER_MS_RETRY_MAX_BACKOFF               | 60          |     yes      |
-| USER_MS_RETRY                           | 3           |     yes      |
+| Purpose | Environment variables |
+|---|---|
+| REST endpoints (global per process) | `USER_REGISTRY_URL`, `ONBOARDING_URL`, `USER_GROUP_URL`, `WEBHOOK_URL`, `ONE_MAIL_URL` |
+| Tenant mail | `TENANT_<ID>_MAIL_ENABLED`, `TENANT_<ID>_MAIL_SENDER`, `TENANT_<ID>_ONE_MAIL_API_KEY`, `TENANT_<ID>_SELFCARE_URL` |
+| Tenant templates | `TENANT_<ID>_{ACTIVATE,DELETE,SUSPEND,REQUEST,CONVENTION,CREATE_MULTI_ROLE,CREATE_SINGLE_ROLE}_TEMPLATE_ID` |
+| Tenant notifications | `TENANT_<ID>_WEBHOOK_ENABLED`, `TENANT_<ID>_EVENTHUB_USERS_ENABLED` |
+| Tenant Service Bus receiver | `TENANT_<ID>_INTERNALEVENTS_{ENABLED,NAMESPACE,CLIENT_ID,CONNECTION_STRING}` |
+| Mail retry | `USER_MS_RETRY_MIN_BACKOFF` (5 seconds), `USER_MS_RETRY_MAX_BACKOFF` (60 seconds), `USER_MS_RETRY` (3) |
+
+Mail remains enabled for **AR and PNPG in PROD**, disabled in DEV/UAT. Sending stays asynchronous:
+each job has an independent tenant context that remains alive through OneMail filters and retries.
+Webhooks, `sc-users` publishing and internal-event receivers remain AR-only in the current deployments.
+The application does not publish `selfcare-fd` messages.
 
 ## EventHub messages
 
@@ -102,7 +104,20 @@ To perform local tests of functionalities that involve sending messages to the S
 
 ## Cucumber Tests (Integration Tests)
 
-To run the Cucumber tests locally, execute it.pagopa.selfcare.user.integration_test.CucumberSuite
+From the repository root, run unit tests with `mvn -f apps/user-ms/pom.xml test`.
+For Cucumber, start Docker and run **from this app's directory**:
 
-To run a single test or a specific feature file, open the file and press the play button for the corresponding test (or the file). The first execution will fail; you will then need to modify the configuration by setting the main class to:
-it.pagopa.selfcare.user.integration_test.CucumberSuite.
+```shell
+mvn test -Dtest=CucumberSuite
+```
+
+The suite starts `docker-compose.yml`, with separate AR/PNPG Mongo databases and product containers.
+`multitenancy.feature` checks isolation, legacy records and rejected headers/JWT mismatches. On ARM
+hosts, pull the user-group dependency with `docker pull --platform=linux/amd64 ghcr.io/pagopa/selfcare-user-group-ms:latest`.
+
+## Rollout
+
+Release the scheduler's `X-Tenant-Id` header change first, verify technical-token compatibility, then
+release user-ms **code and Terraform together** through DEV, UAT and PROD. Secret names in Key Vault
+are unchanged, but their Container App environment-variable names have changed. No deployment,
+backfill or switch to strict mode is performed by these code changes.

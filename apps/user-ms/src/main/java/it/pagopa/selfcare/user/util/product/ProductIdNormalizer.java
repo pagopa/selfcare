@@ -4,7 +4,9 @@ import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonDeserializer;
 import io.quarkus.scheduler.Scheduled;
-import it.pagopa.selfcare.product.service.ProductService;
+import it.pagopa.selfcare.tenant.TenantContext;
+import it.pagopa.selfcare.tenant.TenantRegistry;
+import it.pagopa.selfcare.user.service.TenantProductCatalogService;
 import jakarta.enterprise.inject.spi.CDI;
 import jakarta.ws.rs.ext.ParamConverter;
 import jakarta.ws.rs.ext.ParamConverterProvider;
@@ -22,8 +24,7 @@ import java.util.concurrent.ConcurrentHashMap;
 @Slf4j
 public class ProductIdNormalizer extends JsonDeserializer<String> implements ParamConverterProvider {
 
-    // productId -> parentId
-    private static final Map<String, String> PARENT_IDS = new ConcurrentHashMap<>();
+    private static final Map<String, Map<String, String>> PARENT_IDS = new ConcurrentHashMap<>();
 
     @Override
     public String deserialize(JsonParser p, DeserializationContext ctxt) throws IOException {
@@ -56,11 +57,13 @@ public class ProductIdNormalizer extends JsonDeserializer<String> implements Par
         if (productId == null || productId.isBlank()) {
             return productId;
         }
-        return PARENT_IDS.getOrDefault(productId, productId);
+        String tenant = CDI.current().select(TenantContext.class).get().requiredTenantId();
+        return PARENT_IDS.getOrDefault(tenant, Map.of()).getOrDefault(productId, productId);
     }
 
     public static void addParentId(String productId, String parentId) {
-        PARENT_IDS.put(productId, parentId);
+        String tenant = CDI.current().select(TenantContext.class).get().requiredTenantId();
+        PARENT_IDS.computeIfAbsent(tenant, ignored -> new ConcurrentHashMap<>()).put(productId, parentId);
     }
 
     public static void clearParentIds() {
@@ -69,13 +72,17 @@ public class ProductIdNormalizer extends JsonDeserializer<String> implements Par
 
     @Scheduled(every = "10m")
     public static void updateParentIds() {
-        final ProductService productService = CDI.current().select(ProductService.class).get();
-        try {
-            productService.getProducts(false, true).stream()
-                    .filter(p -> p.getParentId() != null && !p.getParentId().isBlank())
-                    .forEach(p -> PARENT_IDS.put(p.getId(), p.getParentId()));
-        } catch (Exception ex) {
-            log.error("Failed to update parent IDs", ex);
+        var catalog = CDI.current().select(TenantProductCatalogService.class).get();
+        for (String tenant : CDI.current().select(TenantRegistry.class).get().supportedTenantIds()) {
+            try {
+                Map<String, String> parents = new ConcurrentHashMap<>();
+                catalog.productsForTenant(tenant).stream()
+                        .filter(p -> p.getParentId() != null && !p.getParentId().isBlank())
+                        .forEach(p -> parents.put(p.getId(), p.getParentId()));
+                PARENT_IDS.put(tenant, parents);
+            } catch (RuntimeException ex) {
+                log.error("Failed to update parent IDs for tenant {}", tenant, ex);
+            }
         }
     }
 
