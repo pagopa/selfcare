@@ -29,6 +29,10 @@ storage account, identity and Key Vault. With strict mode disabled, reads includ
 documents **only in that tenant's database**. Do not mix untagged AR and PNPG data in one database.
 Enable strict mode only after the documented backfill verification.
 
+Product catalogues are loaded at startup and refreshed every minute. Lookups read the published
+tenant snapshot without storage I/O or waiting for refresh. A failed refresh is logged and keeps
+the last loaded catalogue; readiness remains DOWN if any tenant has not been loaded yet.
+
 
 ## Running the application in dev mode
 

@@ -75,6 +75,7 @@ public class ProductIdNormalizer extends JsonDeserializer<String> implements Par
         var catalog = CDI.current().select(TenantProductCatalogService.class).get();
         for (String tenant : CDI.current().select(TenantRegistry.class).get().supportedTenantIds()) {
             try {
+                catalog.refreshTenant(tenant);
                 Map<String, String> parents = new ConcurrentHashMap<>();
                 catalog.productsForTenant(tenant).stream()
                         .filter(p -> p.getParentId() != null && !p.getParentId().isBlank())

@@ -122,6 +122,15 @@ Database cleanup hooks must finish before `MultitenancySteps` clears the scenari
 do not detach their reactive subscriptions. JaCoCo covers the entire app package and plain JUnit
 tests as described in [Testing](../testing.md#coverage-and-sonarcloud).
 
+Product catalogues are preloaded during startup, then refreshed every minute on the scheduler's worker
+threads (`user-ms.products.refresh-interval`). Request lookups use only the last published per-tenant
+snapshot: no blob calls or shared monitor. Refreshes for the same tenant cannot overlap; a complete
+catalogue, including parent links, replaces the previous snapshot atomically. Failed refreshes are
+logged and preserve the last loaded snapshot. Readiness is DOWN until every enabled tenant has a
+snapshot. Test startup skips preloading (`%test.user-ms.products.preload-enabled=false`); the
+Cucumber setup explicitly refreshes catalogues after its containers are ready. Parent-ID normalization
+retains its existing ten-minute interval.
+
 ## Deployment
 
 - Container Apps `selc-<env>-user-ms` (AR) and `selc-<env>-pnpg-user-ms` (PNPG), image `selfcare-user-ms`, stacks `dev|uat|prod-ar` and `dev|uat|prod-pnpg`.

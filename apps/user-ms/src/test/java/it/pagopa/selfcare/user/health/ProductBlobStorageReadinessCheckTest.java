@@ -30,6 +30,7 @@ class ProductBlobStorageReadinessCheckTest {
     when(check.registry.storage(tenant, "products")).thenReturn(
         new it.pagopa.selfcare.tenant.TenantDefinition.StorageDefinition("local", "products-" + tenant, "", null));
     when(check.catalogs.productPath(tenant)).thenReturn("products.json");
+    when(check.catalogs.hasSnapshot(tenant)).thenReturn(true);
     AzureBlobClientDefault client = mock(AzureBlobClientDefault.class);
     when(check.catalogs.blobClient(tenant)).thenReturn(client);
     return client;
@@ -48,6 +49,14 @@ class ProductBlobStorageReadinessCheckTest {
     var response = check.call().await().atMost(Duration.ofSeconds(5));
     assertEquals(HealthCheckResponse.Status.DOWN, response.getStatus());
     assertTrue(response.getData().orElseThrow().get("error").toString().contains("[PNPG]"));
+    verify(ar).getProperties("products.json");
+  }
+
+  @Test void isDownUntilEveryTenantCatalogueIsLoaded() {
+    when(check.catalogs.hasSnapshot("PNPG")).thenReturn(false);
+    var response = check.call().await().atMost(Duration.ofSeconds(5));
+    assertEquals(HealthCheckResponse.Status.DOWN, response.getStatus());
+    verifyNoInteractions(pnpg);
     verify(ar).getProperties("products.json");
   }
 }

@@ -42,7 +42,8 @@ non attende OneMail. Non sono stati eseguiti deploy, modifiche ai segreti remoti
 
 | Verifica | Comando / perimetro | Esito |
 |---|---|---|
-| Unit test dei due moduli, come nel build Sonar | `mvn -T 1C -q clean test --projects apps,apps/user-ms,apps/institution-send-mail-scheduler --also-make -Dquarkus.http.test-port=0 -Dquarkus.management.test-port=0 -Dquarkus.generate-code.serialize-test-model=false` | **421 test user-ms e 11 scheduler passati**, nessun errore o test saltato |
+| Unit test user-ms, come nel build Sonar | `mvn -T 1C -q clean test --projects apps/user-ms --also-make -Dquarkus.http.test-port=0 -Dquarkus.management.test-port=0 -Dquarkus.generate-code.serialize-test-model=false` | **427 test passati**, nessun errore o test saltato; inclusi lettori concorrenti durante un refresh bloccato |
+| Unit test scheduler | `mvn -q -f apps/institution-send-mail-scheduler/pom.xml clean test` | **11 test passati** |
 | Cucumber, comando CI dalla root | `mvn --projects :user-ms --also-make test -Dtest=CucumberSuite -Dsurefire.failIfNoSpecifiedTests=false` | **291 scenari passati**, 3150 step; AR e PNPG nello stesso processo |
 | Packaging e controlli finali codec/worker | `mvn -q -f apps/user-ms/pom.xml package '-Dtest=MongoConfigTest,UserServiceTest#testSendMail'` | Passato |
 | Header scheduler | `mvn -q -f apps/institution-send-mail-scheduler/pom.xml test -Dtest=AuthenticationPropagationHeadersFactoryTest` | **2 test passati** |
@@ -51,7 +52,7 @@ non attende OneMail. Non sono stati eseguiti deploy, modifiche ai segreti remoti
 
 Correzioni CI: cleanup delle fixture completato prima della chiusura del contesto tenant; raccolta
 JaCoCo estesa a tutti i package applicativi e ai test JUnit non Quarkus. La copertura locale di righe
-e condizioni nuove, dai soli unit test dopo `clean`, è **87,8%**; la soglia Sonar resta **80%**.
+e condizioni nuove, dai soli unit test dopo `clean`, è **89,2%**; la soglia Sonar resta **80%**.
 Il valore del quality gate sulla PR richiede una nuova analisi SonarCloud.
 
 Maven è il fallback locale: Nx non è utilizzabile per la configurazione TypeScript del plugin del
@@ -134,7 +135,8 @@ Dimensione indicativa: **S** ≤ 1 gg, **M** 2–3 gg, **L** > 3 gg.
 ### D. Catalogo prodotti (D1)
 
 - **UMS-10 (M) – `ProductService` tenant-aware.**
-  - Sostituire `productBlobClient` e `productService` in `conf/UserMsConfig.java` con una `ProductServiceCacheable` per tenant, creata in modo lazy.
+  - Sostituire `productBlobClient` e `productService` in `conf/UserMsConfig.java` con snapshot `ProductServiceDefault` per tenant, precaricati all'avvio e aggiornati ogni minuto.
+  - Nessun I/O nelle letture delle richieste, nessun `synchronized`: il refresh pubblica atomicamente il nuovo snapshot, con parent link già risolti. Un errore di refresh mantiene l'ultimo snapshot e viene loggato; la readiness resta DOWN se manca il caricamento iniziale.
   - Il blob client per tenant si costruisce da `tenantRegistry.storage(tenant, "products")` più `storageConnectionString` o `storageManagedIdentityClientId`. Usare i costruttori di `AzureBlobClientDefault` già presenti in `UserMsConfig`.
   - Esempio Quarkus di client blob dal registry: `apps/product/.../storage/TenantBlobClientProvider.java`.
   - Rimuovere `user-ms.blob-storage.*`, tranne `filepath-product`.

@@ -31,8 +31,12 @@ public class ProductBlobStorageReadinessCheck extends AbstractAsyncReadinessChec
 
   @Override protected Uni<?> probe() {
     return Multi.createFrom().iterable(registry.supportedTenantIds())
-        .onItem().transformToUniAndMerge(tenant -> Uni.createFrom().item(() ->
-            catalogs.blobClient(tenant).getProperties(catalogs.productPath(tenant)))
+        .onItem().transformToUniAndMerge(tenant -> Uni.createFrom().item(() -> {
+              if (!catalogs.hasSnapshot(tenant)) {
+                throw new IllegalStateException("Product catalogue has not been loaded for tenant " + tenant);
+              }
+              return catalogs.blobClient(tenant).getProperties(catalogs.productPath(tenant));
+            })
             .runSubscriptionOn(Infrastructure.getDefaultWorkerPool())
             .ifNoItem().after(Duration.ofSeconds(2)).fail()
             .onFailure().invoke(failure -> log.warn("Product storage readiness failed for tenant {} ({})", tenant, failure.getClass().getSimpleName()))
