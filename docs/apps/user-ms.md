@@ -5,9 +5,9 @@
 | | |
 |---|---|
 | Path | `apps/user-ms` |
-| Stack | Quarkus 3.11.1, Java 17, reactive (Mutiny + reactive Panache MongoDB) |
+| Stack | Quarkus 3.11.2, Java 17, reactive (Mutiny + reactive Panache MongoDB) |
 | Type | REST microservice |
-| Tenants | Both: separate `-ar` and `-pnpg` deployments (no tenant-aware data layer) |
+| Tenants | AR and PNPG: tenant-aware code, still separate `-ar` and `-pnpg` deployments |
 | Infra | `infra/resources/user-ms/` |
 
 ## Responsibilities
@@ -15,7 +15,7 @@
 - CRUD of user roles and statuses per institution/product in the `userInstitutions` collection (`selcUser` database).
 - Create or update users by fiscal code or user id; personal data (name, fiscal code, work contacts) lives in the PDV User Registry and is read/written through its REST API.
 - Permission check (`GET /authorize`) based on the role → actions map `src/main/resources/role_action_mapping.json` (`util/ActionMapRetriever`).
-- Notify user changes: Event Hub `sc-users` and `selfcare-fd`, webhook notifications (topic `SC-Users`) and e-mails through OneMail templates.
+- Notify user changes: Event Hub `sc-users`, webhook notifications (topic `SC-Users`) and e-mails through OneMail templates. There is no `selfcare-fd` publisher in this app.
 - Keep the denormalized institution description in sync by consuming `InstitutionUpdatedEvent` (Service Bus topic `institution-events`, subscription `user-sub`).
 
 ## Architecture
@@ -27,9 +27,11 @@ Single Maven module, package `it.pagopa.selfcare.user`:
 | `controller` | `UserController` (`/users`), `InstitutionController` (`/institutions`), `UserPermissionController` (`/authorize`), `EventsController` (`/events`), all `@Authenticated` |
 | `service` | `UserService(Impl)`, `UserInstitutionService(Default)`, `UserRegistryService(Impl)`, `UserNotificationService(Impl)`, `UserPermissionService(Impl)`, `MailService` / `OneMailServiceImpl` |
 | `entity` | `UserInstitution` (`@MongoEntity(collection = "userInstitutions")`) and query filters |
-| `internalevents` | `InternalEvents` (receiver from [selfcare-internal-events-sdk](../libs/selfcare-internal-events-sdk.md)) |
-| `client/auth` | `AuthenticationPropagationHeadersFactory` (propagates `Authorization` and `X-Tenant-Id` to REST clients) |
-| `filter` | Request/response logging filters (log the `X-Tenant-Id` header) |
+| `repository` | `UserInstitutionRepository`, central tenant predicate and scoped writes |
+| `conf` | `TenantNotificationConfig`, validated per-tenant settings; `MongoConfig`, custom date codec provider |
+| `internalevents` | One `InternalEvents` receiver per enabled tenant; `InstitutionUpdatedEventHandler` owns each callback's tenant context |
+| `client/auth` | Tenant/authorization propagation and tenant-specific PDV/OneMail API-key filters |
+| `filter` | Tenant-aware request/response logging via `TenantLogUtils` |
 | `health` | `UserMongoReadinessCheck`, `ProductBlobStorageReadinessCheck` |
 | `exception/handler` | `ExceptionHandler` returning `Problem` |
 
@@ -54,10 +56,9 @@ Not an application API in APIM. It is a backend of external APIs in `infra/resou
 | Resource | Usage |
 |---|---|
 | MongoDB `selcUser.userInstitutions` | Read/write; changes are streamed by [user-cdc](user-cdc.md) |
-| Event Hub `sc-users` | Publishes user events (`USER_MS_EVENTHUB_USERS_ENABLED`, AR only) |
-| Event Hub `selfcare-fd` | Publishes events for FD (`USER_MS_EVENTHUB_SELFCARE_FD_ENABLED`, AR only) |
+| Event Hub `sc-users` | Publishes user events (`TENANT_AR_EVENTHUB_USERS_ENABLED`, AR only) |
 | Service Bus `institution-events` / `user-sub` | Consumes `InstitutionUpdatedEvent` from [institution-cdc](institution-cdc.md) (AR only) |
-| Blob storage (product container, `products.json`) | Product catalogue |
+| Blob storage (product container, `products.json`) | Per-tenant catalogue clients and caches (`TenantProductCatalogService`); normalizer refreshes each tenant explicitly |
 
 ## Integrations
 
@@ -66,8 +67,8 @@ Not an application API in APIM. It is a backend of external APIs in `infra/resou
 | `user_registry.json` (PDV User Registry) | Personal data read/search/save/update |
 | `onboarding_ms.json` → [onboarding-ms](onboarding-ms.md) | Delete onboarding user data |
 | `user_group_ms.json` → [user-group-ms](user-group-ms.md) | Remove a deleted user from groups |
-| `webhook_ms.json` → [webhook](webhook.md) | User notifications (`USER_MS_WEBHOOK_ENABLED`, tenant `USER_MS_WEBHOOK_TENANT_ID`) |
-| `one_mail.json` (OneMail) | Transactional e-mails (`MAIL_ENABLED`) |
+| `webhook_ms.json` → [webhook](webhook.md) | User notifications (`TENANT_<ID>_WEBHOOK_ENABLED`); payload tenant comes from `TenantContext` |
+| `one_mail.json` (OneMail) | Transactional e-mails (`TENANT_<ID>_MAIL_ENABLED`), with per-tenant API key, sender and templates |
 
 Callers keep committed copies of this spec, e.g. `apps/auth/src/main/openapi/internal_ms_user.json`, `apps/onboarding-ms/src/main/openapi/user.json`, `apps/onboarding-functions/src/main/openapi/user.json`, `apps/dashboard-bff/docs/openapi/selfcare-user-docs.json`, `apps/external-api/src/main/docs/openapi/api-selfcare-user-docs.json`, `apps/onboarding-bff/connector/rest/docs/openapi/api-selfcare-user-docs.json`, `apps/institution-ms/connector/rest/docs/openapi/selfcare-user-docs.json`, `apps/institution-send-mail-scheduler/src/main/openapi/selfcare-user.json`.
 
@@ -77,22 +78,30 @@ From `src/main/resources/application.properties` (secrets come from Key Vault in
 
 | Group | Env vars |
 |---|---|
-| Security / DB | `JWT-PUBLIC-KEY`, `MONGODB-CONNECTION-STRING` (database fixed to `selcUser`) |
-| Event Hub | `EVENT_HUB_BASE_PATH`, `EVENT_HUB_SC_USERS_TOPIC`, `EVENT_HUB_SELFCARE_FD_TOPIC`, `SHARED_ACCESS_KEY_NAME`, `FD_SHARED_ACCESS_KEY_NAME`, `EVENTHUB_SENDER_MANAGED_IDENTITY_CLIENT_ID`, `EVENTHUBFD_SENDER_MANAGED_IDENTITY_CLIENT_ID`, `USER_MS_EVENTHUB_USERS_ENABLED`, `USER_MS_EVENTHUB_SELFCARE_FD_ENABLED`, `USER_MS_EVENTHUB_USERS_PAGE_SIZE`, `USER_MS_EVENTHUB_USERS_CONCURRENCY_LEVEL` |
-| Webhook | `WEBHOOK_URL`, `USER_MS_WEBHOOK_ENABLED`, `USER_MS_WEBHOOK_TENANT_ID` (default `AR`), `USER_MS_WEBHOOK_TOPIC` (default `SC-Users`) |
-| REST clients | `USER_REGISTRY_URL`, `USER-REGISTRY-API-KEY`, `ONBOARDING_URL`, `USER_GROUP_URL`, `ONE_MAIL_URL`, `ONE_MAIL_API_KEY` |
-| Mail | `MAIL_ENABLED`, `MAIL_SENDER_ADDRESS`, `*_TEMPLATE_ID` (OneMail templates) |
-| Product storage | `STORAGE_CONTAINER_PRODUCT`, `BLOB-STORAGE-PRODUCT-*` |
-| Internal events | `INTERNALEVENTS_ENABLED`, `INTERNALEVENTS_CONNECTION_STRING`, `INTERNALEVENTS_NAMESPACE`, `INTERNALEVENTS_CLIENT_ID` |
-| Other | `SELFCARE_URL`, `USER_MS_RETRY*`, `APPLICATIONINSIGHTS_CONNECTION_STRING` |
+| Registry / isolation | `TENANT_SUPPORTED_TENANTS`, `TENANT_REGISTRY_JSON`, `TENANT_ENFORCEMENT_ENABLED` (true), `SELFCARE_TENANT_STRICT_DATA_ISOLATION` (false) |
+| Security / DB / PDV | Registry references `JWT_PUBLIC_KEY_<ID>`, `MONGODB_CONNECTION_STRING_<ID>`, `USER_REGISTRY_API_KEY_<ID>`; `JWT-PUBLIC-KEY` remains a legacy JWT fallback |
+| Product storage | Logical key `products` in the registry; deployed stacks use managed identity via `PRODUCTS_STORAGE_MANAGED_IDENTITY_CLIENT_ID_<ID>` |
+| Event Hub | Global AR endpoint/authentication (`EVENT_HUB_BASE_PATH`, `EVENT_HUB_SC_USERS_TOPIC`, `SHARED_ACCESS_KEY_NAME`, `EVENTHUB_SENDER_MANAGED_IDENTITY_CLIENT_ID`); enablement `TENANT_<ID>_EVENTHUB_USERS_ENABLED` |
+| Webhook | `WEBHOOK_URL`, `TENANT_<ID>_WEBHOOK_ENABLED`, `USER_MS_WEBHOOK_TOPIC` (default `SC-Users`) |
+| REST endpoints | `USER_REGISTRY_URL`, `ONBOARDING_URL`, `USER_GROUP_URL`, `ONE_MAIL_URL` (global per process) |
+| Mail | `TENANT_<ID>_MAIL_ENABLED`, `TENANT_<ID>_MAIL_SENDER`, `TENANT_<ID>_ONE_MAIL_API_KEY`, `TENANT_<ID>_*_TEMPLATE_ID`, `TENANT_<ID>_SELFCARE_URL` |
+| Internal events | `TENANT_<ID>_INTERNALEVENTS_{ENABLED,CONNECTION_STRING,NAMESPACE,CLIENT_ID}` |
+| Other | `USER_MS_RETRY*`, `USER_MS_EVENTHUB_USERS_{PAGE_SIZE,CONCURRENCY_LEVEL}`, `APPLICATIONINSIGHTS_CONNECTION_STRING` |
 
-PNPG stacks (`infra/resources/user-ms/*-pnpg/main.tf`) disable webhook, Event Hub publishing and internal events, and point `ONBOARDING_URL` / `USER_GROUP_URL` to the `-pnpg-` Container Apps.
+`<ID>` is `AR` or `PNPG`; only supported tenants are validated at startup. PNPG stacks disable webhook,
+Event Hub publishing and internal events, and retain PNPG downstream URLs. Mail remains enabled in
+PROD for **both** tenants, disabled in DEV/UAT. OneMail stays fire-and-forget: a managed executor
+clears the originating request context, and `TenantMailJob` establishes its own context until the
+send/retries finish. Template payloads and tenant selection are captured before dispatch.
 
 ## Multitenancy
 
-- Isolation is by deployment: each domain has its own Container App and its own Key Vault secret values (same secret names, e.g. `mongodb-connection-string`, `jwt-public-key`). There is no `tenantId` field on `UserInstitution` and no tenant registry.
-- The `X-Tenant-Id` header is only propagated to downstream REST clients (`AuthenticationPropagationHeadersFactory`) and logged (`CustomLoggingFilter`); webhook notifications use the configured `USER_MS_WEBHOOK_TENANT_ID`.
-- Target design: [../multitenancy.md](../multitenancy.md), [Step 2 architecture](../specs/MULTITENANT/Step_2/ARCHITECTURE.md), [Database identification](../specs/MULTITENANT/Step_2/Database_identification.md), [Ingress unification](../specs/MULTITENANT/Step_2/Ingress_unification.md).
+- The registry routes Mongo, products and PDV credentials per tenant; the same process supports both tenants. All six deployed stacks still expose only their own tenant and retain separate resources.
+- The repository applies `tenantId=T OR tenantId IS NULL` by default, or `tenantId=T` in strict mode. New/replaced documents are tagged; conflicting writes are rejected atomically. Legacy fallback is safe only while untagged data remains in separate tenant databases.
+- `X-Tenant-Id` is required (query fallback disabled), normalized and checked against the supported registry. JWT/header mismatches are rejected by the security SDK; a claim-less SPID token uses `DEFAULT_TENANT` (default PNPG). `tenantId` is not added to public response DTOs.
+- Service Bus callbacks trust the receiver's tenant, dead-letter conflicting payloads and always clear the context. Health probes and catalogue refreshes select resources explicitly, without relying on an HTTP request.
+- Future deployment consolidation still needs cross-Key-Vault secret provisioning, downstream URL routing or consolidation, APIM changes and a separate user-cdc assessment. Event Hub publishing remains AR-only; enabling it for PNPG fails startup.
+- Implementation and rollout: [user-ms tasks](../specs/MULTITENANT/Step_2/UserMs_implementation.md), [multitenancy](../multitenancy.md).
 
 ## Build, run and test
 
@@ -100,12 +109,27 @@ PNPG stacks (`infra/resources/user-ms/*-pnpg/main.tf`) disable webhook, Event Hu
 mvn -f apps/user-ms/pom.xml clean package      # also regenerates src/main/docs/openapi.*
 mvn -f apps/user-ms/pom.xml test
 mvn -f apps/user-ms/pom.xml quarkus:dev
-# Cucumber integration tests (Docker required), as in CI
-mvn --projects :user-ms --also-make test -Dtest=CucumberSuite -Dsurefire.failIfNoSpecifiedTests=false
+# Cucumber integration tests (Docker required; run from the app directory)
+(cd apps/user-ms && mvn test -Dtest=CucumberSuite)
 mvn --projects :test-coverage --also-make verify -Puser-ms,report
 ```
 
-Cucumber runner: `it.pagopa.selfcare.user.integration_test.CucumberSuite`, features in `src/test/resources/features/` (`user`, `institution`, `userPermission`, `events`). It starts `apps/user-ms/docker-compose.yml` (MongoDB, Azurite, Azure CLI, MockServer and a `usergroupms` container) through Testcontainers.
+Cucumber runner: `it.pagopa.selfcare.user.integration_test.CucumberSuite`, including `multitenancy.feature`.
+It starts `apps/user-ms/docker-compose.yml` (MongoDB, Azurite, Azure CLI, MockServer and `usergroupms`).
+The integration profile enables tenant enforcement, uses two Mongo databases and two product containers,
+and disables real notifications. Isolation fixtures are seeded/removed only for their tagged scenarios.
+Database cleanup hooks must finish before `MultitenancySteps` clears the scenario's tenant context;
+do not detach their reactive subscriptions. JaCoCo covers the entire app package and plain JUnit
+tests as described in [Testing](../testing.md#coverage-and-sonarcloud).
+
+Product catalogues are preloaded during startup, then refreshed every minute on the scheduler's worker
+threads (`user-ms.products.refresh-interval`). Request lookups use only the last published per-tenant
+snapshot: no blob calls or shared monitor. Refreshes for the same tenant cannot overlap; a complete
+catalogue, including parent links, replaces the previous snapshot atomically. Failed refreshes are
+logged and preserve the last loaded snapshot. Readiness is DOWN until every enabled tenant has a
+snapshot. Test startup skips preloading (`%test.user-ms.products.preload-enabled=false`); the
+Cucumber setup explicitly refreshes catalogues after its containers are ready. Parent-ID normalization
+retains its existing ten-minute interval.
 
 ## Deployment
 
@@ -113,6 +137,8 @@ Cucumber runner: `it.pagopa.selfcare.user.integration_test.CucumberSuite`, featu
 - The same stacks provision the Cosmos MongoDB database `selcUser` and collection `userInstitutions` (modules `_modules/cosmosdb_database`, `_modules/cosmosdb_collection`).
 - PR: `.github/workflows/pr_user_ms.yml`, `.github/workflows/pr_user_ms_infra.yml`; integration tests: `.github/workflows/integration_tests_user_ms.yml`.
 - Release: `.github/workflows/trigger_release_user_ms.yml` → `release_app.yml` for `ar` and `pnpg`; DEV auto-release via `trigger_deploy_after_merge.yml`.
+- Release institution-send-mail-scheduler first (`USER_MS_TENANT_ID=AR` by default) and verify its technical token; then deploy user-ms code and Terraform together. Container App secret environment names changed, not the existing Key Vault secret names.
+- Do not enable strict isolation until `backfill_tenant_id.py --verify` succeeds on both tenant databases. Deployment, real-token checks and backfill remain operational tasks, not effects of this implementation.
 
 ## References
 
