@@ -600,7 +600,7 @@ class PdfMapperDataTest {
     @ParameterizedTest
     @MethodSource("rtpServices")
     void setupProdRtpData_shouldSelectServices(List<RtpServiceType> services) {
-        RtpContractPdfRequest request = buildRtpContractPdfRequest(new InstitutionPdfData(), new UserPdfData());
+        ContractPdfRequest request = buildRtpContractPdfRequest(new InstitutionPdfData(), new UserPdfData());
         request.setRtpServiceTypes(services);
         Map<String, Object> map = new HashMap<>();
 
@@ -622,8 +622,8 @@ class PdfMapperDataTest {
                 List.of(RtpServiceType.RTP, RtpServiceType.REPOSITORY_CONSULTATION), List.of(), null);
     }
 
-    private RtpContractPdfRequest buildRtpContractPdfRequest(InstitutionPdfData institution, UserPdfData manager) {
-        RtpContractPdfRequest request = new RtpContractPdfRequest();
+    private ContractPdfRequest buildRtpContractPdfRequest(InstitutionPdfData institution, UserPdfData manager) {
+        ContractPdfRequest request = new ContractPdfRequest();
         request.setInstitution(institution);
         request.setManager(manager);
         return request;
@@ -633,7 +633,7 @@ class PdfMapperDataTest {
     @ValueSource(booleans = {false, true})
     void setupProdRtpData_shouldFillMissingFields(boolean emptyNestedObjects) {
         InstitutionPdfData institution = new InstitutionPdfData();
-        RtpContractPdfRequest request = buildRtpContractPdfRequest(institution, new UserPdfData());
+        ContractPdfRequest request = buildRtpContractPdfRequest(institution, new UserPdfData());
         if (emptyNestedObjects) {
             institution.setPaymentServiceProvider(new PaymentServiceProviderPdfData());
             institution.setDataProtectionOfficer(new DataProtectionOfficerPdfData());
@@ -660,7 +660,7 @@ class PdfMapperDataTest {
                 .shareCapital("100000")
                 .businessRegisterPlace("Roma")
                 .build();
-        RtpContractPdfRequest request = buildRtpContractPdfRequest(institution, new UserPdfData());
+        ContractPdfRequest request = buildRtpContractPdfRequest(institution, new UserPdfData());
         request.setBilling(BillingPdfData.builder().recipientCode("ABC1234").build());
         Map<String, Object> map = new HashMap<>();
 

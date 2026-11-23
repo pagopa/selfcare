@@ -26,6 +26,7 @@ public interface ContractPdfRequestMapper {
   @Mapping(target = "billing", source = "onboarding.billing")
   @Mapping(target = "contractTemplatePath", source = "contractTemplatePath")
   @Mapping(target = "aggregatesCsvBaseUrl", source = "aggregatesCsvBaseUrl")
+  @Mapping(target = "rtpServiceTypes", source = "onboarding.rtpServiceTypes")
   ContractPdfRequest toRequest(
           Onboarding onboarding,
           UserResource manager,

@@ -124,6 +124,12 @@
           },
           "billing" : {
             "$ref" : "#/components/schemas/BillingPdfData"
+          },
+          "rtpServiceTypes" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/RtpServiceType"
+            }
           }
         }
       },
@@ -581,6 +587,10 @@
             "type" : "string"
           }
         }
+      },
+      "RtpServiceType" : {
+        "enum" : [ "RTP", "REPOSITORY_CONSULTATION" ],
+        "type" : "string"
       },
       "SignatureRequest" : {
         "required" : [ "onboardingId", "file", "fiscalCodes", "skipSignatureVerification" ],
