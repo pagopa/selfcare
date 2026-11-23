@@ -49,6 +49,12 @@ explicitly with `--allow-missing`.
 * **Verifies real coverage.** Collection discovery errors, unexpected missing collections and a run
   that inspects zero collections all fail; they cannot produce a successful `--verify`.
 * **Interruptible.** Each collection converges independently; re-running resumes where it stopped.
+* **Throttling-aware.** `--apply` tags documents in batches of `_id`s and retries a batch with
+  backoff when Cosmos DB answers 16500 (request rate too large). Success is decided by re-counting
+  the untagged documents, not by `modifiedCount`, which Cosmos under-reports after a retry.
+* **Cosmos-compatible filters.** "Untagged" is `{tenantId: null}` (missing or null) and "another
+  tenant" is `{tenantId: {$nin: [<tenant>, null]}}`. Filters built with `$or` + `$expr` are avoided:
+  on Cosmos DB `find`/`update` with them silently matches fewer documents than `count`.
 
 ## Usage
 
@@ -82,6 +88,8 @@ Run the three steps once per tenant, against that tenant's own connection string
 * `--allow-missing <database.collection>` — explicitly allow one expected collection to be absent;
   repeatable. This is deliberately per collection rather than a broad “ignore missing” switch.
 * `--apply` — perform the updates.
+* `--batch-size <n>` — documents tagged per update with `--apply` (default `500`); lower it if Cosmos
+  keeps throttling. In PROD run one `--database` at a time, outside peak hours.
 * `--verify` — report only, exiting non-zero while untagged, mismatched, inaccessible or unexpectedly
   absent data remains. This is the gate for dropping the `or tenantId is null` branch from the
   services: it must exit `0` for both tenants in an environment before that environment's reads can
@@ -106,9 +114,10 @@ strict_tenant_data_isolation_by_env = {
 
 The example is illustrative: do not enable DEV until the verification actually succeeds. Apply only after
 every participating service has been wired to `module.local.config.strict_tenant_data_isolation`
-and verified in that environment. Currently `infra/resources/auth/{dev,uat,prod}-ar/auth.tf` injects
-`SELFCARE_TENANT_STRICT_DATA_ISOLATION` for `auth`; wiring the other services remains a separate rollout
-gate. The property name is `selfcare.tenant.strict-data-isolation`.
+and verified in that environment. `SELFCARE_TENANT_STRICT_DATA_ISOLATION` is currently injected from
+that flag for `auth`, `iam`, `onboarding-functions` (all stacks) and `document-ms` (`{dev,uat,prod}-ar`);
+`institution-ms` and `user-group-ms` use the Spring `TENANT_STRICT_DATA_ISOLATION` property and are not
+wired to the shared flag yet, which remains a separate rollout gate. The property name is `selfcare.tenant.strict-data-isolation`.
 
 In `auth`, strict mode drops the `or tenantId is null` branch for OTP reads. Before consolidation,
 `document-ms`, `iam`, `user-ms`, `onboarding-ms`, `user-group-ms`, `institution-ms`,

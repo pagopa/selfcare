@@ -16,6 +16,7 @@ import it.pagopa.selfcare.onboarding.common.OnboardingStatus;
 import it.pagopa.selfcare.onboarding.config.AggregateBatchConfig;
 import it.pagopa.selfcare.onboarding.config.RetryPolicyConfig;
 import it.pagopa.selfcare.onboarding.context.TenantContext;
+import it.pagopa.selfcare.onboarding.context.TenantDataIsolation;
 import it.pagopa.selfcare.onboarding.dto.ManagingInstitutionSendEmail;
 import it.pagopa.selfcare.onboarding.dto.OnboardingAggregateOrchestratorInput;
 import it.pagopa.selfcare.onboarding.dto.ManagingInstitutionGetEmailRequest;
@@ -93,6 +94,7 @@ public class OnboardingFunctions {
 
   private final OnboardingMapper onboardingMapper;
   private final AggregateBatchConfig aggregateBatchConfig;
+  private final TenantDataIsolation tenantDataIsolation;
 
   public OnboardingFunctions(
       OnboardingService onboardingService,
@@ -106,7 +108,8 @@ public class OnboardingFunctions {
       DocumentService documentService,
       TelemetryService telemetryService,
       UserService userService,
-      HttpFunctionGuard httpFunctionGuard) {
+      HttpFunctionGuard httpFunctionGuard,
+      TenantDataIsolation tenantDataIsolation) {
     this.onboardingService = onboardingService;
     this.objectMapper = objectMapper;
     this.completionService = completionService;
@@ -118,6 +121,7 @@ public class OnboardingFunctions {
     this.telemetryService = telemetryService;
     this.userService = userService;
     this.httpFunctionGuard = httpFunctionGuard;
+    this.tenantDataIsolation = tenantDataIsolation;
     optionsRetry = new TaskOptions(retryHandler(retryPolicyConfig));
   }
 
@@ -404,7 +408,10 @@ public class OnboardingFunctions {
                   () ->
                       new ResourceNotFoundException(
                           String.format("Onboarding with id %s not found!", onboardingId)));
-      if (!TenantContext.resolve(onboarding.getTenantId()).equals(TenantContext.requiredTenant())) {
+      // without strict isolation, onboardings created before tenantId belong to the input tenant
+      if (!tenantDataIsolation
+          .ownerTenant(onboarding.getTenantId())
+          .equals(TenantContext.requiredTenant())) {
         throw new IllegalArgumentException("Conflicting tenant context");
       }
 

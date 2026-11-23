@@ -70,7 +70,7 @@ locals {
   app_settings_product_ms = [
     {
       name  = "JAVA_TOOL_OPTIONS"
-      value = "-javaagent:applicationinsights-agent.jar"
+      value = "-javaagent:applicationinsights-agent.jar -XX:-UseBASE64Intrinsics"
     },
     {
       name  = "APPLICATIONINSIGHTS_ROLE_NAME"
@@ -91,6 +91,10 @@ locals {
     {
       name  = "PRODUCT_MS_RETRY"
       value = 3
+    },
+    {
+      name  = "PRODUCT_MS_ONBOARDING_RULES_ALLOWED_WORKFLOW_TYPES_SELC"
+      value = "FOR_APPROVE,IMPORT,FOR_APPROVE_PT,FOR_APPROVE_GPU,CONFIRMATION,CONFIRMATION_AGGREGATOR,INCREMENT_REGISTRATION_AGGREGATOR,CONTRACT_WITH_COUNTERSIGNATURE,CONTRACT_REGISTRATION"
     },
     {
       name  = "MONGODB_DATABASE_NAME"

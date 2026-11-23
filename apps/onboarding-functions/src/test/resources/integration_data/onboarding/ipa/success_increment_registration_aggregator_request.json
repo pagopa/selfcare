@@ -1,0 +1,72 @@
+{
+  "id": "a14d68d1-1b61-4ea6-9ea1-716ea97f6866",
+  "billing": {
+    "publicServices": false,
+    "recipientCode": "c_inc1",
+    "vatNumber": "90000000037"
+  },
+  "createdAt": "2024-03-05T15:23:33.861Z",
+  "institution": {
+    "id": "7c3f1a52-6d2e-4b8a-9f10-3e5d7a9b2c43",
+    "imported": false,
+    "institutionType": "PA",
+    "taxCode": "90000000037",
+    "description": "Comune Aggregatore Incremento",
+    "digitalAddress": "aggregatore-incremento@test.it",
+    "address": "Via Aggregatore, 3",
+    "zipCode": "00100",
+    "city": "Roma",
+    "county": "RM",
+    "country": "IT",
+    "origin": "IPA",
+    "originId": "c_inc1"
+  },
+  "isAggregator": true,
+  "aggregates": [
+    {
+      "taxCode": "90000000045",
+      "description": "Comune Nuovo Aggregato",
+      "digitalAddress": "nuovo-aggregato@test.it",
+      "address": "Via Aggregato, 4",
+      "zipCode": "00100",
+      "city": "Roma",
+      "county": "RM",
+      "origin": "IPA",
+      "originId": "c_inc2",
+      "users": [
+        {
+          "id": "ec7ca4d5-c537-462a-8c06-e102e0c21c44",
+          "productRole": "referente amministrativo",
+          "role": "MANAGER",
+          "userMailUuid": "ID_MAIL#49e16aa5-bc28-40c7-9844-6886e4647e21"
+        }
+      ]
+    },
+    {
+      "taxCode": "90000000052",
+      "description": "Comune Gia Aggregato",
+      "digitalAddress": "gia-aggregato@test.it",
+      "address": "Via Aggregato, 5",
+      "zipCode": "00100",
+      "city": "Roma",
+      "county": "RM",
+      "origin": "IPA",
+      "originId": "c_inc3"
+    }
+  ],
+  "productId": "prod-io",
+  "status": "PENDING",
+  "userRequester": {
+    "userRequestUid": "ec7ca4d5-c537-462a-8c06-e102e0c21c44"
+  },
+  "users": [
+    {
+      "id": "ec7ca4d5-c537-462a-8c06-e102e0c21c44",
+      "productRole": "referente amministrativo",
+      "role": "MANAGER",
+      "userMailUuid": "ID_MAIL#49e16aa5-bc28-40c7-9844-6886e4647e21"
+    }
+  ],
+  "workflowType": "INCREMENT_REGISTRATION_AGGREGATOR",
+  "updatedAt": "2025-05-22T18:14:27.008Z"
+}

@@ -85,7 +85,7 @@ The same concepts for Spring apps: a `ThreadLocal` `TenantContext`, `TenantRegis
 | `TENANT_SUPPORTED_TENANTS` | document-ms, external-api, iam, institution-ms, onboarding-ms, product, product-cdc, registry-proxy, user-group-ms | `tenant.supported-tenants` of the registry |
 | `TENANT_REGISTRY_JSON` | auth, iam, onboarding-ms, product, product-cdc | Tenant resource registry (Quarkus) |
 | `SELFCARE_TENANT_DATA_ISOLATION` | external-api, institution-ms, user-group-ms | Tenant resource registry (Spring) |
-| `SELFCARE_TENANT_STRICT_DATA_ISOLATION` | auth, iam | Strict mode (no `tenantId IS NULL` fallback) |
+| `SELFCARE_TENANT_STRICT_DATA_ISOLATION` | auth, document-ms, iam, onboarding-functions | Strict mode (no `tenantId IS NULL` fallback) |
 
 Terraform wiring is in `infra/resources/<app>/*.tf`.
 

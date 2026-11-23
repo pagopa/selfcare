@@ -5,9 +5,9 @@
 | | |
 |---|---|
 | Path | `libs/selfcare-commons` |
-| Artifact | `it.pagopa.selfcare:selc-commons:2.23.0` (packaging `pom`); modules listed below |
+| Artifact | `it.pagopa.selfcare:selc-commons:2.25.0` (packaging `pom`); modules listed below |
 | Stack | Spring Boot (parent [`selc-starter-parent:0.3.3`](selfcare-starter-parent.md), Spring Boot 3.3.0), Spring Cloud OpenFeign, Java 17, blocking |
-| Used by | `dashboard-bff` (2.10.0), `external-api` (2.23.0), `institution-ms` (2.22.0), `onboarding-bff` (2.10.0), `registry-proxy` (2.23.0), `user-group-ms` (2.20.0) — versions from the `selc-commons.version` property of each app POM |
+| Used by | `dashboard-bff` (2.10.0), `external-api` (2.25.0), `institution-ms` (2.24.0), `onboarding-bff` (2.10.0), `registry-proxy` (2.23.0), `user-group-ms` (2.20.0) — versions from the `selc-commons.version` property of each app POM |
 
 ## Modules
 
@@ -47,7 +47,7 @@ The tenant module reads `tenant.registry.json`, `tenant.supported-tenants`, `ten
 
 ```xml
 <properties>
-  <selc-commons.version>2.23.0</selc-commons.version>
+  <selc-commons.version>2.25.0</selc-commons.version>
 </properties>
 <dependency>
   <groupId>it.pagopa.selfcare</groupId>
@@ -63,10 +63,15 @@ mvn -f libs/selfcare-commons/pom.xml clean verify
 mvn --projects :selc-commons --also-make-dependents clean package -DskipTests
 ```
 
-Release: `.github/workflows/release_selfcare_commons.yml` ("Release Selfcare Commons"), push on `main` or
-`workflow_dispatch`; deploys with `mvn -B deploy -f libs/selfcare-commons/pom.xml` to
+Release: `.github/workflows/release_selfcare_commons.yml` ("Release Selfcare Commons"), push on `main` touching
+`libs/selfcare-commons/**` or `workflow_dispatch`; deploys with `mvn -B deploy -f libs/selfcare-commons/pom.xml` to
 `https://maven.pkg.github.com/pagopa/selfcare` (`distributionManagement` in `libs/selfcare-commons/pom.xml`).
-All modules share the version of the root POM (`2.23.0`).
+The job only runs on `main`, so published artifacts always match the merged source: bump the version in the PR, the
+release happens after merge (GitHub Packages rejects redeploying an existing version).
+All modules share the version of the root POM (`2.25.0`).
+
+`selc-commons-web` targets `io.kubernetes:client-java` 19.0.1, the version managed by the Spring Cloud BOM imported by
+`selc-starter-parent`, so `K8sJwtAuthenticationStrategy` is binary compatible with what the apps resolve at runtime.
 
 ## References
 

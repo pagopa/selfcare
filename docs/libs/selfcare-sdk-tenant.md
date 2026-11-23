@@ -5,7 +5,7 @@
 | | |
 |---|---|
 | Path | `libs/selfcare-sdk-tenant` |
-| Artifact | `it.pagopa.selfcare:selfcare-sdk-tenant:0.5.0` |
+| Artifact | `it.pagopa.selfcare:selfcare-sdk-tenant:0.7.0` |
 | Stack | Plain Java 17 + CDI (Jakarta), MicroProfile Config, Jackson; parent [`selfcare-sdk-pom`](selfcare-sdk-pom.md) (Quarkus BOM 3.11.2) |
 | Used by | `auth`, `document-ms`, `iam`, `onboarding-ms`, `product`, `product-cdc`; transitively through [`selfcare-sdk-security`](selfcare-sdk-security.md) and [`selfcare-sdk-tenant-mongodb`](selfcare-sdk-tenant-mongodb.md) |
 
@@ -34,7 +34,7 @@ The jar ships `META-INF/beans.xml` (`bean-discovery-mode="annotated"`), so beans
 <dependency>
   <groupId>it.pagopa.selfcare</groupId>
   <artifactId>selfcare-sdk-tenant</artifactId>
-  <version>0.5.0</version>
+  <version>0.7.0</version>
 </dependency>
 ```
 
@@ -55,8 +55,13 @@ Shape of a registry entry (abridged from `apps/iam/src/main/resources/applicatio
 ```json
 {"AR": {"mongo": {"account": "cosmos-ar", "database": "selcIam",
                   "connectionStringEnvVar": "MONGODB_CONNECTION_STRING_AR"},
-        "jwt":   {"publicKeyEnvVar": "..."}}}
+        "jwt":   {"publicKeyEnvVar": "...",
+                  "session": {"audience": "api.dev.selfcare.pagopa.it"}}}}
 ```
+
+`jwt.session.audience` (optional, since 0.6.0) is the `aud` claim of the JWTs an app issues for the tenant: read it with `TenantRegistry.jwtSessionAudience(tenantId)`.
+
+`JwtTenantClaimResolver` (since 0.7.0) resolves the tenant of an already verified JWT from its `tenant_id` claim, without depending on a JWT library: `JwtTenantClaimResolver.of(defaultTenant, supportedTenants, tenantClaimRequired).resolve(rawClaim)` returns the normalized tenant and whether it came from the claim or from the default tenant. A missing claim falls back to the default tenant (rejected when there is no default or the claim is required); a blank, non-string or unsupported claim throws `InvalidTenantClaimException`. Used by `selfcare-sdk-security` (`JwtTenantValidator`) and `onboarding-functions` (`HttpJwtValidator`); matching the tenant with `X-Tenant-Id` stays in the caller.
 
 Real examples: `apps/iam`, `apps/onboarding-ms`, `apps/document-ms`, `apps/product-cdc` (`src/main/resources/application.properties`), `apps/auth` (`TENANT_REGISTRY_JSON`).
 Request filters that populate `TenantContext` are provided by [`selfcare-sdk-security`](selfcare-sdk-security.md).

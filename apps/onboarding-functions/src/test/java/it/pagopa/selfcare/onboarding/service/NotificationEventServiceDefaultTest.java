@@ -123,6 +123,37 @@ public class NotificationEventServiceDefaultTest {
   }
 
   @Test
+  void sendMessageAttributesOnboardingWithoutTenantToOuterTenant() {
+    final Onboarding onboarding = createOnboarding();
+    onboarding.setTenantId(null);
+    when(productService.getProduct(any())).thenReturn(createProduct());
+    mockNotificationMapper(true);
+    when(documentService.getDocumentByOnboardingIdOrNull(any())).thenReturn(new DocumentResponse());
+    when(institutionApi.retrieveInstitutionByIdUsingGET(any(), any())).thenReturn(new InstitutionResponse());
+    ExecutionContext context = mock(ExecutionContext.class);
+    doReturn(Logger.getGlobal()).when(context).getLogger();
+
+    try (TenantContext.Scope ignored = TenantContext.open("AR")) {
+      notificationServiceDefault.send(context, onboarding, QueueEvent.ADD);
+    }
+
+    verify(eventHubRestClient, times(3)).sendMessage(anyString(), anyString());
+  }
+
+  @Test
+  void sendMessageRejectsOnboardingWithoutTenantAndWithoutOuterTenant() {
+    final Onboarding onboarding = createOnboarding();
+    onboarding.setTenantId(null);
+    ExecutionContext context = mock(ExecutionContext.class);
+    doReturn(Logger.getGlobal()).when(context).getLogger();
+
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> notificationServiceDefault.send(context, onboarding, QueueEvent.ADD));
+    verifyNoInteractions(eventHubRestClient, webhookRestClient);
+  }
+
+  @Test
   void sendMessageWithoutQueueEvent() {
     final Onboarding onboarding = createOnboarding();
     final ProductResponse product = createProduct();

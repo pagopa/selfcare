@@ -21,14 +21,19 @@ Two invariants make the script safe to re-run and safe to interrupt:
   * any existing non-null `tenantId` different from the requested tenant aborts the whole run before
     the first write;
   * nothing is written unless --apply is passed.
+
+Writes are issued in batches of `_id`s (--batch-size) and retried with backoff when Cosmos DB
+throttles them (error 16500, request rate too large): a single update over a large collection
+exceeds the provisioned RU/s and fails part-way.
 """
 
 import argparse
 import os
 import sys
+import time
 
 from pymongo import MongoClient
-from pymongo.errors import PyMongoError
+from pymongo.errors import OperationFailure, PyMongoError
 from pymongo.uri_parser import parse_uri
 
 # Databases and collections whose entities declare a `tenantId` field, derived from the @MongoEntity
@@ -50,12 +55,12 @@ TENANT_SCOPED_COLLECTIONS = {
 
 TENANTS = ["AR", "PNPG"]
 
-UNTAGGED = {
-    "$or": [
-        {"tenantId": {"$exists": False}},
-        {"$expr": {"$eq": [{"$type": "$tenantId"}, "null"]}},
-    ]
-}
+COSMOS_TOO_MANY_REQUESTS = 16500
+MAX_THROTTLE_RETRIES = 10
+
+# `{field: null}` matches both a missing field and an explicit null. Avoid `$expr` here: on Cosmos DB
+# for MongoDB, find/update with `$or` + `$expr` silently match fewer documents than count does.
+UNTAGGED = {"tenantId": None}
 
 
 class AnsiColors:
@@ -78,6 +83,9 @@ def parseArguments():
                         help="Explicitly allow one expected collection to be absent; repeatable.")
     parser.add_argument("--apply", action="store_true",
                         help="Actually write. Without it the script only reports what it would tag.")
+    parser.add_argument("--batch-size", type=int, default=500,
+                        help="Documents tagged per update with --apply (default: 500). Lower it if "
+                             "Cosmos DB keeps throttling.")
     parser.add_argument("--verify", action="store_true",
                         help="Report how many documents are still untagged and exit. Use this to decide "
                              "whether the 'or tenantId is null' read branch can be dropped.")
@@ -89,15 +97,7 @@ def selectedDatabases(requested):
 
 
 def mismatchedTenant(tenant):
-    return {
-        "tenantId": {"$exists": True},
-        "$expr": {
-            "$and": [
-                {"$ne": [{"$type": "$tenantId"}, "null"]},
-                {"$ne": ["$tenantId", tenant]},
-            ]
-        },
-    }
+    return {"tenantId": {"$nin": [tenant, None]}}
 
 
 def tenantForAccount(accountName):
@@ -180,7 +180,33 @@ def scanCollections(collections, tenant):
     return scan
 
 
-def run(client, databases, tenant, apply, allowedMissing):
+def isThrottled(error):
+    return error.code == COSMOS_TOO_MANY_REQUESTS or "16500" in str(error)
+
+
+def updateWithRetry(collection, query, update):
+    for attempt in range(MAX_THROTTLE_RETRIES):
+        try:
+            return collection.update_many(query, update).modified_count
+        except OperationFailure as e:
+            if not isThrottled(e) or attempt == MAX_THROTTLE_RETRIES - 1:
+                raise
+            time.sleep(min(2 ** attempt, 30))
+    return 0
+
+
+def tagCollection(collection, tenant, batchSize):
+    # Collect the ids once: re-running the untagged filter per batch would rescan the collection.
+    ids = [document["_id"] for document in collection.find(UNTAGGED, {"_id": 1})]
+    tagged = 0
+    for start in range(0, len(ids), batchSize):
+        batch = ids[start:start + batchSize]
+        tagged += updateWithRetry(
+            collection, {"$and": [{"_id": {"$in": batch}}, UNTAGGED]}, {"$set": {"tenantId": tenant}})
+    return tagged
+
+
+def run(client, databases, tenant, apply, allowedMissing, batchSize=500):
     collections = resolveCollections(client, databases, allowedMissing)
     scan = scanCollections(collections, tenant)
     totalUntagged = sum(item[3] for item in scan)
@@ -206,8 +232,7 @@ def run(client, databases, tenant, apply, allowedMissing):
     if apply:
         for _, _, collection, untagged, _ in scan:
             if untagged:
-                totalTagged += collection.update_many(
-                    UNTAGGED, {"$set": {"tenantId": tenant}}).modified_count
+                totalTagged += tagCollection(collection, tenant, batchSize)
 
     return totalUntagged, totalTagged, 0
 
@@ -251,7 +276,7 @@ def main():
               f"in account {args.account_name}\n")
 
         untagged, tagged, mismatched = run(
-            client, databases, args.tenant, args.apply, allowedMissing)
+            client, databases, args.tenant, args.apply, allowedMissing, args.batch_size)
 
         if mismatched:
             print(f"\n{AnsiColors.ERROR}No documents were changed because {mismatched} document(s) "
@@ -259,9 +284,15 @@ def main():
             return 1
 
         if args.apply:
-            print(f"\nTagged {tagged} document(s) as {args.tenant}.")
-            if tagged != untagged:
-                print(f"{AnsiColors.WARNING}Expected {untagged}; re-run to converge.{AnsiColors.ENDC}")
+            # Cosmos DB under-reports modified_count when a throttled batch is retried, so convergence
+            # is checked by counting what is still untagged rather than trusting the write results.
+            remaining = sum(collection.count_documents(UNTAGGED)
+                            for _, _, collection in resolveCollections(client, databases, allowedMissing))
+            print(f"\nTagged {untagged - remaining} document(s) as {args.tenant} "
+                  f"(write results reported {tagged}).")
+            if remaining:
+                print(f"{AnsiColors.WARNING}{remaining} document(s) still untagged; re-run to converge."
+                      f"{AnsiColors.ENDC}")
                 return 1
         else:
             print(f"\nWould tag {untagged} document(s) as {args.tenant}. Re-run with --apply to write.")

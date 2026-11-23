@@ -32,6 +32,8 @@ public interface InstitutionService {
 
     List<Institution> getActiveOnboarding(String taxCode,String productId,String subunitCode);
 
+    InstitutionsSearchResponse searchInstitutions(String taxCode);
+
     InstitutionOnboardingData getInstitutionOnboardingDataById(String institutionId, String productId);
 
     InstitutionOnboardingData getInstitutionOnboardingData(String externalInstitutionId, String productId);

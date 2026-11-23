@@ -5,8 +5,6 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import it.pagopa.selfcare.commons.base.logging.LogUtils;
 import it.pagopa.selfcare.commons.base.security.SelfCareUser;
-import it.pagopa.selfcare.core.generated.openapi.v1.dto.OnboardingsResponse;
-import it.pagopa.selfcare.dashboard.aspect.ApiFeatureFlag;
 import it.pagopa.selfcare.dashboard.model.CreateUserDto;
 import it.pagopa.selfcare.dashboard.model.*;
 import it.pagopa.selfcare.dashboard.model.delegation.DelegationWithPagination;
@@ -29,10 +27,7 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.io.IOUtils;
 import org.owasp.encoder.Encode;
-import org.springframework.core.io.Resource;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -40,11 +35,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
-import java.io.IOException;
-import java.io.InputStream;
 import java.util.*;
-
-import static org.springframework.http.MediaType.APPLICATION_OCTET_STREAM_VALUE;
 
 
 @Slf4j
@@ -226,7 +217,7 @@ public class InstitutionV2Controller {
 
     @Operation(summary = "${swagger.dashboard.institutions.delegations}", description = "${swagger.dashboard.institutions.delegations}", operationId = "#getDelegationsUsingToUsingGET_1")
     @GetMapping(value = "/{institutionId}/institutions", produces = MediaType.APPLICATION_JSON_VALUE)
-    @PreAuthorize("hasPermission(new it.pagopa.selfcare.dashboard.security.FilterAuthorityDomain(#institutionId, #productId, null), 'Selc:ViewDelegations')")
+    @PreAuthorize("hasPermission(new it.pagopa.selfcare.dashboard.security.FilterAuthorityDomain(#institutionId, #productId, null), 'Selc:ViewManagedInstitutions')")
     public ResponseEntity<DelegationWithPagination> getDelegationsUsingTo(@Parameter(description = "${swagger.dashboard.delegation.model.to}")
                                                                           @PathVariable("institutionId") String institutionId,
                                                                           @Parameter(description = "${swagger.dashboard.delegation.model.productId}")
@@ -305,62 +296,6 @@ public class InstitutionV2Controller {
         log.debug(LogUtils.CONFIDENTIAL_MARKER, "getUserCount result = {}", result);
         log.trace("getUserCount end");
         return result;
-    }
-
-    @GetMapping(value = "/{institutionId}/onboardings-info", produces = MediaType.APPLICATION_JSON_VALUE)
-    @ResponseStatus(HttpStatus.OK)
-    @Operation(summary = "getOnboardingsInfo", description = "${swagger.dashboard.institutions.api.getOnboardingsInfo}", operationId = "#v2GetOnboardingsInfo")
-    @PreAuthorize("hasPermission(new it.pagopa.selfcare.dashboard.security.FilterAuthorityDomain(#institutionId, null, null), 'Selc:ViewContract')")
-    @ApiFeatureFlag("feature.viewcontract.enabled")
-    public List<OnboardingInfo> getOnboardingsInfo(@Parameter(description = "${swagger.dashboard.institutions.model.id}")
-                                                   @PathVariable("institutionId") String institutionId,
-                                                   @Parameter(description = "${swagger.dashboard.institutions.model.products}")
-                                                   @RequestParam(name = "products", required = false) String[] products) {
-        log.trace("getOnboardingsInfo start");
-        OnboardingsResponse onboardingsResponse =
-                institutionV2Service.getOnboardingsInfoResponse(
-                        institutionId,
-                        Optional.ofNullable(products).map(Arrays::asList).orElse(Collections.emptyList())
-                );
-
-        List<OnboardingInfo> result =
-                onboardingsResponse.getOnboardings().stream()
-                        .map(onboardingMapper::toOnboardingInfo)
-                        .toList();
-
-        log.debug(LogUtils.CONFIDENTIAL_MARKER, "getOnboardingsInfo result = {}", result);
-        log.trace("getOnboardingsInfo end");
-        return result;
-    }
-
-    @GetMapping(value = "/{institutionId}/contract", produces = APPLICATION_OCTET_STREAM_VALUE)
-    @ResponseStatus(HttpStatus.OK)
-    @Operation(summary = "getContract", description = "${swagger.dashboard.institutions.api.getContract}", operationId = "#v2GetContract")
-    @PreAuthorize("hasPermission(new it.pagopa.selfcare.dashboard.security.FilterAuthorityDomain(#institutionId, #productId, null), 'Selc:ViewContract')")
-    @ApiFeatureFlag("feature.viewcontract.enabled")
-    public ResponseEntity<byte[]> getContract(@Parameter(description = "${swagger.dashboard.institutions.model.id}")
-                                              @PathVariable("institutionId") String institutionId,
-                                              @Parameter(description = "${swagger.dashboard.products.model.id}")
-                                              @RequestParam(name = "productId") String productId) throws IOException {
-        log.trace("getContract start");
-        log.debug("getContract institutionId = {}, productId = {}", Encode.forJava(institutionId), Encode.forJava(productId));
-        Resource contract = institutionV2Service.getContract(institutionId, productId);
-        return getResponseEntity(contract);
-    }
-
-    private ResponseEntity<byte[]> getResponseEntity(Resource contract) throws IOException {
-        try (InputStream inputStream = contract.getInputStream()) {
-            byte[] byteArray = IOUtils.toByteArray(inputStream);
-
-            HttpHeaders headers = new HttpHeaders();
-            headers.add(HttpHeaders.CONTENT_TYPE, APPLICATION_OCTET_STREAM_VALUE);
-            headers.add(HttpHeaders.ACCESS_CONTROL_EXPOSE_HEADERS, HttpHeaders.CONTENT_DISPOSITION);
-            headers.add(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + contract.getFilename());
-
-            return ResponseEntity.ok()
-                    .headers(headers)
-                    .body(byteArray);
-        }
     }
 
     @PostMapping(value = "/{institutionId}/product/{productId}/check-user")
