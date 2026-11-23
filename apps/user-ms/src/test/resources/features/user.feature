@@ -5097,6 +5097,7 @@ Feature: User
       | Selc:CreateDelegation             |
       | Selc:ViewInstitutionData          |
       | Selc:ViewContract                 |
+      | Selc:UpdateContract               |
       | Selc:UpdateGeoTaxonomy            |
 
   Scenario: Successfully retrieves userInstitution data with list of actions permitted for each user's product (with role MANAGER and prod-io-sign)
@@ -5777,6 +5778,7 @@ Feature: User
       | Selc:CreateDelegation             |
       | Selc:ViewInstitutionData          |
       | Selc:ViewContract                 |
+      | Selc:UpdateContract               |
       | Selc:UpdateGeoTaxonomy            |
 
   @RemoveUserInstitutionAfterScenario
@@ -5818,6 +5820,7 @@ Feature: User
       | Selc:CreateDelegation             |
       | Selc:ViewInstitutionData          |
       | Selc:ViewContract                 |
+      | Selc:UpdateContract               |
       | Selc:UpdateGeoTaxonomy            |
 
   @RemoveUserInstitutionAfterScenario

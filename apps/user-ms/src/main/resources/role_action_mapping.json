@@ -39,6 +39,7 @@
       "Selc:CreateDelegation",
       "Selc:ViewInstitutionData",
       "Selc:ViewContract",
+      "Selc:UpdateContract",
       "Selc:UpdateGeoTaxonomy"
     ],
     "prod-pagopa-pt": [
@@ -442,6 +443,7 @@
       "Selc:CreateDelegation",
       "Selc:ViewInstitutionData",
       "Selc:ViewContract",
+      "Selc:UpdateContract",
       "Selc:UpdateGeoTaxonomy"
     ],
     "prod-pagopa-pt": [
@@ -845,6 +847,7 @@
       "Selc:CreateDelegation",
       "Selc:ViewInstitutionData",
       "Selc:ViewContract",
+      "Selc:UpdateContract",
       "Selc:UpdateGeoTaxonomy"
     ],
     "prod-pagopa-pt": [
