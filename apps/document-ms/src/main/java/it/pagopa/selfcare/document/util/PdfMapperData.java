@@ -196,7 +196,7 @@ public class PdfMapperData {
     /**
      * Sets up prod-rtp specific data: PSP and company register fields plus service checkboxes.
      */
-    public static void setupProdRtpData(Map<String, Object> map, RtpContractPdfRequest request) {
+    public static void setupProdRtpData(Map<String, Object> map, ContractPdfRequest request) {
         setupPSPData(map, request.getManager(), request);
         setECData(map, request.getInstitution());
 
