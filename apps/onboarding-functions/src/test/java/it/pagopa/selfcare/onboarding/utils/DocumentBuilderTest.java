@@ -9,7 +9,6 @@ import it.pagopa.selfcare.onboarding.mapper.AttachmentPdfRequestMapper;
 import it.pagopa.selfcare.onboarding.mapper.ContractPdfRequestMapperImpl;
 import it.pagopa.selfcare.onboarding.mapper.DocumentBuilderRequestMapper;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
