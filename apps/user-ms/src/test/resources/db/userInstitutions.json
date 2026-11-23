@@ -41,6 +41,7 @@
     "_id": {
       "$oid": "65b1234f85a6a37415221ef9"
     },
+    "tenantId": "AR",
     "institutionId": "a1b2c3d4-5678-90ab-cdef-1234567890ab",
     "userId": "97a511a7-2acc-47b9-afed-2f3c65753b4a",
     "products": [
@@ -80,6 +81,7 @@
     "_id": {
       "$oid": "65b1214f85b2a37412421ef6"
     },
+    "tenantId": "AR",
     "institutionId": "a1b2c3d4-5678-90ab-cdef-1234567890ab",
     "userId": "35a78332-d038-4bfa-8e85-2cba7f6b7bf7",
     "products": [
@@ -105,6 +107,7 @@
     "_id": {
       "$oid": "65b2345a85a6a37415222ff1"
     },
+    "tenantId": "AR",
     "institutionId": "f2e4d6c8-9876-5432-ba10-abcdef123456",
     "userId": "35a78332-d038-4bfa-8e85-2cba7f6b7bf7",
     "products": [
@@ -129,6 +132,7 @@
     "_id": {
       "$oid": "d6bdc33f231ce735ba8649f6"
     },
+    "tenantId": "AR",
     "institutionId": "df5ebeaf-6f7d-4c79-b35f-b44b689c5cc3",
     "userId": "97a511a7-2acc-47b9-afed-2f3c65753b4a",
     "products": [
@@ -153,6 +157,7 @@
     "_id": {
       "$oid": "0b8290dab19a01b6ec598381"
     },
+    "tenantId": "AR",
     "institutionId": "6b5e0d68-c7bc-4639-a922-48a1662ed991",
     "userId": "97a511a7-2acc-47b9-afed-2f3c65753b4a",
     "products": [

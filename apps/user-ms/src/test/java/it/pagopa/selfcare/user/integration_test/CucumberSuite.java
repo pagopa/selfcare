@@ -7,6 +7,7 @@ import it.pagopa.selfcare.user.util.product.ProductIdNormalizer;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
+import io.quarkus.test.junit.TestProfile;
 import org.testcontainers.containers.ComposeContainer;
 import org.testcontainers.containers.wait.strategy.Wait;
 
@@ -18,6 +19,7 @@ import java.time.Duration;
 import java.util.Scanner;
 
 @Slf4j
+@TestProfile(IntegrationProfile.class)
 @CucumberOptions(
         features = "src/test/resources/features",
         glue = {"it.pagopa.selfcare.cucumber.utils", "it.pagopa.selfcare.user.integration_test"},

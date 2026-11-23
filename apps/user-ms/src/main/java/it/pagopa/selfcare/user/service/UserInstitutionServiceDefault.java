@@ -1,7 +1,6 @@
 package it.pagopa.selfcare.user.service;
 
 import com.mongodb.client.model.UpdateOptions;
-import com.mongodb.client.result.UpdateResult;
 import io.quarkus.mongodb.panache.reactive.ReactivePanacheQuery;
 import io.quarkus.panache.common.Page;
 import io.smallrye.mutiny.Multi;
@@ -12,6 +11,7 @@ import it.pagopa.selfcare.user.constant.SelfCareRole;
 import it.pagopa.selfcare.user.controller.request.UpdateDescriptionDto;
 import it.pagopa.selfcare.user.controller.response.UserInstitutionResponse;
 import it.pagopa.selfcare.user.entity.UserInstitution;
+import it.pagopa.selfcare.user.repository.UserInstitutionRepository;
 import it.pagopa.selfcare.user.entity.filter.OnboardedProductFilter;
 import it.pagopa.selfcare.user.entity.filter.UserInstitutionFilter;
 import it.pagopa.selfcare.user.mapper.UserInstitutionMapper;
@@ -52,6 +52,7 @@ public class UserInstitutionServiceDefault implements UserInstitutionService {
     private final UserInstitutionMapper userInstitutionMapper;
     private final QueryUtils queryUtils;
     private final UserUtils userUtils;
+    private final UserInstitutionRepository repository;
 
     @RestClient
     @Inject
@@ -59,19 +60,19 @@ public class UserInstitutionServiceDefault implements UserInstitutionService {
 
     @Override
     public Uni<UserInstitutionResponse> findById(String id) {
-        Uni<UserInstitution> userInstitution = UserInstitution.findById(new ObjectId(id));
+        Uni<UserInstitution> userInstitution = repository.findById(new ObjectId(id));
         return userInstitution.onItem().transform(userInstitutionMapper::toResponse);
     }
 
     @Override
     public Uni<UserInstitutionResponse> findByInstitutionId(String institutionId) {
-        Uni<UserInstitution> userInstitution = UserInstitution.find(UserInstitution.Fields.institutionId.name(), institutionId).firstResult();
+        Uni<UserInstitution> userInstitution = repository.find(new Document("institutionId", institutionId)).firstResult();
         return userInstitution.onItem().transform(userInstitutionMapper::toResponse);
     }
 
     @Override
     public Multi<UserInstitutionResponse> findByUserId(String userId) {
-        Multi<UserInstitution> userInstitutions = UserInstitution.find(UserInstitution.Fields.userId.name(), userId).stream();
+        Multi<UserInstitution> userInstitutions = repository.find(new Document("userId", userId)).stream();
         return userInstitutions.onItem().transform(userInstitutionMapper::toResponse);
     }
 
@@ -171,10 +172,7 @@ public class UserInstitutionServiceDefault implements UserInstitutionService {
 
     Document query = queryUtils.buildQueryDocument(filterMap);
 
-    return UserInstitution.mongoCollection()
-      .find(query, UserInstitution.class)
-      .collect()
-      .asList()
+    return repository.list(query)
       .map(userInstitutions ->
         userInstitutions.stream()
           .flatMap(userInstitution ->
@@ -243,7 +241,7 @@ public class UserInstitutionServiceDefault implements UserInstitutionService {
         final String productsElemUpdatedAt = UserInstitution.Fields.products.name() + ".$[elem]." + OnboardedProduct.Fields.updatedAt.name();
         final String elemProductId = "elem." + OnboardedProduct.Fields.productId.name();
         final String elemStatus = "elem." + OnboardedProduct.Fields.status.name();
-        return UserInstitution.mongoCollection().updateMany(
+        return repository.updateMany(
                 new Document(institutionIdField, institutionId)
                         .append(statusField, new Document("$in", List.of(ACTIVE, SUSPENDED)))
                         .append(productIdField, productId),
@@ -252,7 +250,7 @@ public class UserInstitutionServiceDefault implements UserInstitutionService {
                 new UpdateOptions().arrayFilters(List.of(new Document(elemProductId, productId)
                         .append(elemStatus, new Document("$in", List.of(ACTIVE, SUSPENDED)))
                 ))
-        ).map(UpdateResult::getModifiedCount);
+        );
     }
 
     @Override
@@ -316,8 +314,8 @@ public class UserInstitutionServiceDefault implements UserInstitutionService {
         Map<String, Object> fieldToUpdateMap = Map.of(UserInstitution.Fields.products.name() + CURRENT_ANY + OnboardedProduct.Fields.createdAt.name(), createdAt.toInstant(),
                                                       UserInstitution.Fields.products.name() + CURRENT_ANY + OnboardedProduct.Fields.updatedAt.name(), Instant.now());
         log.info("Update user institution with filter: {} and field to update: {}", Encode.forJava(filterMap.toString()), Encode.forJava(fieldToUpdateMap.toString()));
-        return UserInstitution.update(queryUtils.buildUpdateDocument(fieldToUpdateMap))
-                .where(queryUtils.buildQueryDocument(filterMap));
+        return repository.update(queryUtils.buildUpdateDocument(fieldToUpdateMap),
+                queryUtils.buildQueryDocument(filterMap));
     }
 
     @Override
@@ -332,7 +330,7 @@ public class UserInstitutionServiceDefault implements UserInstitutionService {
         batchSize = Optional.ofNullable(batchSize).orElse(100);
         Document query = queryUtils.buildQueryDocument(queryParameter);
         log.debug("Query: {}", query);
-        return UserInstitution.find(query).withBatchSize(batchSize).stream();
+        return repository.find(query).withBatchSize(batchSize).stream();
     }
 
     @Override
@@ -363,8 +361,8 @@ public class UserInstitutionServiceDefault implements UserInstitutionService {
             fieldToUpdateMap.put(UserInstitution.Fields.products.name() + CURRENT + OnboardedProduct.Fields.status.name(), status);
             fieldToUpdateMap.put(UserInstitution.Fields.products.name() + CURRENT + OnboardedProduct.Fields.updatedAt.name(), Instant.now());
         }
-        return UserInstitution.update(queryUtils.buildUpdateDocument(fieldToUpdateMap))
-                .where(queryUtils.buildQueryDocument(filterMap));
+        return repository.update(queryUtils.buildUpdateDocument(fieldToUpdateMap),
+                queryUtils.buildQueryDocument(filterMap));
     }
 
     @Override
@@ -385,8 +383,7 @@ public class UserInstitutionServiceDefault implements UserInstitutionService {
         Optional.ofNullable(userInstitution.getProducts()).ifPresent(l ->
                 l.stream().filter(p -> p.getRoleId() == null)
                         .forEach(p -> p.setRoleId(UUID.randomUUID().toString())));
-        return UserInstitution.persistOrUpdate(userInstitution)
-                .replaceWith(userInstitution);
+        return repository.persistOrUpdate(userInstitution);
     }
 
     @Override
@@ -416,8 +413,8 @@ public class UserInstitutionServiceDefault implements UserInstitutionService {
 
         Map<String, Object> filterMap = Map.of(UserInstitution.Fields.institutionId.name(), institutionId);
 
-        return UserInstitution.update(queryUtils.buildUpdateDocument(fieldToUpdateMap))
-                .where(queryUtils.buildQueryDocument(filterMap));
+        return repository.update(queryUtils.buildUpdateDocument(fieldToUpdateMap),
+                queryUtils.buildQueryDocument(filterMap));
 
     }
 
@@ -429,11 +426,11 @@ public class UserInstitutionServiceDefault implements UserInstitutionService {
     }
 
     public ReactivePanacheQuery<UserInstitution> runUserInstitutionFindQuery(Document query, Document sort) {
-        return UserInstitution.find(query, sort);
+        return repository.find(query, sort);
     }
 
     public Uni<Boolean> runUserInstitutionCountQuery(Document query) {
-        Uni<Long> count = UserInstitution.count(query);
+        Uni<Long> count = repository.count(query);
         return count.onItem().transform(c -> c > 0);
     }
 
@@ -451,7 +448,7 @@ public class UserInstitutionServiceDefault implements UserInstitutionService {
         final Document query = queryUtils.buildQueryDocument(userUtils.retrieveMapForFilter(userFilter, productFilter));
         log.debug("Query: {}", query);
 
-        return UserInstitution.count(query);
+        return repository.count(query);
     }
 
 }

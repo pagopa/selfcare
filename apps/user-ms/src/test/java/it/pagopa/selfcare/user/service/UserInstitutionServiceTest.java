@@ -47,6 +47,10 @@ import static org.mockito.Mockito.*;
 @QuarkusTest
 class UserInstitutionServiceTest {
 
+    @Inject it.pagopa.selfcare.tenant.TenantContext tenantContext;
+    @org.junit.jupiter.api.BeforeEach
+    void initializeTenant() { tenantContext.setTenantId("AR"); }
+
     @Inject
     private UserInstitutionServiceDefault userInstitutionService;
 
@@ -284,7 +288,7 @@ class UserInstitutionServiceTest {
         PanacheMock.mock(UserInstitution.class);
         ReactivePanacheQuery query = Mockito.mock(ReactivePanacheQuery.class);
         when(query.firstResult()).thenReturn(Uni.createFrom().item(userInstitution));
-        when(UserInstitution.find(any(), (Object) any()))
+        when(UserInstitution.find(any(Document.class)))
                 .thenReturn(query);
         Uni<UserInstitutionResponse> response = userInstitutionService.findByInstitutionId(institutionId);
         Assertions.assertNotNull(response);
@@ -297,7 +301,7 @@ class UserInstitutionServiceTest {
         PanacheMock.mock(UserInstitution.class);
         ReactivePanacheQuery query = Mockito.mock(ReactivePanacheQuery.class);
         when(query.firstResult()).thenReturn(Uni.createFrom().item(userInstitution));
-        when(UserInstitution.find(any(), (Object) any()))
+        when(UserInstitution.find(any(Document.class)))
                 .thenReturn(query);
         Multi<UserInstitutionResponse> response = userInstitutionService.findByUserId(userId);
         Assertions.assertNotNull(response);
@@ -961,11 +965,15 @@ class UserInstitutionServiceTest {
         final OnboardedProduct prod2 = new OnboardedProduct();
         userInstitution.setProducts(List.of(prod1, prod2));
         PanacheMock.mock(UserInstitution.class);
-        when(UserInstitution.persistOrUpdate(userInstitution)).thenReturn(Uni.createFrom().voidItem());
-        userInstitutionService.persistOrUpdate(userInstitution);
+        ReactiveMongoCollection<UserInstitution> collection = Mockito.mock(ReactiveMongoCollection.class);
+        when(UserInstitution.<UserInstitution>mongoCollection()).thenReturn(collection);
+        when(collection.replaceOne(any(Document.class), eq(userInstitution), any(com.mongodb.client.model.ReplaceOptions.class)))
+                .thenReturn(Uni.createFrom().item(UpdateResult.acknowledged(1, 1L, null)));
+        userInstitutionService.persistOrUpdate(userInstitution).await().indefinitely();
         assertEquals("roleId", userInstitution.getProducts().get(0).getRoleId());
         assertDoesNotThrow(() -> UUID.fromString(userInstitution.getProducts().get(1).getRoleId()));
-        PanacheMock.verify(UserInstitution.class, times(1)).persistOrUpdate(userInstitution);
+        assertEquals("AR", userInstitution.getTenantId());
+        verify(collection).replaceOne(any(Document.class), eq(userInstitution), any(com.mongodb.client.model.ReplaceOptions.class));
     }
 
     @Test
@@ -973,10 +981,13 @@ class UserInstitutionServiceTest {
         final UserInstitution userInstitution = createDummyUserInstitution();
         userInstitution.setProducts(null);
         PanacheMock.mock(UserInstitution.class);
-        when(UserInstitution.persistOrUpdate(userInstitution)).thenReturn(Uni.createFrom().voidItem());
-        userInstitutionService.persistOrUpdate(userInstitution);
+        ReactiveMongoCollection<UserInstitution> collection = Mockito.mock(ReactiveMongoCollection.class);
+        when(UserInstitution.<UserInstitution>mongoCollection()).thenReturn(collection);
+        when(collection.replaceOne(any(Document.class), eq(userInstitution), any(com.mongodb.client.model.ReplaceOptions.class)))
+                .thenReturn(Uni.createFrom().item(UpdateResult.acknowledged(1, 1L, null)));
+        userInstitutionService.persistOrUpdate(userInstitution).await().indefinitely();
         assertNull(userInstitution.getProducts());
-        PanacheMock.verify(UserInstitution.class, times(1)).persistOrUpdate(userInstitution);
+        verify(collection).replaceOne(any(Document.class), eq(userInstitution), any(com.mongodb.client.model.ReplaceOptions.class));
     }
 
     @Test

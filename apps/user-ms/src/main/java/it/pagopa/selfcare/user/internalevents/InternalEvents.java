@@ -4,70 +4,57 @@ import io.quarkus.runtime.Startup;
 import it.pagopa.selfcare.internalevents.model.InstitutionUpdatedEvent;
 import it.pagopa.selfcare.internalevents.service.InternalEventReceiver;
 import it.pagopa.selfcare.internalevents.service.impl.AzureServiceBusEventReceiver;
-import it.pagopa.selfcare.user.controller.request.UpdateDescriptionDto;
-import it.pagopa.selfcare.user.service.UserInstitutionService;
+import it.pagopa.selfcare.tenant.TenantRegistry;
+import it.pagopa.selfcare.user.conf.TenantNotificationConfig;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
+import java.util.ArrayList;
+import java.util.List;
 import lombok.extern.slf4j.Slf4j;
-import org.eclipse.microprofile.config.inject.ConfigProperty;
-
-import java.time.Duration;
-import java.util.Optional;
 
 @Startup
 @ApplicationScoped
 @Slf4j
 public class InternalEvents {
-
-  private static final String INSTITUTION_EVENTS_TOPIC = "institution-events";
-  private static final String SUBSCRIPTION_NAME = "user-sub";
-
-  private static final int MAX_CONCURRENT_SESSIONS = 10;
-  private static final int MAX_CONCURRENT_CALLS = 1;
-
-  private final UserInstitutionService userInstitutionService;
-  private final InternalEventReceiver institutionEventsReceiver;
-
-  public InternalEvents(@ConfigProperty(name = "user-ms.internalevents.enabled", defaultValue = "false") boolean internalEventsEnabled,
-                        @ConfigProperty(name = "user-ms.internalevents.connection-string") Optional<String> internalEventsConnectionString,
-                        @ConfigProperty(name = "user-ms.internalevents.namespace") Optional<String> internalEventsNamespace,
-                        @ConfigProperty(name = "user-ms.internalevents.client-id") Optional<String> internalEventsClientId,
-                        UserInstitutionService userInstitutionService) {
-    this.userInstitutionService = userInstitutionService;
-    if (!internalEventsEnabled) {
-      this.institutionEventsReceiver = null;
-    } else {
-      this.institutionEventsReceiver = internalEventsConnectionString
-        .filter(cs -> !cs.isBlank())
-        .map(cs -> new AzureServiceBusEventReceiver(cs, INSTITUTION_EVENTS_TOPIC, SUBSCRIPTION_NAME,
-          MAX_CONCURRENT_SESSIONS, MAX_CONCURRENT_CALLS))
-        .orElseGet(() -> new AzureServiceBusEventReceiver(internalEventsNamespace.orElse(""), internalEventsClientId.orElse(""),
-          INSTITUTION_EVENTS_TOPIC, SUBSCRIPTION_NAME, MAX_CONCURRENT_SESSIONS, MAX_CONCURRENT_CALLS));
-    }
-  }
+  @Inject TenantRegistry registry;
+  @Inject TenantNotificationConfig config;
+  @Inject InstitutionUpdatedEventHandler handler;
+  private final List<InternalEventReceiver> receivers = new ArrayList<>();
 
   @PostConstruct
   public void init() {
-    if (institutionEventsReceiver != null) {
-      institutionEventsReceiver.subscribe(InstitutionUpdatedEvent.class, this::institutionUpdatedHandler);
+    try {
+      for (String tenant : registry.supportedTenantIds()) {
+        var settings = config.forTenant(tenant).internalEvents();
+        if (settings.enabled()) {
+          InternalEventReceiver receiver = createReceiver(settings);
+          receivers.add(receiver);
+          receiver.subscribe(InstitutionUpdatedEvent.class, event -> handler.handle(tenant, event));
+        }
+      }
+    } catch (RuntimeException failure) {
+      destroy();
+      throw failure;
     }
+  }
+
+  protected InternalEventReceiver createReceiver(TenantNotificationConfig.InternalEventsSettings settings) {
+    return settings.connectionString().isBlank()
+        ? new AzureServiceBusEventReceiver(settings.namespace(), settings.clientId(), "institution-events", "user-sub", 10, 1)
+        : new AzureServiceBusEventReceiver(settings.connectionString(), "institution-events", "user-sub", 10, 1);
   }
 
   @PreDestroy
   public void destroy() {
-    if (institutionEventsReceiver != null) {
-      institutionEventsReceiver.close();
+    for (InternalEventReceiver receiver : receivers) {
+      try {
+        receiver.close();
+      } catch (RuntimeException failure) {
+        log.error("Failed to close internal event receiver", failure);
+      }
     }
+    receivers.clear();
   }
-
-  private void institutionUpdatedHandler(InstitutionUpdatedEvent event) {
-    log.info("Received InstitutionUpdatedEvent: {}", event);
-    final UpdateDescriptionDto updateDescriptionDto = new UpdateDescriptionDto();
-    updateDescriptionDto.setInstitutionDescription(event.getDescription());
-    updateDescriptionDto.setInstitutionRootName(event.getParentDescription());
-    userInstitutionService.updateInstitutionDescription(event.getInstitutionId(), updateDescriptionDto)
-      .await().atMost(Duration.ofSeconds(5));
-  }
-
 }

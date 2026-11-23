@@ -24,7 +24,7 @@ public class CustomLoggingFilter implements ResteasyReactiveContainerRequestFilt
     public void filter(ResteasyReactiveContainerRequestContext requestContext) {
         String endpoint = requestContext.getUriInfo().getPath();
         String method = requestContext.getMethod();
-        String tenantId = requestContext.getHeaderString("X-Tenant-Id");
+        String tenantId = it.pagopa.selfcare.security.tenant.TenantLogUtils.fromInboundRequest(requestContext);
         LOG.infof(
                 "Request: method: %s, endpoint: %s, tenant: %s",
                 Encode.forJava(method),
@@ -33,4 +33,3 @@ public class CustomLoggingFilter implements ResteasyReactiveContainerRequestFilt
 
     }
 }
-
