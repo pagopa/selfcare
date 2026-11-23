@@ -82,10 +82,11 @@ The same concepts for Spring apps: a `ThreadLocal` `TenantContext`, `TenantRegis
 | `SUPPORTED_TENANTS` | `JwtTenantValidator` (default `AR,PNPG`), onboarding-functions, onboarding-cdc | Accepted tenant ids |
 | `DEFAULT_TENANT` | `JwtTenantValidator` (default `PNPG`), iam, onboarding-functions, onboarding-cdc | Tenant assumed for claim-less SPID tokens |
 | `JWT_TENANT_CLAIM_REQUIRED` | `JwtTenantValidator` (default `false`), external-api (set to `"false"` in Terraform) | Reject tokens without `tenant_id` |
-| `TENANT_SUPPORTED_TENANTS` | document-ms, external-api, iam, institution-ms, onboarding-ms, product, product-cdc, registry-proxy, user-group-ms | `tenant.supported-tenants` of the registry |
-| `TENANT_REGISTRY_JSON` | auth, iam, onboarding-ms, product, product-cdc | Tenant resource registry (Quarkus) |
+| `TENANT_SUPPORTED_TENANTS` | document-ms, external-api, iam, institution-ms, onboarding-ms, product, product-cdc, registry-proxy, user-group-ms, user-ms | `tenant.supported-tenants` of the registry |
+| `TENANT_REGISTRY_JSON` | auth, iam, onboarding-ms, product, product-cdc, user-ms | Tenant resource registry (Quarkus) |
 | `SELFCARE_TENANT_DATA_ISOLATION` | external-api, institution-ms, user-group-ms | Tenant resource registry (Spring) |
-| `SELFCARE_TENANT_STRICT_DATA_ISOLATION` | auth, document-ms, iam, onboarding-functions | Strict mode (no `tenantId IS NULL` fallback) |
+| `SELFCARE_TENANT_STRICT_DATA_ISOLATION` | auth, document-ms, iam, onboarding-functions, user-ms | Strict mode (no `tenantId IS NULL` fallback) |
+| `TENANT_<ID>_*` | user-ms | OneMail credentials, sender, templates, frontend URL, webhook/Event Hub flags and internal-event receivers; see the app configuration |
 
 Terraform wiring is in `infra/resources/<app>/*.tf`.
 
@@ -137,7 +138,8 @@ not that the app is out of scope.
 | [user-group-ms](./apps/user-group-ms.md) | — | Registry, strict default `true` | `config/core-config.properties` |
 | [institution-ms](./apps/institution-ms.md) | — | Registry, strict default `true`, storage keys `products`, `mail-templates` | `connector/dao/src/main/resources/config/dao-config.properties`, OpenSpec change (all tasks checked) |
 | [dashboard-bff](./apps/dashboard-bff.md) | Forwards `X-Tenant-Id` on Feign calls | — | `interceptor/TenantHeaderInterceptor` |
-| [user-ms](./apps/user-ms.md), [user-cdc](./apps/user-cdc.md), [delegation-cdc](./apps/delegation-cdc.md) | Tenant id on webhook notifications (default `AR`) | — | `USER_MS_WEBHOOK_TENANT_ID` and webhook tenant-id properties |
+| [user-ms](./apps/user-ms.md) | Security SDK resolution and JWT validation; header required outside tests | Tenant-scoped repository (legacy/strict), Mongo/PDV/products routing, per-tenant notifications and Service Bus callbacks; deployments remain separate | `repository/UserInstitutionRepository`, `conf/TenantNotificationConfig`, `service/TenantProductCatalogService`, six Terraform stacks |
+| [user-cdc](./apps/user-cdc.md), [delegation-cdc](./apps/delegation-cdc.md) | Tenant id on webhook notifications (default `AR`) | — | Webhook tenant-id properties; CDC consolidation is separate from user-ms |
 
 Legacy data is tagged per database and collection by the
 [backfill script](./specs/MULTITENANT/Step_1/scripts/README.md). It covers `selcAuth`,

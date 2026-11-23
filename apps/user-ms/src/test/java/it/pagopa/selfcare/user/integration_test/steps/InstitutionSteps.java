@@ -6,7 +6,8 @@ import it.pagopa.selfcare.user.entity.UserInstitution;
 import jakarta.enterprise.context.ApplicationScoped;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.Objects;
+import java.time.Duration;
+import java.util.List;
 
 @Slf4j
 @ApplicationScoped
@@ -17,44 +18,9 @@ public class InstitutionSteps {
 
     @After("@RemoveUserInstitutions")
     public void removeUserInstitutionAfterCreateFromAPI(Scenario scenario) {
-        UserInstitution.find("institutionId = ?1 and userId = ?2", mockInstitutionId2, mockUserId2)
-                .firstResult()
-                .subscribe()
-                .with(
-                        success -> {
-                            UserInstitution userInstitution = (UserInstitution) success;
-                            if(!Objects.isNull(userInstitution)) {
-                                UserInstitution.deleteById(userInstitution.getId())
-                                        .subscribe()
-                                        .with(
-                                                deleteSuccess -> log.info("Deleted userInstitution with userId {} and institutionId {}", mockUserId2, mockInstitutionId2),
-                                                deleteFailure -> log.info("Failed to delete userInstitution with  userId {} and institutionId {}: {}", mockUserId2, mockInstitutionId2, deleteFailure.getMessage())
-                                        );
-                            } else {
-                                log.info("No userInstitution with userId {} and institutionId {}", mockUserId2, mockInstitutionId2);
-                            }
-                        },
-                        failure -> log.info("Failed to find userInstitution with userId {} and institutionId {}", mockUserId2, mockInstitutionId2)
-                );
-
-        UserInstitution.find("institutionId = ?1 and userId = ?2", mockInstitutionId2, mockUserId)
-                .firstResult()
-                .subscribe()
-                .with(
-                        success -> {
-                            UserInstitution userInstitution = (UserInstitution) success;
-                            if(!Objects.isNull(userInstitution)) {
-                                UserInstitution.deleteById(userInstitution.getId())
-                                        .subscribe()
-                                        .with(
-                                                deleteSuccess -> log.info("Deleted userInstitution with userId {} and institutionId {}", mockUserId, mockInstitutionId2),
-                                                deleteFailure -> log.info("Failed to delete userInstitution with  userId {} and institutionId {}: {}", mockUserId, mockInstitutionId2, deleteFailure.getMessage())
-                                        );
-                            } else {
-                                log.info("No userInstitution with userId {} and institutionId {}", mockUserId, mockInstitutionId2);
-                            }
-                        },
-                        failure -> log.info("Failed to find userInstitution with userId {} and institutionId {}", mockUserId, mockInstitutionId2)
-                );
+        long deleted = UserInstitution.delete("institutionId = ?1 and userId in ?2",
+                mockInstitutionId2, List.of(mockUserId, mockUserId2))
+                .await().atMost(Duration.ofSeconds(5));
+        log.info("Deleted {} scenario userInstitutions for institution {}", deleted, mockInstitutionId2);
     }
 }

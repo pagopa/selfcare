@@ -64,14 +64,15 @@ From `src/main/resources/application.properties` (secrets from Key Vault: `mongo
 | Group | Env vars |
 |---|---|
 | MongoDB | `MONGODB_CONNECTION_STRING` (database fixed to `selcMsCore`) |
-| user-ms | `SELFCARE_USER_URL`, `JWT_BEARER_TOKEN` |
+| user-ms | `SELFCARE_USER_URL`, `JWT_BEARER_TOKEN`, `USER_MS_TENANT_ID` (`user-ms.tenant-id`, default `AR`) |
 | Scheduling | `PEC_NOTIFICATION_FREQUENCY`, `MAIL_QUERY_SIZE`, `SEND_ALL_NOTIFICATION` |
 | Mail | `MAIL_SERVER_HOST`, `MAIL_SERVER_PORT`, `MAIL_SERVER_USERNAME`, `MAIL_SERVER_PASSWORD`, `MAIL_SERVER_SMTP_AUTH`, `MAIL_SERVER_SMTP_TLS_ENABLE`, `MAIL_SERVER_SSL`, `MAIL_SENDER_ADDRESS`, `MAIL_DESTINATION_TEST`, `MAIL_DESTINATION_TEST_ADDRESS`, `MAIL_TEMPLATE_NOTIFICATION_PATH`, `MAIL_TEMPLATE_FIRST_NOTIFICATION_PATH` |
 | Storage | `STORAGE_CONTAINER_CONTRACT`, `BLOB-STORAGE-CONTRACT-*`, `STORAGE_CONTAINER_PRODUCT`, `BLOB_STORAGE_PRODUCT_*` |
 
 ## Multitenancy
 
-- SELC only: there is no PNPG stack and no tenant handling in the code; `MailNotification` is read without any tenant filter.
+- SELC only: there is no PNPG stack; `MailNotification` is read without any tenant filter. Outbound user-ms requests explicitly carry tenant `AR` by default.
+- Release this header change **before** enabling user-ms tenant enforcement. Verify that the technical token issuer/`tenant_id` is compatible with AR; do not assume a claim-less SPID token represents AR.
 - The `MailNotification` collection in `selcMsCore` is in scope of the institution-ms multitenant persistence change (see [institution-ms](institution-ms.md#multitenancy)); this job does not use it yet.
 - See [../multitenancy.md](../multitenancy.md) and [Database identification](../specs/MULTITENANT/Step_2/Database_identification.md).
 

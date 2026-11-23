@@ -1,0 +1,24 @@
+[
+  {
+    "_id": {"$oid": "65a000000000000000000001"},
+    "tenantId": "PNPG",
+    "userId": "tenant-isolation-user",
+    "institutionId": "tenant-isolation-institution",
+    "institutionDescription": "PNPG institution",
+    "products": []
+  },
+  {
+    "_id": {"$oid": "65a000000000000000000002"},
+    "tenantId": "AR",
+    "userId": "wrong-tenant-user",
+    "institutionId": "tenant-isolation-institution",
+    "institutionDescription": "Must not be returned from PNPG",
+    "products": []
+  },
+  {
+    "_id": {"$oid": "65a000000000000000000003"},
+    "userId": "legacy-pnpg-user",
+    "institutionId": "legacy-pnpg-institution",
+    "products": []
+  }
+]
