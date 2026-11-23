@@ -125,6 +125,12 @@
           "billing" : {
             "$ref" : "#/components/schemas/BillingPdfData"
           }
+        },
+        "discriminator" : {
+          "propertyName" : "productId",
+          "mapping" : {
+            "prod-rtp" : "#/components/schemas/RtpContractPdfRequest"
+          }
         }
       },
       "ContractSignedReport" : {
@@ -219,7 +225,7 @@
             "$ref" : "#/components/schemas/LocalDateTime"
           },
           "activatedAt" : {
-            "$ref" : "#/components/schemas/LocalDateTime"
+              "$ref" : "#/components/schemas/LocalDateTime"
           },
           "storageOrigin" : {
             "$ref" : "#/components/schemas/StorageOrigin"
@@ -581,6 +587,24 @@
             "type" : "string"
           }
         }
+      },
+      "RtpContractPdfRequest" : {
+        "type" : "object",
+        "allOf" : [ {
+          "$ref" : "#/components/schemas/ContractPdfRequest"
+        } ],
+        "properties" : {
+          "rtpServiceTypes" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/RtpServiceType"
+            }
+          }
+        }
+      },
+      "RtpServiceType" : {
+        "enum" : [ "RTP", "REPOSITORY_CONSULTATION" ],
+        "type" : "string"
       },
       "SignatureRequest" : {
         "required" : [ "onboardingId", "file", "fiscalCodes", "skipSignatureVerification" ],

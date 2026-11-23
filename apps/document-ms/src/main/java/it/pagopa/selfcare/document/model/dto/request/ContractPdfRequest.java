@@ -9,6 +9,8 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.eclipse.microprofile.openapi.annotations.media.DiscriminatorMapping;
+import org.eclipse.microprofile.openapi.annotations.media.Schema;
 
 import java.util.List;
 
@@ -28,6 +30,9 @@ import java.util.List;
         defaultImpl = ContractPdfRequest.class
 )
 @JsonSubTypes({@JsonSubTypes.Type(value = RtpContractPdfRequest.class, name = "prod-rtp")})
+@Schema(
+        discriminatorProperty = "productId",
+        discriminatorMapping = @DiscriminatorMapping(value = "prod-rtp", schema = RtpContractPdfRequest.class))
 public class ContractPdfRequest {
 
     @NotBlank

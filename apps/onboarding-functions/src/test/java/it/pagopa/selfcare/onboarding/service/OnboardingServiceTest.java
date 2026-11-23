@@ -17,12 +17,16 @@ import jakarta.inject.Inject;
 import org.bson.Document;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 import org.openapi.quarkus.document_json.model.AttachmentPdfRequest;
 import org.openapi.quarkus.document_json.model.ContractPdfRequest;
 import org.openapi.quarkus.document_json.model.DocumentBuilderRequest;
 import org.openapi.quarkus.document_json.model.DocumentResponse;
+import org.openapi.quarkus.document_json.model.RtpContractPdfRequest;
 import org.openapi.quarkus.product_json.model.ContractTemplateConfig;
 import org.openapi.quarkus.product_json.model.ContractType;
 import org.openapi.quarkus.product_json.model.OnboardingType;
@@ -37,6 +41,7 @@ import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.util.*;
 import java.util.logging.Logger;
+import java.util.stream.Stream;
 
 import static it.pagopa.selfcare.onboarding.service.OnboardingService.USERS_FIELD_LIST;
 import static it.pagopa.selfcare.onboarding.service.OnboardingService.USERS_WORKS_FIELD_LIST;
@@ -233,10 +238,75 @@ class OnboardingServiceTest {
         ArgumentCaptor<ContractPdfRequest> captorRequest = ArgumentCaptor.forClass(ContractPdfRequest.class);
         Mockito.verify(documentService, Mockito.times(1))
                 .createContractPdf(captorRequest.capture());
+        assertEquals(ContractPdfRequest.class, captorRequest.getValue().getClass());
         assertEquals(
                 captorRequest.getValue().getContractTemplatePath(),
                 product
                         .getContracts().get(0).getPath());
+    }
+
+    @ParameterizedTest
+    @MethodSource("rtpServiceSelections")
+    void createContract_shouldForwardRtpRequestWithSelectedServices(List<RtpServiceType> services) {
+        UserResource managerResource = createUserResource();
+        UserResource delegateResource = createUserResource();
+        Onboarding onboarding = createOnboarding();
+        onboarding.setProductId(ProductId.PROD_RTP.getValue());
+        onboarding.setRtpServiceTypes(services);
+        onboarding.getInstitution().setInstitutionType(InstitutionType.PSP);
+
+        User manager = new User();
+        manager.setId(managerResource.getId().toString());
+        manager.setRole(PartyRole.MANAGER);
+        manager.setUserMailUuid("ID_MAIL#TEST-123");
+        User delegate = new User();
+        delegate.setId(delegateResource.getId().toString());
+        delegate.setRole(PartyRole.DELEGATE);
+        delegate.setUserMailUuid("ID_MAIL#TEST-123");
+        onboarding.setUsers(List.of(manager, delegate));
+
+        ProductResponse product = createDummyProduct();
+        product.setProductId(onboarding.getProductId());
+        product.getContracts().get(0).setPath("rtp/contract-template.pdf");
+        when(productService.getValidProduct(onboarding.getProductId())).thenReturn(product);
+        when(pdvUserRegistryService.getUserById(USERS_WORKS_FIELD_LIST, manager.getId()))
+                .thenReturn(managerResource);
+        when(pdvUserRegistryService.getUserById(USERS_WORKS_FIELD_LIST, delegate.getId()))
+                .thenReturn(delegateResource);
+        when(notificationService.rejectOnboardingUrl()).thenReturn("https://example.test/aggregates");
+
+        onboardingService.createContract(getOnboardingWorkflowInstitution(onboarding));
+
+        ArgumentCaptor<ContractPdfRequest> requestCaptor = ArgumentCaptor.forClass(ContractPdfRequest.class);
+        verify(documentService).createContractPdf(requestCaptor.capture());
+        RtpContractPdfRequest request = assertInstanceOf(RtpContractPdfRequest.class, requestCaptor.getValue());
+        assertEquals(
+                services.stream().map(Enum::name).toList(),
+                request.getRtpServiceTypes().stream().map(Enum::name).toList());
+        assertEquals(onboarding.getId(), request.getOnboardingId());
+        assertEquals(ProductId.PROD_RTP.getValue(), request.getProductId());
+        assertEquals(product.getTitle(), request.getProductName());
+        assertEquals("rtp/contract-template.pdf", request.getContractTemplatePath());
+        assertEquals("https://example.test/aggregates", request.getAggregatesCsvBaseUrl());
+        assertEquals("description", request.getInstitution().getDescription());
+        assertEquals(manager.getId(), request.getManager().getId());
+        assertEquals("name", request.getManager().getName());
+        assertEquals("surname", request.getManager().getSurname());
+        assertEquals(manager.getUserMailUuid(), request.getManager().getUserMailUuid());
+        assertEquals("email.lavoro@test.it", request.getManager().getEmail());
+        assertEquals(1, request.getDelegates().size());
+        assertEquals(delegate.getId(), request.getDelegates().get(0).getId());
+        assertEquals(delegate.getUserMailUuid(), request.getDelegates().get(0).getUserMailUuid());
+        assertEquals("email.lavoro@test.it", request.getDelegates().get(0).getEmail());
+        verify(pdvUserRegistryService).getUserById(USERS_WORKS_FIELD_LIST, manager.getId());
+        verify(pdvUserRegistryService).getUserById(USERS_WORKS_FIELD_LIST, delegate.getId());
+    }
+
+    private static Stream<Arguments> rtpServiceSelections() {
+        return Stream.of(
+                Arguments.of(List.of(RtpServiceType.RTP)),
+                Arguments.of(List.of(RtpServiceType.REPOSITORY_CONSULTATION)),
+                Arguments.of(List.of(RtpServiceType.RTP, RtpServiceType.REPOSITORY_CONSULTATION)));
     }
 
     @Test

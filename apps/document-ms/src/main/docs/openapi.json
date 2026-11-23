@@ -610,6 +610,24 @@
           }
         }
       },
+      "RtpContractPdfRequest" : {
+        "type" : "object",
+        "allOf" : [ {
+          "$ref" : "#/components/schemas/ContractPdfRequest"
+        } ],
+        "properties" : {
+          "rtpServiceTypes" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/RtpServiceType"
+            }
+          }
+        }
+      },
+      "RtpServiceType" : {
+        "enum" : [ "RTP", "REPOSITORY_CONSULTATION" ],
+        "type" : "string"
+      },
       "SignatureRequest" : {
         "required" : [ "onboardingId", "file", "fiscalCodes", "skipSignatureVerification" ],
         "type" : "object",

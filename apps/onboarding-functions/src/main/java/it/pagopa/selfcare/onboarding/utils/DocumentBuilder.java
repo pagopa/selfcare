@@ -1,5 +1,6 @@
 package it.pagopa.selfcare.onboarding.utils;
 
+import it.pagopa.selfcare.onboarding.common.ProductId;
 import it.pagopa.selfcare.onboarding.entity.Onboarding;
 import it.pagopa.selfcare.onboarding.entity.OnboardingWorkflow;
 import it.pagopa.selfcare.onboarding.mapper.AttachmentPdfRequestMapper;
@@ -40,6 +41,15 @@ public class DocumentBuilder {
     ProductResponse product,
     String contractTemplatePath,
     String rejectOnboardingUrl) {
+    if(ProductId.PROD_RTP.getValue().equals(product.getProductId())) {
+      return contractPdfRequestMapper.toRtpRequest(
+        onboarding,
+        manager,
+        delegates,
+        product,
+        contractTemplatePath,
+        rejectOnboardingUrl);
+    }
     return contractPdfRequestMapper.toRequest(
       onboarding,
       manager,

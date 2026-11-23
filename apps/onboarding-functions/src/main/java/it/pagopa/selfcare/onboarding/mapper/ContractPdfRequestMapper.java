@@ -1,16 +1,22 @@
 package it.pagopa.selfcare.onboarding.mapper;
 
-import it.pagopa.selfcare.onboarding.entity.*;
-import org.openapi.quarkus.product_json.model.ProductResponse;
-import java.util.List;
-import java.util.stream.Collectors;
+import it.pagopa.selfcare.onboarding.entity.Billing;
+import it.pagopa.selfcare.onboarding.entity.Institution;
+import it.pagopa.selfcare.onboarding.entity.Onboarding;
+import it.pagopa.selfcare.onboarding.entity.User;
+import org.mapstruct.InheritConfiguration;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.openapi.quarkus.document_json.model.BillingPdfData;
 import org.openapi.quarkus.document_json.model.ContractPdfRequest;
 import org.openapi.quarkus.document_json.model.InstitutionPdfData;
+import org.openapi.quarkus.document_json.model.RtpContractPdfRequest;
 import org.openapi.quarkus.document_json.model.UserPdfData;
+import org.openapi.quarkus.product_json.model.ProductResponse;
 import org.openapi.quarkus.user_registry_json.model.UserResource;
+
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Mapper(componentModel = "cdi")
 public interface ContractPdfRequestMapper {
@@ -27,6 +33,16 @@ public interface ContractPdfRequestMapper {
   @Mapping(target = "contractTemplatePath", source = "contractTemplatePath")
   @Mapping(target = "aggregatesCsvBaseUrl", source = "aggregatesCsvBaseUrl")
   ContractPdfRequest toRequest(
+          Onboarding onboarding,
+          UserResource manager,
+          List<UserResource> delegates,
+          ProductResponse product,
+          String contractTemplatePath,
+          String aggregatesCsvBaseUrl);
+
+  @InheritConfiguration(name = "toRequest")
+  @Mapping(target = "rtpServiceTypes", source = "onboarding.rtpServiceTypes")
+  RtpContractPdfRequest toRtpRequest(
           Onboarding onboarding,
           UserResource manager,
           List<UserResource> delegates,

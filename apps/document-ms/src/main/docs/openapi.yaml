@@ -121,6 +121,10 @@ components:
             $ref: "#/components/schemas/UserPdfData"
         billing:
           $ref: "#/components/schemas/BillingPdfData"
+      discriminator:
+        propertyName: productId
+        mapping:
+          prod-rtp: "#/components/schemas/RtpContractPdfRequest"
     ContractSignedReport:
       type: object
       properties:
@@ -480,6 +484,20 @@ components:
         filePath:
           description: Full storage path of the document.
           type: string
+    RtpContractPdfRequest:
+      type: object
+      allOf:
+      - $ref: "#/components/schemas/ContractPdfRequest"
+      properties:
+        rtpServiceTypes:
+          type: array
+          items:
+            $ref: "#/components/schemas/RtpServiceType"
+    RtpServiceType:
+      enum:
+      - RTP
+      - REPOSITORY_CONSULTATION
+      type: string
     SignatureRequest:
       required:
       - onboardingId
