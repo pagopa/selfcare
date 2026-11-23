@@ -1,7 +1,5 @@
 package it.pagopa.selfcare.document.model.dto.request;
 
-import com.fasterxml.jackson.annotation.JsonSubTypes;
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -9,8 +7,6 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.eclipse.microprofile.openapi.annotations.media.DiscriminatorMapping;
-import org.eclipse.microprofile.openapi.annotations.media.Schema;
 
 import java.util.List;
 
@@ -22,17 +18,6 @@ import java.util.List;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@JsonTypeInfo(
-        use = JsonTypeInfo.Id.NAME,
-        include = JsonTypeInfo.As.EXISTING_PROPERTY,
-        property = "productId",
-        visible = true,
-        defaultImpl = ContractPdfRequest.class
-)
-@JsonSubTypes({@JsonSubTypes.Type(value = RtpContractPdfRequest.class, name = "prod-rtp")})
-@Schema(
-        discriminatorProperty = "productId",
-        discriminatorMapping = @DiscriminatorMapping(value = "prod-rtp", schema = RtpContractPdfRequest.class))
 public class ContractPdfRequest {
 
     @NotBlank
@@ -68,5 +53,10 @@ public class ContractPdfRequest {
 
     @Valid
     private BillingPdfData billing;
+
+    /**
+     * Services selected during onboarding, used only by prod-rtp
+     */
+    private List<RtpServiceType> rtpServiceTypes;
 
 }

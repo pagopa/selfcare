@@ -14,7 +14,6 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.openapi.quarkus.document_json.model.ContractPdfRequest;
-import org.openapi.quarkus.document_json.model.RtpContractPdfRequest;
 import org.openapi.quarkus.product_json.model.ProductResponse;
 import org.openapi.quarkus.user_registry_json.model.UserResource;
 
@@ -22,7 +21,6 @@ import java.util.List;
 import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.Mockito.mock;
 
@@ -61,31 +59,19 @@ class DocumentBuilderTest {
 
   @ParameterizedTest
   @MethodSource("rtpServiceSelections")
-  void toContractPdfRequest_mapsRtpServicesAndInheritedFields(List<RtpServiceType> services) {
+  void toContractPdfRequest_mapsRtpServicesAndCommonFields(List<RtpServiceType> services) {
     onboarding.setRtpServiceTypes(services);
 
     ContractPdfRequest request = toRequest();
 
-    RtpContractPdfRequest rtpRequest = assertInstanceOf(RtpContractPdfRequest.class, request);
-    assertCommonFields(rtpRequest);
+    assertCommonFields(request);
     if (services == null) {
-      assertNull(rtpRequest.getRtpServiceTypes());
+      assertNull(request.getRtpServiceTypes());
     } else {
       assertEquals(
           services.stream().map(Enum::name).toList(),
-          rtpRequest.getRtpServiceTypes().stream().map(Enum::name).toList());
+          request.getRtpServiceTypes().stream().map(Enum::name).toList());
     }
-  }
-
-  @Test
-  void toContractPdfRequest_keepsBaseRequestForOtherProducts() {
-    product.setProductId(ProductId.PROD_PAGOPA.getValue());
-    onboarding.setRtpServiceTypes(List.of(RtpServiceType.RTP));
-
-    ContractPdfRequest request = toRequest();
-
-    assertEquals(ContractPdfRequest.class, request.getClass());
-    assertCommonFields(request);
   }
 
   private ContractPdfRequest toRequest() {

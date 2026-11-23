@@ -26,7 +26,6 @@ import org.openapi.quarkus.document_json.model.AttachmentPdfRequest;
 import org.openapi.quarkus.document_json.model.ContractPdfRequest;
 import org.openapi.quarkus.document_json.model.DocumentBuilderRequest;
 import org.openapi.quarkus.document_json.model.DocumentResponse;
-import org.openapi.quarkus.document_json.model.RtpContractPdfRequest;
 import org.openapi.quarkus.product_json.model.ContractTemplateConfig;
 import org.openapi.quarkus.product_json.model.ContractType;
 import org.openapi.quarkus.product_json.model.OnboardingType;
@@ -279,7 +278,7 @@ class OnboardingServiceTest {
 
         ArgumentCaptor<ContractPdfRequest> requestCaptor = ArgumentCaptor.forClass(ContractPdfRequest.class);
         verify(documentService).createContractPdf(requestCaptor.capture());
-        RtpContractPdfRequest request = assertInstanceOf(RtpContractPdfRequest.class, requestCaptor.getValue());
+        ContractPdfRequest request = requestCaptor.getValue();
         assertEquals(
                 services.stream().map(Enum::name).toList(),
                 request.getRtpServiceTypes().stream().map(Enum::name).toList());

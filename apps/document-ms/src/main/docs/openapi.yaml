@@ -121,10 +121,10 @@ components:
             $ref: "#/components/schemas/UserPdfData"
         billing:
           $ref: "#/components/schemas/BillingPdfData"
-      discriminator:
-        propertyName: productId
-        mapping:
-          prod-rtp: "#/components/schemas/RtpContractPdfRequest"
+        rtpServiceTypes:
+          type: array
+          items:
+            $ref: "#/components/schemas/RtpServiceType"
     ContractSignedReport:
       type: object
       properties:
@@ -184,8 +184,9 @@ components:
         contractFilename:
           type: string
         rootOnboardingId:
-          description: "Root dossier onboarding ID. For INSTITUTION contract updates,\
-            \ it matches the onboardingId of the adhesion onboarding."
+          description: "Identificativo della radice del Fascicolo Documentale. Per\
+            \ un contratto INSTITUTION di aggiornamento, corrisponde all'onboardingId\
+            \ dell'adesione."
           type: string
         createdAt:
           $ref: "#/components/schemas/LocalDateTime"
@@ -194,8 +195,8 @@ components:
         deletedAt:
           $ref: "#/components/schemas/LocalDateTime"
         activatedAt:
-          description: "Contract activation timestamp, set after the orchestration
-             has completed successfully."
+          description: Timestamp di attivazione del contratto dopo la presa in carico
+            positiva dell'orchestrazione.
           type: string
           allOf:
           - $ref: "#/components/schemas/LocalDateTime"
@@ -484,15 +485,6 @@ components:
         filePath:
           description: Full storage path of the document.
           type: string
-    RtpContractPdfRequest:
-      type: object
-      allOf:
-      - $ref: "#/components/schemas/ContractPdfRequest"
-      properties:
-        rtpServiceTypes:
-          type: array
-          items:
-            $ref: "#/components/schemas/RtpServiceType"
     RtpServiceType:
       enum:
       - RTP
