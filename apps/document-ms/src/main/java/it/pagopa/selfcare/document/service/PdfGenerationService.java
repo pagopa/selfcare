@@ -3,8 +3,6 @@ package it.pagopa.selfcare.document.service;
 import it.pagopa.selfcare.document.model.dto.request.AttachmentPdfRequest;
 import it.pagopa.selfcare.document.model.dto.request.ContractPdfRequest;
 import it.pagopa.selfcare.document.model.dto.request.InstitutionPdfData;
-import it.pagopa.selfcare.document.model.dto.request.RtpContractPdfRequest;
-import it.pagopa.selfcare.document.exception.InvalidRequestException;
 import it.pagopa.selfcare.document.util.PdfBuilder;
 import it.pagopa.selfcare.document.util.PdfMapperData;
 import it.pagopa.selfcare.onboarding.common.InstitutionType;
@@ -56,7 +54,7 @@ public class PdfGenerationService {
         InstitutionType institutionType = institution.getInstitutionType();
 
         if (PROD_RTP.getValue().equalsIgnoreCase(productId)) {
-            PdfMapperData.setupProdRtpData(data, asRtpContractPdfRequest(request));
+            PdfMapperData.setupProdRtpData(data, request);
         } else if (isPspAndPagoPaOrDashboard(productId, institutionType)) {
             PdfMapperData.setupPSPData(data, request.getManager(), request);
         } else if (isPrvOrGpuAndPagoPaOrIdpay(productId, institutionType)) {
@@ -94,12 +92,5 @@ public class PdfGenerationService {
         return PROD_IO.getValue().equalsIgnoreCase(productId)
                 || PROD_IO_PREMIUM.getValue().equalsIgnoreCase(productId)
                 || PROD_IO_SIGN.getValue().equalsIgnoreCase(productId);
-    }
-
-    private RtpContractPdfRequest asRtpContractPdfRequest(ContractPdfRequest request) {
-        if (request instanceof RtpContractPdfRequest rtpContractPdfRequest) {
-            return rtpContractPdfRequest;
-        }
-        throw new InvalidRequestException("Request for prod-rtp must be of type RtpContractPdfRequest", "0000");
     }
 }

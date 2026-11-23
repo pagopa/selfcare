@@ -113,7 +113,7 @@ class PdfGenerationServiceTest {
 
     @Test
     void generateContractPdf_shouldResolveEveryRtpTemplatePlaceholder() throws IOException {
-        RtpContractPdfRequest request = buildValidRtpContractRequest();
+        ContractPdfRequest request = buildValidRtpContractRequest();
         request.setProductId(PROD_RTP.getValue());
         request.setRtpServiceTypes(List.of(RtpServiceType.RTP, RtpServiceType.REPOSITORY_CONSULTATION));
         request.setBilling(null);
@@ -208,9 +208,9 @@ class PdfGenerationServiceTest {
         return request;
     }
 
-    private RtpContractPdfRequest buildValidRtpContractRequest() {
+    private ContractPdfRequest buildValidRtpContractRequest() {
         ContractPdfRequest baseRequest = buildValidContractRequest();
-        RtpContractPdfRequest request = new RtpContractPdfRequest();
+        ContractPdfRequest request = new ContractPdfRequest();
         request.setOnboardingId(baseRequest.getOnboardingId());
         request.setProductId(baseRequest.getProductId());
         request.setProductName(baseRequest.getProductName());

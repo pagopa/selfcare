@@ -43,6 +43,7 @@ public class Onboarding {
     private Boolean sendMailForImport;
     private Boolean toAddOnAggregates;
     private AdditionalInformations additionalInformations;
+    private List<RtpServiceType> rtpServiceTypes;
 
 
     //This field is used in case of workflowType USER
