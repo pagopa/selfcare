@@ -3,7 +3,7 @@ package it.pagopa.selfcare.user.util;
 import io.quarkus.test.junit.QuarkusMock;
 import io.quarkus.test.junit.QuarkusTest;
 import it.pagopa.selfcare.product.entity.Product;
-import it.pagopa.selfcare.product.service.ProductService;
+import it.pagopa.selfcare.user.service.TenantProductCatalogService;
 import it.pagopa.selfcare.user.util.product.ProductIdNormalizer;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -19,10 +19,12 @@ class ProductIdNormalizerTest {
 
     @BeforeEach
     void setup() {
+        jakarta.enterprise.inject.spi.CDI.current().select(it.pagopa.selfcare.tenant.TenantContext.class)
+                .get().setTenantId("AR");
         ProductIdNormalizer.clearParentIds();
         ProductIdNormalizer.addParentId("child", "parent");
 
-        ProductService productService = Mockito.mock(ProductService.class);
+        TenantProductCatalogService productService = Mockito.mock(TenantProductCatalogService.class);
 
         Product prod1 = new Product();
         prod1.setId("prod1");
@@ -31,10 +33,10 @@ class ProductIdNormalizerTest {
         prod2.setId("prod2");
         prod2.setParentId("prod1");
 
-        Mockito.when(productService.getProducts(false, true))
+        Mockito.when(productService.productsForTenant(Mockito.anyString()))
                 .thenReturn(List.of(prod1, prod2));
 
-        QuarkusMock.installMockForType(productService, ProductService.class);
+        QuarkusMock.installMockForType(productService, TenantProductCatalogService.class);
     }
 
     @Test
@@ -84,9 +86,21 @@ class ProductIdNormalizerTest {
     @Test
     void shouldUpdateParentIds() {
         ProductIdNormalizer.updateParentIds();
-        assertEquals("parent", ProductIdNormalizer.normalize("child"));
+        assertEquals("child", ProductIdNormalizer.normalize("child"));
         assertEquals("prod1", ProductIdNormalizer.normalize("prod1"));
         assertEquals("prod1", ProductIdNormalizer.normalize("prod2"));
+    }
+
+    @Test
+    void shouldNotReuseParentsAcrossTenants() {
+        var context = jakarta.enterprise.inject.spi.CDI.current()
+                .select(it.pagopa.selfcare.tenant.TenantContext.class).get();
+        context.setTenantId("PNPG");
+        assertEquals("child", ProductIdNormalizer.normalize("child"));
+        ProductIdNormalizer.addParentId("child", "pnpg-parent");
+        assertEquals("pnpg-parent", ProductIdNormalizer.normalize("child"));
+        context.setTenantId("AR");
+        assertEquals("parent", ProductIdNormalizer.normalize("child"));
     }
 
 }

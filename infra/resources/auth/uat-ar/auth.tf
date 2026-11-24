@@ -167,7 +167,7 @@ locals {
     },
     {
       name  = "JAVA_TOOL_OPTIONS"
-      value = "-javaagent:applicationinsights-agent.jar"
+      value = "-javaagent:applicationinsights-agent.jar -XX:-UseBASE64Intrinsics"
     },
     {
       name  = "APPLICATIONINSIGHTS_ROLE_NAME"

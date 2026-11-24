@@ -1,63 +1,51 @@
 package it.pagopa.selfcare.user.health;
 
+import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.infrastructure.Infrastructure;
-import it.pagopa.selfcare.azurestorage.AzureBlobClientDefault;
-import it.pagopa.selfcare.commons.health.AbstractBlobStorageReadinessCheck;
+import it.pagopa.selfcare.commons.health.AbstractAsyncReadinessCheck;
+import it.pagopa.selfcare.tenant.TenantRegistry;
+import it.pagopa.selfcare.user.service.TenantProductCatalogService;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
-import org.eclipse.microprofile.config.inject.ConfigProperty;
+import java.time.Duration;
+import java.util.Map;
+import java.util.stream.Collectors;
 import org.eclipse.microprofile.health.Readiness;
-
-import java.util.Optional;
+import lombok.extern.slf4j.Slf4j;
 
 @Readiness
 @ApplicationScoped
-public class ProductBlobStorageReadinessCheck extends AbstractBlobStorageReadinessCheck {
+@Slf4j
+public class ProductBlobStorageReadinessCheck extends AbstractAsyncReadinessCheck {
+  @Inject TenantRegistry registry;
+  @Inject TenantProductCatalogService catalogs;
 
-    private static final String ACCOUNT_NOT_APPLICABLE = "n/a";
+  @Override protected String checkName() { return "blob-storage-product"; }
+  @Override protected Duration timeout() { return Duration.ofSeconds(3); }
 
-    private final AzureBlobClientDefault blobClient;
-    private final String container;
-    private final String account;
-    private final String probeTarget;
+  @Override protected Map<String, String> data() {
+    return registry.supportedTenantIds().stream().collect(Collectors.toMap(
+        tenant -> tenant + ".container", tenant -> registry.storage(tenant, "products").container()));
+  }
 
-    @Inject
-    public ProductBlobStorageReadinessCheck(
-            AzureBlobClientDefault productBlobClient,
-            @ConfigProperty(name = "user-ms.blob-storage.container-product") String container,
-            @ConfigProperty(name = "user-ms.blob-storage.account-name-product") Optional<String> account,
-            @ConfigProperty(name = "user-ms.blob-storage.filepath-product") String probeTarget) {
-        this.blobClient = productBlobClient;
-        this.container = container;
-        this.account = account.filter(s -> !s.isBlank()).orElse(ACCOUNT_NOT_APPLICABLE);
-        this.probeTarget = probeTarget;
-    }
-
-    @Override
-    protected String checkName() {
-        return "blob-storage-product";
-    }
-
-    @Override
-    protected String account() {
-        return account;
-    }
-
-    @Override
-    protected String container() {
-        return container;
-    }
-
-    @Override
-    protected String probeTarget() {
-        return probeTarget;
-    }
-
-    @Override
-    protected Uni<?> probe() {
-        return Uni.createFrom()
-                .item(() -> blobClient.getProperties(probeTarget))
-                .runSubscriptionOn(Infrastructure.getDefaultWorkerPool());
-    }
+  @Override protected Uni<?> probe() {
+    return Multi.createFrom().iterable(registry.supportedTenantIds())
+        .onItem().transformToUniAndMerge(tenant -> Uni.createFrom().item(() -> {
+              if (!catalogs.hasSnapshot(tenant)) {
+                throw new IllegalStateException("Product catalogue has not been loaded for tenant " + tenant);
+              }
+              return catalogs.blobClient(tenant).getProperties(catalogs.productPath(tenant));
+            })
+            .runSubscriptionOn(Infrastructure.getDefaultWorkerPool())
+            .ifNoItem().after(Duration.ofSeconds(2)).fail()
+            .onFailure().invoke(failure -> log.warn("Product storage readiness failed for tenant {} ({})", tenant, failure.getClass().getSimpleName()))
+            .replaceWith("").onFailure().recoverWithItem(tenant))
+        .collect().asList().invoke(results -> {
+          var failures = results.stream().filter(tenant -> !tenant.isEmpty()).toList();
+          if (!failures.isEmpty()) {
+            throw new IllegalStateException("Product storage unavailable for tenants: " + failures);
+          }
+        });
+  }
 }

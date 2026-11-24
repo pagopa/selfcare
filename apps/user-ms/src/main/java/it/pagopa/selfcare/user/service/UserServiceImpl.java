@@ -673,7 +673,7 @@ public class UserServiceImpl implements UserService {
     }
 
     private Uni<PrepareNotificationData.PrepareNotificationDataBuilder> retrieveProductAndAddToPrepareNotificationData(PrepareNotificationData.PrepareNotificationDataBuilder builder, String productId) {
-        return Uni.createFrom().item(productService.getProduct(productId))
+        return Uni.createFrom().item(() -> productService.getProduct(productId))
                 .runSubscriptionOn(Infrastructure.getDefaultWorkerPool())
                 .onItem().transform(builder::product);
     }

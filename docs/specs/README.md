@@ -72,7 +72,7 @@ Summary of the whole initiative and its implementation status: [../multitenancy.
 | [SECURITY.md](./MULTITENANT/Step_1/SECURITY.md) | Fail-closed and isolation rules for Step 1. |
 | [EPIC.md](./MULTITENANT/Step_1/EPIC.md) | Jira epic breakdown for Step 1. |
 | [scripts/README.md](./MULTITENANT/Step_1/scripts/README.md) | Runbook for backfilling `tenantId` on legacy documents. Dry run by default; never reassigns a tenant. |
-| [scripts/backfill_tenant_id.py](./MULTITENANT/Step_1/scripts/backfill_tenant_id.py) | The backfill script (`--tenant`, `--account-name`, `--apply`, `--verify`, `--allow-missing`). |
+| [scripts/backfill_tenant_id.py](./MULTITENANT/Step_1/scripts/backfill_tenant_id.py) | The backfill script (`--tenant`, `--account-name`, `--apply`, `--batch-size`, `--verify`, `--allow-missing`). |
 | [scripts/test_backfill_tenant_id.py](./MULTITENANT/Step_1/scripts/test_backfill_tenant_id.py) | Unit tests for the backfill script. |
 
 ### Step 2: strict isolation and single ingress
@@ -84,6 +84,7 @@ Summary of the whole initiative and its implementation status: [../multitenancy.
 | [SECURITY.md](./MULTITENANT/Step_2/SECURITY.md) | Security rules for Step 2. |
 | [Auth_implementation.md](./MULTITENANT/Step_2/Auth_implementation.md) | Plan for auth: `TenantRegistry`, OneIdentity credentials and user-registry key per tenant, AR only for now (PNPG `auth_enabled=false`). |
 | [DocumentMs_implementation.md](./MULTITENANT/Step_2/DocumentMs_implementation.md) | Plan for document-ms, in Italian, with SELC-DMS-NN stories. |
+| [UserMs_implementation.md](./MULTITENANT/Step_2/UserMs_implementation.md) | user-ms multitenant readiness: implementation tasks, decisions and rollout gates while retaining separate Container Apps. |
 | [Database_identification.md](./MULTITENANT/Step_2/Database_identification.md) | Mongo routing contract: JWT / `X-Tenant-Id` → `TenantContext` → registry → client and database. |
 | [Storage_identification.md](./MULTITENANT/Step_2/Storage_identification.md) | Storage selected by tenant plus a logical key, e.g. the several bindings used by onboarding-ms. |
 | [JWT_Key_Resolution.md](./MULTITENANT/Step_2/JWT_Key_Resolution.md) | Verification key taken from the registry `jwt.publicKeyEnvVar` instead of the flat `mp.jwt.verify.publickey`. |

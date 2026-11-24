@@ -5,7 +5,7 @@
 | | |
 |---|---|
 | Path | `libs/selfcare-sdk-tenant-mongodb` |
-| Artifact | `it.pagopa.selfcare:selfcare-sdk-tenant-mongodb:0.4.0` |
+| Artifact | `it.pagopa.selfcare:selfcare-sdk-tenant-mongodb:0.4.2` |
 | Stack | Quarkus (`quarkus-mongodb-client`, `quarkus-mongodb-panache-common`, BOM 3.11.2), Java 17, reactive (Mutiny); parent [`selfcare-sdk-pom`](selfcare-sdk-pom.md) |
 | Used by | `auth`, `document-ms`, `iam`, `onboarding-ms`, `product`, `product-cdc` |
 
@@ -28,7 +28,7 @@ client and CDI injection becomes ambiguous.
 <dependency>
   <groupId>it.pagopa.selfcare</groupId>
   <artifactId>selfcare-sdk-tenant-mongodb</artifactId>
-  <version>0.4.0</version>
+  <version>0.4.2</version>
 </dependency>
 ```
 

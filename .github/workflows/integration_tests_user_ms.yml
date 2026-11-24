@@ -11,6 +11,9 @@ on:
       - releases/*
     paths:
       - "apps/user-ms/**"
+      - "libs/selfcare-sdk-tenant/**"
+      - "libs/selfcare-sdk-tenant-mongodb/**"
+      - "libs/selfcare-sdk-security/**"
       - ".github/workflows/integration_tests_user_ms.yml"
   workflow_dispatch:
 

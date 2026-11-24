@@ -14,6 +14,7 @@ import com.microsoft.durabletask.azurefunctions.DurableOrchestrationTrigger;
 import it.pagopa.selfcare.onboarding.dto.NotificationCountResult;
 import it.pagopa.selfcare.onboarding.dto.ResendNotificationsFilters;
 import it.pagopa.selfcare.onboarding.context.TenantContext;
+import it.pagopa.selfcare.onboarding.context.TenantDataIsolation;
 import it.pagopa.selfcare.onboarding.entity.Onboarding;
 import it.pagopa.selfcare.onboarding.dto.QueueEvent;
 import it.pagopa.selfcare.onboarding.exception.DatabaseThrottledException;
@@ -53,6 +54,7 @@ public class NotificationFunctions {
   private final CompletionService completionService;
   private final FunctionInvocationLogger functionInvocationLogger;
   private final HttpFunctionGuard httpFunctionGuard;
+  private final TenantDataIsolation tenantDataIsolation;
 
   public NotificationFunctions(ObjectMapper objectMapper,
                                NotificationEventService notificationEventService,
@@ -61,7 +63,8 @@ public class NotificationFunctions {
                                TelemetryService telemetryService,
                                CompletionService completionService,
                                FunctionInvocationLogger functionInvocationLogger,
-                               HttpFunctionGuard httpFunctionGuard) {
+                               HttpFunctionGuard httpFunctionGuard,
+                               TenantDataIsolation tenantDataIsolation) {
     this.objectMapper = objectMapper;
     this.notificationEventService = notificationEventService;
     this.onboardingService = onboardingService;
@@ -70,6 +73,7 @@ public class NotificationFunctions {
     this.completionService = completionService;
     this.functionInvocationLogger = functionInvocationLogger;
     this.httpFunctionGuard = httpFunctionGuard;
+    this.tenantDataIsolation = tenantDataIsolation;
   }
 
   /**
@@ -163,16 +167,18 @@ public class NotificationFunctions {
   }
 
   /**
-   * Payloads without a tenant (e.g. the ones sent by onboarding-cdc) inherit the already validated
-   * request tenant; a different tenant in the payload is rejected.
+   * Without strict tenant data isolation, payloads without a tenant (e.g. legacy onboardings sent
+   * by onboarding-cdc) inherit the already validated request tenant; with strict isolation they are
+   * rejected. A different tenant in the payload is always rejected.
    */
-  private static boolean matchesRequestTenant(Onboarding onboarding) {
-    if (onboarding.getTenantId() == null || onboarding.getTenantId().isBlank()) {
-      onboarding.setTenantId(TenantContext.requiredTenant());
-      return true;
-    }
+  private boolean matchesRequestTenant(Onboarding onboarding) {
     try {
-      return TenantContext.resolve(onboarding.getTenantId()).equals(TenantContext.requiredTenant());
+      String ownerTenant = tenantDataIsolation.ownerTenant(onboarding.getTenantId());
+      if (!ownerTenant.equals(TenantContext.requiredTenant())) {
+        return false;
+      }
+      onboarding.setTenantId(ownerTenant);
+      return true;
     } catch (IllegalArgumentException exception) {
       return false;
     }

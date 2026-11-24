@@ -1478,6 +1478,15 @@ class InstitutionServiceImplTest {
     }
 
     @Test
+    void searchInstitutionsForwardsTaxCodeAndResponse() {
+        InstitutionsSearchResponse response = new InstitutionsSearchResponse();
+        when(partyConnectorMock.searchInstitutions("12345678901")).thenReturn(response);
+
+        assertSame(response, institutionService.searchInstitutions("12345678901"));
+        verify(partyConnectorMock).searchInstitutions("12345678901");
+    }
+
+    @Test
     void getByFiltersTooManyResource() {
         //given
         final String subunitCode = "subunitCode";

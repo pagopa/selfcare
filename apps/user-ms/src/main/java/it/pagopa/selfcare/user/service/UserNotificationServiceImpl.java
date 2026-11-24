@@ -3,13 +3,15 @@ package it.pagopa.selfcare.user.service;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.microsoft.applicationinsights.TelemetryClient;
+import io.smallrye.context.api.ManagedExecutorConfig;
 import io.smallrye.mutiny.Uni;
 import it.pagopa.selfcare.product.entity.Product;
 import it.pagopa.selfcare.product.entity.ProductRole;
 import it.pagopa.selfcare.product.utils.ProductUtils;
-import it.pagopa.selfcare.user.client.EventHubFdRestClient;
 import it.pagopa.selfcare.user.client.EventHubRestClient;
 import it.pagopa.selfcare.user.entity.UserInstitution;
+import it.pagopa.selfcare.user.conf.TenantNotificationConfig;
+import it.pagopa.selfcare.tenant.TenantContext;
 import it.pagopa.selfcare.user.exception.InvalidRequestException;
 import it.pagopa.selfcare.user.model.LoggedUser;
 import it.pagopa.selfcare.user.model.OnboardedProduct;
@@ -20,6 +22,8 @@ import jakarta.inject.Inject;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
+import org.eclipse.microprofile.context.ManagedExecutor;
+import org.eclipse.microprofile.context.ThreadContext;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.openapi.quarkus.user_registry_json.model.UserResource;
 import org.openapi.quarkus.user_registry_json.model.WorkContactResource;
@@ -53,53 +57,33 @@ public class UserNotificationServiceImpl implements UserNotificationService {
 
   @Inject @RestClient WebhookApi webhookApi;
 
-  @Inject @RestClient EventHubFdRestClient eventHubFdRestClient;
 
   @Inject ObjectMapper objectMapper;
 
-  @ConfigProperty(name = "user-ms.selfcare-url")
-  String selfcareUrl;
+  @Inject TenantNotificationConfig tenantConfig;
+  @Inject TenantContext tenantContext;
 
-  @ConfigProperty(name = "user-ms.webhook.enabled")
-  boolean webhookEnabled;
-
-  @ConfigProperty(name = "user-ms.webhook.tenant-id")
-  String webhookTenantId;
+  @Inject
+  @ManagedExecutorConfig(propagated = {}, cleared = ThreadContext.ALL_REMAINING)
+  ManagedExecutor mailExecutor;
 
   @ConfigProperty(name = "user-ms.webhook.topic")
   String webhookTopic;
-  @ConfigProperty(name = "user-ms.onemail.template.activated")
-  String activateUserTemplateId;
-  @ConfigProperty(name = "user-ms.onemail.template.deleted")
-  String deleteUserTemplateId;
-  @ConfigProperty(name = "user-ms.onemail.template.suspended")
-  String suspendUserTemplateId;
-  @ConfigProperty(name = "user-ms.onemail.template.request")
-  String requestUserTemplateId;
-  @ConfigProperty(name = "user-ms.onemail.template.convention")
-  String conventionRequestTemplateId;
-  @ConfigProperty(name = "user-ms.onemail.template.multi-role")
-  String createMultiRoleTemplateId;
-  @ConfigProperty(name = "user-ms.onemail.template.single-role")
-  String createSingleRoleTemplateId;
 
-  private final MailService mailService;
-  private final boolean eventHubUsersEnabled;
+  private final TenantMailJob mailJob;
   private final TelemetryClient telemetryClient;
 
   public UserNotificationServiceImpl(
-      MailService mailService,
-      @ConfigProperty(name = "user-ms.eventhub.users.enabled") boolean eventHubUsersEnabled,
+      TenantMailJob mailJob,
       TelemetryClient telemetryClient) {
-    this.mailService = mailService;
+    this.mailJob = mailJob;
     this.telemetryClient = telemetryClient;
-    this.eventHubUsersEnabled = eventHubUsersEnabled;
   }
 
   @Override
   public Uni<UserNotificationToSend> sendKafkaNotification(
       UserNotificationToSend userNotificationToSend) {
-    return eventHubUsersEnabled
+    return tenantConfig.current().usersEnabled()
         ? eventHubRestClient
             .sendMessage(userNotificationToSend)
             .onItem()
@@ -136,7 +120,7 @@ public class UserNotificationServiceImpl implements UserNotificationService {
 
   Uni<UserNotificationToSend> sendWebhookNotification(
       UserNotificationToSend userNotificationToSend) {
-    if (!webhookEnabled) {
+    if (!tenantConfig.current().webhookEnabled()) {
       return Uni.createFrom().item(userNotificationToSend);
     }
 
@@ -145,7 +129,7 @@ public class UserNotificationServiceImpl implements UserNotificationService {
       notificationRequest =
           NotificationRequest.builder()
               .productId(userNotificationToSend.getProductId())
-              .tenantId(webhookTenantId)
+              .tenantId(tenantContext.requiredTenantId())
               .payload(objectMapper.writeValueAsString(userNotificationToSend))
               .topic(webhookTopic)
               .build();
@@ -198,7 +182,7 @@ public class UserNotificationServiceImpl implements UserNotificationService {
               user,
               institution,
               product,
-            activateUserTemplateId,
+              tenantConfig.current().templates().get("activated"),
               productRole,
               loggedUserName,
               loggedUserSurname);
@@ -207,7 +191,7 @@ public class UserNotificationServiceImpl implements UserNotificationService {
               user,
               institution,
               product,
-            deleteUserTemplateId,
+              tenantConfig.current().templates().get("deleted"),
               productRole,
               loggedUserName,
               loggedUserSurname);
@@ -216,7 +200,7 @@ public class UserNotificationServiceImpl implements UserNotificationService {
               user,
               institution,
               product,
-              suspendUserTemplateId,
+              tenantConfig.current().templates().get("suspended"),
               productRole,
               loggedUserName,
               loggedUserSurname);
@@ -241,7 +225,7 @@ public class UserNotificationServiceImpl implements UserNotificationService {
 
     String email = retrieveMail(userResource, userInstitution);
     String templateId =
-        roleLabels.size() > 1 ? createMultiRoleTemplateId : createSingleRoleTemplateId;
+        tenantConfig.current().templates().get(roleLabels.size() > 1 ? "multi-role" : "single-role");
     Map<String, String> dataModel =
         buildCreateEmailDataModel(loggedUser, product, institutionDescription, roleLabels);
 
@@ -351,6 +335,7 @@ public class UserNotificationServiceImpl implements UserNotificationService {
 
   private Map<String, String> buildEmailDataModelUserRequest(
       UserInstitution institution, Product product) {
+    String selfcareUrl = tenantConfig.current().selfcareUrl();
     Map<String, String> dataModel = new HashMap<>();
     dataModel.put(PRODUCT_NAME, Optional.ofNullable(product.getTitle()).orElse(""));
     dataModel.put(
@@ -382,7 +367,7 @@ public class UserNotificationServiceImpl implements UserNotificationService {
       UserResource user, UserInstitution institution, Product product) {
     String email = retrieveMail(user, institution);
     Map<String, String> dataModel = buildEmailDataModelUserRequest(institution, product);
-    return sendMail(user.getId().toString(), email, requestUserTemplateId, dataModel);
+    return sendMail(user.getId().toString(), email, tenantConfig.current().templates().get("request"), dataModel);
   }
 
   @Override
@@ -390,17 +375,14 @@ public class UserNotificationServiceImpl implements UserNotificationService {
       UserResource user, UserInstitution institution, Product product) {
     String email = retrieveMail(user, institution);
     Map<String, String> dataModel = buildEmailDataModelUserRequest(institution, product);
-    return sendMail(user.getId().toString(), email, conventionRequestTemplateId, dataModel);
+    return sendMail(user.getId().toString(), email, tenantConfig.current().templates().get("convention"), dataModel);
   }
 
   private Uni<Void> sendMail(String userId, String email, String templateId, Map<String, String> dataModel) {
-    mailService.sendOneMail(userId, email, templateId, dataModel)
-      .subscribe()
-      .with(
-        ignored -> log.debug("Mail sent"),
-        failure -> log.error("Mail failed", failure)
-      );
-    return Uni.createFrom().voidItem();
+    String tenant = tenantContext.requiredTenantId();
+    Map<String, String> attributes = new HashMap<>(dataModel);
+    return Uni.createFrom().voidItem().invoke(() ->
+        mailExecutor.execute(() -> mailJob.send(tenant, userId, email, templateId, attributes)));
   }
 
   private static String retrieveMail(UserResource user, UserInstitution institution) {

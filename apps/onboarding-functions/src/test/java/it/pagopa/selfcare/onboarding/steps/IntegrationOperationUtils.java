@@ -36,6 +36,12 @@ public class IntegrationOperationUtils {
         return onboardingRepository.findById(id);
     }
 
+    public Onboarding findAggregateOnboarding(String referenceOnboardingId, String taxCode) {
+        return onboardingRepository
+                .find("referenceOnboardingId = ?1 and institution.taxCode = ?2", referenceOnboardingId, taxCode)
+                .firstResult();
+    }
+
     public void persistInstitution(MongoDatabase mongoDatabase, Institution institution) {
         MongoCollection<Document> collection = mongoDatabase.getCollection("Institution");
         Document institutionDocument = insertInstitution(institution);

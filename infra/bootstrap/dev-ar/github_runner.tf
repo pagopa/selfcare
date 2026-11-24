@@ -6,16 +6,16 @@ module "github_runner" {
   location  = local.location
   tags      = local.tags
 
-  key_vault = {
-    name                = "${local.project}-kv"
-    resource_group_name = "${local.project}-sec-rg"
-    pat_secret_name     = "github-runner-pat"
-  }
-
   networking = {
     vnet_resource_group_name = "${local.project}-vnet-rg"
     vnet_name                = "${local.project}-vnet"
     subnet_cidr_block        = "10.1.146.0/23"
+  }
+
+  container = {
+    cpu    = 2
+    memory = "4Gi"
+    image  = "ghcr.io/pagopa/github-self-hosted-runner-azure:latest"
   }
 
   law = {

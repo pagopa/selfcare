@@ -5412,6 +5412,12 @@
           },
           "contractUpdateRequired": {
             "type": "boolean"
+          },
+          "rtpServiceTypes": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RtpServiceTypeResponse"
+            }
           }
         }
       },
@@ -5440,6 +5446,13 @@
             "type": "string"
           }
         }
+      },
+      "RtpServiceTypeResponse": {
+        "enum": [
+          "RTP",
+          "REPOSITORY_CONSULTATION"
+        ],
+        "type": "string"
       },
       "OnboardingImportRequest": {
         "required": [
@@ -5610,6 +5623,13 @@
           },
           "billing": {
             "$ref": "#/components/schemas/BillingRequest1"
+          },
+          "rtpServiceTypes": {
+            "description": "Required and non-empty when productId is prod-rtp.",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RtpServiceTypeRequest"
+            }
           }
         }
       },
@@ -5710,6 +5730,13 @@
             "$ref": "#/components/schemas/DataProtectionOfficerRequest1"
           }
         }
+      },
+      "RtpServiceTypeRequest": {
+        "enum": [
+          "RTP",
+          "REPOSITORY_CONSULTATION"
+        ],
+        "type": "string"
       },
       "Problem3": {
         "type": "object",

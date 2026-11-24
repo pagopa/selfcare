@@ -26,4 +26,5 @@ public class OnboardingGet {
     private String reasonForReject;
     private List<String> attachments;
     private Boolean contractUpdateRequired;
+    private List<RtpServiceTypeResponse> rtpServiceTypes;
 }

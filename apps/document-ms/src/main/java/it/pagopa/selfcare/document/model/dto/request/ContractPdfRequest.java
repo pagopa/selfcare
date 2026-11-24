@@ -54,4 +54,9 @@ public class ContractPdfRequest {
     @Valid
     private BillingPdfData billing;
 
+    /**
+     * Services selected during onboarding, used only by prod-rtp
+     */
+    private List<RtpServiceType> rtpServiceTypes;
+
 }

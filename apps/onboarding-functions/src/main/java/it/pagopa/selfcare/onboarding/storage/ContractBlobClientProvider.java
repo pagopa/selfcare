@@ -2,42 +2,47 @@ package it.pagopa.selfcare.onboarding.storage;
 
 import it.pagopa.selfcare.azurestorage.AzureBlobClient;
 import it.pagopa.selfcare.azurestorage.AzureBlobClientDefault;
-import it.pagopa.selfcare.onboarding.config.ContractStorageConfig;
-import it.pagopa.selfcare.onboarding.config.ContractStorageConfig.TenantBinding;
 import it.pagopa.selfcare.onboarding.context.TenantContext;
+import it.pagopa.selfcare.tenant.TenantDefinition.StorageDefinition;
+import it.pagopa.selfcare.tenant.TenantRegistry;
+import it.pagopa.selfcare.tenant.UnknownStorageException;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Map;
-import java.util.Optional;
+import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.function.Function;
+import java.util.function.BiFunction;
 
 /**
- * Resolves the contract/documents blob storage of the tenant in the current {@link TenantContext},
- * i.e. the same account, container and path prefix that {@code document-ms} uses for its
- * {@code contracts} binding. There is no fallback: a missing tenant context or a tenant without a
- * binding fails closed.
+ * Resolves the contract/documents blob storage of the tenant in the current {@link TenantContext}
+ * from the {@code contracts} storage of the {@link TenantRegistry}, i.e. the same account,
+ * container and path prefix that {@code document-ms} uses. There is no fallback: a missing tenant
+ * context or a tenant without the {@code contracts} storage fails closed.
  */
 @ApplicationScoped
 public class ContractBlobClientProvider {
 
+    public static final String CONTRACTS_STORAGE_KEY = "contracts";
+
     private static final Logger log = LoggerFactory.getLogger(ContractBlobClientProvider.class);
 
-    private final ContractStorageConfig config;
-    private final Function<TenantBinding, AzureBlobClient> delegateFactory;
+    private final TenantRegistry registry;
+    private final BiFunction<String, StorageDefinition, AzureBlobClient> delegateFactory;
     private final Map<String, AzureBlobClient> clients = new ConcurrentHashMap<>();
 
     @Inject
-    public ContractBlobClientProvider(ContractStorageConfig config) {
-        this(config, ContractBlobClientProvider::createDelegate);
+    public ContractBlobClientProvider(TenantRegistry registry) {
+        this.registry = registry;
+        this.delegateFactory = this::createDelegate;
     }
 
     ContractBlobClientProvider(
-            ContractStorageConfig config, Function<TenantBinding, AzureBlobClient> delegateFactory) {
-        this.config = config;
+            TenantRegistry registry,
+            BiFunction<String, StorageDefinition, AzureBlobClient> delegateFactory) {
+        this.registry = registry;
         this.delegateFactory = delegateFactory;
     }
 
@@ -47,33 +52,29 @@ public class ContractBlobClientProvider {
     }
 
     private AzureBlobClient createClient(String tenant) {
-        TenantBinding binding = Optional.ofNullable(config.tenants().get(tenant))
-                .filter(ContractBlobClientProvider::isComplete)
-                .orElseThrow(() -> new IllegalStateException(
-                        "No contract storage binding configured for tenant " + tenant));
+        StorageDefinition storage;
+        try {
+            storage = registry.storage(tenant, CONTRACTS_STORAGE_KEY);
+        } catch (UnknownStorageException exception) {
+            throw new IllegalStateException("No contract storage configured for tenant " + tenant, exception);
+        }
+        String pathPrefix = Objects.toString(storage.pathPrefix(), "");
         log.info("Contract blob storage client configured for tenant {}, container {}, prefixConfigured {}",
-                tenant, binding.container().orElse(""), hasText(binding.pathPrefix()));
-        return new PrefixingAzureBlobClient(
-                delegateFactory.apply(binding), binding.pathPrefix().orElse(""));
+                tenant, storage.container(), !pathPrefix.isBlank());
+        return new PrefixingAzureBlobClient(delegateFactory.apply(tenant, storage), pathPrefix);
     }
 
-    private static boolean isComplete(TenantBinding binding) {
-        return hasText(binding.container())
-                && (hasText(binding.connectionString()) || hasText(binding.accountName()));
-    }
-
-    private static boolean hasText(Optional<String> value) {
-        return value.filter(text -> !text.isBlank()).isPresent();
-    }
-
-    private static AzureBlobClient createDelegate(TenantBinding binding) {
-        String container = binding.container().orElseThrow();
-        return binding.connectionString()
-                .filter(connectionString -> !connectionString.isBlank())
-                .<AzureBlobClient>map(connectionString -> new AzureBlobClientDefault(connectionString, container))
-                .orElseGet(() -> new AzureBlobClientDefault(
-                        container,
-                        binding.accountName().orElse(""),
-                        binding.managedIdentityClientId().orElse("")));
+    private AzureBlobClient createDelegate(String tenant, StorageDefinition storage) {
+        return switch (storage.authentication().type()) {
+            case CONNECTION_STRING -> new AzureBlobClientDefault(
+                    registry.storageConnectionString(tenant, CONTRACTS_STORAGE_KEY)
+                            .orElseThrow(() -> new IllegalStateException(
+                                    "Missing contract storage connection string for tenant " + tenant)),
+                    storage.container());
+            case MANAGED_IDENTITY -> new AzureBlobClientDefault(
+                    storage.container(),
+                    storage.account(),
+                    registry.storageManagedIdentityClientId(tenant, CONTRACTS_STORAGE_KEY).orElse(""));
+        };
     }
 }

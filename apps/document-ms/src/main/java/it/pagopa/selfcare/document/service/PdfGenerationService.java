@@ -53,7 +53,9 @@ public class PdfGenerationService {
         InstitutionPdfData institution = request.getInstitution();
         InstitutionType institutionType = institution.getInstitutionType();
 
-        if (isPspAndPagoPaOrDashboard(productId, institutionType)) {
+        if (PROD_RTP.getValue().equalsIgnoreCase(productId)) {
+            PdfMapperData.setupProdRtpData(data, request);
+        } else if (isPspAndPagoPaOrDashboard(productId, institutionType)) {
             PdfMapperData.setupPSPData(data, request.getManager(), request);
         } else if (isPrvOrGpuAndPagoPaOrIdpay(productId, institutionType)) {
             PdfMapperData.setupPRVData(data, request);

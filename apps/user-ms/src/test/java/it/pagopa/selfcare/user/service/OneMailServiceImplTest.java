@@ -19,9 +19,14 @@ import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.verifyNoInteractions;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @QuarkusTest
 class OneMailServiceImplTest {
+  @Inject it.pagopa.selfcare.tenant.TenantContext tenantContext;
+  @org.junit.jupiter.api.BeforeEach
+  void initializeTenant() { tenantContext.setTenantId("AR"); }
 
   @Inject
   MailService mailService;
@@ -61,5 +66,14 @@ class OneMailServiceImplTest {
         anyBoolean(),
         emailArgumentCaptor.capture()
       );
+    assertEquals("noreply@selfcare.pagopa.it", emailArgumentCaptor.getValue().getFrom().getEmail());
+  }
+
+  @Test
+  void doesNotSendMailWhenDisabledForTheCurrentTenant() {
+    tenantContext.setTenantId("PNPG");
+    mailService.sendOneMail("userId", "email", "templateId", Map.of())
+        .await().indefinitely();
+    verifyNoInteractions(emailsApi);
   }
 }

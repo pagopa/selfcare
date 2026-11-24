@@ -21,6 +21,7 @@ import it.pagopa.selfcare.onboarding.connector.model.RelationshipState;
 import it.pagopa.selfcare.onboarding.connector.model.RelationshipsResponse;
 import it.pagopa.selfcare.onboarding.connector.model.institutions.Institution;
 import it.pagopa.selfcare.onboarding.connector.model.institutions.InstitutionInfo;
+import it.pagopa.selfcare.onboarding.connector.model.institutions.InstitutionsSearchResponse;
 import it.pagopa.selfcare.onboarding.connector.model.institutions.OnboardingResource;
 import it.pagopa.selfcare.onboarding.connector.model.onboarding.*;
 import it.pagopa.selfcare.onboarding.connector.model.onboarding.InstitutionUpdate;
@@ -1087,17 +1088,97 @@ class PartyConnectorImplTest {
     }
 
     @Test
+    void searchInstitutionsForwardsTaxCodeAndResponse() {
+        InstitutionResponse details = new InstitutionResponse();
+        details.setId("institution-id");
+        details.setRea("REA-123");
+        details.setIstatCode("010025");
+        details.setIsTest(true);
+        details.setCreatedAt(java.time.OffsetDateTime.parse("2024-01-01T10:00:00Z"));
+        InstitutionsSearchResponse.RootParentDetails rootParent = new InstitutionsSearchResponse.RootParentDetails();
+        rootParent.setId("root-id");
+        details.setRootParent(rootParent);
+        PaymentServiceProvider psp = new PaymentServiceProvider();
+        psp.setAbiCode("12345");
+        psp.setVatNumberGroup(false);
+        details.setPaymentServiceProvider(psp);
+        InstitutionResponse.OnboardingDetails onboarding = new InstitutionResponse.OnboardingDetails();
+        onboarding.setProductId("prod-pagopa");
+        onboarding.setInstitutionType("PSP");
+        onboarding.setOrigin("SELC");
+        onboarding.setOriginId("origin-id");
+        onboarding.setIsAggregator(true);
+        onboarding.setIsPartnerTech(true);
+        Billing billing = new Billing();
+        billing.setRecipientCode("recipient");
+        onboarding.setBilling(billing);
+        details.setOnboarding(List.of(onboarding));
+        InstitutionsResponse response = new InstitutionsResponse();
+        response.setInstitutions(List.of(details));
+        when(restClientMock.getInstitutions("12345678901", null)).thenReturn(response);
+
+        InstitutionsSearchResponse.InstitutionDetails result = partyConnector.searchInstitutions("12345678901")
+                .getInstitutions().get(0);
+
+        assertEquals("institution-id", result.getId());
+        assertEquals("REA-123", result.getRea());
+        assertEquals("010025", result.getIstatCode());
+        assertTrue(result.getIsTest());
+        assertEquals(details.getCreatedAt(), result.getCreatedAt());
+        assertEquals("root-id", result.getRootParent().getId());
+        assertEquals("12345", result.getPaymentServiceProvider().getAbiCode());
+        assertEquals("PSP", result.getOnboarding().get(0).getInstitutionType());
+        assertEquals("SELC", result.getOnboarding().get(0).getOrigin());
+        assertEquals("origin-id", result.getOnboarding().get(0).getOriginId());
+        assertTrue(result.getOnboarding().get(0).getIsAggregator());
+        assertTrue(result.getOnboarding().get(0).getIsPartnerTech());
+        assertEquals("recipient", result.getOnboarding().get(0).getBilling().getRecipientCode());
+        verify(restClientMock).getInstitutions("12345678901", null);
+    }
+
+    @Test
     void getInstitutionsByTaxCodeAndSubunitCode() {
-        // given
         final String taxCode = "taxCode";
         final String subunitCode = "subunitCode";
+        InstitutionResponse details = new InstitutionResponse();
+        details.setId("institution-id");
+        details.setTaxCode(taxCode);
+        details.setRea("REA-123");
+        details.setSupportEmail("support@example.com");
+        PaymentServiceProvider psp = new PaymentServiceProvider();
+        psp.setAbiCode("12345");
+        psp.setVatNumberGroup(true);
+        psp.setLongTermPayments(true);
+        details.setPaymentServiceProvider(psp);
+        GPUData gpuData = new GPUData();
+        gpuData.setManager(true);
+        details.setGpuData(gpuData);
+        InstitutionResponse.OnboardingDetails onboarding = new InstitutionResponse.OnboardingDetails();
+        onboarding.setProductId("prod-pagopa");
+        onboarding.setStatus("ACTIVE");
+        onboarding.setContract("contract");
+        onboarding.setPricingPlan("plan");
+        onboarding.setClosedAt(java.time.OffsetDateTime.parse("2024-01-01T10:00:00Z"));
+        details.setOnboarding(List.of(onboarding));
         InstitutionsResponse institutionsResponse = new InstitutionsResponse();
-        institutionsResponse.setInstitutions(List.of());
-        when(restClientMock.getInstitutions(anyString(), anyString())).thenReturn(institutionsResponse);
-        // when
-        final Executable executable = () -> partyConnector.getInstitutionsByTaxCodeAndSubunitCode(taxCode, subunitCode);
-        // then
-        assertDoesNotThrow(executable);
+        institutionsResponse.setInstitutions(List.of(details));
+        when(restClientMock.getInstitutions(taxCode, subunitCode)).thenReturn(institutionsResponse);
+
+        List<Institution> result = partyConnector.getInstitutionsByTaxCodeAndSubunitCode(taxCode, subunitCode);
+
+        assertEquals("institution-id", result.get(0).getId());
+        assertEquals(taxCode, result.get(0).getTaxCode());
+        assertEquals("REA-123", result.get(0).getCompanyInformations().getRea());
+        assertEquals("support@example.com", result.get(0).getAssistanceContacts().getSupportEmail());
+        assertEquals("12345", result.get(0).getPaymentServiceProvider().getAbiCode());
+        assertTrue(result.get(0).getPaymentServiceProvider().getVatNumberGroup());
+        assertTrue(result.get(0).getPaymentServiceProvider().isLongTermPayments());
+        assertTrue(result.get(0).getGpuData().isManager());
+        assertEquals("prod-pagopa", result.get(0).getOnboarding().get(0).getProductId());
+        assertEquals("ACTIVE", result.get(0).getOnboarding().get(0).getStatus());
+        assertEquals("contract", result.get(0).getOnboarding().get(0).getContract());
+        assertEquals("plan", result.get(0).getOnboarding().get(0).getPricingPlan());
+        assertEquals(onboarding.getClosedAt(), result.get(0).getOnboarding().get(0).getClosedAt());
         verify(restClientMock, times(1))
                 .getInstitutions(taxCode, subunitCode);
         verifyNoMoreInteractions(restClientMock);

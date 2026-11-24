@@ -14,6 +14,22 @@ import org.slf4j.LoggerFactory;
 
 public class ExceptionHandler {
 
+    @ServerExceptionMapper
+    public Response toResponse(it.pagopa.selfcare.tenant.UnknownTenantException exception) {
+        return tenantProblem(Response.Status.BAD_REQUEST);
+    }
+
+    @ServerExceptionMapper
+    public Response toResponse(it.pagopa.selfcare.tenant.UnresolvedTenantException exception) {
+        return tenantProblem(Response.Status.UNAUTHORIZED);
+    }
+
+    private Response tenantProblem(Response.Status status) {
+        LOGGER.warn("Invalid tenant context: {}", status);
+        Problem problem = new Problem("Invalid tenant context", null, null,
+                status.getStatusCode(), "Invalid tenant context", null);
+        return Response.status(status).type("application/problem+json").entity(problem).build();
+    }
     private static final Logger LOGGER = LoggerFactory.getLogger(ExceptionHandler.class);
     public static final String SOMETHING_HAS_GONE_WRONG_IN_THE_SERVER = "Something has gone wrong in the server";
     public static final String PREFIX_LOGGER = "{}: {}";
