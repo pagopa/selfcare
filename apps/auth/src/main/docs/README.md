@@ -13,7 +13,6 @@ specifications when its APIs change, and update the internal contract separately
 
 `POST /token/service` exists only on the opt-in internal listener.
 DEV/UAT/PROD enable plaintext HTTP explicitly, without changing CAE peer-to-peer encryption.
-Its tenant policies remain disabled, so neither tenant can obtain tokens yet.
 It requires no caller credentials: CAE network isolation is the trust boundary.
 The request contains only `tenantId`. Auth does not check IAM permissions or
 require grants during issuance; downstream services must authorize operations.
