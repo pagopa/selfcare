@@ -1,0 +1,10 @@
+[
+  {
+    "_id": {"$oid": "65a000000000000000000001"},
+    "tenantId": "AR",
+    "userId": "tenant-isolation-user",
+    "institutionId": "tenant-isolation-institution",
+    "institutionDescription": "AR institution",
+    "products": []
+  }
+]
