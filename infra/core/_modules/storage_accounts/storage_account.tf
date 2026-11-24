@@ -1,9 +1,9 @@
 module "storage_account" {
-  source = "pagopa-dx/azure-storage-account/azurerm"
+  source  = "pagopa-dx/azure-storage-account/azurerm"
   version = ">= 4.0.5, < 5.0.0"
 
-  subnet_pep_id = azurerm_subnet.storage_account_snet.id
-  tags          = var.tags
+  subnet_pep_id       = azurerm_subnet.storage_account_snet.id
+  tags                = var.tags
   use_case            = "default"
   environment         = local.environment
   resource_group_name = var.resource_group_name

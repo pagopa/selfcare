@@ -8,16 +8,23 @@ import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
+import org.apache.commons.text.StringSubstitutor;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.util.List;
 import java.util.Map;
+import java.util.regex.Pattern;
 
 import static it.pagopa.selfcare.onboarding.common.ProductId.PROD_CED;
 import static it.pagopa.selfcare.onboarding.common.ProductId.PROD_IO;
 import static it.pagopa.selfcare.onboarding.common.ProductId.PROD_PAGOPA;
+import static it.pagopa.selfcare.onboarding.common.ProductId.PROD_RTP;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.*;
 
 class PdfGenerationServiceTest {
@@ -105,6 +112,45 @@ class PdfGenerationServiceTest {
     }
 
     @Test
+    void generateContractPdf_shouldResolveEveryRtpTemplatePlaceholder() throws IOException {
+        ContractPdfRequest request = buildValidRtpContractRequest();
+        request.setProductId(PROD_RTP.getValue());
+        request.setRtpServiceTypes(List.of(RtpServiceType.RTP, RtpServiceType.REPOSITORY_CONSULTATION));
+        request.setBilling(null);
+        String template;
+        try (var stream = getClass().getResourceAsStream(
+                "/contracts/rtp/rtp-accordo_di_adesione-v.1.0.0.html")) {
+            assertNotNull(stream);
+            template = new String(stream.readAllBytes(), StandardCharsets.UTF_8);
+        }
+        ArgumentCaptor<Map<String, Object>> dataCaptor = ArgumentCaptor.forClass(Map.class);
+
+        try (MockedStatic<PdfBuilder> pdfBuilderMock = Mockito.mockStatic(PdfBuilder.class)) {
+            pdfBuilderMock.when(() -> PdfBuilder.generateDocument(anyString(), anyString(), anyMap()))
+                    .thenReturn(new File("dummy_rtp.pdf"));
+
+            pdfGenerationService.generateContractPdf(template, request);
+
+            pdfBuilderMock.verify(() -> PdfBuilder.generateDocument(anyString(), eq(template), dataCaptor.capture()));
+        }
+        Map<String, Object> data = dataCaptor.getValue();
+        var placeholders = Pattern.compile("\\$\\{([^}]+)}").matcher(template);
+        assertTrue(placeholders.find(), "The fixture must contain placeholders");
+        placeholders.reset();
+        while (placeholders.find()) {
+            String key = placeholders.group(1);
+            assertNotNull(data.get(key), () -> "Unresolved placeholder: " + key);
+        }
+        assertEquals("X", data.get("rtpServiceCheckbox"));
+        assertEquals("X", data.get("rtpRepositoryServiceCheckbox"));
+        assertEquals("X", data.get("rtpDebtorServiceProviderCheckbox"));
+        assertEquals("X", data.get("rtpPagoPaMemberCheckbox"));
+        assertEquals("", data.get("rtpCreditorServiceProviderCheckbox"));
+        assertEquals("", data.get("rtpPagoPaNonMemberCheckbox"));
+        assertFalse(new StringSubstitutor(data).replace(template).contains("${"));
+    }
+
+    @Test
     void generateAttachmentPdf_shouldGenerateCorrectly() throws IOException {
         // Arrange
         AttachmentPdfRequest request = buildValidAttachmentRequest();
@@ -159,6 +205,23 @@ class PdfGenerationServiceTest {
         billing.setRecipientCode("ABCDEF");
         request.setBilling(billing);
 
+        return request;
+    }
+
+    private ContractPdfRequest buildValidRtpContractRequest() {
+        ContractPdfRequest baseRequest = buildValidContractRequest();
+        ContractPdfRequest request = new ContractPdfRequest();
+        request.setOnboardingId(baseRequest.getOnboardingId());
+        request.setProductId(baseRequest.getProductId());
+        request.setProductName(baseRequest.getProductName());
+        request.setContractTemplatePath(baseRequest.getContractTemplatePath());
+        request.setInstitution(baseRequest.getInstitution());
+        request.setManager(baseRequest.getManager());
+        request.setDelegates(baseRequest.getDelegates());
+        request.setBilling(baseRequest.getBilling());
+        request.setIsAggregator(baseRequest.getIsAggregator());
+        request.setPricingPlan(baseRequest.getPricingPlan());
+        request.setAggregatesCsvBaseUrl(baseRequest.getAggregatesCsvBaseUrl());
         return request;
     }
 

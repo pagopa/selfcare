@@ -87,7 +87,7 @@ From `src/main/resources/application.properties` and `infra/resources/document-m
 | `TENANT_REGISTRY_JSON` | `tenant.registry.json` in properties | Per-tenant Mongo, JWT key, signature and storage bindings |
 | `TENANT_SUPPORTED_TENANTS` | `AR` | Enabled tenants |
 | `TENANT_ENFORCEMENT_ENABLED` / `TENANT_DEFAULT` | `true` / `AR` | Fail-closed `X-Tenant-Id` requirement; default only when enforcement is off |
-| `SELFCARE_TENANT_STRICT_DATA_ISOLATION` | `false` | Strict `tenantId` filtering |
+| `SELFCARE_TENANT_STRICT_DATA_ISOLATION` | `false` | Strict `tenantId` filtering; set in Terraform from the shared `strict_tenant_data_isolation` flag |
 | `MONGODB_CONNECTION_STRING_AR` (and legacy `MONGODB_CONNECTION_STRING`) | Key Vault `mongodb-connection-string` | Mongo connection |
 | `JWT_PUBLIC_KEY_AR` (fallback `JWT_PUBLIC_KEY`) | Key Vault `jwt-public-key` | JWT verification |
 | `PAGOPA_SIGNATURE_SOURCE` | `disabled` (Terraform: `namirial`) | PagoPA signing source for AR |

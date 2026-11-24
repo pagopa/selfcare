@@ -1,0 +1,16 @@
+<policies>
+    <inbound>
+        <base/>
+        <set-variable name="productId" value="prod-pagopa-pt"/>
+        <set-variable name="tenantId" value="AR"/>
+    </inbound>
+    <backend>
+        <base/>
+    </backend>
+    <outbound>
+        <base/>
+    </outbound>
+    <on-error>
+        <base/>
+    </on-error>
+</policies>

@@ -31,6 +31,7 @@ services:
     volumes:
       - "./src/test/resources/blobStorageInit/initAzurite.sh:/initAzurite.sh"
       - "./src/test/resources/blobStorageInit/products.json:/workspace/products.json"
+      - "./src/test/resources/blobStorageInit/products-pnpg.json:/workspace/products-pnpg.json"
     environment:
       - SELFCARE_INFRA_PRIVATE_ENV=dev
     command: [ "/bin/sh", "-c", "/initAzurite.sh" ]

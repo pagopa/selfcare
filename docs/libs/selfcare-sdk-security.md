@@ -5,7 +5,7 @@
 | | |
 |---|---|
 | Path | `libs/selfcare-sdk-security` |
-| Artifact | `it.pagopa.selfcare:selfcare-sdk-security:0.8.0` |
+| Artifact | `it.pagopa.selfcare:selfcare-sdk-security:0.8.2` |
 | Stack | Quarkus (`quarkus-smallrye-jwt`, `quarkus-rest-jackson`, `quarkus-rest-client-jackson`, BOM 3.11.2), Java 17, `java-jwt`, `jose4j`; parent [`selfcare-sdk-pom`](selfcare-sdk-pom.md); depends on [`selfcare-sdk-tenant`](selfcare-sdk-tenant.md) |
 | Used by | `document-ms`, `iam`, `onboarding-ms`, `product`, `user-ms`, `webhook` |
 
@@ -17,7 +17,7 @@ Package `it.pagopa.selfcare.security` (`libs/selfcare-sdk-security/src/main/java
 |---|---|
 | `JWTCallerPrincipalFactory` | CDI `@Alternative` replacing the Quarkus JWT parser. Accepts only issuers `SPID` and `PAGOPA`; verifies with `mp.jwt.verify.publickey` and/or the per-tenant keys returned by `TenantRegistry.jwtPublicKey(...)`. |
 | `JWTSecurityIdentityAugmentor` | Adds roles to the `SecurityIdentity`; tokens issued by `PAGOPA` get the `SUPPORT` role. |
-| `JwtTenantValidator`, `JwtTenantValidationFilter` | For `SPID` tokens, reconcile the `tenant_id` claim with the `X-Tenant-Id` header (`401` on missing/unknown/mismatching header). |
+| `JwtTenantValidator`, `JwtTenantValidationFilter` | For `SPID` tokens, reconcile the `tenant_id` claim (resolved by `selfcare-sdk-tenant` `JwtTenantClaimResolver`) with the `X-Tenant-Id` header (`401` on missing/unknown/mismatching header). |
 | `LoggingContextFilter` | Copies the JWT claims listed in `selfcare.logging.mdc.claims` (default `uid`) into the MDC for every REST request. |
 | `tenant.TenantResolutionFilter` | Opt-in JAX-RS filter resolving the tenant from `tenantId` query param / `X-Tenant-Id` header, validating it with `TenantRegistry` and storing it in `TenantContext` (`400` problem on conflict). |
 | `tenant.EffectiveTenant` | Resolves an endpoint's optional `tenantId` param, falling back to `TenantContext` then to the JWT `tenant_id` claim. |
@@ -29,7 +29,7 @@ Package `it.pagopa.selfcare.security` (`libs/selfcare-sdk-security/src/main/java
 <dependency>
   <groupId>it.pagopa.selfcare</groupId>
   <artifactId>selfcare-sdk-security</artifactId>
-  <version>0.8.0</version>
+  <version>0.8.2</version>
 </dependency>
 ```
 

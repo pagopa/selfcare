@@ -5,6 +5,7 @@ import it.pagopa.selfcare.commons.base.security.PartyRole;
 import it.pagopa.selfcare.onboarding.connector.model.institutions.*;
 import it.pagopa.selfcare.onboarding.connector.rest.model.BillingDataResponse;
 import it.pagopa.selfcare.onboarding.connector.rest.model.InstitutionResponse;
+import it.pagopa.selfcare.onboarding.connector.rest.model.InstitutionsResponse;
 import it.pagopa.selfcare.onboarding.connector.rest.model.OnboardingResponse;
 import it.pagopa.selfcare.user.generated.openapi.v1.dto.OnboardedProductResponse;
 import it.pagopa.selfcare.user.generated.openapi.v1.dto.OnboardedProductState;
@@ -22,6 +23,8 @@ public interface InstitutionMapper {
     @Mapping(target = "companyInformations", source = ".", qualifiedByName = "toCompanyInformationsEntity")
     @Mapping(target = "assistanceContacts", source = ".", qualifiedByName = "toAssistanceContacts")
     Institution toEntity(InstitutionResponse dto);
+
+    InstitutionsSearchResponse toInstitutionsSearchResponse(InstitutionsResponse dto);
 
     @Named("toCompanyInformationsEntity")
     static CompanyInformations toCompanyInformationsEntity(InstitutionResponse dto) {

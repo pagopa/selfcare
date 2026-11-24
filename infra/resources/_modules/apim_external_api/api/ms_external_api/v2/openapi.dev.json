@@ -7304,6 +7304,12 @@
           },
           "contractUpdateRequired": {
             "type": "boolean"
+          },
+          "rtpServiceTypes": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RtpServiceTypeResponse"
+            }
           }
         }
       },
@@ -7575,6 +7581,13 @@
             "type": "string"
           }
         }
+      },
+      "RtpServiceTypeResponse": {
+        "enum": [
+          "RTP",
+          "REPOSITORY_CONSULTATION"
+        ],
+        "type": "string"
       },
       "OnboardingStatus": {
         "enum": [

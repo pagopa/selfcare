@@ -1,19 +1,20 @@
 package it.pagopa.selfcare.user.conf;
 
-import com.mongodb.MongoClientSettings;
 import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.enterprise.inject.Produces;
+import java.time.OffsetDateTime;
+import org.bson.codecs.Codec;
+import org.bson.codecs.configuration.CodecProvider;
 import org.bson.codecs.configuration.CodecRegistries;
 import org.bson.codecs.configuration.CodecRegistry;
 
 @ApplicationScoped
-public class MongoConfig {
+public class MongoConfig implements CodecProvider {
 
-    @Produces
-    public CodecRegistry produceCodecRegistry() {
-        CodecRegistry defaultCodecRegistry = MongoClientSettings.getDefaultCodecRegistry();
-        CodecRegistry customCodecRegistry = CodecRegistries.fromCodecs(new DateCodec());
-
-        return CodecRegistries.fromRegistries(customCodecRegistry, defaultCodecRegistry);
+    @Override
+    public <T> Codec<T> get(Class<T> type, CodecRegistry registry) {
+        return type == OffsetDateTime.class
+                ? CodecRegistries.fromCodecs(new DateCodec()).get(type)
+                : null;
     }
+
 }

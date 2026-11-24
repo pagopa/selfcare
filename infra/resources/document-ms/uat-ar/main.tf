@@ -90,7 +90,7 @@ locals {
   app_settings_document_ms = [
     {
       name  = "JAVA_TOOL_OPTIONS"
-      value = "-javaagent:applicationinsights-agent.jar"
+      value = "-javaagent:applicationinsights-agent.jar -XX:-UseBASE64Intrinsics"
     },
     {
       name  = "APPLICATIONINSIGHTS_ROLE_NAME"
@@ -143,6 +143,10 @@ locals {
     {
       name  = "TENANT_SUPPORTED_TENANTS"
       value = "AR"
+    },
+    {
+      name  = "SELFCARE_TENANT_STRICT_DATA_ISOLATION"
+      value = tostring(module.local.config.strict_tenant_data_isolation)
     }
   ]
 

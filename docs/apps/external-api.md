@@ -116,7 +116,7 @@ Terraform values and Key Vault secret names are in `infra/resources/external-api
 
 ## Multitenancy
 
-- Libraries: `selc-commons-tenant`, `selc-commons-web`, `selc-commons-connector-rest` 2.23.0 (`libs/selfcare-commons`, see [selfcare-commons](../libs/selfcare-commons.md)).
+- Libraries: `selc-commons-tenant`, `selc-commons-web`, `selc-commons-connector-rest` 2.25.0 (`libs/selfcare-commons`, see [selfcare-commons](../libs/selfcare-commons.md)).
 - Audience-based resolution is mandatory (`jwt.tenant-audience-resolution-enabled=true`): each request needs one `X-Tenant-Id` and a JWT whose `aud` maps to exactly one tenant; the verified tenant must match the header. No default tenant. `ExternalAPISecurityConfig` refuses to start if no tenant is supported or audience resolution is disabled.
 - Feign clients propagate the bearer and validated `TenantContext`; the User Registry client sends only the tenant API key.
 - Each stack defines its own `SELFCARE_TENANT_DATA_ISOLATION` JSON in `locals.tf`; current stacks are single-tenant (`TENANT_SUPPORTED_TENANTS=AR` or `PNPG`).

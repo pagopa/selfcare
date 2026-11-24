@@ -24,6 +24,7 @@ public class CustomClientRequestLoggingFilter implements ResteasyReactiveClientR
         String query = requestContext.getUri().getQuery();
         String method = requestContext.getMethod();
         MDCUtils.addOperationIdAndParameters(method);
-        log.info("Request: method: {}, endpoint: {}, query: {}", method, endpoint, query);
+        log.info("Request: method: {}, endpoint: {}, query: {}, tenant: {}", method, endpoint, query,
+                it.pagopa.selfcare.security.tenant.TenantLogUtils.fromClientRequest(requestContext));
     }
 }

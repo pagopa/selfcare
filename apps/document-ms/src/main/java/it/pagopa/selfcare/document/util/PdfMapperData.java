@@ -112,6 +112,7 @@ public class PdfMapperData {
         map.put(INSTITUTION_NAME, institution.getDescription());
         map.put("address", institution.getAddress());
         map.put("institutionTaxCode", Optional.ofNullable(institution.getTaxCode()).orElse(UNDERSCORE));
+        map.put(INSTITUTION_BUSINESS_REGISTER_PLACE, Optional.ofNullable(institution.getBusinessRegisterPlace()).orElse(UNDERSCORE));
         map.put("zipCode", Optional.ofNullable(institution.getZipCode()).orElse(EMPTY_STR));
         map.put("institutionCity", Optional.ofNullable(institution.getCity()).orElse("__"));
         map.put("institutionCountry", Optional.ofNullable(institution.getCountry()).orElse("__"));
@@ -190,6 +191,32 @@ public class PdfMapperData {
         map.put(INSTITUTION_REA, Optional.ofNullable(institution.getRea()).orElse(UNDERSCORE));
         map.put(INSTITUTION_SHARE_CAPITAL, Optional.ofNullable(institution.getShareCapital()).orElse(UNDERSCORE));
         map.put(INSTITUTION_BUSINESS_REGISTER_PLACE, Optional.ofNullable(institution.getBusinessRegisterPlace()).orElse(UNDERSCORE));
+    }
+
+    /**
+     * Sets up prod-rtp specific data: PSP and company register fields plus service checkboxes.
+     */
+    public static void setupProdRtpData(Map<String, Object> map, ContractPdfRequest request) {
+        setupPSPData(map, request.getManager(), request);
+        setECData(map, request.getInstitution());
+
+        List<RtpServiceType> services = Optional.ofNullable(request.getRtpServiceTypes()).orElse(List.of());
+        map.put("rtpServiceCheckbox", services.contains(RtpServiceType.RTP) ? CHECKBOX_X : EMPTY_STR);
+        map.put("rtpRepositoryServiceCheckbox", services.contains(RtpServiceType.REPOSITORY_CONSULTATION) ? CHECKBOX_X : EMPTY_STR);
+
+        // Defaults until explicit role and membership fields are integrated into the request
+        map.put("rtpDebtorServiceProviderCheckbox", CHECKBOX_X);
+        map.put("rtpCreditorServiceProviderCheckbox", EMPTY_STR);
+        map.put("rtpPagoPaMemberCheckbox", CHECKBOX_X);
+        map.put("rtpPagoPaNonMemberCheckbox", EMPTY_STR);
+
+        // setupPSPData may skip or null these keys, which would leave literal placeholders in the PDF
+        for (String key : List.of("institutionAbi", INSTITUTION_RECIPIENT_CODE,
+                "dataProtectionOfficerEmail", "dataProtectionOfficerPec")) {
+            if (StringUtils.isBlank((String) map.get(key))) {
+                map.put(key, UNDERSCORE);
+            }
+        }
     }
 
     /**

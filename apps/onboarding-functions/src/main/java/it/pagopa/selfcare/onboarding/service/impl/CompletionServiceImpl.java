@@ -214,8 +214,8 @@ public class CompletionServiceImpl implements CompletionService {
     @Override
     public void sendCompletedEmail(OnboardingWorkflow onboardingWorkflow) {
         Onboarding onboarding = onboardingWorkflow.getOnboarding();
-        if (Objects.isNull(onboarding.getInstitution().getDigitalAddress())) {
-            log.warn("Digital address is null for onboarding {}, skipping completed email notification", onboarding.getId());
+        if (StringUtils.isBlank(onboarding.getInstitution().getDigitalAddress())) {
+            log.warn("Digital address is blank for onboarding {}, skipping completed email notification", onboarding.getId());
             return;
         }
         List<String> destinationMails = CONTRACT_UPDATE.equals(onboarding.getWorkflowType())
@@ -234,8 +234,8 @@ public class CompletionServiceImpl implements CompletionService {
             return;
         }
         Onboarding onboarding = onboardingOpt.get();
-        if (Objects.isNull(onboarding.getInstitution().getDigitalAddress())) {
-            log.warn("Digital address is null for onboarding {}, skipping deleted email notification", onboardingId);
+        if (StringUtils.isBlank(onboarding.getInstitution().getDigitalAddress())) {
+            log.warn("Digital address is blank for onboarding {}, skipping deleted email notification", onboardingId);
             return;
         }
         // TODO only for CED RN, asap for all delete action

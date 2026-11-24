@@ -1,0 +1,46 @@
+name: Maven Dependency Submission
+
+# Replaces GitHub's "Automatic dependency submission" for Maven, which runs without credentials for
+# GitHub Packages (maven.pkg.github.com/pagopa/selfcare) and fails with HTTP 401 on the private SDKs.
+# Automatic dependency submission must stay disabled in the repository settings, otherwise both run.
+
+permissions:
+  contents: write
+  packages: read
+
+on:
+  workflow_dispatch:
+
+  push:
+    branches:
+      - main
+    paths:
+      - '**/pom.xml'
+      - '.github/workflows/dependency_submission.yml'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  submit-maven:
+    name: Submit Maven dependency snapshot
+    runs-on: ubuntu-24.04
+
+    steps:
+      - name: Setup Maven Action
+        uses: s4u/setup-maven-action@fa2c7e4517ed008b1f73e7e0195a9eecf5582cd4
+        with:
+          java-version: 17
+          java-distribution: 'temurin'
+          maven-version: '3.9.5'
+          cache-enabled: true
+
+      - uses: s4u/maven-settings-action@60912582505985be4cc55d2b890eb32767f8de5f # pin@v2.8.0
+        with:
+          servers: '[{"id": "selfcare", "username": "${{ github.actor }}", "password": "${{ secrets.GITHUB_TOKEN }}"}]'
+
+      - name: Submit dependency snapshot
+        uses: advanced-security/maven-dependency-submission-action@a64327a7329c9939cf675e458452febe1894a70c # v6.0.1
+        with:
+          ignore-maven-wrapper: true

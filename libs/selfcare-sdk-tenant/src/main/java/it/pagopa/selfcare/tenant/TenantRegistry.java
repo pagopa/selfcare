@@ -188,6 +188,15 @@ public class TenantRegistry {
         .filter(value -> !value.isBlank());
   }
 
+  /** Returns empty when the tenant has no {@code jwt.session.audience}. */
+  public Optional<String> jwtSessionAudience(String tenantId) {
+    TenantDefinition.JwtDefinition jwt = resolve(tenantId).jwt();
+    if (jwt == null || jwt.session() == null || isBlank(jwt.session().audience())) {
+      return Optional.empty();
+    }
+    return Optional.of(jwt.session().audience().trim());
+  }
+
   /** Returns empty only when OneIdentity is not configured for this tenant. */
   public Optional<OneIdentityCredentials> oneIdentityCredentials(String tenantId) {
     TenantDefinition.OneIdentityDefinition definition = resolve(tenantId).oneIdentity();

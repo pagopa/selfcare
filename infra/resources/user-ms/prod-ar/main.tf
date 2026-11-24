@@ -91,10 +91,36 @@ module "collection_user_institutions" {
 ###############################################################################
 
 locals {
+  tenant_id = "AR"
+  tenant_registry = {
+    (local.tenant_id) = {
+      mongo = {
+        account                = module.local.config.mongo_db.cosmosdb_account_mongodb_name
+        database               = module.cosmosdb.database_name
+        connectionStringEnvVar = "MONGODB_CONNECTION_STRING_AR"
+      }
+      jwt          = { publicKeyEnvVar = "JWT_PUBLIC_KEY_AR" }
+      userRegistry = { apiKeyEnvVar = "USER_REGISTRY_API_KEY_AR" }
+      storages = {
+        products = {
+          account   = data.azurerm_storage_account.product_storage.name
+          container = "selc-${module.local.config.env_short}-product"
+          authentication = {
+            type                          = "MANAGED_IDENTITY"
+            managedIdentityClientIdEnvVar = "PRODUCTS_STORAGE_MANAGED_IDENTITY_CLIENT_ID_AR"
+          }
+        }
+      }
+    }
+  }
   app_settings_user_ms = [
+    { name = "TENANT_SUPPORTED_TENANTS", value = local.tenant_id },
+    { name = "TENANT_ENFORCEMENT_ENABLED", value = "true" },
+    { name = "TENANT_REGISTRY_JSON", value = jsonencode(local.tenant_registry) },
+    { name = "SELFCARE_TENANT_STRICT_DATA_ISOLATION", value = tostring(module.local.config.strict_tenant_data_isolation) },
     {
       name  = "JAVA_TOOL_OPTIONS"
-      value = "-javaagent:applicationinsights-agent.jar",
+      value = "-javaagent:applicationinsights-agent.jar -XX:-UseBASE64Intrinsics",
     },
     {
       name  = "APPLICATIONINSIGHTS_ROLE_NAME"
@@ -121,16 +147,8 @@ locals {
       value = "external-interceptor-wo"
     },
     {
-      name  = "USER_MS_EVENTHUB_USERS_ENABLED"
+      name  = "TENANT_AR_EVENTHUB_USERS_ENABLED"
       value = true
-    },
-    {
-      name  = "USER_MS_EVENTHUB_SELFCARE_FD_ENABLED"
-      value = true
-    },
-    {
-      name  = "STORAGE_CONTAINER_PRODUCT"
-      value = "selc-p-product"
     },
     {
       name  = "USER_REGISTRY_URL"
@@ -149,7 +167,7 @@ locals {
       value = 3
     },
     {
-      name  = "SELFCARE_URL"
+      name  = "TENANT_AR_SELFCARE_URL"
       value = "https://selfcare.pagopa.it"
     },
     {
@@ -165,15 +183,11 @@ locals {
       value = "https://selc-${module.local.config.env_short}-webhook-ms-ca.${module.local.config.private_dns_name_domain}"
     },
     {
-      name  = "USER_MS_WEBHOOK_ENABLED"
+      name  = "TENANT_AR_WEBHOOK_ENABLED"
       value = true
     },
     {
-      name  = "BLOB-STORAGE-PRODUCT-ACCOUNT-NAME"
-      value = data.azurerm_storage_account.product_storage.name
-    },
-    {
-      name  = "BLOB-STORAGE-PRODUCT-MANAGED-IDENTITY-CLIENT-ID"
+      name  = "PRODUCTS_STORAGE_MANAGED_IDENTITY_CLIENT_ID_AR"
       value = data.azurerm_user_assigned_identity.product_storage_blob_identity.client_id
     },
     {
@@ -185,43 +199,43 @@ locals {
       value = data.azurerm_user_assigned_identity.fd_eventhub_sender_identity.client_id
     },
     {
-      name  = "INTERNALEVENTS_ENABLED"
+      name  = "TENANT_AR_INTERNALEVENTS_ENABLED"
       value = "true"
     },
     {
-      name  = "INTERNALEVENTS_NAMESPACE"
+      name  = "TENANT_AR_INTERNALEVENTS_NAMESPACE"
       value = "selc-${module.local.config.env_short}-${module.local.config.domain}-internal-events.servicebus.windows.net"
     },
     {
-      name  = "INTERNALEVENTS_CLIENT_ID"
+      name  = "TENANT_AR_INTERNALEVENTS_CLIENT_ID"
       value = data.azurerm_user_assigned_identity.internal_events_identity.client_id
     },
     {
-      name  = "ACTIVATE_TEMPLATE_ID"
+      name  = "TENANT_AR_ACTIVATE_TEMPLATE_ID"
       value = "selfcare_user_activated"
     },
     {
-      name  = "DELETE_TEMPLATE_ID"
+      name  = "TENANT_AR_DELETE_TEMPLATE_ID"
       value = "selfcare_user_deleted"
     },
     {
-      name  = "SUSPEND_TEMPLATE_ID"
+      name  = "TENANT_AR_SUSPEND_TEMPLATE_ID"
       value = "selfcare_user_suspended"
     },
     {
-      name  = "REQUEST_TEMPLATE_ID"
+      name  = "TENANT_AR_REQUEST_TEMPLATE_ID"
       value = "selfcare_user_request"
     },
     {
-      name  = "CONVENTION_TEMPLATE_ID"
+      name  = "TENANT_AR_CONVENTION_TEMPLATE_ID"
       value = "selfcare_convention_request"
     },
     {
-      name = "CREATE_MULTI_ROLE_TEMPLATE_ID"
+      name  = "TENANT_AR_CREATE_MULTI_ROLE_TEMPLATE_ID"
       value = "selfcare_user_added_multi_role"
     },
     {
-      name  = "CREATE_SINGLE_ROLE_TEMPLATE_ID"
+      name  = "TENANT_AR_CREATE_SINGLE_ROLE_TEMPLATE_ID"
       value = "selfcare_user_added_single_role"
     },
     {
@@ -229,23 +243,23 @@ locals {
       value = "https://onemail.pagopa.it"
     },
     {
-      name  = "MAIL_ENABLED"
+      name  = "TENANT_AR_MAIL_ENABLED"
       value = true
     },
     {
-      name  = "MAIL_SENDER_ADDRESS",
+      name  = "TENANT_AR_MAIL_SENDER",
       value = "noreply@areariservata.pagopa.it"
     }
   ]
 
   secrets_names_user_ms = {
     "APPLICATIONINSIGHTS_CONNECTION_STRING" = "appinsights-connection-string"
-    "JWT-PUBLIC-KEY"                        = "jwt-public-key"
-    "MONGODB-CONNECTION-STRING"             = "mongodb-connection-string"
-    "USER-REGISTRY-API-KEY"                 = "user-registry-api-key"
+    "JWT_PUBLIC_KEY_AR"                     = "jwt-public-key"
+    "MONGODB_CONNECTION_STRING_AR"          = "mongodb-connection-string"
+    "USER_REGISTRY_API_KEY_AR"              = "user-registry-api-key"
     "AWS-SES-ACCESS-KEY-ID"                 = "aws-ses-access-key-id"
     "AWS-SES-SECRET-ACCESS-KEY"             = "aws-ses-secret-access-key"
-    "ONE_MAIL_API_KEY"                      = "onemail-api-key-prod"
+    "TENANT_AR_ONE_MAIL_API_KEY"            = "onemail-api-key-prod"
   }
 }
 
