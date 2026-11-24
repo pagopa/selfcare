@@ -139,7 +139,7 @@ public class InstitutionV2Controller {
     @PostMapping(value = "/{institutionId}/products/{productId}/contract-update", produces = MediaType.APPLICATION_JSON_VALUE)
     @ResponseStatus(HttpStatus.CREATED)
     @Operation(summary = "onboardingContractUpdate", description = "${swagger.dashboard.institutions.api.onboardingContractUpdate}", operationId = "#v2OnboardingContractUpdate")
-    @PreAuthorize("hasPermission(new it.pagopa.selfcare.dashboard.security.FilterAuthorityDomain(#institutionId, #productId, null), 'Selc:CreateProductUsers')")
+    @PreAuthorize("hasPermission(new it.pagopa.selfcare.dashboard.security.FilterAuthorityDomain(#institutionId, #productId, null), 'Selc:UpdateContract')")
     public void onboardingContractUpdate(@Parameter(description = "${swagger.dashboard.institutions.model.id}")
                                          @PathVariable("institutionId")
                                          String institutionId,
