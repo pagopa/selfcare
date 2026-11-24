@@ -126,5 +126,69 @@
       }
     ],
     "requiredDocuments": []
+  },
+  {
+    "_id": "7d2e4b91-3c6a-4f85-b0d7-9e1a2c4f6b83",
+    "tenantId": "AR",
+    "productId": "prod-pagopa",
+    "alias": "prod-pagopa",
+    "title": "Piattaforma pagoPA",
+    "status": "ACTIVE",
+    "version": 1,
+    "features": {
+      "allowCompanyOnboarding": true,
+      "allowIndividualOnboarding": false,
+      "delegable": true,
+      "invoiceable": true,
+      "enabled": true,
+      "expirationDays": 30
+    },
+    "roleMappings": [
+      {
+        "role": "MANAGER",
+        "institutionType": "DEFAULT",
+        "multiroleAllowed": false,
+        "phasesAdditionAllowed": [
+          "onboarding"
+        ],
+        "skipUserCreation": false,
+        "backOfficeRoles": [
+          {
+            "code": "admin",
+            "label": "Amministratore",
+            "description": "Amministratore"
+          }
+        ]
+      },
+      {
+        "role": "DELEGATE",
+        "institutionType": "DEFAULT",
+        "multiroleAllowed": false,
+        "phasesAdditionAllowed": [
+          "onboarding"
+        ],
+        "skipUserCreation": false,
+        "backOfficeRoles": [
+          {
+            "code": "admin",
+            "label": "Amministratore",
+            "description": "Amministratore"
+          }
+        ]
+      }
+    ],
+    "institutionOrigins": [
+      {
+        "institutionType": "PA",
+        "origin": "IPA",
+        "labelKey": "pa"
+      },
+      {
+        "institutionType": "PT",
+        "origin": "IPA",
+        "labelKey": "pt"
+      }
+    ],
+    "requiredDocuments": []
   }
 ]
