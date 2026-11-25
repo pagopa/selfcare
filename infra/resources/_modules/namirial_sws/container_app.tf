@@ -77,7 +77,7 @@ resource "azurerm_container_app" "namirial_container_app" {
 
       # Variabili d'ambiente concatenate
       dynamic "env" {
-        for_each = concat(var.app_settings, local.secrets_env)
+        for_each = concat(local.app_settings, local.secrets_env)
         content {
           name  = env.value.name
           value = lookup(env.value, "value", null)
