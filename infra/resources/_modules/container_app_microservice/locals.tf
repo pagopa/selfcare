@@ -17,12 +17,16 @@ locals {
   cleaned_image_tag   = replace(trimspace(var.image_tag), "\\", "")
   sanitized_image_tag = length(local.cleaned_image_tag) == 0 ? "latest" : (startswith(local.cleaned_image_tag, "sha-") && length(local.cleaned_image_tag) > 11 ? substr(local.cleaned_image_tag, 0, 11) : local.cleaned_image_tag)
 
-  secrets = [for secret in var.secrets_names :
+  secrets = concat([for secret in var.secrets_names :
     {
       identity              = data.azurerm_user_assigned_identity.cae_identity.id
       name                  = secret
       key_vault_secret_name = "https://${data.azurerm_key_vault.key_vault.name}.vault.azure.net/secrets/${secret}"
-  }]
+      }], [for setting in var.app_settings : {
+      identity              = data.azurerm_user_assigned_identity.cae_identity.id
+      name                  = replace(lower(setting.name), "_", "-")
+      key_vault_secret_name = setting.key_vault_secret_id
+  } if setting.key_vault_secret_id != null])
 
   secrets_env = [for env, secret in var.secrets_names :
     {

@@ -13,6 +13,8 @@ module "local" {
   private_dns_name_domain        = "mangopond-2a5d4d65.westeurope.azurecontainerapps.io"
   container_app_environment_name = "selc-u-cae-002"
   ca_resource_group_name         = "selc-u-container-app-002-rg"
+  # Keep the additional TCP listener available independently of primary HTTP traffic.
+  container_app_min_replicas = 1
 }
 
 ###############################################################################
@@ -122,7 +124,47 @@ module "collection_auth_otp_flows" {
 ###############################################################################
 
 locals {
+  m2m_enabled = true
+  m2m_tenants = {
+    AR = {
+      enabled   = true
+      uidEnvVar = "TENANT_AR_M2M_IAM_UID"
+    }
+    PNPG = {
+      enabled   = true
+      uidEnvVar = "TENANT_PNPG_M2M_IAM_UID"
+    }
+  }
+  m2m_secret_names = {
+    "TENANT_AR_M2M_IAM_UID" = "auth-m2m-iam-uid-ar"
+    # "TENANT_PNPG_M2M_IAM_UID" = "auth-m2m-iam-uid-pnpg"
+  }
+
   app_settings_auth_ms = [
+    {
+      name                = "TENANT_PNPG_JWT_SESSION_PRIVATE_KEY"
+      key_vault_secret_id = "https://selc-${module.local.config.env_short}-pnpg-kv.vault.azure.net/secrets/jwt-private-key-pkcs8"
+    },
+    {
+      name                = "TENANT_PNPG_JWT_SESSION_KEY_ID"
+      key_vault_secret_id = "https://selc-${module.local.config.env_short}-pnpg-kv.vault.azure.net/secrets/jwt-kid"
+    },
+    {
+      name                = "TENANT_PNPG_M2M_IAM_UID"
+      key_vault_secret_id = "https://selc-${module.local.config.env_short}-pnpg-kv.vault.azure.net/secrets/auth-m2m-iam-uid-pnpg"
+    },
+    {
+      name  = "M2M_ISSUER_ENABLED"
+      value = tostring(local.m2m_enabled)
+    },
+    {
+      name  = "M2M_INTERNAL_PORT"
+      value = "8082"
+    },
+    {
+      name  = "M2M_TLS_ENABLED"
+      value = "false"
+    },
     {
       name  = "JAVA_TOOL_OPTIONS"
       value = "-javaagent:applicationinsights-agent.jar -XX:-UseBASE64Intrinsics"
@@ -141,7 +183,8 @@ locals {
             database               = "selcAuth"
             connectionStringEnvVar = "MONGODB_CONNECTION_STRING_AR"
           } : null
-          }, tenant.auth_enabled ? {
+          m2m = try(local.m2m_tenants[tenant_id], null)
+          }, tenant.auth_enabled || try(local.m2m_tenants[tenant_id].enabled, false) ? {
           jwt = {
             publicKeyEnvVar = "JWT_PUBLIC_KEY_${tenant_id}"
             session = {
@@ -251,7 +294,8 @@ locals {
 }
 
 module "container_app_auth_ms" {
-  source = "../../_modules/container_app_microservice"
+  source             = "../../_modules/container_app_microservice"
+  internal_tcp_ports = [8082]
 
   env_short                      = module.local.config.env_short
   resource_group_name            = module.local.config.ca_resource_group_name
@@ -261,7 +305,7 @@ module "container_app_auth_ms" {
   image_name                     = "selfcare-auth-ms"
   image_tag                      = var.image_tag
   app_settings                   = local.app_settings_auth_ms
-  secrets_names                  = local.secrets_names_auth_ms
+  secrets_names                  = merge(local.secrets_names_auth_ms, local.m2m_secret_names)
 
   key_vault_resource_group_name = module.local.config.key_vault_resource_group_name
   key_vault_name                = module.local.config.key_vault_name
@@ -269,4 +313,24 @@ module "container_app_auth_ms" {
   probes = module.local.config.quarkus_health_probes
 
   tags = module.local.config.tags
+}
+
+module "auth_m2m_proxy" {
+  source = "../../_modules/auth_m2m_proxy"
+
+  name                           = "${module.local.config.project}-auth-m2m-proxy-ca"
+  resource_group_name            = module.local.config.ca_resource_group_name
+  container_app_environment_name = module.local.config.container_app_environment_name
+  vnet_resource_group_name       = module.local.vnet_resource_group_name
+  virtual_network_name           = module.local.vnet_selc_name
+  function_subnet_name           = "${module.local.config.project}-onboarding-fn-snet"
+  auth_container_app_name        = module.container_app_auth_ms.container_app_name
+  image                          = module.container_app_auth_ms.container_image
+  tags                           = module.local.config.tags
+
+  depends_on = [module.container_app_auth_ms]
+}
+
+output "m2m_proxy_endpoint" {
+  value = module.auth_m2m_proxy.endpoint
 }

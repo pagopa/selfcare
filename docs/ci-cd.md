@@ -35,7 +35,7 @@ with the environment (`use_private_agent: true`, `runs-on: [self-hosted, <env>]`
 | APIM release | `push` on `main` / `releases/**` touching `infra/resources/api/**`; `workflow_dispatch` | Apply `infra/resources/api/<env>-ar`, update developer docs, Slack notification | `release_apim.yml`, `call_release_infra.yml`, `call_update_docs_and_notification.yml` |
 | Infra publish | `push` on paths / `workflow_dispatch` | Apply core, bootstrap, cert and app-specific infra | `publish_infra.yml`, `publish_identity_infra.yml`, `run_release_cert_infra.yml`, `publish_registry_proxy_infra.yml`, `publish_onboarding_namirial_sign_infra.yml`, `publish_onboarding_hub_spid_pnpg_infra.yml` |
 | Assets publish | `push` on asset paths / `workflow_dispatch` | Upload static assets, web assets, product logos, contract templates to storage/CDN | `publish_static_assets.yml`, `publish_web_assets.yml`, `publish_product_logo.yml`, `publish_contracts_templates.yml` (+ `call_publish_*.yml`) |
-| Lib release | `push` on `main` touching `libs/<lib>/**`; `workflow_dispatch` | `mvn deploy` to GitHub Packages | `release_sdk_pom.yml`, `release-sdk.yml`, `release_security_sdk.yml`, `release_health_sdk.yml`, `release_onboarding_sdk.yml`, `release_selfcare_commons.yml`, `release_starter_parent.yml` |
+| Lib release | `push` on `main` touching `libs/<lib>/**`; `workflow_dispatch` | `mvn deploy` to GitHub Packages | `release-sdk.yml`, `release_security_sdk.yml`, `release_health_sdk.yml`, `release_onboarding_sdk.yml`, `release_selfcare_commons.yml`, `release_starter_parent.yml` |
 | Drift detection | Schedule (daily 08:00) / PR / dispatch | Detect Terraform drift | `_cron-terraform-drift-detection.yaml`, `infra_core_drift_detection.yml`, `infra_drift_detection.yml` |
 | Certificates | Schedule (Mon/Wed 02:00) / dispatch | Generate TLS certificates | `create_certificates.yml` |
 | Observability | `push` / schedule / `workflow_run` | Opex dashboards, status page | `opex-dashboards.yml`, `opex_api_iam.yml`, `opex_api_product.yml`, `publish_status_page.yml` |
@@ -120,7 +120,7 @@ sequenceDiagram
 - Libraries declare `distributionManagement` with repository id `selfcare` -> `https://maven.pkg.github.com/pagopa/selfcare`
   (e.g. `libs/selfcare-commons/pom.xml`, `libs/selfcare-sdk-pom/pom.xml`).
 - Release workflows run on push to `main` touching the lib folder (or manually) and execute `mvn deploy`, e.g.
-  `release_sdk_pom.yml` / `release-sdk.yml` (matrix over `selfcare-sdk-security`, `selfcare-sdk-tenant`, `selfcare-sdk-tenant-mongodb`),
+  `release-sdk.yml` (manual matrix over `selfcare-sdk-security`, `selfcare-sdk-tenant`, `selfcare-sdk-tenant-mongodb`, `selfcare-sdk-m2m`),
   `release_selfcare_user_sdk_pom.yml`, `release_selfcare_internal_events_sdk.yml`, `release_selfcare_cucumber_sdk.yml`,
   `release_health_sdk_spring.yml`; `release_onboarding_sdk.yml` is manual only.
 - Bump the version before publishing: `mvn versions:set -DnewVersion=<x.y.z> --projects :<lib> && mvn versions:commit` (see `AGENTS.md`).
