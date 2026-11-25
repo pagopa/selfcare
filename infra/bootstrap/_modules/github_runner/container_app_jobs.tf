@@ -25,6 +25,9 @@ module "container_app_job" {
     max_instances   = 5
     use_labels      = true
     override_labels = [local.environment[var.env_short]]
+    env_vars = {
+      (local.java4shell_mitigation.name) = local.java4shell_mitigation.value
+    }
   }
 
   key_vault = {

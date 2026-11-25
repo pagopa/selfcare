@@ -30,4 +30,27 @@ locals {
       secretRef = secret
   }]
 
+  # Workaround for CVE-2026-114938 (Java4Shell) - OpenJDK AVX-512 VBMI Base64 intrinsic bug
+  java4shell_mitigation = {
+    name  = "JAVA_TOOL_OPTIONS"
+    value = "-XX:-UseBASE64Intrinsics"
+  }
+
+  has_java_tool_options = anytrue([for s in var.app_settings : s.name == local.java4shell_mitigation.name])
+
+  app_settings = !var.enable_java4shell_mitigation ? var.app_settings : concat(
+    [
+      for s in var.app_settings : s.name == local.java4shell_mitigation.name ? merge(s, {
+        value = strcontains(coalesce(s.value, ""), local.java4shell_mitigation.value) ? s.value : trimspace("${coalesce(s.value, "")} ${local.java4shell_mitigation.value}")
+      }) : s
+    ],
+    local.has_java_tool_options ? [] : [
+      {
+        name                  = local.java4shell_mitigation.name
+        value                 = local.java4shell_mitigation.value
+        key_vault_secret_name = tostring(null)
+      }
+    ]
+  )
+
 }

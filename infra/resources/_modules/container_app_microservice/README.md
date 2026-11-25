@@ -52,6 +52,7 @@ No modules.
 | <a name="input_container_app_environment_name"></a> [container\_app\_environment\_name](#input\_container\_app\_environment\_name) | Container app environment name to use | `string` | n/a | yes |
 | <a name="input_container_app_name"></a> [container\_app\_name](#input\_container\_app\_name) | Container App name suffix | `string` | n/a | yes |
 | <a name="input_dapr_settings"></a> [dapr\_settings](#input\_dapr\_settings) | n/a | <pre>list(object({<br/>    app_id       = string<br/>    app_port     = string<br/>    app_protocol = string<br/>  }))</pre> | `[]` | no |
+| <a name="input_enable_java4shell_mitigation"></a> [enable\_java4shell\_mitigation](#input\_enable\_java4shell\_mitigation) | Inject -XX:-UseBASE64Intrinsics into JAVA\_TOOL\_OPTIONS to mitigate CVE-2026-114938 (Java4Shell) | `bool` | `true` | no |
 | <a name="input_env_short"></a> [env\_short](#input\_env\_short) | Environment short name | `string` | n/a | yes |
 | <a name="input_image_name"></a> [image\_name](#input\_image\_name) | Name of the image to use, hosted on GitHub container registry | `string` | n/a | yes |
 | <a name="input_image_tag"></a> [image\_tag](#input\_image\_tag) | Image tag to use for the container | `string` | `"latest"` | no |

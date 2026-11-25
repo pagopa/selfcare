@@ -14,4 +14,10 @@ locals {
     u = "uat"
     p = "prod"
   }
+
+  # Workaround for CVE-2026-114938 (Java4Shell) - OpenJDK AVX-512 VBMI Base64 intrinsic bug
+  java4shell_mitigation = {
+    name  = "JAVA_TOOL_OPTIONS"
+    value = "-XX:-UseBASE64Intrinsics"
+  }
 }
