@@ -1,6 +1,6 @@
 # selfcare-sdk-m2m
 
-> Quarkus client to obtain short-lived technical session JWTs from auth's CAE-only listener and attach them to outgoing REST client calls.
+> Quarkus client to obtain short-lived technical session JWTs from auth or its subnet-restricted proxy and attach them to outgoing REST client calls.
 
 | | |
 |---|---|
@@ -22,13 +22,14 @@ Configuration properties: `selfcare.m2m.enabled` (default `false`), `selfcare.m2
 `selfcare.m2m.allowed-tenants` (default `AR,PNPG`) and
 `selfcare.m2m.allow-insecure-http` (default `false`). HTTPS uses normal JVM certificate
 and hostname verification; HTTP requires explicit opt-in in auth and the SDK.
-
-No caller credentials or Entra tokens are used: any workload reaching the listener
-can obtain any enabled tenant's identity. Auth signs a short-lived `PAGOPA` session
+No caller credentials or Entra tokens are used. Any workload reaching the CAE-only
+listener (8082), or the Function-subnet proxy, can obtain any enabled tenant's
+identity. The proxy uses plaintext HTTP, allows only `POST /token/service`, and
+does not identify the individual caller. Auth signs a short-lived `PAGOPA` session
 for the configured technical UID without grant or IAM checks. Recipients must
 authorize operations, using IAM where required; this library does not add those
 checks. Legacy recipients may assign `SUPPORT` to `PAGOPA` without IAM.
-The listener must remain CAE-only and must not be published through APIM.
+The listener must remain CAE-only and neither endpoint must be published through APIM.
 
 ## Usage
 

@@ -8,7 +8,7 @@
 | Stack | Quarkus 3.31.2, Java 17, reactive (Mutiny `Uni`, reactive Mongo Panache) |
 | Type | REST microservice (application API behind APIM) |
 | Tenants | AR login; per-tenant M2M issuance also supports PNPG with login disabled |
-| Infra | `infra/resources/auth/` (`dev-ar`, `uat-ar`, `prod-ar`) |
+| Infra | `infra/resources/auth/` (AR and PNPG, DEV/UAT/PROD) |
 
 ## Responsibilities
 
@@ -69,13 +69,15 @@ sequenceDiagram
 | GET | `/otp/info` | OTP info by `userId`/`status` (tag `support`) | no |
 | POST | `/saml/acs` | SAML ACS callback | yes |
 | POST | `/token/service` (internal port 8082 only) | `issueMachineToken` | no |
+| POST | `/token/service` (Function-subnet proxy) | Forwards to `issueMachineToken` | no |
 
 APIM exposure:
 
 - Application API `selc-<env>-api-auth`, base path `auth`, module `infra/resources/_modules/apim_api`, built from `openapi-apim.json`, with tenant enforcement enabled and JWT-based tenant resolution disabled (`infra/resources/auth/dev-ar/auth.tf`).
 - Operations tagged `support` are merged into the external support API (`infra/resources/_modules/apim_external_api/api/selfcare_support_service/v1/openapi_merge/openapi_merge.json`, input `selfcare-auth-ms`).
-- The machine endpoint is absent from the primary listener and its generated specification. Its separate `openapi-m2m.yaml` must never be imported into APIM. Terraform maps its additional TCP port with `external=false`; auth terminates TLS using separate certificate/key secrets.
-- DEV/UAT/PROD Terraform explicitly selects plaintext HTTP (`M2M_TLS_ENABLED=false`), keeps one minimum auth replica, and does not change CAE peer-to-peer encryption. Listeners are enabled but AR/PNPG tenant policies remain disabled, with only UID secret references configured. Clients require `selfcare.m2m.allow-insecure-http=true`.
+- The machine endpoint is absent from the primary listener and its generated specification. Its separate `openapi-m2m.yaml` must never be imported into APIM. Terraform maps its additional TCP port with `external=false`; when TLS is enabled, auth terminates it using separate certificate/key secrets.
+- A separate proxy Container App forwards only `POST /token/service` and its request body to the local auth port 8082. Its ingress is restricted to the onboarding Function's integration subnet; it does not authenticate a Function identity or enforce a tenant boundary. The CAE must have an internal load balancer, so `external_enabled=true` publishes the proxy only to the private VNet ingress.
+- DEV/UAT/PROD Terraform enables tenant issuance and explicitly selects plaintext HTTP (`M2M_TLS_ENABLED=false`), keeps one minimum auth replica, and does not change CAE peer-to-peer encryption. Both proxy legs carry tokens in plaintext; any workload in the allowed subnet can acquire enabled tenant identities. The SDK requires `selfcare.m2m.allow-insecure-http=true`.
 
 ## Data and messaging
 

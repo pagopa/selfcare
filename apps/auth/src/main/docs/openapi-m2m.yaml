@@ -11,6 +11,9 @@ info:
     No caller credentials are accepted or required: all reachable workloads share
     the configured tenant identity. Authorization is enforced by downstream services,
     using IAM where required; auth does not contact IAM during issuance.
+    A separate HTTP proxy forwards this operation and its body from the onboarding
+    Function subnet. It authenticates neither the Function nor the tenant: any
+    workload reaching it from that subnet can request any enabled tenant.
 paths:
   /token/service:
     post:
@@ -65,3 +68,7 @@ paths:
           description: Unsupported content type.
         '500':
           description: Internal error; no token returned.
+        '502':
+          description: Proxy only; the upstream is unavailable or its response is too large.
+        '504':
+          description: Proxy only; the upstream connection or response timed out.

@@ -33,6 +33,7 @@ No providers.
 
 | Name | Source | Version |
 | ---- | ------ | ------- |
+| <a name="module_auth_m2m_proxy"></a> [auth\_m2m\_proxy](#module\_auth\_m2m\_proxy) | ../../_modules/auth_m2m_proxy | n/a |
 | <a name="module_container_app_auth_ms"></a> [container\_app\_auth\_ms](#module\_container\_app\_auth\_ms) | ../../_modules/container_app_microservice | n/a |
 | <a name="module_local"></a> [local](#module\_local) | ../../_modules/local-env | n/a |
 
@@ -48,5 +49,7 @@ No resources.
 
 ## Outputs
 
-No outputs.
+| Name | Description |
+| ---- | ----------- |
+| <a name="output_m2m_proxy_endpoint"></a> [m2m\_proxy\_endpoint](#output\_m2m\_proxy\_endpoint) | n/a |
 <!-- END_TF_DOCS -->

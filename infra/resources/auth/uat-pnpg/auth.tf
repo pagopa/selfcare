@@ -81,3 +81,23 @@ module "container_app_auth_ms" {
   probes                        = module.local.config.quarkus_health_probes
   tags                          = module.local.config.tags
 }
+
+module "auth_m2m_proxy" {
+  source = "../../_modules/auth_m2m_proxy"
+
+  name                           = "${module.local.config.project}-pnpg-auth-m2m-proxy-ca"
+  resource_group_name            = module.local.config.ca_resource_group_name
+  container_app_environment_name = module.local.config.container_app_environment_name
+  vnet_resource_group_name       = module.local.vnet_resource_group_name
+  virtual_network_name           = module.local.vnet_selc_name
+  function_subnet_name           = "${module.local.config.project}-pnpg-onboarding-fn-snet"
+  auth_container_app_name        = module.container_app_auth_ms.container_app_name
+  image                          = module.container_app_auth_ms.container_image
+  tags                           = module.local.config.tags
+
+  depends_on = [module.container_app_auth_ms]
+}
+
+output "m2m_proxy_endpoint" {
+  value = module.auth_m2m_proxy.endpoint
+}

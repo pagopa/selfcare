@@ -1,21 +1,23 @@
 # Internal machine-to-machine tokens
 
 Auth issues short-lived `PAGOPA` JWTs on a **dedicated internal listener**, default
-port `8082`, using HTTPS by default. The client library caches them locally for four minutes. Entra and
-Managed Identity authentication have been removed from this flow.
+port `8082`, using HTTPS by default. The client library caches them locally for four minutes.
+The onboarding Function can reach it through a separate subnet-restricted HTTP proxy;
+see [Callers outside the CAE](#callers-outside-the-cae-function-subnet-proxy).
 
-No existing caller is migrated. DEV/UAT/PROD Terraform enables the internal listener in
-explicit plaintext HTTP mode; tenant issuance remains denied until real IAM
-identities and signing keys are configured. No environment has been deployed by this change.
+No existing caller is migrated. DEV/UAT/PROD Terraform enables the listener and tenant
+issuance in explicit plaintext HTTP mode. The configured UID and signing secrets must
+exist before deployment; missing required values prevent auth from starting.
 The older caller/receiver integration in #1126 needs alignment with this contract.
 
 ## Trust boundary
 
 The caller supplies only `tenantId`.
-Its identity is **not authenticated**: the trust boundary is the Container Apps
-Environment (CAE). Any workload able to reach port 8082 can request any configured
-tenant identity. Do not enable this service in a CAE containing untrusted workloads,
-or expose/proxy this port through APIM, a gateway or an environment route.
+Its identity is **not authenticated**: any workload able to reach port 8082 inside
+the Container Apps Environment (CAE), or the proxy from its allowed Function subnet,
+can request any enabled tenant identity on that issuer. The proxy does not distinguish
+the Function from other workloads in its subnet. Do not enable this service where
+those workloads are untrusted or publish it through APIM or an environment route.
 
 Terraform adds `additionalPortMappings` with `external=false` to auth in
 DEV/UAT/PROD. The existing ingress to port 8080 and login APIs remain unchanged.
@@ -37,7 +39,7 @@ by the SDK. No TLS certificate is required for this mode, and CAE peer-to-peer
 encryption settings are not changed. The application connection is plaintext;
 where platform peer encryption is disabled, tokens also travel unencrypted across
 the internal network. CAE-only reachability is not encryption or per-tenant isolation.
-The existing public HTTP ingress/TLS configuration is unchanged.
+The existing primary HTTP ingress/TLS configuration is unchanged.
 
 ## Tenant identity, IAM and privileges
 
@@ -118,9 +120,9 @@ Each environment maps these versionless references from its own Key Vault:
 | AR | `TENANT_AR_M2M_IAM_UID` | `auth-m2m-iam-uid-ar` |
 | PNPG | `TENANT_PNPG_M2M_IAM_UID` | `auth-m2m-iam-uid-pnpg` |
 
-The vaults are `selc-d-kv` (DEV), `selc-u-kv` (UAT) and `selc-p-kv` (PROD).
-Secret names are identical; values must be populated for the intended IAM identity
-in each environment and are not assumed to be shared.
+The AR vaults are `selc-d-kv`, `selc-u-kv` and `selc-p-kv`; the PNPG vaults are
+`selc-d-pnpg-kv`, `selc-u-pnpg-kv` and `selc-p-pnpg-kv`. Values must be populated
+for the intended IAM identity in each environment and are not assumed to be shared.
 Populate each secret with the corresponding technical IAM user's UUID outside
 Terraform. The secret value is never embedded in `TENANT_REGISTRY_JSON`, Terraform
 variables or the repository. The Container App's existing managed identity reads
@@ -148,17 +150,11 @@ affects user sessions: verify AR compatibility before changing it.
 | `M2M_TLS_CERTIFICATE_PEM` | TLS certificate chain, injected from Key Vault |
 | `M2M_TLS_PRIVATE_KEY_PEM` | Matching TLS private key, injected from Key Vault |
 
-Auth Terraform roots expose `m2m_enabled`, `m2m_tenants` and `m2m_secret_names`
-locals. All three environments enable only the HTTP listener and declare disabled AR/PNPG policies
-with UID references and their secret bindings, so both tenants return 403 for
-valid requests. Create both UID secrets in each target vault before applying its configuration:
-Azure must resolve the secret bindings even while tenant issuance is disabled.
-Complete `m2m_tenants` with the per-tenant
-`m2m` objects above; signing references are then included for those tenants even
-when login is disabled. Populate `m2m_secret_names` with environment-variable to
-Key Vault secret-name mappings for both TLS values and any PNPG JWT key/`kid`.
-Existing AR signing-secret bindings are retained. The module uses versionless
-Key Vault references and the existing runtime secret-reader identity.
+AR auth roots enable AR and PNPG issuance; PNPG auth roots enable PNPG issuance.
+They bind the UID and signing key/`kid` references to the respective tenant vaults.
+Create the required secrets and grant auth's runtime identity access to each referenced
+vault before applying; in particular, AR auth also reads the PNPG vault.
+The module uses versionless Key Vault references and the existing runtime secret-reader identity.
 The unused data sources that previously listed and fetched every secret value
 have been removed from the Container App module. This prevents new UID values
 from being fetched into Terraform state by this module; it does not purge secret
@@ -223,7 +219,49 @@ Each app-name endpoint is for callers in that auth CAE only.
 It can request either tenant once policies are configured; it does not make
 the listener reachable from the separate PNPG CAE. Tenant JWT signing keys are
 required even when caller transport is HTTP; auth makes no IAM call for issuance.
-No consumer deployment is changed automatically by these settings.
+No consumer deployment is changed automatically by these settings. AR auth currently
+uses the global session audience; the PNPG-specific audience is used by PNPG auth.
+
+## Callers outside the CAE (Function subnet proxy)
+
+Azure Functions run outside the auth CAE and cannot reach the CAE-only port 8082.
+Terraform creates a separate proxy Container App in the same internal CAE for each
+environment and domain. Its HTTP ingress (`external_enabled=true`) is published on
+the CAE's **private** load balancer, not the public internet; a precondition rejects
+public CAEs. Native ingress `Allow` rules use the onboarding Function integration
+subnet's actual IPv4 prefixes, and an empty or unrestricted list is rejected.
+No Function identity or tenant is authenticated: the AR proxy can request either
+enabled tenant and the PNPG proxy can request PNPG. HTTP sends both the request
+and JWT response without encryption; treat subnet membership and network observation
+as security risks. The issuer on 8082 remains reachable to other apps in the same CAE.
+
+The proxy forwards only `POST /token/service` and its request bytes to
+`http://<local-auth-container-app>:8082/token/service`. It returns upstream status,
+body and relevant headers, rejects bodies over 8192 bytes and returns 502/504 for
+upstream errors/timeouts. It uses no Entra token. Its image is the same auth image,
+with a standalone Java entry point and no signing secrets. Publish an auth image
+containing that entry point **before applying** the Terraform changes. Each proxy
+keeps at least one replica and therefore adds running cost.
+
+Terraform creates the private DNS A record and exposes `m2m_proxy_endpoint` as an
+output in each auth root. Function configuration (DEV AR example):
+
+```properties
+selfcare.m2m.enabled=true
+selfcare.m2m.endpoint=http://selc-d-auth-m2m-proxy-ca.whitemoss-eb7ef327.westeurope.azurecontainerapps.io/token/service
+selfcare.m2m.allow-insecure-http=true
+```
+
+For each environment use `terraform output -raw m2m_proxy_endpoint` from its auth
+root; PNPG has a separate proxy and CAE. Ensure the private DNS zone is linked and
+the Function subnet has a route to the CAE on HTTP port 80. After deployment verify
+the real Function request succeeds and traffic from an unlisted subnet is denied:
+the source IP observed by the CAE must actually belong to the integration subnet.
+Also verify that auth's TCP 8082 mapping is present with `external=false`; at the
+last DEV check, PNPG had `external=true` and AR had no additional port mapping.
+No Function configuration is changed here.
+`trigger_release_auth.yml` targets AR only; PNPG must be released separately using
+the `Release App` workflow with `app=auth` and `target=pnpg`.
 
 Cache entries are separated by tenant and shared across destinations. Concurrent requests
 share one acquisition. The deadline is `min(240, expires_in - 30)` seconds from
