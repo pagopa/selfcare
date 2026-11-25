@@ -379,7 +379,7 @@ Feature: Institution
   Scenario: Successfully request a contract update by institutionId and productId
     Given user login with username "j.doe" and password "test"
     And the institutionId is "067327d3-bdd6-408d-8655-87e8f1960046"
-    And the productId is "prod-io"
+    And the productId is "prod-pagopa"
     And the following contract update institution details:
       | institutionType | origin | originId | taxCode     |
       | PT              | IPA    | c_d277   | 99000870064 |
@@ -389,6 +389,19 @@ Feature: Institution
       | Carlo | Pietro  | PTRCRT80A41H401T | cp@test.it | DELEGATE |
     When I send a POST request to "/v2/institutions/{institutionId}/products/{productId}/contract-update" to request a contract update
     Then the response status should be 201
+
+  Scenario: Attempt to request a contract update for a product without Selc:UpdateContract action
+    Given user login with username "j.doe" and password "test"
+    And the institutionId is "067327d3-bdd6-408d-8655-87e8f1960046"
+    And the productId is "prod-io"
+    And the following contract update institution details:
+      | institutionType | origin | originId | taxCode     |
+      | PT              | IPA    | c_d277   | 99000870064 |
+    And the following contract update users:
+      | name  | surname | taxCode          | email      | role     |
+      | Rocky | Balboa  | blbrki80A41H401T | rb@test.it | MANAGER  |
+    When I send a POST request to "/v2/institutions/{institutionId}/products/{productId}/contract-update" to request a contract update
+    Then the response status should be 403
 
   Scenario: Attempt to request a contract update without permissions (OPERATOR)
     Given user login with username "j.doe" and password "test"
@@ -405,11 +418,11 @@ Feature: Institution
 
   Scenario: Attempt to request a contract update for a product without a completed onboarding
     Given user login with username "j.doe" and password "test"
-    And the institutionId is "067327d3-bdd6-408d-8655-87e8f1960046"
-    And the productId is "prod-pn"
+    And the institutionId is "c9a50656-f345-4c81-84be-5b2474470544"
+    And the productId is "prod-pagopa"
     And the following contract update institution details:
       | institutionType | origin | originId | taxCode     |
-      | PT              | IPA    | c_d277   | 99000870064 |
+      | PA              | IPA    | c_c067   | 00310810825 |
     And the following contract update users:
       | name  | surname | taxCode          | email      | role    |
       | Rocky | Balboa  | blbrki80A41H401T | rb@test.it | MANAGER |
