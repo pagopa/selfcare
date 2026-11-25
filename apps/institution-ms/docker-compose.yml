@@ -56,7 +56,10 @@ services:
     networks:
       - develop-network
     depends_on:
-      - mongodb
+      mongodb:
+        condition: service_started
+      azure-cli:
+        condition: service_completed_successfully
 
 networks:
   develop-network:

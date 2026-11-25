@@ -118,6 +118,7 @@ mvn -f apps/onboarding-bff/pom.xml test                        # unit tests
 ```
 
 - Cucumber runner `it.pagopa.selfcare.onboarding.CucumberSuite`; features for institutions (v1/v2), products (v1/v2), tokens and users; stack in `app/src/test/resources/docker-compose.yml`.
+- Blob consumers start only after the Azurite seeder succeeds; the suite waits for user-ms readiness before running scenarios. Seeding fails fast and overwrites fixtures so local reruns remain repeatable.
 - See [testing](../testing.md).
 
 ## Deployment
