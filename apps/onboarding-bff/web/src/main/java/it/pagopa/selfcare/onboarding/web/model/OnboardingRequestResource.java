@@ -2,6 +2,7 @@ package it.pagopa.selfcare.onboarding.web.model;
 
 
 import io.swagger.v3.oas.annotations.media.Schema;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -88,7 +89,8 @@ public class OnboardingRequestResource {
         @Schema(description = "${swagger.onboarding.institutions.model.taxCodeInvoicing}")
         private String taxCodeInvoicing;
 
-        @Schema(description = "${swagger.onboarding.institutions.model.vatNumber}", requiredMode = Schema.RequiredMode.REQUIRED)
+        @Schema(description = "${swagger.onboarding.institutions.model.vatNumber}")
+        @JsonInclude(JsonInclude.Include.NON_NULL)
         private String vatNumber;
 
         @Schema(description = "${swagger.onboarding.institutions.model.recipientCode}")
