@@ -906,6 +906,22 @@ public class OnboardingFunctions {
     return callWithTenant(onboarding, () -> completionService.createInstitutionAndPersistInstitutionId(onboarding));
   }
 
+  @FunctionName(RESOLVE_AGGREGATOR_INSTITUTION_ID_ACTIVITY)
+  public String resolveAggregatorInstitutionId(
+      @DurableActivityTrigger(name = "onboardingString") String onboardingString,
+      final ExecutionContext context) {
+    Onboarding onboarding = readOnboardingValue(objectMapper, onboardingString);
+    telemetryService.trackFunction(
+        RESOLVE_AGGREGATOR_INSTITUTION_ID_ACTIVITY,
+        String.format(
+            FORMAT_LOGGER_ONBOARDING_STRING, RESOLVE_AGGREGATOR_INSTITUTION_ID_ACTIVITY, onboardingString),
+        SeverityLevel.Information,
+        Map.of(
+            ONBOARDING_ID, onboarding.getId(),
+            PRODUCT_ID, onboarding.getProductId()));
+    return callWithTenant(onboarding, () -> completionService.resolveAggregatorInstitutionId(onboarding));
+  }
+
   @FunctionName(STORE_ONBOARDING_ACTIVATEDAT)
   public void storeOnboardingActivatedAt(
       @DurableActivityTrigger(name = "onboardingString") String onboardingString,

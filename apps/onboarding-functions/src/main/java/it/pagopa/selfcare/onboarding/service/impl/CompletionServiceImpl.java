@@ -68,7 +68,8 @@ public class CompletionServiceImpl implements CompletionService {
 
 
     private static final String USERS_FIELD_LIST = "fiscalCode,familyName,name";
-    private final InstitutionMapper institutionMapper;
+  private static final String STATUS = "status";
+  private final InstitutionMapper institutionMapper;
     private final OnboardingRepository onboardingRepository;
     private final ObjectMapper objectMapper;
     private final UserMapper userMapper;
@@ -366,7 +367,7 @@ public class CompletionServiceImpl implements CompletionService {
     public void overridePendingOnboardings(Onboarding onboarding) {
         LocalDateTime now = LocalDateTime.now();
         Document update = new Document("$set", new Document()
-                .append("status", OnboardingStatus.OVERRIDDEN.name())
+                .append(STATUS, OnboardingStatus.OVERRIDDEN.name())
                 .append("updatedAt", now));
 
         if (CONTRACT_UPDATE.equals(onboarding.getWorkflowType())) {
@@ -374,7 +375,7 @@ public class CompletionServiceImpl implements CompletionService {
                     .append("referenceOnboardingId", onboarding.getReferenceOnboardingId())
                     .append("workflowType", CONTRACT_UPDATE.name())
                     .append("_id", new Document("$ne", onboarding.getId()))
-                    .append("status", new Document("$in", List.of(
+                    .append(STATUS, new Document("$in", List.of(
                             OnboardingStatus.REQUEST.name(), OnboardingStatus.PENDING.name())));
             onboardingRepository.mongoCollection().updateMany(contractUpdateQuery, update);
             return;
@@ -393,7 +394,7 @@ public class CompletionServiceImpl implements CompletionService {
                 .append("institution.originId", institution.getOriginId())
                 .append("productId", onboarding.getProductId())
                 .append("_id", new Document("$ne", onboarding.getId()))
-                .append("status", new Document("$nin", excludedStatuses));
+                .append(STATUS, new Document("$nin", excludedStatuses));
 
         if (StringUtils.isNotBlank(institution.getSubunitCode())) {
             query.append("institution.subunitCode", institution.getSubunitCode());
@@ -526,7 +527,39 @@ public class CompletionServiceImpl implements CompletionService {
         }
     }
 
-    private void setAggregatorInstitutionId(OnboardingAggregateOrchestratorInput input) {
+    @Override
+    public String resolveAggregatorInstitutionId(Onboarding onboarding) {
+      fillInstitutionIdIfNull(onboarding);
+      try {
+            return objectMapper.writeValueAsString(onboarding);
+        } catch (JsonProcessingException e) {
+            throw new GenericOnboardingException(e.getMessage());
+        }
+    }
+
+  private void fillInstitutionIdIfNull(Onboarding onboarding) {
+    if (Objects.isNull(onboarding.getInstitution().getId())) {
+        Optional<Onboarding> onboardingAggregator = onboardingRepository.findByFilters(
+                        onboarding.getInstitution().getTaxCode(), null,
+                        onboarding.getInstitution().getOrigin().getValue(),
+                        onboarding.getInstitution().getOriginId(), onboarding.getProductId()).stream()
+                .findFirst();
+        if (onboardingAggregator.isPresent()) {
+          updateInstitutionId(onboarding, onboardingAggregator.get());
+        } else {
+            log.warn("Aggregator onboarding not found for onboarding {}, leaving institution id unresolved", onboarding.getId());
+        }
+    }
+  }
+
+  private void updateInstitutionId(Onboarding onboarding, Onboarding fromDB) {
+    String institutionId = fromDB.getInstitution().getId();
+    onboarding.getInstitution().setId(institutionId);
+    onboardingRepository.update("institution.id = ?1", institutionId)
+            .where("_id", onboarding.getId());
+  }
+
+  private void setAggregatorInstitutionId(OnboardingAggregateOrchestratorInput input) {
         if (Objects.isNull(input.getInstitution().getId())) {
             Onboarding onboardingAggregator = onboardingRepository.findByFilters(input.getInstitution().getTaxCode(),
                             null, input.getInstitution().getOrigin().getValue(),
@@ -534,9 +567,8 @@ public class CompletionServiceImpl implements CompletionService {
                     .findFirst()
                     .orElseThrow(() -> new GenericOnboardingException("Onboarding not found"));
             input.getInstitution().setId(onboardingAggregator.getInstitution().getId());
-            Onboarding onboarding = onboardingRepository.findById(input.getId());
-            onboarding.getInstitution().setId(onboardingAggregator.getInstitution().getId());
-            onboardingRepository.persistOrUpdate(onboarding);
+            onboardingRepository.update("institution.id = ?1", onboardingAggregator.getInstitution().getId())
+                    .where("_id", input.getId());
         }
     }
 

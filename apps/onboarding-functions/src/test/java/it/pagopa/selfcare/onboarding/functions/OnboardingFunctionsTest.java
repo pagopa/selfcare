@@ -27,6 +27,7 @@ import it.pagopa.selfcare.onboarding.context.TenantContext;
 import it.pagopa.selfcare.onboarding.dto.ManagingInstitutionGetEmailRequest;
 import it.pagopa.selfcare.onboarding.dto.ManagingInstitutionSendEmail;
 import it.pagopa.selfcare.onboarding.dto.AttachmentTemplate;
+import it.pagopa.selfcare.onboarding.dto.AggregatesBatchOrchestratorInput;
 import it.pagopa.selfcare.onboarding.dto.UserMail;
 import it.pagopa.selfcare.onboarding.entity.*;
 import it.pagopa.selfcare.onboarding.config.RetryPolicyConfig;
@@ -52,6 +53,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.ArgumentCaptor;
+import org.mockito.InOrder;
 import org.mockito.Mockito;
 import org.mockito.stubbing.Answer;
 import org.openapi.quarkus.core_json.model.DelegationResponse;
@@ -220,12 +222,13 @@ class OnboardingFunctionsTest {
         .thenReturn(new HttpResponseMessageMock.HttpResponseMessageBuilderMock()
             .status(HttpStatus.ACCEPTED).build());
 
+    Map<String, String> ar = Map.of("X-Tenant-Id", "AR");
     if ("scheduling-error".equals(outcome)) {
       assertSame(schedulingError, assertThrows(IllegalStateException.class,
-          () -> startOrchestrationRequest(Map.of("X-Tenant-Id", "AR"), durableContext, query)));
+          () -> startOrchestrationRequest(ar, durableContext, query)));
     } else {
       HttpResponseMessage response =
-          startOrchestrationRequest(Map.of("X-Tenant-Id", "AR"), durableContext, query);
+          startOrchestrationRequest(ar, durableContext, query);
       assertEquals("completed".equals(outcome) ? 200 : 202, response.getStatusCode());
     }
 
@@ -705,16 +708,26 @@ class OnboardingFunctionsTest {
 
     TaskOrchestrationContext orchestrationContext =
             mockTaskOrchestrationContextForIncrementAggregator(onboarding, "true");
+    String originalInput = Utils.getOnboardingString(objectMapper, onboarding);
+    Task<String> resolvedTask = mockTaskWithValue(originalInput);
+    when(orchestrationContext.callActivity(eq(RESOLVE_AGGREGATOR_INSTITUTION_ID_ACTIVITY), eq(originalInput), any(), eq(String.class)))
+            .thenReturn(resolvedTask);
     Task<String> verifyTask = mockTaskWithValue(onboardingWithoutInstitutionIdString);
     when(orchestrationContext.callActivity(eq(VERIFY_ONBOARDING_AGGREGATE_ACTIVITY), any(), eq(String.class)))
             .thenReturn(verifyTask);
     function.onboardingsOrchestrator(orchestrationContext, executionContext);
 
     ArgumentCaptor<String> captorActivity = ArgumentCaptor.forClass(String.class);
-    Mockito.verify(orchestrationContext, times(2))
+    Mockito.verify(orchestrationContext, times(3))
             .callActivity(captorActivity.capture(), any(), any(), any());
-    assertEquals(CREATE_USERS_ACTIVITY, captorActivity.getAllValues().get(0));
-    assertEquals(STORE_ONBOARDING_ACTIVATEDAT, captorActivity.getAllValues().get(1));
+    assertEquals(RESOLVE_AGGREGATOR_INSTITUTION_ID_ACTIVITY, captorActivity.getAllValues().get(0));
+    assertEquals(CREATE_USERS_ACTIVITY, captorActivity.getAllValues().get(1));
+    assertEquals(STORE_ONBOARDING_ACTIVATEDAT, captorActivity.getAllValues().get(2));
+    InOrder inOrder = inOrder(orchestrationContext);
+    inOrder.verify(orchestrationContext).callActivity(eq(RESOLVE_AGGREGATOR_INSTITUTION_ID_ACTIVITY), eq(originalInput), any(), eq(String.class));
+    inOrder.verify(orchestrationContext).callSubOrchestrator(eq(ONBOARDINGS_AGGREGATE_BATCH_ORCHESTRATOR), any(), eq(String.class));
+    inOrder.verify(orchestrationContext).callActivity(eq(CREATE_USERS_ACTIVITY), eq(originalInput), any(), eq(String.class));
+    inOrder.verify(orchestrationContext).callActivity(eq(STORE_ONBOARDING_ACTIVATEDAT), eq(originalInput), any(), eq(String.class));
 
     Mockito.verify(service, times(1))
             .updateOnboardingStatus(onboarding.getId(), OnboardingStatus.COMPLETED);
@@ -723,22 +736,38 @@ class OnboardingFunctionsTest {
   @Test
   void onboardingOrchestratorIncrementRegistrationAggregator_Pending_delgationNotExists() {
     Onboarding onboarding = getOnboarding();
+    onboarding.getInstitution().setId(null);
     TaskOrchestrationContext orchestrationContext =
             mockTaskOrchestrationContextForIncrementAggregator(onboarding, "false");
+    String originalInput = Utils.getOnboardingString(objectMapper, onboarding);
+    Onboarding resolved = Utils.readOnboardingValue(objectMapper, originalInput);
+    resolved.getInstitution().setId("resolved-aggregator-id");
+    Task<String> resolvedTask = mockTaskWithValue(Utils.getOnboardingString(objectMapper, resolved));
+    when(orchestrationContext.callActivity(eq(RESOLVE_AGGREGATOR_INSTITUTION_ID_ACTIVITY), eq(originalInput), any(), eq(String.class)))
+            .thenReturn(resolvedTask);
     Task<String> verifyTask = mockTaskWithValue(onboardingWithoutInstitutionIdString);
     when(orchestrationContext.callActivity(eq(VERIFY_ONBOARDING_AGGREGATE_ACTIVITY), any(), eq(String.class)))
             .thenReturn(verifyTask);
     function.onboardingsOrchestrator(orchestrationContext, executionContext);
 
-    // With the new batch orchestrator, we call ONBOARDINGS_AGGREGATE_BATCH_ORCHESTRATOR once
-    Mockito.verify(orchestrationContext, times(1))
-            .callSubOrchestrator(eq(ONBOARDINGS_AGGREGATE_BATCH_ORCHESTRATOR), any(), any());
+    ArgumentCaptor<String> batchInputCaptor = ArgumentCaptor.forClass(String.class);
+    InOrder inOrder = inOrder(orchestrationContext);
+    inOrder.verify(orchestrationContext).callActivity(eq(RESOLVE_AGGREGATOR_INSTITUTION_ID_ACTIVITY), eq(originalInput), any(), eq(String.class));
+    inOrder.verify(orchestrationContext).callSubOrchestrator(eq(ONBOARDINGS_AGGREGATE_BATCH_ORCHESTRATOR), batchInputCaptor.capture(), eq(String.class));
+    inOrder.verify(orchestrationContext).callActivity(eq(CREATE_USERS_ACTIVITY), eq(originalInput), any(), eq(String.class));
+    inOrder.verify(orchestrationContext).callActivity(eq(STORE_ONBOARDING_ACTIVATEDAT), eq(originalInput), any(), eq(String.class));
+    AggregatesBatchOrchestratorInput batchInput = Utils.readAggregatesBatchInput(objectMapper, batchInputCaptor.getValue());
+    assertEquals(onboarding.getAggregates().size(), batchInput.getAggregateOrchestratorInputs().size());
+    batchInput.getAggregateOrchestratorInputs().forEach(input ->
+            assertEquals("resolved-aggregator-id", Utils.readOnboardingAggregateOrchestratorInputValue(objectMapper, input).getInstitution().getId()));
+    assertNull(onboarding.getInstitution().getId());
 
     ArgumentCaptor<String> captorActivity = ArgumentCaptor.forClass(String.class);
-    Mockito.verify(orchestrationContext, times(2))
+    Mockito.verify(orchestrationContext, times(3))
             .callActivity(captorActivity.capture(), any(), any(), any());
-    assertEquals(CREATE_USERS_ACTIVITY, captorActivity.getAllValues().get(0));
-    assertEquals(STORE_ONBOARDING_ACTIVATEDAT, captorActivity.getAllValues().get(1));
+    assertEquals(RESOLVE_AGGREGATOR_INSTITUTION_ID_ACTIVITY, captorActivity.getAllValues().get(0));
+    assertEquals(CREATE_USERS_ACTIVITY, captorActivity.getAllValues().get(1));
+    assertEquals(STORE_ONBOARDING_ACTIVATEDAT, captorActivity.getAllValues().get(2));
 
     Mockito.verify(service, times(1))
             .updateOnboardingStatus(onboarding.getId(), OnboardingStatus.COMPLETED);
@@ -1951,6 +1980,29 @@ class OnboardingFunctionsTest {
 
     assertEquals(institutionId, actualInstitutionId);
     verify(completionService, times(1)).createInstitutionAndPersistInstitutionId(any());
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = {"AR", "PNPG"})
+  void resolveAggregatorInstitutionId(String tenant) {
+    String input = onboardingStringBase.replace("\"AR\"", "\"" + tenant + "\"");
+    when(completionService.resolveAggregatorInstitutionId(any()))
+            .thenAnswer(invocation -> {
+              Onboarding onboarding = invocation.getArgument(0);
+              assertEquals("onboardingId", onboarding.getId());
+              assertEquals(tenant, onboarding.getTenantId());
+              assertEquals(tenant, TenantContext.currentTenant());
+              return onboardingWithInstitutionIdString;
+            });
+
+    String result = function.resolveAggregatorInstitutionId(input, executionContext);
+
+    assertEquals(onboardingWithInstitutionIdString, result);
+    verify(completionService).resolveAggregatorInstitutionId(any());
+    verify(telemetryService).trackFunction(
+            eq(RESOLVE_AGGREGATOR_INSTITUTION_ID_ACTIVITY), anyString(), eq(SeverityLevel.Information),
+            eq(Map.of("onboardingId", "onboardingId", "productId", "prod-test")));
+    assertNull(TenantContext.currentTenant());
   }
 
   @Test

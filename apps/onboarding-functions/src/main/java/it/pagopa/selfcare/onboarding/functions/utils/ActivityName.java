@@ -22,6 +22,7 @@ public class ActivityName {
     "SendMailRegistrationApprove";
   public static final String SEND_MAIL_ONBOARDING_APPROVE_ACTIVITY = "SendMailOnboardingApprove";
   public static final String CREATE_INSTITUTION_ACTIVITY = "CreateInstitution";
+  public static final String RESOLVE_AGGREGATOR_INSTITUTION_ID_ACTIVITY = "ResolveAggregatorInstitutionIdActivity";
   public static final String CREATE_ONBOARDING_ACTIVITY = "CreateOnboarding";
   public static final String SEND_MAIL_COMPLETION_ACTIVITY = "SendMailCompletion";
   public static final String SEND_MAIL_DELETE_ACTIVITY = "SendMailDelete";
