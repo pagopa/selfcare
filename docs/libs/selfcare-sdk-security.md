@@ -60,7 +60,7 @@ mvn --projects :selfcare-sdk-security --also-make-dependents clean package -Dski
 Release workflows (GitHub Packages `https://maven.pkg.github.com/pagopa/selfcare`):
 
 - `.github/workflows/release_security_sdk.yml` ("Release Security sdk"): push on `main` or `workflow_dispatch`, `mvn -B deploy -f libs/selfcare-sdk-security/pom.xml`.
-- `.github/workflows/release-sdk.yml` / `.github/workflows/release_sdk_pom.yml`: matrix release of security, tenant and tenant-mongodb.
+- `.github/workflows/release-sdk.yml`: manual matrix release of security, tenant, tenant-mongodb and m2m.
 
 Coverage: profile `selfcare-sdk-security` in `test-coverage/pom.xml`.
 

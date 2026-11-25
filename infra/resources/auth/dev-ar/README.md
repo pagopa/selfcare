@@ -17,6 +17,7 @@ No providers.
 | Name | Source | Version |
 | ---- | ------ | ------- |
 | <a name="module_apim_api_auth"></a> [apim\_api\_auth](#module\_apim\_api\_auth) | ../../_modules/apim_api | n/a |
+| <a name="module_auth_m2m_proxy"></a> [auth\_m2m\_proxy](#module\_auth\_m2m\_proxy) | ../../_modules/auth_m2m_proxy | n/a |
 | <a name="module_collection_auth_otp_flows"></a> [collection\_auth\_otp\_flows](#module\_collection\_auth\_otp\_flows) | ../../_modules/cosmosdb_collection | n/a |
 | <a name="module_container_app_auth_ms"></a> [container\_app\_auth\_ms](#module\_container\_app\_auth\_ms) | ../../_modules/container_app_microservice | n/a |
 | <a name="module_cosmosdb_auth"></a> [cosmosdb\_auth](#module\_cosmosdb\_auth) | ../../_modules/cosmosdb_database | n/a |
@@ -34,5 +35,7 @@ No resources.
 
 ## Outputs
 
-No outputs.
+| Name | Description |
+| ---- | ----------- |
+| <a name="output_m2m_proxy_endpoint"></a> [m2m\_proxy\_endpoint](#output\_m2m\_proxy\_endpoint) | n/a |
 <!-- END_TF_DOCS -->

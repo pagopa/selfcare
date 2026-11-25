@@ -1,0 +1,74 @@
+openapi: 3.0.3
+info:
+  title: Auth internal machine token API
+  version: 0.1.0
+  description: |
+    Dedicated internal listener, default port 8082, reachable only inside the CAE.
+    HTTPS is the application default. DEV/UAT/PROD Terraform explicitly selects
+    plaintext HTTP without changing CAE peer-to-peer encryption; the SDK also
+    requires explicit HTTP opt-in.
+    Never import this specification into APIM or expose it on the primary ingress.
+    No caller credentials are accepted or required: all reachable workloads share
+    the configured tenant identity. Authorization is enforced by downstream services,
+    using IAM where required; auth does not contact IAM during issuance.
+    A separate HTTP proxy forwards this operation and its body from the onboarding
+    Function subnet. It authenticates neither the Function nor the tenant: any
+    workload reaching it from that subnet can request any enabled tenant.
+paths:
+  /token/service:
+    post:
+      operationId: issueMachineToken
+      summary: Issue an internal IAM user token
+      description: |
+        Returns a short-lived PAGOPA token for the server-configured tenant UID.
+        No destination, scope, product or grant is required. The token authenticates
+        the technical identity; it does not attest an IAM permission check.
+        Downstream services must enforce authorization. Legacy receivers may assign
+        SUPPORT to PAGOPA tokens without contacting IAM.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [tenantId]
+              properties:
+                tenantId:
+                  type: string
+                  pattern: '^[A-Za-z0-9_-]{1,64}$'
+                  description: Must be listed in auth's configured M2M allowed tenants and tenant registry.
+      responses:
+        '200':
+          description: Token issued; Cache-Control no-store and Pragma no-cache.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [access_token, token_type, expires_in]
+                properties:
+                  access_token:
+                    type: string
+                  token_type:
+                    type: string
+                    enum: [Bearer]
+                  expires_in:
+                    type: integer
+                    minimum: 60
+                    maximum: 900
+        '400':
+          description: Invalid JSON, request fields or unknown tenant.
+        '403':
+          description: Machine token issuance is disabled for the tenant.
+        '404':
+          description: Unknown route; the listener is not started when globally disabled.
+        '413':
+          description: Request exceeds 8192 bytes.
+        '415':
+          description: Unsupported content type.
+        '500':
+          description: Internal error; no token returned.
+        '502':
+          description: Proxy only; the upstream is unavailable or its response is too large.
+        '504':
+          description: Proxy only; the upstream connection or response timed out.

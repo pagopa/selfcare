@@ -10,6 +10,10 @@ output "container_app_name" {
   value = azurerm_container_app.container_app.name
 }
 
+output "container_image" {
+  value = azurerm_container_app.container_app.template[0].container[0].image
+}
+
 output "cae_identity_id" {
   value = data.azurerm_user_assigned_identity.cae_identity.id
 }
