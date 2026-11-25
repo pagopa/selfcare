@@ -5609,7 +5609,7 @@
         "description" : "Data Protection Officer (DPO) specific data"
       },
       "InstitutionInfo" : {
-        "required" : [ "address", "fiscalCode", "institutionType", "mailAddress", "name", "vatNumber", "zipCode" ],
+        "required" : [ "address", "fiscalCode", "institutionType", "mailAddress", "name", "zipCode" ],
         "type" : "object",
         "properties" : {
           "id" : {
