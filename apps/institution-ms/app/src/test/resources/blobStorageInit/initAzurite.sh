@@ -1,3 +1,5 @@
+set -e
+
 sleep 5
 mkdir -p /workspace
 # Aggiungo products.json
