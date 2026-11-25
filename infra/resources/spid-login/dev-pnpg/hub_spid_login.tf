@@ -26,7 +26,7 @@ locals {
   app_settings = [
     {
       name  = "JAVA_TOOL_OPTIONS"
-      value = "-javaagent:applicationinsights-agent.jar -XX:-UseBASE64Intrinsics -Djava.net.preferIPv4Stack=true -Dnetworkaddress.cache.ttl=30 -Dnetworkaddress.cache.negative.ttl=1"
+      value = "-javaagent:applicationinsights-agent.jar -Djava.net.preferIPv4Stack=true -Dnetworkaddress.cache.ttl=30 -Dnetworkaddress.cache.negative.ttl=1"
     },
     {
       name  = "APPLICATIONINSIGHTS_ROLE_NAME"
@@ -266,5 +266,6 @@ module "container_app_hub_spid_login" {
   key_vault_resource_group_name  = module.local.config.key_vault_resource_group_name
   key_vault_name                 = module.local.config.key_vault_name
   probes                         = local.probes
+  enable_java4shell_mitigation   = false
   tags                           = module.local.config.tags
 }

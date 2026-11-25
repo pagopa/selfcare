@@ -121,6 +121,7 @@ mvn --projects :test-coverage --also-make verify -Pinstitution-ms,report
 ```
 
 Cucumber features in `app/src/test/resources/features/` (institution, delegation, delegationV2, onboarding, external, management, tenant-isolation). The runner starts `apps/institution-ms/docker-compose.yml` (MongoDB, Azurite, Azure CLI, MockServer, a `userms` container).
+Compose starts `userms` only after the Azurite seeder exits successfully, so its AR product catalog is available at startup.
 
 ## Deployment
 

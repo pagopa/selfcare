@@ -1,6 +1,7 @@
 [
   {
     "_id": "cdd3d4bb-bae3-4187-af16-53ec40358267",
+    "tenantId": "AR",
     "externalId": "00310810825",
     "description": "Comune di Test",
     "digitalAddress": "comune.test@test.it",
