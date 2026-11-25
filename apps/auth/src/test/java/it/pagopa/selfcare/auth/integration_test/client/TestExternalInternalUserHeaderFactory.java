@@ -27,6 +27,7 @@ public class TestExternalInternalUserHeaderFactory implements ClientHeadersFacto
     MultivaluedMap<String, String> headers = new MultivaluedHashMap<>();
     headers.putSingle(HEADER_NAME, apiKey);
     headers.putSingle("Authorization", "Bearer " + sharedStepData.getToken());
+    headers.putSingle("X-Tenant-Id", sharedStepData.getTenantId());
     return headers;
   }
 }

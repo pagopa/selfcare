@@ -1,3 +1,9 @@
 MONGODB-CONNECTION-STRING=mongodb://mongodb:27017/
+TENANT_SUPPORTED_TENANTS=AR
+TENANT_REGISTRY_JSON={"AR":{"mongo":{"account":"local","database":"selcUser","connectionStringEnvVar":"MONGODB-CONNECTION-STRING"},"jwt":{"publicKeyEnvVar":"JWT-PUBLIC-KEY"},"storages":{"products":{"account":"devstoreaccount1","container":"products","authentication":{"type":"CONNECTION_STRING","connectionStringEnvVar":"BLOB-STORAGE-PRODUCT-CONNECTION-STRING"}}},"userRegistry":{"apiKeyEnvVar":"USER_REGISTRY_API_KEY_AR"}}}
+USER_REGISTRY_URL=http://mockserver:1080/user-registry-mock/v1
+USER_REGISTRY_API_KEY_AR=123
+BLOB-STORAGE-PRODUCT-CONNECTION-STRING=DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtlCD9I1QhZT4gRjAAHEDPazjFIwtg==;BlobEndpoint=http://azurite:10000/devstoreaccount1;
+USER_MS_BLOB_STORAGE_FILEPATH_PRODUCT=ar/products.json
 MS_USER_PORT=8080
 JWT-PUBLIC-KEY=MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAnpt9gVNzDW6FpBk/TwNCqd+URprAD3tfGhYWhq2sAxDAP5u9GxgHybFQ8XGNY3yeb9rp5lxLqAcxOg5j19i0tvjkK/Q7GUezteY8xpEfRLJxglIaux/sM8M82YiHCwAjgQPF+EmIPboER5fLLnvDXyl+FYzcGhwPc8Z8AGlYjv8mgijrffSpbjtd7FF0I6WxIqKFHFhIsfUMezBa7NTMSIrxp5dACCMetrKkggTK3Yq8DP86nWuSdDsjIGLrIQFuMQOALr46cSafvHMFK5B/iIDfFLAek7Kg2tELHXWdcctjdPwsc38EXb3P2Fi70WOcLg9lAx9EDgizVLaG5obCCQIDAQAB

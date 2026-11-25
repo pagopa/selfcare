@@ -126,6 +126,7 @@ mvn --projects :auth --also-make test -Dtest=CucumberSuite -Dsurefire.failIfNoSp
 ```
 
 - Cucumber runner: `it.pagopa.selfcare.auth.integration_test.CucumberSuite`; features in `apps/auth/src/test/resources/features/` (`oidc*.feature`, `otp.feature`, `saml.feature`); stack in `apps/auth/src/test/resources/docker-compose.yml`.
+- The test-only `/mock-apim` proxy forwards the scenario's `X-Tenant-Id`, JWT and subscription key to user-ms for OTP e-mail lookups.
 - Code style: `spotless-maven-plugin` with Google Java Format.
 
 ## Deployment
