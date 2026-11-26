@@ -15,6 +15,7 @@ import org.openapi.quarkus.one_mail_json.model.EmailHighPriorityBodyDTOAllOfTo;
 import java.time.Duration;
 import java.util.Map;
 
+import static it.pagopa.selfcare.user.util.GeneralUtils.maskEmail;
 @Slf4j
 @ApplicationScoped
 public class OneMailServiceImpl implements MailService {
@@ -37,11 +38,11 @@ public class OneMailServiceImpl implements MailService {
     @Override
     public Uni<Void> sendOneMail(String userId, String email, String templateId, Map<String, String> templateAttributes) {
 
-      log.info("Sending email. userId={}, email={}, templateId={}", userId, email, templateId);
+      log.info("Sending email. userId={}, email={}, templateId={}", userId, maskEmail(email), templateId);
 
       var settings = tenantConfig.current();
       if (!settings.mailEnabled()) {
-        log.info("Email sending is disabled. Skipping email for userId={}, email={}", userId, email);
+        log.info("Email sending is disabled. Skipping email for userId={}, email={}", userId, maskEmail(email));
         return Uni.createFrom().voidItem();
       }
 
@@ -56,9 +57,10 @@ public class OneMailServiceImpl implements MailService {
 
       return emailsApi
         .v1EmailsSendHighPost(false, emailRequest)
-        .invoke(() -> log.info("OneMail call completed successfully for {}", email))
+        .invoke(response -> log.info("Email sent. userId={}, email={}, templateId={}, requestId={}",
+          userId, maskEmail(email), templateId, response != null ? response.getRequestId() : null))
         .onFailure()
-        .invoke(t -> log.error("OneMail call failed for {}: {}", email, t.getMessage(), t))
+        .invoke(t -> log.error("OneMail call failed. userId={}, email={}, templateId={}: {}", userId, maskEmail(email), templateId, t.getMessage(), t))
         .onFailure()
         .retry()
         .withBackOff(Duration.ofSeconds(retryMinBackOff), Duration.ofSeconds(retryMaxBackOff))

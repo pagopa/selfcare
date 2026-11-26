@@ -30,4 +30,12 @@ class GeneralUtilsTest {
         assertTrue(emptyList.isEmpty());
     }
 
+    @Test
+    void maskEmailHidesLocalPart() {
+        assertEquals("j**n.d*e@example.com", GeneralUtils.maskEmail("john.doe@example.com"));
+        assertEquals("p*.p***o@test.com", GeneralUtils.maskEmail("p.pippo@test.com"));
+        assertEquals("email", GeneralUtils.maskEmail("email"));
+        assertNull(GeneralUtils.maskEmail(null));
+    }
+
 }

@@ -520,4 +520,42 @@ class UserNotificationServiceImplTest {
 
     }
 
+    @Test
+    void testBuildDataModelContractUpdateAndSendEmail() {
+        when(mailService.sendOneMail(anyString(), anyString(), anyString(), anyMap())).thenReturn(Uni.createFrom().voidItem());
+
+        userNotificationService.buildDataModelContractUpdateAndSendEmail(
+                        userResource,
+                        userInstitution,
+                        List.of("Product A", "Product B")
+                )
+                .subscribe()
+                .withSubscriber(UniAssertSubscriber.create())
+                .awaitItem().assertCompleted();
+
+        ArgumentCaptor<Map> captor = ArgumentCaptor.forClass(Map.class);
+        verify(mailService, timeout(2000).times(1)).sendOneMail(anyString(), anyString(), anyString(), captor.capture());
+        assertEquals("Product A e Product B", captor.getValue().get("productNames"));
+        assertTrue(captor.getValue().get("documentInstitutionUrl").toString()
+                .endsWith("/dashboard/" + userInstitution.getInstitutionId() + "/document"));
+    }
+
+    @Test
+    void testFormatProductsLabel() {
+        assertEquals("", UserNotificationServiceImpl.formatProductsLabel(null));
+        assertEquals("il prodotto A", UserNotificationServiceImpl.formatProductsLabel(List.of("A")));
+        assertEquals("il prodotto A", UserNotificationServiceImpl.formatProductsLabel(List.of("A", "A", " ")));
+        assertEquals("A e B", UserNotificationServiceImpl.formatProductsLabel(List.of("A", "B")));
+        assertEquals("A, B e C", UserNotificationServiceImpl.formatProductsLabel(List.of("A", "B", "C")));
+    }
+
+    @Test
+    void testFormatProductNames() {
+        assertEquals("", UserNotificationServiceImpl.formatProductNames(null));
+        assertEquals("", UserNotificationServiceImpl.formatProductNames(List.of()));
+        assertEquals("A", UserNotificationServiceImpl.formatProductNames(List.of("A")));
+        assertEquals("A e B", UserNotificationServiceImpl.formatProductNames(List.of("A", "B")));
+        assertEquals("A, B e C", UserNotificationServiceImpl.formatProductNames(List.of("A", "B", "C")));
+    }
+
 }

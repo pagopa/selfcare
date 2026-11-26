@@ -4,6 +4,7 @@ import io.quarkus.security.Authenticated;
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
 import it.pagopa.selfcare.onboarding.common.PartyRole;
+import it.pagopa.selfcare.user.controller.request.SendInstitutionMailDto;
 import it.pagopa.selfcare.user.controller.request.UpdateDescriptionDto;
 import it.pagopa.selfcare.user.controller.request.UpdateProductUsersDto;
 import it.pagopa.selfcare.user.controller.response.*;
@@ -174,6 +175,29 @@ public class InstitutionController {
                                             @Context SecurityContext ctx) {
         return userUtils.readUserIdFromToken(ctx)
                 .onItem().transformToUni(loggedUser -> userService.updateProductUsers(institutionId, productId, updateProductUsersDto, loggedUser))
+                .replaceWith(Response.status(HttpStatus.SC_NO_CONTENT).build());
+    }
+
+    @Operation(
+            summary = "Send an email to the users of an institution for a list of products",
+            description = "Sends the email identified by 'type' to the users of the institution enabled for it on the given products. " +
+                    "Each type defines the recipients and the OneMail template: CONTRACT_UPDATE is sent to the users with role MANAGER, DELEGATE or " +
+                                        "SUB_DELEGATE on at least one ACTIVE product among 'productIds' (required), asking them to subscribe again the membership agreement documentation. " +
+                                        "Every mail lists the same 'productIds'."
+    )
+    @APIResponses(value = {
+            @APIResponse(responseCode = "204", description = "No Content"),
+            @APIResponse(responseCode = "400", description = "Bad Request", content = @Content(schema = @Schema(implementation = Problem.class), mediaType = "application/problem+json")),
+            @APIResponse(responseCode = "401", description = "Not Authorized", content = @Content(schema = @Schema(implementation = Problem.class), mediaType = "application/problem+json")),
+            @APIResponse(responseCode = "403", description = "Forbidden", content = @Content(schema = @Schema(implementation = Problem.class), mediaType = "application/problem+json")),
+            @APIResponse(responseCode = "404", description = "Not Found", content = @Content(schema = @Schema(implementation = Problem.class), mediaType = "application/problem+json"))
+    })
+    @POST
+    @Path(value = "/{institutionId}/send-mail")
+    @Consumes(MediaType.APPLICATION_JSON)
+    public Uni<Response> sendInstitutionMail(@PathParam(value = "institutionId") String institutionId,
+                                             @jakarta.validation.constraints.NotNull @Valid SendInstitutionMailDto sendInstitutionMailDto) {
+        return userService.sendInstitutionMail(institutionId, sendInstitutionMailDto.getType(), sendInstitutionMailDto.getProductIds())
                 .replaceWith(Response.status(HttpStatus.SC_NO_CONTENT).build());
     }
 

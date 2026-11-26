@@ -47,11 +47,13 @@ public class UserNotificationServiceImpl implements UserNotificationService {
   public static final String REQUESTER_NAME = "requesterName";
   public static final String REQUESTER_SURNAME = "requesterSurname";
   public static final String PRODUCT_NAME = "productName";
+  public static final String PRODUCT_NAMES = "productNames";
   public static final String INSTITUTION_NAME = "institutionName";
   public static final String NO_ROLE_FOUND = "no_role_found";
   public static final String PRODUCT_ROLE = "productRole";
   public static final String DEFAULT_NAME = "Operatore PagoPa";
   public static final String SELFCARE_DASHBOARD_INSTITUTION_URL = "dashboardInstitutionUrl";
+  public static final String SELFCARE_DASHBOARD_DOCUMENT_INSTITUTION_URL = "documentInstitutionUrl";
 
   @Inject @RestClient EventHubRestClient eventHubRestClient;
 
@@ -376,6 +378,50 @@ public class UserNotificationServiceImpl implements UserNotificationService {
     String email = retrieveMail(user, institution);
     Map<String, String> dataModel = buildEmailDataModelUserRequest(institution, product);
     return sendMail(user.getId().toString(), email, tenantConfig.current().templates().get("convention"), dataModel);
+  }
+
+  @Override
+  public Uni<Void> buildDataModelContractUpdateAndSendEmail(
+      UserResource user, UserInstitution institution, List<String> productNames) {
+    String email = retrieveMail(user, institution);
+    String selfcareUrl = tenantConfig.current().selfcareUrl();
+    Map<String, String> dataModel = new HashMap<>();
+    dataModel.put(PRODUCT_NAMES, formatProductsLabel(productNames));
+    dataModel.put(
+        SELFCARE_DASHBOARD_DOCUMENT_INSTITUTION_URL,
+        Optional.ofNullable(institution.getInstitutionId())
+            .map(id -> String.format("%s/dashboard/%s/document", selfcareUrl, id))
+            .orElse(String.format("%s/dashboard/party-selection", selfcareUrl)));
+    return sendMail(user.getId().toString(), email, tenantConfig.current().templates().get("contract-update"), dataModel);
+  }
+
+  /** Single product: "il prodotto A"; multiple products: "A e B", "A, B e C". */
+  static String formatProductsLabel(List<String> productNames) {
+    String names = formatProductNames(productNames);
+    long count = Optional.ofNullable(productNames).orElse(Collections.emptyList()).stream()
+        .filter(StringUtils::isNotBlank)
+        .distinct()
+        .count();
+    return count == 1 ? "il prodotto " + names : names;
+  }
+
+  /**
+   * Joins the product names in a human readable list following the Italian grammar, e.g. "A",
+   * "A e B", "A, B e C".
+   */
+  static String formatProductNames(List<String> productNames) {
+    List<String> names =
+        Optional.ofNullable(productNames).orElse(Collections.emptyList()).stream()
+            .filter(StringUtils::isNotBlank)
+            .distinct()
+            .toList();
+    if (names.isEmpty()) {
+      return "";
+    }
+    if (names.size() == 1) {
+      return names.get(0);
+    }
+    return String.join(", ", names.subList(0, names.size() - 1)) + " e " + names.get(names.size() - 1);
   }
 
   private Uni<Void> sendMail(String userId, String email, String templateId, Map<String, String> dataModel) {
