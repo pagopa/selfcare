@@ -41,6 +41,7 @@ data "azurerm_user_assigned_identity" "product_storage_blob_identity" {
 
 locals {
   app_settings_user_cdc = [
+    { name = "USER_CDC_TENANT_ID", value = upper(module.local.config.domain) },
     {
       name  = "JAVA_TOOL_OPTIONS"
       value = "-javaagent:applicationinsights-agent.jar -XX:-UseBASE64Intrinsics -Djava.net.preferIPv4Stack=true -Dnetworkaddress.cache.ttl=30 -Dnetworkaddress.cache.negative.ttl=1"

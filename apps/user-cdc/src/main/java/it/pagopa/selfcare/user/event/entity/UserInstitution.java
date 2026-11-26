@@ -19,6 +19,7 @@ import java.util.List;
 public class UserInstitution extends ReactivePanacheMongoEntity {
 
     private ObjectId id;
+    private String tenantId;
     private String userId;
     private String institutionId;
     private String institutionDescription;

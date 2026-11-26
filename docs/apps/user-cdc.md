@@ -78,7 +78,7 @@ From `apps/user-cdc/src/main/resources/application.properties`:
 
 | Group | Env vars |
 |---|---|
-| MongoDB | `MONGODB-CONNECTION-STRING` (database `selcUser`) |
+| MongoDB | `MONGODB-CONNECTION-STRING` (database `selcUser`), `USER_CDC_TENANT_ID` (required; stack tenant `AR` or `PNPG`) |
 | Feature flags | `USER_CDC_SEND_EVENTS_WATCH_ENABLED`, `USER_CDC_SEND_EVENTS_FD_WATCH_ENABLED`, `USER_CDC_ADD_ON_AGGREGATES_WATCH_ENABLED`, `USER_CDC_ADD_ON_AGGREGATES_GROUP_PRODUCTS` |
 | Table | `START_AT_TABLE_NAME`, `TABLE_CONNECTION_STRING`, `TABLE_ACCOUNT_NAME`, `TABLE_MANAGED_IDENTITY_CLIENT_ID` |
 | Blob | `STORAGE_CONNECTION_STRING`, `STORAGE_ACCOUNT_NAME`, `STORAGE_MANAGED_IDENTITY_CLIENT_ID`, `STORAGE_CONTAINER_PRODUCT` |
@@ -93,7 +93,8 @@ From `apps/user-cdc/src/main/resources/application.properties`:
 
 - Tenant isolation is by deployment: the AR and PNPG Container Apps connect to their own `MONGODB-CONNECTION-STRING` (Key Vault of each domain) and watch the same database/collection name.
 - In `-ar` stacks all three consumers and the webhook are enabled; in `-pnpg` stacks none of the feature flags is set (defaults `false`, comment in `application.properties`: "False for pnpg use case because we must not send events") and `USER_CDC_WEBHOOK_ENABLED = false`.
-- The webhook tenant is static configuration (`USER_CDC_WEBHOOK_TENANT_ID`, default `AR`); no tenant field is read from documents.
+- Aggregate propagation assigns `USER_CDC_TENANT_ID` to new records and updates only CDC-owned fields on existing records, preserving any `tenantId` written by the backfill. It rejects a source or target tagged for another tenant and accepts legacy records without a tag.
+- The webhook tenant remains a separate static configuration (`USER_CDC_WEBHOOK_TENANT_ID`, default `AR`).
 - The internal API is reached through APIM with a subscription key (see [Step 0 epic](../specs/MULTITENANT/Step_0/EPIC.md) for the planned conversion). Overview: [../multitenancy.md](../multitenancy.md).
 
 ## Build, run and test

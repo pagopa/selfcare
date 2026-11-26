@@ -13,6 +13,7 @@ Before running you must set these properties as environment variables.
 | **Property**                                      | **Environment Variable**                 | **Default** | **Required** |
 |---------------------------------------------------|------------------------------------------|-------------|:------------:|
 | quarkus.mongodb.connection-string                 | MONGODB-CONNECTION-STRING                |             |     yes      |
+| user-cdc.tenant-id                                | USER_CDC_TENANT_ID (`AR` or `PNPG`)      |             |     yes      |
 | user-cdc.app-insights.connection-string           | USER-CDC-APPINSIGHTS-CONNECTION-STRING   |             |     yes      |
 
 
