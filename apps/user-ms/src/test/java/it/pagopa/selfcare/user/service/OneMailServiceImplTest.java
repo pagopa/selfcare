@@ -3,77 +3,68 @@ package it.pagopa.selfcare.user.service;
 import io.quarkus.test.InjectMock;
 import io.quarkus.test.junit.QuarkusTest;
 import io.smallrye.mutiny.Uni;
-import io.smallrye.mutiny.helpers.test.UniAssertSubscriber;
+import it.pagopa.selfcare.tenant.TenantContext;
+import it.pagopa.selfcare.tenant.UnknownTenantException;
+import it.pagopa.selfcare.user.client.OneMailClient;
 import jakarta.inject.Inject;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
-import org.openapi.quarkus.one_mail_json.api.EmailsApi;
 import org.openapi.quarkus.one_mail_json.model.EmailHighPriorityBodyDTO;
 import org.openapi.quarkus.one_mail_json.model.EmailSuccessResponseDTO;
 
+import java.time.Duration;
 import java.util.Map;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyBoolean;
-import static org.mockito.Mockito.times;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mockito.Mockito.verifyNoInteractions;
-import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @QuarkusTest
 class OneMailServiceImplTest {
-  @Inject it.pagopa.selfcare.tenant.TenantContext tenantContext;
-  @org.junit.jupiter.api.BeforeEach
-  void initializeTenant() { tenantContext.setTenantId("AR"); }
+  @Inject TenantContext tenantContext;
 
   @Inject
   MailService mailService;
 
   @InjectMock
   @RestClient
-  EmailsApi emailsApi;
+  OneMailClient oneMailClient;
 
 
   @Test
-  void testSendMailNotification() {
+  void usesExplicitTenantEvenWithAnotherTenantInTheRequestContext() {
+    tenantContext.setTenantId("PNPG");
 
-    when(emailsApi.v1EmailsSendHighPost(
-      anyBoolean(),
-      any(EmailHighPriorityBodyDTO.class)
-    )).thenReturn(Uni.createFrom().item(new EmailSuccessResponseDTO()));
+    when(oneMailClient.sendHighPriority(eq("ar-test-mail-key"), eq(false), any()))
+        .thenReturn(Uni.createFrom().item(new EmailSuccessResponseDTO()));
 
-    UniAssertSubscriber<Void> subscriber = mailService
-      .sendOneMail(
-        "userId",
-        "email",
-        "templateId",
-        Map.of("key", "value")
-      )
-      .subscribe()
-      .withSubscriber(UniAssertSubscriber.create());
-
-    subscriber
-      .awaitItem()
-      .assertCompleted();
+    mailService.sendOneMail("AR", "userId", "email", "templateId", Map.of("key", "value"))
+        .await().atMost(Duration.ofSeconds(5));
 
     ArgumentCaptor<EmailHighPriorityBodyDTO> emailArgumentCaptor =
       ArgumentCaptor.forClass(EmailHighPriorityBodyDTO.class);
 
-    verify(emailsApi, times(1))
-      .v1EmailsSendHighPost(
-        anyBoolean(),
-        emailArgumentCaptor.capture()
-      );
+    verify(oneMailClient).sendHighPriority(eq("ar-test-mail-key"), eq(false), emailArgumentCaptor.capture());
     assertEquals("noreply@selfcare.pagopa.it", emailArgumentCaptor.getValue().getFrom().getEmail());
   }
 
   @Test
-  void doesNotSendMailWhenDisabledForTheCurrentTenant() {
-    tenantContext.setTenantId("PNPG");
-    mailService.sendOneMail("userId", "email", "templateId", Map.of())
-        .await().indefinitely();
-    verifyNoInteractions(emailsApi);
+  void doesNotSendMailWhenDisabledForTheExplicitTenant() {
+    tenantContext.setTenantId("AR");
+    mailService.sendOneMail("PNPG", "userId", "email", "templateId", Map.of())
+        .await().atMost(Duration.ofSeconds(5));
+    verifyNoInteractions(oneMailClient);
+  }
+
+  @Test
+  void rejectsUnknownTenantWithoutSendingMail() {
+    assertThrows(UnknownTenantException.class,
+        () -> mailService.sendOneMail("UNKNOWN", "userId", "email", "templateId", Map.of()));
+    verifyNoInteractions(oneMailClient);
   }
 }
