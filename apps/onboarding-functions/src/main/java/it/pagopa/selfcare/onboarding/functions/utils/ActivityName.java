@@ -57,6 +57,7 @@ public class ActivityName {
   public static final String GET_SIGNING_CONFIGURATION_ACTIVITY = "GetSigningConfiguration";
   public static final String GET_MANAGING_INSTITUTION_ACTIVITY = "GetManagingInstitution";
   public static final String GET_USER_EMAIL_UUID_ACTIVITY = "GetUserEmailUuid";
+  public static final String GET_ONBOARDING_ACTIVITY = "GetOnboardingActivity";
   private ActivityName() {
   }
 }

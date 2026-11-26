@@ -401,13 +401,11 @@ public class OnboardingFunctions {
         Map.of(ONBOARDING_ID, onboardingId));
 
     try (TenantContext.Scope ignored = TenantContext.open(orchestrationInput.getTenantId())) {
-      onboarding =
-          onboardingService
-              .getOnboarding(onboardingId)
-              .orElseThrow(
-                  () ->
-                      new ResourceNotFoundException(
-                          String.format("Onboarding with id %s not found!", onboardingId)));
+      String onboardingString = ctx.callActivity(GET_ONBOARDING_ACTIVITY, ctx.getInput(String.class), optionsRetry, String.class).await();
+      if (onboardingString == null || onboardingString.isBlank()) {
+        throw new ResourceNotFoundException(String.format("Onboarding with id %s not found!", onboardingId));
+      }
+      onboarding = readOnboardingValue(objectMapper, onboardingString);
       // without strict isolation, onboardings created before tenantId belong to the input tenant
       if (!tenantDataIsolation
           .ownerTenant(onboarding.getTenantId())
@@ -1304,6 +1302,17 @@ public class OnboardingFunctions {
     }
 
     return getEmailListString(objectMapper, emails);
+  }
+
+  @FunctionName(GET_ONBOARDING_ACTIVITY)
+  public String getOnboardingActivity(
+    @DurableActivityTrigger(name = "orchestrationInputString") String orchestrationInputString, final ExecutionContext context) {
+    OnboardingOrchestrationInput input = readOnboardingOrchestrationInputValue(objectMapper, orchestrationInputString);
+    try (TenantContext.Scope ignored = TenantContext.open(input.getTenantId())) {
+      return onboardingService.getOnboarding(input.getOnboardingId())
+        .map(o -> getOnboardingString(objectMapper, o))
+        .orElse("");
+    }
   }
 
   private void ensureSuccessfulDocumentResponse(
