@@ -18,7 +18,8 @@ Then, it updates the private DNS zone with a new A record pointing at the existi
 
 | Name | Version |
 | ---- | ------- |
-| <a name="provider_azurerm"></a> [azurerm](#provider\_azurerm) | 4.72.0 |
+| <a name="provider_azapi"></a> [azapi](#provider\_azapi) | 2.13.0 |
+| <a name="provider_azurerm"></a> [azurerm](#provider\_azurerm) | 4.81.0 |
 
 ## Modules
 
@@ -28,14 +29,13 @@ No modules.
 
 | Name | Type |
 | ---- | ---- |
+| [azapi_update_resource.internal_tcp_ingress](https://registry.terraform.io/providers/azure/azapi/latest/docs/resources/update_resource) | resource |
 | [azurerm_container_app.container_app](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/container_app) | resource |
 | [azurerm_monitor_metric_alert.container_restart](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/monitor_metric_alert) | resource |
 | [azurerm_private_dns_a_record.private_dns_record_a_azurecontainerapps_io](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/private_dns_a_record) | resource |
 | [azurerm_client_config.current](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/client_config) | data source |
 | [azurerm_container_app_environment.container_app_environment](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/container_app_environment) | data source |
 | [azurerm_key_vault.key_vault](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/key_vault) | data source |
-| [azurerm_key_vault_secret.keyvault_secret](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/key_vault_secret) | data source |
-| [azurerm_key_vault_secrets.key_vault_secrets](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/key_vault_secrets) | data source |
 | [azurerm_monitor_action_group.restart_alert](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/monitor_action_group) | data source |
 | [azurerm_private_dns_zone.private_azurecontainerapps_io](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/private_dns_zone) | data source |
 | [azurerm_resource_group.resource_group_app](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/resource_group) | data source |
@@ -47,14 +47,16 @@ No modules.
 | Name | Description | Type | Default | Required |
 | ---- | ----------- | ---- | ------- | :------: |
 | <a name="input_additional_user_assigned_identity_ids"></a> [additional\_user\_assigned\_identity\_ids](#input\_additional\_user\_assigned\_identity\_ids) | Additional user-assigned identity IDs to attach to the container app | `list(string)` | `[]` | no |
-| <a name="input_app_settings"></a> [app\_settings](#input\_app\_settings) | n/a | <pre>list(object({<br/>    name                  = string<br/>    value                 = optional(string, "")<br/>    key_vault_secret_name = optional(string)<br/>  }))</pre> | n/a | yes |
+| <a name="input_app_settings"></a> [app\_settings](#input\_app\_settings) | n/a | <pre>list(object({<br/>    name                  = string<br/>    value                 = optional(string, "")<br/>    key_vault_secret_name = optional(string)<br/>    key_vault_secret_id   = optional(string)<br/>  }))</pre> | n/a | yes |
 | <a name="input_container_app"></a> [container\_app](#input\_container\_app) | Container App configuration | <pre>object({<br/>    min_replicas = number<br/>    max_replicas = number<br/><br/>    scale_rules = list(object({<br/>      name = string<br/>      type = optional(string)<br/>      custom = object({<br/>        metadata = map(string)<br/>        type     = string<br/>      })<br/>    }))<br/><br/>    cpu    = number<br/>    memory = string<br/>  })</pre> | n/a | yes |
 | <a name="input_container_app_environment_name"></a> [container\_app\_environment\_name](#input\_container\_app\_environment\_name) | Container app environment name to use | `string` | n/a | yes |
 | <a name="input_container_app_name"></a> [container\_app\_name](#input\_container\_app\_name) | Container App name suffix | `string` | n/a | yes |
 | <a name="input_dapr_settings"></a> [dapr\_settings](#input\_dapr\_settings) | n/a | <pre>list(object({<br/>    app_id       = string<br/>    app_port     = string<br/>    app_protocol = string<br/>  }))</pre> | `[]` | no |
+| <a name="input_enable_java4shell_mitigation"></a> [enable\_java4shell\_mitigation](#input\_enable\_java4shell\_mitigation) | Inject -XX:-UseBASE64Intrinsics into JAVA\_TOOL\_OPTIONS to mitigate CVE-2026-114938 (Java4Shell) | `bool` | `true` | no |
 | <a name="input_env_short"></a> [env\_short](#input\_env\_short) | Environment short name | `string` | n/a | yes |
 | <a name="input_image_name"></a> [image\_name](#input\_image\_name) | Name of the image to use, hosted on GitHub container registry | `string` | n/a | yes |
 | <a name="input_image_tag"></a> [image\_tag](#input\_image\_tag) | Image tag to use for the container | `string` | `"latest"` | no |
+| <a name="input_internal_tcp_ports"></a> [internal\_tcp\_ports](#input\_internal\_tcp\_ports) | Additional CAE-only TCP ports. Null leaves them unmanaged; an empty set clears previously managed mappings. | `set(number)` | `null` | no |
 | <a name="input_key_vault_name"></a> [key\_vault\_name](#input\_key\_vault\_name) | Key Vault name (for custom domain certificate) | `string` | n/a | yes |
 | <a name="input_key_vault_resource_group_name"></a> [key\_vault\_resource\_group\_name](#input\_key\_vault\_resource\_group\_name) | Key Vault resource group name (for custom domain certificate) | `string` | n/a | yes |
 | <a name="input_port"></a> [port](#input\_port) | Container binding port | `number` | `8080` | no |
@@ -74,4 +76,5 @@ No modules.
 | <a name="output_container_app_environment_name"></a> [container\_app\_environment\_name](#output\_container\_app\_environment\_name) | n/a |
 | <a name="output_container_app_name"></a> [container\_app\_name](#output\_container\_app\_name) | n/a |
 | <a name="output_container_app_resource_group_name"></a> [container\_app\_resource\_group\_name](#output\_container\_app\_resource\_group\_name) | n/a |
+| <a name="output_container_image"></a> [container\_image](#output\_container\_image) | n/a |
 <!-- END_TF_DOCS -->

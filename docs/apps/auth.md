@@ -7,8 +7,8 @@
 | Path | `apps/auth` |
 | Stack | Quarkus 3.31.2, Java 17, reactive (Mutiny `Uni`, reactive Mongo Panache) |
 | Type | REST microservice (application API behind APIM) |
-| Tenants | AR only (PNPG login is not enabled in `auth`) |
-| Infra | `infra/resources/auth/` (`dev-ar`, `uat-ar`, `prod-ar`) |
+| Tenants | AR login; per-tenant M2M issuance also supports PNPG with login disabled |
+| Infra | `infra/resources/auth/` (AR and PNPG, DEV/UAT/PROD) |
 
 ## Responsibilities
 
@@ -16,6 +16,7 @@
 - Validate SAML responses posted to the Assertion Consumer Service (`SAMLServiceImpl`, `util/SamlValidator`).
 - Run the OTP flow (create, verify, resend), send OTP e-mails through OneMail and enforce attempts/daily limits (`OtpFlowServiceImpl`, `OtpNotificationServiceImpl`).
 - Sign the session JWT with the per-tenant private key and `kid` (`JwtServiceImpl`, `conf/TenantSessionKeyProvider`).
+- Issue short-lived `PAGOPA` session tokens for a configured technical UID per tenant through `/token/service` on the opt-in internal listener (HTTPS by default). No grant or IAM precheck is required; downstream services enforce permissions. CAE network isolation replaces caller credentials/Entra.
 - Resolve and enforce the tenant on every login entry point (`filter/TenantResolutionFilter`).
 
 ## Architecture
@@ -67,11 +68,16 @@ sequenceDiagram
 | GET | `/otp/mail-info/{mailRequestId}` | `getOtpMailInfo` (tag `support`) | no |
 | GET | `/otp/info` | OTP info by `userId`/`status` (tag `support`) | no |
 | POST | `/saml/acs` | SAML ACS callback | yes |
+| POST | `/token/service` (internal port 8082 only) | `issueMachineToken` | no |
+| POST | `/token/service` (Function-subnet proxy) | Forwards to `issueMachineToken` | no |
 
 APIM exposure:
 
 - Application API `selc-<env>-api-auth`, base path `auth`, module `infra/resources/_modules/apim_api`, built from `openapi-apim.json`, with tenant enforcement enabled and JWT-based tenant resolution disabled (`infra/resources/auth/dev-ar/auth.tf`).
 - Operations tagged `support` are merged into the external support API (`infra/resources/_modules/apim_external_api/api/selfcare_support_service/v1/openapi_merge/openapi_merge.json`, input `selfcare-auth-ms`).
+- The machine endpoint is absent from the primary listener and its generated specification. Its separate `openapi-m2m.yaml` must never be imported into APIM. Terraform maps its additional TCP port with `external=false`; when TLS is enabled, auth terminates it using separate certificate/key secrets.
+- A separate proxy Container App forwards only `POST /token/service` and its request body to the local auth port 8082. Its ingress is restricted to the onboarding Function's integration subnet; it does not authenticate a Function identity or enforce a tenant boundary. The CAE must have an internal load balancer, so `external_enabled=true` publishes the proxy only to the private VNet ingress.
+- DEV/UAT/PROD Terraform enables tenant issuance and explicitly selects plaintext HTTP (`M2M_TLS_ENABLED=false`), keeps one minimum auth replica, and does not change CAE peer-to-peer encryption. Both proxy legs carry tokens in plaintext; any workload in the allowed subnet can acquire enabled tenant identities. The SDK requires `selfcare.m2m.allow-insecure-http=true`.
 
 ## Data and messaging
 
@@ -110,6 +116,31 @@ Names only, from `apps/auth/src/main/resources/application.properties` and `infr
 
 Secrets are injected from Key Vault (`secrets_names` map in `auth.tf`).
 
+Signing keys are referenced per tenant through `jwt.session.privateKeyEnvVar`
+and `jwt.session.keyIdEnvVar` in `TENANT_REGISTRY_JSON`; actual key material
+stays in secret-backed environment variables. A PNPG entry may declare these
+references with `auth_enabled=false`, without login credentials or resources.
+Signing-key loading is independent of login enablement; user-session generation
+still requires `auth_enabled=true`. M2M issuance additionally requires the global
+listener flag, TLS secrets unless HTTP is explicitly selected, per-tenant
+`m2m.enabled`, `m2m.uidEnvVar` and signing configuration; JWT groups and lifetime
+are server-configured. `M2M_ALLOWED_TENANTS` restricts the allowed
+tenant IDs (default `AR,PNPG`); the SDK's `selfcare.m2m.allowed-tenants` must
+include any additional tenant requested by the client. Requests contain only
+`tenantId`; auth issues a five-minute session without contacting IAM or checking
+that the UID exists in IAM. No bootstrap token or scope is generated.
+Downstream services must check roles/permissions through IAM where required.
+Legacy `PAGOPA`/`SUPPORT` authorization can bypass IAM; this change does not
+modify recipient authorization. Tokens remain valid until expiry.
+Each environment resolves `TENANT_AR_M2M_IAM_UID` and `TENANT_PNPG_M2M_IAM_UID`
+from the `auth-m2m-iam-uid-ar` and `auth-m2m-iam-uid-pnpg` secrets in its own
+Key Vault: `selc-d-kv`, `selc-u-kv` or `selc-p-kv`.
+No UID value is stored in the tenant registry. Missing/invalid UID configuration
+fails startup for enabled tenants, without a literal or cross-tenant fallback.
+Provision the secrets before applying their Container App bindings.
+See the [M2M configuration guide](../../libs/selfcare-sdk-m2m/README.md) for a
+tenant configuration, audience settings and the `PAGOPA`/`SUPPORT` trust implications.
+
 ## Multitenancy
 
 - `TenantResolutionFilter` requires the `X-Tenant-Id` header on `/oidc`, `/otp` and `/saml` paths, resolves it against `TenantRegistry` (only tenants with authentication enabled are accepted) and copies it into both `AuthTenantContext` and the shared `TenantContext`. Missing/unknown tenant returns 400, a disabled tenant returns 403; rejections are logged on the `AUDIT_TENANT` logger.
@@ -126,6 +157,7 @@ mvn --projects :auth --also-make test -Dtest=CucumberSuite -Dsurefire.failIfNoSp
 ```
 
 - Cucumber runner: `it.pagopa.selfcare.auth.integration_test.CucumberSuite`; features in `apps/auth/src/test/resources/features/` (`oidc*.feature`, `otp.feature`, `saml.feature`); stack in `apps/auth/src/test/resources/docker-compose.yml`.
+- The test-only `/mock-apim` proxy forwards the scenario's `X-Tenant-Id`, JWT and subscription key to user-ms for OTP e-mail lookups.
 - Code style: `spotless-maven-plugin` with Google Java Format.
 
 ## Deployment

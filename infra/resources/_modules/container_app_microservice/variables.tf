@@ -102,7 +102,16 @@ variable "app_settings" {
     name                  = string
     value                 = optional(string, "")
     key_vault_secret_name = optional(string)
+    key_vault_secret_id   = optional(string)
   }))
+  validation {
+    condition = alltrue([
+      for setting in var.app_settings : setting.key_vault_secret_id == null ? true : (
+        setting.value == "" && can(regex("^https://[a-z0-9-]+\\.vault\\.azure\\.net/secrets/[a-zA-Z0-9-]+$", setting.key_vault_secret_id))
+      )
+    ])
+    error_message = "A Key Vault app setting requires a versionless secret URI and cannot also have a literal value."
+  }
 }
 
 variable "secrets_names" {
@@ -124,6 +133,19 @@ variable "port" {
   type        = number
   default     = 8080
   description = "Container binding port"
+}
+
+variable "internal_tcp_ports" {
+  description = "Additional CAE-only TCP ports. Null leaves them unmanaged; an empty set clears previously managed mappings."
+  type        = set(number)
+  default     = null
+  validation {
+    condition = var.internal_tcp_ports == null ? true : length(var.internal_tcp_ports) <= 5 && alltrue([
+      for port in var.internal_tcp_ports :
+      port == floor(port) && port > 0 && port <= 65535 && !contains([80, 443, 8080, 36985], port)
+    ])
+    error_message = "Use at most five distinct integer ports, excluding the primary and reserved ports."
+  }
 }
 
 variable "workload_profile_name" {
@@ -171,3 +193,10 @@ variable "additional_user_assigned_identity_ids" {
   type        = list(string)
   default     = []
 }
+
+variable "enable_java4shell_mitigation" {
+  description = "Inject -XX:-UseBASE64Intrinsics into JAVA_TOOL_OPTIONS to mitigate CVE-2026-114938 (Java4Shell)"
+  type        = bool
+  default     = true
+}
+

@@ -99,6 +99,10 @@ Requires `pymongo` (`pip install pymongo`).
 
 ## After the backfill: turning isolation strict
 
+Before backfilling `selcUser.userInstitutions`, deploy the `user-cdc` aggregate-write fix together
+with its `USER_CDC_TENANT_ID` setting. Older CDC revisions replace whole documents and can remove
+`tenantId` again. Repeat `--verify` after aggregate propagation has run before approving strict mode.
+
 Tagging the data is only half the job. Until the services stop accepting untagged documents, an untagged
 document that appears later — from a restored backup, a replayed event, a fixture — is still readable by both
 tenants. Once `--verify` exits `0` for both tenants in an environment, set the corresponding entry in

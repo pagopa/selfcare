@@ -48,14 +48,21 @@ public class SessionServiceImpl implements SessionService {
     if (!tenantAudienceEnabled) {
       return audience;
     }
-    TenantDefinition.JwtDefinition jwt =
-        tenantRegistry.resolveEnabledTenant(tenantId).definition().jwt();
+    return resolveAudience(tenantRegistry.resolveEnabledTenant(tenantId).definition());
+  }
+
+  String resolveAudience(TenantDefinition tenant) {
+    if (!tenantAudienceEnabled) {
+      return audience;
+    }
+    TenantDefinition.JwtDefinition jwt = tenant.jwt();
     String tenantAudience = jwt == null || jwt.session() == null ? null : jwt.session().audience();
     return tenantAudience == null || tenantAudience.isBlank() ? audience : tenantAudience;
   }
 
   @Override
   public Uni<String> generateSessionToken(UserClaims userClaims) {
+    tenantRegistry.resolveEnabledTenant(userClaims.getTenantId());
     SigningKey signingKey = tenantSessionKeyProvider.getSigningKey(userClaims.getTenantId());
     Instant issuedAt = Instant.now();
     return Uni.createFrom()
@@ -79,6 +86,7 @@ public class SessionServiceImpl implements SessionService {
 
   @Override
   public Uni<String> generateSessionTokenInternal(UserClaims userClaims) {
+    tenantRegistry.resolveEnabledTenant(userClaims.getTenantId());
     SigningKey signingKey = tenantSessionKeyProvider.getSigningKey(userClaims.getTenantId());
     Instant issuedAt = Instant.now();
     return Uni.createFrom()

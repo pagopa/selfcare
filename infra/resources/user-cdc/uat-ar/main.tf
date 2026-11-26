@@ -53,6 +53,7 @@ data "azurerm_user_assigned_identity" "fd_eventhub_sender_identity" {
 
 locals {
   app_settings_user_cdc = [
+    { name = "USER_CDC_TENANT_ID", value = upper(module.local.config.domain) },
     {
       name  = "JAVA_TOOL_OPTIONS"
       value = "-javaagent:applicationinsights-agent.jar -XX:-UseBASE64Intrinsics",

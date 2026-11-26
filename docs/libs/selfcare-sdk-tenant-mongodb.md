@@ -44,8 +44,8 @@ client and CDI injection becomes ambiguous.
 mvn -f libs/selfcare-sdk-tenant-mongodb/pom.xml clean verify
 ```
 
-Released by `.github/workflows/release-sdk.yml` / `.github/workflows/release_sdk_pom.yml` (matrix module
-`selfcare-sdk-tenant-mongodb`, push on `main` or `workflow_dispatch`) to GitHub Packages
+Released by `.github/workflows/release-sdk.yml` (`workflow_dispatch`, matrix module
+`selfcare-sdk-tenant-mongodb`) to GitHub Packages
 `https://maven.pkg.github.com/pagopa/selfcare`.
 
 ## References

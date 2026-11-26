@@ -65,6 +65,10 @@ resource "azurerm_container_app_job" "this" {
       ]
 
       env {
+        name  = local.java4shell_mitigation.name
+        value = local.java4shell_mitigation.value
+      }
+      env {
         name  = "APPLICATIONINSIGHTS_CONNECTION_STRING"
         value = data.azurerm_application_insights.this.connection_string
       }

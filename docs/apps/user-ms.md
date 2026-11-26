@@ -30,7 +30,7 @@ Single Maven module, package `it.pagopa.selfcare.user`:
 | `repository` | `UserInstitutionRepository`, central tenant predicate and scoped writes |
 | `conf` | `TenantNotificationConfig`, validated per-tenant settings; `MongoConfig`, custom date codec provider |
 | `internalevents` | One `InternalEvents` receiver per enabled tenant; `InstitutionUpdatedEventHandler` owns each callback's tenant context |
-| `client/auth` | Tenant/authorization propagation and tenant-specific PDV/OneMail API-key filters |
+| `client` / `client/auth` | OneMail client with an explicit API-key header, tenant/authorization propagation and tenant-specific PDV API-key filter |
 | `filter` | Tenant-aware request/response logging via `TenantLogUtils` |
 | `health` | `UserMongoReadinessCheck`, `ProductBlobStorageReadinessCheck` |
 | `exception/handler` | `ExceptionHandler` returning `Problem` |
@@ -90,9 +90,11 @@ From `src/main/resources/application.properties` (secrets come from Key Vault in
 
 `<ID>` is `AR` or `PNPG`; only supported tenants are validated at startup. PNPG stacks disable webhook,
 Event Hub publishing and internal events, and retain PNPG downstream URLs. Mail remains enabled in
-PROD for **both** tenants, disabled in DEV/UAT. OneMail stays fire-and-forget: a managed executor
-clears the originating request context, and `TenantMailJob` establishes its own context until the
-send/retries finish. Template payloads and tenant selection are captured before dispatch.
+PROD for **both** tenants, disabled in DEV/UAT. OneMail stays fire-and-forget: template payloads and
+the resolved tenant ID are captured before dispatch. The background job resolves the sender and API key
+from that tenant ID and passes `x-api-key` on every attempt, without relying on any request context.
+REST client wire logging is disabled to keep credentials and mail contents out of logs;
+the application still logs request metadata and the outcome of each OneMail attempt.
 
 ## Multitenancy
 

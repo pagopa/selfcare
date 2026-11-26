@@ -29,7 +29,7 @@ resource "azurerm_container_group" "namirial_sws_cg" {
       protocol = "TCP"
     }
 
-    environment_variables = var.environment_variables
+    environment_variables = local.environment_variables
 
     readiness_probe {
       http_get {

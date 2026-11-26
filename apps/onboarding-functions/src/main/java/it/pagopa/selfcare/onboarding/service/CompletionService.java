@@ -12,6 +12,8 @@ public interface CompletionService {
 
     String createInstitutionAndPersistInstitutionId(Onboarding onboarding);
 
+    String resolveAggregatorInstitutionId(Onboarding onboarding);
+
     void sendMailRejection(ExecutionContext context, Onboarding onboarding);
 
     void persistOnboarding(Onboarding onboarding);

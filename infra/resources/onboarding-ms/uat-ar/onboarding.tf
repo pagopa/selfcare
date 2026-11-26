@@ -42,7 +42,10 @@ module "collection_onboardings" {
     { keys = ["productId"], unique = false },
     { keys = ["status"], unique = false },
     { keys = ["activatedAt"], unique = false },
-    { keys = ["deletedAt"], unique = false }
+    { keys = ["deletedAt"], unique = false },
+    { keys = ["institution.taxCode"], unique = false },
+    { keys = ["institution.originId"], unique = false },
+    { keys = ["institution.id"], unique = false }
   ]
 }
 

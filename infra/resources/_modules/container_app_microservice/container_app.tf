@@ -59,10 +59,11 @@ resource "azurerm_container_app" "container_app" {
 
       # Environment variables from app_settings
       dynamic "env" {
-        for_each = var.app_settings
+        for_each = local.app_settings
         content {
-          name  = env.value.name
-          value = env.value.value
+          name        = env.value.name
+          value       = env.value.key_vault_secret_id == null ? env.value.value : null
+          secret_name = env.value.key_vault_secret_id == null ? null : replace(lower(env.value.name), "_", "-")
         }
       }
 
@@ -189,6 +190,34 @@ resource "azurerm_container_app" "container_app" {
         }
       }
     }
+  }
+}
+
+# AzureRM does not expose additionalPortMappings; keep ownership of this property in AzAPI.
+resource "azapi_update_resource" "internal_tcp_ingress" {
+  count = var.internal_tcp_ports != null ? 1 : 0
+
+  type        = "Microsoft.App/containerApps@2024-03-01"
+  resource_id = azurerm_container_app.container_app.id
+  body = {
+    properties = {
+      configuration = {
+        ingress = {
+          additionalPortMappings = [
+            for port in sort([for value in var.internal_tcp_ports : tostring(value)]) : {
+              external    = false
+              exposedPort = tonumber(port)
+              targetPort  = tonumber(port)
+            }
+          ]
+        }
+      }
+    }
+  }
+  response_export_values = []
+
+  lifecycle {
+    replace_triggered_by = [azurerm_container_app.container_app]
   }
 }
 
