@@ -390,7 +390,7 @@ public class UserNotificationServiceImpl implements UserNotificationService {
     dataModel.put(
         SELFCARE_DASHBOARD_DOCUMENT_INSTITUTION_URL,
         Optional.ofNullable(institution.getInstitutionId())
-            .map(id -> String.format("%s/dashboard/%s/document", selfcareUrl, id))
+            .map(id -> String.format("%s/dashboard/%s/documents", selfcareUrl, id))
             .orElse(String.format("%s/dashboard/party-selection", selfcareUrl)));
     return sendMail(user.getId().toString(), email, tenantConfig.current().templates().get("contract-update"), dataModel);
   }

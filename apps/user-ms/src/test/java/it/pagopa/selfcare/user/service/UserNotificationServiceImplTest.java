@@ -538,7 +538,7 @@ class UserNotificationServiceImplTest {
         verify(mailService, timeout(2000).times(1)).sendOneMail(anyString(), anyString(), anyString(), captor.capture());
         assertEquals("Product A e Product B", captor.getValue().get("productNames"));
         assertTrue(captor.getValue().get("documentInstitutionUrl").toString()
-                .endsWith("/dashboard/" + userInstitution.getInstitutionId() + "/document"));
+                .endsWith("/dashboard/" + userInstitution.getInstitutionId() + "/documents"));
     }
 
     @Test
