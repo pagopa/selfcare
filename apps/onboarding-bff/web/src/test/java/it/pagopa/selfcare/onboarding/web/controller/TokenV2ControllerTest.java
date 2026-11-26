@@ -7,6 +7,7 @@ import it.pagopa.selfcare.commons.base.security.SelfCareUser;
 import it.pagopa.selfcare.commons.web.security.JwtAuthenticationToken;
 import it.pagopa.selfcare.onboarding.connector.model.onboarding.AvailableDocument;
 import it.pagopa.selfcare.onboarding.connector.model.onboarding.AvailableDocuments;
+import it.pagopa.selfcare.onboarding.connector.model.onboarding.Billing;
 import it.pagopa.selfcare.onboarding.connector.model.onboarding.InstitutionUpdate;
 import it.pagopa.selfcare.onboarding.connector.model.onboarding.OnboardingData;
 import it.pagopa.selfcare.onboarding.core.TokenService;
@@ -125,6 +126,7 @@ class TokenV2ControllerTest {
     void retrieveOnboardingRequest() throws Exception {
         // given
         OnboardingData onboardingData = new OnboardingData();
+        onboardingData.setBilling(new Billing());
         InstitutionUpdate institutionUpdate = new InstitutionUpdate();
         institutionUpdate.setTaxCode("taxCode");
         onboardingData.setInstitutionUpdate(institutionUpdate);
@@ -139,6 +141,7 @@ class TokenV2ControllerTest {
                         .contentType(APPLICATION_JSON_VALUE)
                         .accept(APPLICATION_JSON_VALUE))
                 .andExpect(status().isOk())
+                .andExpect(MockMvcResultMatchers.jsonPath("$.institutionInfo.vatNumber").doesNotHaveJsonPath())
                 .andReturn();
 
         OnboardingRequestResource response = objectMapper.readValue(

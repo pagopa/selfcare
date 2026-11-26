@@ -248,7 +248,7 @@ flowchart LR
 
 **Comportamenti osservati da tenere presenti:**
 
-- Le release remote delle librerie restano un follow-up manuale: `release_onboarding_sdk.yml` è `workflow_dispatch` e pubblica tutto il reactor onboarding SDK; `release-sdk.yml`/`release_sdk_pom.yml` rilasciano `selfcare-sdk-tenant` (anche automaticamente su `main` per i path SDK o manualmente scegliendo il modulo). Finché non sono pubblicate, `document-ms` compila solo dopo `mvn install` locale delle due librerie.
+- Le release remote delle librerie restano un follow-up manuale: `release_onboarding_sdk.yml` è `workflow_dispatch` e pubblica tutto il reactor onboarding SDK; `release-sdk.yml` rilascia `selfcare-sdk-tenant` tramite `workflow_dispatch` scegliendo il modulo. Finché non sono pubblicate, `document-ms` compila solo dopo `mvn install` locale delle due librerie.
 - `PAGOPA_SIGNATURE_SIGNER`, `PAGOPA_SIGNATURE_LOCATION` e `PAGOPA_SIGNATURE_ONBOARDING_REASON_TEMPLATE` non sono più letti. `PAGOPA_SIGNATURE_SOURCE` è letto solo come valore della `signature.source` AR finché `07.01` non genera `TENANT_REGISTRY_JSON` per ambiente (allora va rimosso, insieme ai legacy `NAMIRIAL_BASE_URL` e `NAMIRIAL_SIGN_SERVICE_IDENTITY_{USER,PASSWORD}`, in `07.02`). Gli alias `NAMIRIAL_*_AR` sono già in infra.
 - `source=disabled` è accettato solo se dichiarato nella sezione `signature`; una sezione assente è un errore applicativo per `document-ms`, ma resta opzionale nel SDK per gli altri servizi.
 - La verifica delle firme caricate resta indipendente dal tenant e continua a usare `SIGNATURE_VALIDATION_ENABLED` e le URL EU LOTL globali.

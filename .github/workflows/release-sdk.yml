@@ -22,6 +22,7 @@ on:
           - selfcare-sdk-security
           - selfcare-sdk-tenant
           - selfcare-sdk-tenant-mongodb
+          - selfcare-sdk-m2m
 
 jobs:
   matrix:
@@ -36,7 +37,7 @@ jobs:
           if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ "${{ inputs.module }}" != "all" ]; then
             echo 'modules=["${{ inputs.module }}"]' >> "$GITHUB_OUTPUT"
           else
-            echo 'modules=["selfcare-sdk-security","selfcare-sdk-tenant","selfcare-sdk-tenant-mongodb"]' >> "$GITHUB_OUTPUT"
+            echo 'modules=["selfcare-sdk-security","selfcare-sdk-tenant","selfcare-sdk-tenant-mongodb","selfcare-sdk-m2m"]' >> "$GITHUB_OUTPUT"
           fi
 
   setup:

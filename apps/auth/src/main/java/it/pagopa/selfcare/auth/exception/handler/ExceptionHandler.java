@@ -27,9 +27,16 @@ public class ExceptionHandler {
   @ServerExceptionMapper
   public Response toResponse(Exception exception) {
     LOGGER.error(
-        "event=request_failed status=500 exception={}", exception.getClass().getSimpleName(),
+        "event=request_failed status=500 exception={}",
+        exception.getClass().getSimpleName(),
         exception);
     return problem(Response.Status.INTERNAL_SERVER_ERROR, SOMETHING_HAS_GONE_WRONG_IN_THE_SERVER);
+  }
+
+  @ServerExceptionMapper
+  public Response toResponse(jakarta.ws.rs.NotFoundException exception) {
+    logHandledException(Response.Status.NOT_FOUND, exception);
+    return problem(Response.Status.NOT_FOUND, RESOURCE_NOT_FOUND);
   }
 
   @ServerExceptionMapper
