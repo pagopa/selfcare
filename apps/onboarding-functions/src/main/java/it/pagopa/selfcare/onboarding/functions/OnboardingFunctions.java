@@ -401,13 +401,11 @@ public class OnboardingFunctions {
         Map.of(ONBOARDING_ID, onboardingId));
 
     try (TenantContext.Scope ignored = TenantContext.open(orchestrationInput.getTenantId())) {
-      onboarding =
-          onboardingService
-              .getOnboarding(onboardingId)
-              .orElseThrow(
-                  () ->
-                      new ResourceNotFoundException(
-                          String.format("Onboarding with id %s not found!", onboardingId)));
+      String onboardingString = ctx.callActivity(GET_ONBOARDING_ACTIVITY, ctx.getInput(String.class), optionsRetry, String.class).await();
+      if (onboardingString == null || onboardingString.isBlank()) {
+        throw new ResourceNotFoundException(String.format("Onboarding with id %s not found!", onboardingId));
+      }
+      onboarding = readOnboardingValue(objectMapper, onboardingString);
       // without strict isolation, onboardings created before tenantId belong to the input tenant
       if (!tenantDataIsolation
           .ownerTenant(onboarding.getTenantId())
@@ -906,6 +904,22 @@ public class OnboardingFunctions {
     return callWithTenant(onboarding, () -> completionService.createInstitutionAndPersistInstitutionId(onboarding));
   }
 
+  @FunctionName(RESOLVE_AGGREGATOR_INSTITUTION_ID_ACTIVITY)
+  public String resolveAggregatorInstitutionId(
+      @DurableActivityTrigger(name = "onboardingString") String onboardingString,
+      final ExecutionContext context) {
+    Onboarding onboarding = readOnboardingValue(objectMapper, onboardingString);
+    telemetryService.trackFunction(
+        RESOLVE_AGGREGATOR_INSTITUTION_ID_ACTIVITY,
+        String.format(
+            FORMAT_LOGGER_ONBOARDING_STRING, RESOLVE_AGGREGATOR_INSTITUTION_ID_ACTIVITY, onboardingString),
+        SeverityLevel.Information,
+        Map.of(
+            ONBOARDING_ID, onboarding.getId(),
+            PRODUCT_ID, onboarding.getProductId()));
+    return callWithTenant(onboarding, () -> completionService.resolveAggregatorInstitutionId(onboarding));
+  }
+
   @FunctionName(STORE_ONBOARDING_ACTIVATEDAT)
   public void storeOnboardingActivatedAt(
       @DurableActivityTrigger(name = "onboardingString") String onboardingString,
@@ -1288,6 +1302,22 @@ public class OnboardingFunctions {
     }
 
     return getEmailListString(objectMapper, emails);
+  }
+
+  @FunctionName(GET_ONBOARDING_ACTIVITY)
+  public String getOnboardingActivity(
+    @DurableActivityTrigger(name = "orchestrationInputString") String orchestrationInputString, final ExecutionContext context) {
+    OnboardingOrchestrationInput input = readOnboardingOrchestrationInputValue(objectMapper, orchestrationInputString);
+    telemetryService.trackFunction(
+        GET_ONBOARDING_ACTIVITY,
+        String.format(FORMAT_LOGGER_ONBOARDING_STRING, GET_ONBOARDING_ACTIVITY, orchestrationInputString),
+        SeverityLevel.Information,
+        Map.of(ONBOARDING_ID, input.getOnboardingId()));
+    try (TenantContext.Scope ignored = TenantContext.open(input.getTenantId())) {
+      return onboardingService.getOnboarding(input.getOnboardingId())
+        .map(o -> getOnboardingString(objectMapper, o))
+        .orElse("");
+    }
   }
 
   private void ensureSuccessfulDocumentResponse(
