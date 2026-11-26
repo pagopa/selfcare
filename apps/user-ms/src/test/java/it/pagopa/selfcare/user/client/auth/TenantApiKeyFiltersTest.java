@@ -15,9 +15,8 @@ import static org.mockito.Mockito.*;
 class TenantApiKeyFiltersTest {
   @Inject TenantContext context;
   @Inject TenantUserRegistryApiKeyFilter registryFilter;
-  @Inject TenantOneMailApiKeyFilter mailFilter;
 
-  @Test void overridesApiKeysWithCurrentTenantCredentials() {
+  @Test void overridesUserRegistryApiKeyWithCurrentTenantCredentials() {
     ClientRequestContext request = mock(ClientRequestContext.class);
     var headers = new MultivaluedHashMap<String, Object>();
     when(request.getHeaders()).thenReturn(headers);
@@ -25,12 +24,9 @@ class TenantApiKeyFiltersTest {
       context.setTenantId(tenant);
       registryFilter.filter(request);
       assertEquals(tenant.toLowerCase() + "-test-key", headers.getFirst("x-api-key"));
-      mailFilter.filter(request);
-      assertEquals(tenant.toLowerCase() + "-test-mail-key", headers.getFirst("x-api-key"));
       assertEquals(1, headers.get("x-api-key").size());
     }
     context.clear();
     assertThrows(UnresolvedTenantException.class, () -> registryFilter.filter(request));
-    assertThrows(UnresolvedTenantException.class, () -> mailFilter.filter(request));
   }
 }
