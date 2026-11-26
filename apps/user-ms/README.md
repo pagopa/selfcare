@@ -90,7 +90,8 @@ Rest client are generated using a quarkus' extension.
 | Mail retry | `USER_MS_RETRY_MIN_BACKOFF` (5 seconds), `USER_MS_RETRY_MAX_BACKOFF` (60 seconds), `USER_MS_RETRY` (3) |
 
 Mail remains enabled for **AR and PNPG in PROD**, disabled in DEV/UAT. Sending stays asynchronous:
-each job has an independent tenant context that remains alive through OneMail filters and retries.
+each job receives the resolved tenant ID and sends that tenant's key explicitly on every OneMail
+attempt, without relying on a request context.
 Webhooks, `sc-users` publishing and internal-event receivers remain AR-only in the current deployments.
 The application does not publish `selfcare-fd` messages.
 
