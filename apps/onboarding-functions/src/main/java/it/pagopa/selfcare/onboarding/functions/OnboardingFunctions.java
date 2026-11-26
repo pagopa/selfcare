@@ -1308,6 +1308,11 @@ public class OnboardingFunctions {
   public String getOnboardingActivity(
     @DurableActivityTrigger(name = "orchestrationInputString") String orchestrationInputString, final ExecutionContext context) {
     OnboardingOrchestrationInput input = readOnboardingOrchestrationInputValue(objectMapper, orchestrationInputString);
+    telemetryService.trackFunction(
+        GET_ONBOARDING_ACTIVITY,
+        String.format(FORMAT_LOGGER_ONBOARDING_STRING, GET_ONBOARDING_ACTIVITY, orchestrationInputString),
+        SeverityLevel.Information,
+        Map.of(ONBOARDING_ID, input.getOnboardingId()));
     try (TenantContext.Scope ignored = TenantContext.open(input.getTenantId())) {
       return onboardingService.getOnboarding(input.getOnboardingId())
         .map(o -> getOnboardingString(objectMapper, o))

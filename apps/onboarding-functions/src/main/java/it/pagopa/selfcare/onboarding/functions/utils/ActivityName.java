@@ -22,7 +22,7 @@ public class ActivityName {
     "SendMailRegistrationApprove";
   public static final String SEND_MAIL_ONBOARDING_APPROVE_ACTIVITY = "SendMailOnboardingApprove";
   public static final String CREATE_INSTITUTION_ACTIVITY = "CreateInstitution";
-  public static final String RESOLVE_AGGREGATOR_INSTITUTION_ID_ACTIVITY = "ResolveAggregatorInstitutionIdActivity";
+  public static final String RESOLVE_AGGREGATOR_INSTITUTION_ID_ACTIVITY = "ResolveAggregatorInstitutionId";
   public static final String CREATE_ONBOARDING_ACTIVITY = "CreateOnboarding";
   public static final String SEND_MAIL_COMPLETION_ACTIVITY = "SendMailCompletion";
   public static final String SEND_MAIL_DELETE_ACTIVITY = "SendMailDelete";
@@ -57,7 +57,7 @@ public class ActivityName {
   public static final String GET_SIGNING_CONFIGURATION_ACTIVITY = "GetSigningConfiguration";
   public static final String GET_MANAGING_INSTITUTION_ACTIVITY = "GetManagingInstitution";
   public static final String GET_USER_EMAIL_UUID_ACTIVITY = "GetUserEmailUuid";
-  public static final String GET_ONBOARDING_ACTIVITY = "GetOnboardingActivity";
+  public static final String GET_ONBOARDING_ACTIVITY = "GetOnboarding";
   private ActivityName() {
   }
 }
