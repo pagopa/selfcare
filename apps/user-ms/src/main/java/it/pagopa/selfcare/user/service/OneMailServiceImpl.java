@@ -1,13 +1,14 @@
 package it.pagopa.selfcare.user.service;
 
 import io.smallrye.mutiny.Uni;
+import it.pagopa.selfcare.user.client.OneMailClient;
 import it.pagopa.selfcare.user.conf.TenantNotificationConfig;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
+import jakarta.ws.rs.WebApplicationException;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
-import org.openapi.quarkus.one_mail_json.api.EmailsApi;
 import org.openapi.quarkus.one_mail_json.model.EmailHighPriorityBodyDTO;
 import org.openapi.quarkus.one_mail_json.model.EmailHighPriorityBodyDTOAllOfFrom;
 import org.openapi.quarkus.one_mail_json.model.EmailHighPriorityBodyDTOAllOfTo;
@@ -22,7 +23,7 @@ public class OneMailServiceImpl implements MailService {
 
     @RestClient
     @Inject
-    EmailsApi emailsApi;
+    OneMailClient oneMailClient;
 
     @Inject TenantNotificationConfig tenantConfig;
 
@@ -36,15 +37,15 @@ public class OneMailServiceImpl implements MailService {
     Integer maxRetry;
 
     @Override
-    public Uni<Void> sendOneMail(String userId, String email, String templateId, Map<String, String> templateAttributes) {
+    public Uni<Void> sendOneMail(String tenant, String userId, String email, String templateId, Map<String, String> templateAttributes) {
 
-      log.info("Sending email. userId={}, email={}, templateId={}", userId, maskEmail(email), templateId);
-
-      var settings = tenantConfig.current();
+      var settings = tenantConfig.forTenant(tenant);
       if (!settings.mailEnabled()) {
-        log.info("Email sending is disabled. Skipping email for userId={}, email={}", userId, maskEmail(email));
+        log.debug("Email sending is disabled for tenant {}", tenant);
         return Uni.createFrom().voidItem();
       }
+
+      log.info("Sending email. tenant={}, userId={}, email={}, templateId={}", tenant, userId, maskEmail(email), templateId);
 
       EmailHighPriorityBodyDTO emailRequest = EmailHighPriorityBodyDTO.builder()
         .from(new EmailHighPriorityBodyDTOAllOfFrom().email(settings.sender()))
@@ -55,18 +56,15 @@ public class OneMailServiceImpl implements MailService {
         ))
         .build();
 
-      return emailsApi
-        .v1EmailsSendHighPost(false, emailRequest)
-        .invoke(response -> log.info("Email sent. userId={}, email={}, templateId={}, requestId={}",
-          userId, maskEmail(email), templateId, response != null ? response.getRequestId() : null))
-        .onFailure()
-        .invoke(t -> log.error("OneMail call failed. userId={}, email={}, templateId={}: {}", userId, maskEmail(email), templateId, t.getMessage(), t))
+      return Uni.createFrom().deferred(() -> oneMailClient.sendHighPriority(settings.apiKey(), false, emailRequest))
+        .invoke(() -> log.info("OneMail call completed successfully for tenant {}, userId={}", tenant, userId))
+        .onFailure().invoke(failure -> log.error("OneMail call failed for tenant {}, userId={}: {}",
+            tenant, userId, failure instanceof WebApplicationException webFailure
+                ? "HTTP " + webFailure.getResponse().getStatus() : failure.getClass().getSimpleName()))
         .onFailure()
         .retry()
         .withBackOff(Duration.ofSeconds(retryMinBackOff), Duration.ofSeconds(retryMaxBackOff))
         .atMost(maxRetry)
-        .onFailure()
-        .recoverWithNull()
         .replaceWithVoid();
 
     }

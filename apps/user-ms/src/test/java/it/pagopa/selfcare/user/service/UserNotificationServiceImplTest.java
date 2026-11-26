@@ -127,7 +127,7 @@ class UserNotificationServiceImplTest {
         String loggedUserName = "loggedUserName";
         String loggedUserSurname = "loggedUserSurname";
 
-        when(mailService.sendOneMail(anyString(), anyString(), anyString(), anyMap())).thenReturn(Uni.createFrom().voidItem());
+        when(mailService.sendOneMail(eq("AR"), anyString(), anyString(), anyString(), anyMap())).thenReturn(Uni.createFrom().voidItem());
 
         userNotificationService.sendEmailNotification(
                         userResource,
@@ -141,7 +141,7 @@ class UserNotificationServiceImplTest {
                 .subscribe()
                 .withSubscriber(UniAssertSubscriber.create())
                 .awaitItem().assertCompleted();
-        verify(mailService, timeout(2000).times(1)).sendOneMail(anyString(), anyString(), anyString(), anyMap());
+        verify(mailService, timeout(2000).times(1)).sendOneMail(eq("AR"), anyString(), anyString(), anyString(), anyMap());
 
     }
 
@@ -150,7 +150,7 @@ class UserNotificationServiceImplTest {
         String loggedUserName = "loggedUserName";
         String loggedUserSurname = "loggedUserSurname";
 
-        when(mailService.sendOneMail(anyString(), anyString(), anyString(), anyMap())).thenReturn(Uni.createFrom().voidItem());
+        when(mailService.sendOneMail(eq("AR"), anyString(), anyString(), anyString(), anyMap())).thenReturn(Uni.createFrom().voidItem());
 
         userNotificationService.sendEmailNotification(
                         userResource,
@@ -164,7 +164,7 @@ class UserNotificationServiceImplTest {
                 .subscribe()
                 .withSubscriber(UniAssertSubscriber.create())
                 .awaitItem().assertCompleted();
-        verify(mailService, timeout(2000).times(1)).sendOneMail(anyString(), anyString(), anyString(), anyMap());
+        verify(mailService, timeout(2000).times(1)).sendOneMail(eq("AR"), anyString(), anyString(), anyString(), anyMap());
 
     }
 
@@ -174,7 +174,7 @@ class UserNotificationServiceImplTest {
         String loggedUserName = "loggedUserName";
         String loggedUserSurname = "loggedUserSurname";
 
-        when(mailService.sendOneMail(anyString(), anyString(), anyString(), anyMap())).thenReturn(Uni.createFrom().voidItem());
+        when(mailService.sendOneMail(eq("AR"), anyString(), anyString(), anyString(), anyMap())).thenReturn(Uni.createFrom().voidItem());
 
         userNotificationService.sendEmailNotification(
                         userResource,
@@ -188,7 +188,7 @@ class UserNotificationServiceImplTest {
                 .subscribe()
                 .withSubscriber(UniAssertSubscriber.create())
                 .awaitItem().assertCompleted();
-        verify(mailService, timeout(2000).times(1)).sendOneMail(anyString(), anyString(), anyString(), anyMap());
+        verify(mailService, timeout(2000).times(1)).sendOneMail(eq("AR"), anyString(), anyString(), anyString(), anyMap());
     }
 
 
@@ -209,7 +209,7 @@ class UserNotificationServiceImplTest {
                 .subscribe()
                 .withSubscriber(UniAssertSubscriber.create())
                 .awaitItem().assertCompleted();
-        verify(mailService, times(0)).sendOneMail(anyString(), anyString(), anyString(), anyMap());
+        verifyNoInteractions(mailService);
     }
 
 
@@ -218,7 +218,7 @@ class UserNotificationServiceImplTest {
         String loggedUserName = "loggedUserName";
         String loggedUserSurname = "loggedUserSurname";
 
-        when(mailService.sendOneMail(anyString(), anyString(), anyString(), anyMap())).thenReturn(Uni.createFrom().voidItem());
+        when(mailService.sendOneMail(eq("AR"), anyString(), anyString(), anyString(), anyMap())).thenReturn(Uni.createFrom().voidItem());
 
         userNotificationService.sendEmailNotification(
                         userResource,
@@ -268,7 +268,7 @@ class UserNotificationServiceImplTest {
                 .subscribe()
                 .withSubscriber(UniAssertSubscriber.create())
                 .awaitItem().assertCompleted();
-        verify(mailService, timeout(2000).times(3)).sendOneMail(anyString(), anyString(), anyString(), anyMap());
+        verify(mailService, timeout(2000).times(3)).sendOneMail(eq("AR"), anyString(), anyString(), anyString(), anyMap());
     }
 
 
@@ -339,7 +339,7 @@ class UserNotificationServiceImplTest {
                 .familyName(loggedUserSurname)
                 .build();
 
-        when(mailService.sendOneMail(anyString(), anyString(), anyString(), anyMap())).thenReturn(Uni.createFrom().voidItem());
+        when(mailService.sendOneMail(eq("AR"), anyString(), anyString(), anyString(), anyMap())).thenReturn(Uni.createFrom().voidItem());
         List<String> roleLabels = List.of("code2", "code3");
         userNotificationService.sendCreateUserNotification(
                         userInstitution.getInstitutionDescription(),
@@ -352,7 +352,7 @@ class UserNotificationServiceImplTest {
                 .subscribe()
                 .withSubscriber(UniAssertSubscriber.create())
                 .awaitItem().assertCompleted();
-        verify(mailService, timeout(2000).times(1)).sendOneMail(anyString(), anyString(), anyString(), anyMap());
+        verify(mailService, timeout(2000).times(1)).sendOneMail(eq("AR"), anyString(), anyString(), anyString(), anyMap());
     }
 
   @Test
@@ -370,6 +370,7 @@ class UserNotificationServiceImplTest {
       ArgumentCaptor.forClass(Map.class);
 
     when(mailService.sendOneMail(
+      eq("AR"),
       anyString(),
       anyString(),
       templateIdCaptor.capture(),
@@ -394,7 +395,7 @@ class UserNotificationServiceImplTest {
       .assertCompleted();
 
     // Assert
-    verify(mailService, timeout(2000)).sendOneMail(anyString(), anyString(), anyString(), anyMap());
+    verify(mailService, timeout(2000)).sendOneMail(eq("AR"), anyString(), anyString(), anyString(), anyMap());
     assertEquals(
       "selfcare_user_added_multi_role",
       templateIdCaptor.getValue()
@@ -421,7 +422,7 @@ class UserNotificationServiceImplTest {
                 .familyName(loggedUserSurname)
                 .build();
 
-        when(mailService.sendOneMail(anyString(), anyString(), anyString(), anyMap())).thenReturn(Uni.createFrom().voidItem());
+        when(mailService.sendOneMail(eq("AR"), anyString(), anyString(), anyString(), anyMap())).thenReturn(Uni.createFrom().voidItem());
         List<String> roleLabels = List.of("code2", "code3");
         userNotificationService.sendCreateUserNotification(
                         userInstitution.getInstitutionDescription(),
@@ -434,7 +435,7 @@ class UserNotificationServiceImplTest {
                 .subscribe()
                 .withSubscriber(UniAssertSubscriber.create())
                 .awaitItem().assertCompleted();
-        verify(mailService, timeout(2000).times(1)).sendOneMail(anyString(), anyString(), anyString(), anyMap());
+        verify(mailService, timeout(2000).times(1)).sendOneMail(eq("AR"), anyString(), anyString(), anyString(), anyMap());
     }
 
     @Test
@@ -446,7 +447,7 @@ class UserNotificationServiceImplTest {
                 .familyName(loggedUserSurname)
                 .build();
 
-        when(mailService.sendOneMail(anyString(), anyString(), anyString(), anyMap())).thenReturn(Uni.createFrom().voidItem());
+        when(mailService.sendOneMail(eq("AR"), anyString(), anyString(), anyString(), anyMap())).thenReturn(Uni.createFrom().voidItem());
         List<String> roleLabels = List.of("code5","code6");
         userNotificationService.sendCreateUserNotification(
                         userInstitution.getInstitutionDescription(),
@@ -459,7 +460,7 @@ class UserNotificationServiceImplTest {
                 .subscribe()
                 .withSubscriber(UniAssertSubscriber.create())
                 .awaitItem().assertCompleted();
-        verify(mailService, timeout(2000).times(1)).sendOneMail(anyString(), anyString(), anyString(), anyMap());
+        verify(mailService, timeout(2000).times(1)).sendOneMail(eq("AR"), anyString(), anyString(), anyString(), anyMap());
     }
 
     @Test
@@ -471,7 +472,7 @@ class UserNotificationServiceImplTest {
                 .familyName(loggedUserSurname)
                 .build();
 
-        when(mailService.sendOneMail(anyString(), anyString(), anyString(), anyMap())).thenReturn(Uni.createFrom().voidItem());
+        when(mailService.sendOneMail(eq("AR"), anyString(), anyString(), anyString(), anyMap())).thenReturn(Uni.createFrom().voidItem());
         List<String> roleLabels = List.of("label");
         userNotificationService.sendCreateUserNotification(
                         null,
@@ -484,19 +485,19 @@ class UserNotificationServiceImplTest {
                 .subscribe()
                 .withSubscriber(UniAssertSubscriber.create())
                 .awaitItem().assertCompleted();
-        verify(mailService, timeout(2000).times(1)).sendOneMail(anyString(), anyString(), anyString(), anyMap());
+        verify(mailService, timeout(2000).times(1)).sendOneMail(eq("AR"), anyString(), anyString(), anyString(), anyMap());
     }
 
     @Test
     void mailDoesNotDelayTheResponseUntilOneMailCompletes() {
         var completion = new java.util.concurrent.CompletableFuture<Void>();
-        when(mailService.sendOneMail(anyString(), anyString(), anyString(), anyMap()))
+        when(mailService.sendOneMail(eq("AR"), anyString(), anyString(), anyString(), anyMap()))
             .thenReturn(Uni.createFrom().completionStage(completion));
         try {
             userNotificationService.sendEmailNotification(
                 userResource, userInstitution, product, OnboardedProductState.ACTIVE,
                 "admin", "name", "surname").await().atMost(java.time.Duration.ofSeconds(1));
-            verify(mailService, timeout(2000)).sendOneMail(anyString(), anyString(), anyString(), anyMap());
+            verify(mailService, timeout(2000)).sendOneMail(eq("AR"), anyString(), anyString(), anyString(), anyMap());
             org.junit.jupiter.api.Assertions.assertFalse(completion.isDone());
         } finally {
             completion.complete(null);
@@ -506,7 +507,7 @@ class UserNotificationServiceImplTest {
     @Test
     void testSendMailNotificationForOnboardingRequest() {
 
-        when(mailService.sendOneMail(anyString(), anyString(), anyString(), anyMap())).thenReturn(Uni.createFrom().voidItem());
+        when(mailService.sendOneMail(eq("AR"), anyString(), anyString(), anyString(), anyMap())).thenReturn(Uni.createFrom().voidItem());
 
         userNotificationService.buildDataModelRequestAndSendEmail(
                         userResource,
@@ -516,7 +517,7 @@ class UserNotificationServiceImplTest {
                 .subscribe()
                 .withSubscriber(UniAssertSubscriber.create())
                 .awaitItem().assertCompleted();
-        verify(mailService, timeout(2000).times(1)).sendOneMail(anyString(), anyString(), anyString(), anyMap());
+        verify(mailService, timeout(2000).times(1)).sendOneMail(eq("AR"), anyString(), anyString(), anyString(), anyMap());
 
     }
 

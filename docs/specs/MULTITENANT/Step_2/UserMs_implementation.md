@@ -35,7 +35,8 @@ Riferimenti: [ARCHITECTURE](ARCHITECTURE.md), [Database](Database_identification
 | UMS-26 | **Operativo, da eseguire**: deploy ordinato e smoke test DEV → UAT → PROD |
 
 Le mail restano in background, come confermato: `TenantMailJob` riceve il tenant catturato dalla
-richiesta e mantiene un contesto indipendente fino alla fine di filtri OneMail e retry. La risposta HTTP
+richiesta e lo passa esplicitamente al servizio OneMail, che seleziona la chiave per ogni invio e retry.
+Non serve un contesto CDI della richiesta. La risposta HTTP
 non attende OneMail. Non sono stati eseguiti deploy, modifiche ai segreti remoti o backfill.
 
 ### Verifiche locali eseguite
@@ -168,10 +169,10 @@ Prefisso proposto: `tenant.<id>.*`, variabili d'ambiente `TENANT_<ID>_*` (conven
   - i 7 template `onemail.template.*`.
 
   Altre modifiche:
-  - `one_mail_json`: `enable-security-generation=false` più un `ClientRequestFilter` per `x-api-key`.
+  - Riutilizzare i modelli `one_mail_json` in `OneMailClient`, che riceve `x-api-key` come parametro esplicito.
   - Usare la config del tenant corrente in `service/OneMailServiceImpl.java` e `service/UserNotificationServiceImpl.java`.
   - `ONE_MAIL_URL` e `USER_REGISTRY_URL` restano globali: oggi hanno lo stesso valore su AR e PNPG di ogni ambiente.
-  - Conservare l'invio in background con un contesto tenant dedicato al job, indipendente dalla richiesta HTTP.
+  - Conservare l'invio in background passando al job il tenant già risolto, senza dipendere dal lifecycle CDI della richiesta HTTP.
 - **UMS-15 (S) – Webhook.**
   - In `service/UserNotificationServiceImpl.java:148` il `tenantId` della `NotificationRequest` deve venire da `TenantContext`.
   - Sostituire `user-ms.webhook.enabled` / `tenant-id` con `tenant.<id>.webhook.enabled` (AR `true`, PNPG `false`, come oggi).
