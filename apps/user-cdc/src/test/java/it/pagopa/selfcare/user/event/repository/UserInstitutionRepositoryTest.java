@@ -1,229 +1,185 @@
 package it.pagopa.selfcare.user.event.repository;
 
-import io.quarkus.mongodb.panache.reactive.ReactivePanacheQuery;
-import io.quarkus.panache.mock.PanacheMock;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+
+import com.mongodb.client.model.Filters;
+import io.quarkus.mongodb.reactive.ReactiveMongoClient;
+import io.quarkus.mongodb.reactive.ReactiveMongoCollection;
 import io.quarkus.test.common.QuarkusTestResource;
 import io.quarkus.test.junit.QuarkusTest;
 import io.quarkus.test.mongodb.MongoTestResource;
-import io.quarkus.test.vertx.RunOnVertxContext;
-import io.quarkus.test.vertx.UniAsserter;
-import io.smallrye.mutiny.Uni;
-import io.smallrye.mutiny.helpers.test.UniAssertSubscriber;
 import it.pagopa.selfcare.onboarding.common.PartyRole;
 import it.pagopa.selfcare.user.event.entity.UserInstitution;
 import it.pagopa.selfcare.user.model.OnboardedProduct;
 import it.pagopa.selfcare.user.model.constants.OnboardedProductState;
 import jakarta.inject.Inject;
+import java.time.Duration;
+import java.time.OffsetDateTime;
+import java.util.Date;
+import java.util.List;
+import java.util.UUID;
+import org.bson.Document;
 import org.bson.types.ObjectId;
 import org.junit.jupiter.api.Test;
-import org.mockito.ArgumentCaptor;
-import org.mockito.Mockito;
-
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
 @QuarkusTest
 @QuarkusTestResource(MongoTestResource.class)
 class UserInstitutionRepositoryTest {
 
-    public static final String INSTITUTION_ID = "institutionId";
-    @Inject
-    UserInstitutionRepository userInstitutionRepository;
+    private static final Duration TIMEOUT = Duration.ofSeconds(10);
+    private static final String AGGREGATE_ID = "aggregate";
+    private static final OffsetDateTime UPDATED_AT = OffsetDateTime.parse("2026-11-25T10:15:00Z");
 
-    final static UserInstitution userResource;
+    @Inject UserInstitutionRepository repository;
+    @Inject ReactiveMongoClient mongo;
 
-    static {
-        userResource = new UserInstitution();
-        userResource.setInstitutionId("institutionId");
-        userResource.setUserId("userId");
-        userResource.setProducts(Collections.emptyList());
-    }
+    @Test
+    void insertsATaggedAggregateEvenWhenTheParentIsLegacy() {
+        var parent = parent();
+        var created = repository.propagateUserToAggregate(parent, parentProduct(),
+                AGGREGATE_ID, "Aggregate name", PartyRole.ADMIN_EA, "admin")
+                .await().atMost(TIMEOUT);
 
-    private OnboardedProduct dummyOnboardedProduct(String productId, PartyRole partyRole) {
-        OnboardedProduct onboardedProduct = new OnboardedProduct();
-        onboardedProduct.setRole(partyRole);
-        onboardedProduct.setProductId(productId);
-        onboardedProduct.setStatus(OnboardedProductState.ACTIVE);
-        return onboardedProduct;
-    }
-
-    void mockPersistUserInstitution(UniAsserter asserter) {
-        asserter.execute(() -> PanacheMock.mock(UserInstitution.class));
-        asserter.execute(() -> when(UserInstitution.persist(any(UserInstitution.class), any()))
-                .thenAnswer(arg -> Uni.createFrom().nullItem()));
+        assertEquals("AR", created.getTenantId());
+        assertEquals(parent.getUserId(), created.getUserId());
+        assertEquals(AGGREGATE_ID, created.getInstitutionId());
+        assertEquals("Aggregate name", created.getInstitutionDescription());
+        assertEquals(parent.getInstitutionDescription(), created.getInstitutionRootName());
+        assertEquals(parent.getUserMailUuid(), created.getUserMailUuid());
+        assertEquals(1, created.getProducts().size());
+        assertPropagatedProduct(created.getProducts().get(0));
+        assertEquals("AR", read(created.getId()).getString("tenantId"));
     }
 
     @Test
-    @RunOnVertxContext
-    public void propagateUserToAggregateTestWithoutExistingUserInstitution(UniAsserter asserter) {
-        final OnboardedProduct parentProduct = dummyOnboardedProduct("parentProduct", PartyRole.DELEGATE);
-        parentProduct.setRoleId("roleId");
-        parentProduct.setToAddOnAggregates(true);
-        final UserInstitution parentUser = new UserInstitution();
-        parentUser.setUserId("userId");
-        parentUser.setUserMailUuid("userMailUuid");
-        parentUser.setInstitutionDescription("parentInstitutionDescription");
-        parentUser.setProducts(List.of(
-                dummyOnboardedProduct("dummy1", PartyRole.OPERATOR),
-                parentProduct,
-                dummyOnboardedProduct("dummy2", PartyRole.MANAGER)
-        ));
-        final String aggregateId = "aggregateId";
-        final String aggregateDescription = "aggregateDescription";
-        final PartyRole roleToPropagate = PartyRole.ADMIN_EA;
-        final String productRoleToPropagate = "admin";
+    void updatesAnExistingRoleWithoutRemovingItsBackfilledTagOrOtherFields() {
+        var parent = parent();
+        parent.setTenantId("AR");
+        var id = seed(parent, "AR", List.of(
+                new Document("productId", "unrelated").append("role", "OPERATOR"),
+                new Document("productId", "old").append("roleId", "shared-role").append("role", "OPERATOR")));
 
-        PanacheMock.mock(UserInstitution.class);
-        final ReactivePanacheQuery query = mock(ReactivePanacheQuery.class);
-        when(UserInstitution.find(anyString(), any(Object[].class))).thenReturn(query);
-        when(query.firstResultOptional()).thenReturn(Uni.createFrom().item(Optional.empty()));
-        mockPersistUserInstitution(asserter);
+        var updated = repository.propagateUserToAggregate(parent, parentProduct(),
+                AGGREGATE_ID, "Aggregate name", PartyRole.ADMIN_EA, "admin")
+                .await().atMost(TIMEOUT);
 
-        userInstitutionRepository.propagateUserToAggregate(parentUser, parentProduct, aggregateId, aggregateDescription,
-                roleToPropagate, productRoleToPropagate).subscribe().withSubscriber(UniAssertSubscriber.create()).assertCompleted();
-
-        asserter.execute(() -> {
-            final ArgumentCaptor<UserInstitution> argumentCaptor = ArgumentCaptor.forClass(UserInstitution.class);
-            PanacheMock.verify(UserInstitution.class, Mockito.atLeastOnce()).persist(argumentCaptor.capture(), any());
-            assertEquals(parentUser.getUserId(), argumentCaptor.getValue().getUserId());
-            assertEquals(aggregateId, argumentCaptor.getValue().getInstitutionId());
-            assertEquals(aggregateDescription, argumentCaptor.getValue().getInstitutionDescription());
-            assertEquals(parentUser.getUserMailUuid(), argumentCaptor.getValue().getUserMailUuid());
-            assertEquals(parentUser.getInstitutionDescription(), argumentCaptor.getValue().getInstitutionRootName());
-            assertEquals(1, argumentCaptor.getValue().getProducts().size());
-            assertEquals(parentProduct.getRoleId(), argumentCaptor.getValue().getProducts().get(0).getRoleId());
-            assertEquals(parentProduct.getProductId(), argumentCaptor.getValue().getProducts().get(0).getProductId());
-            assertEquals(parentProduct.getStatus(), argumentCaptor.getValue().getProducts().get(0).getStatus());
-            assertEquals(roleToPropagate, argumentCaptor.getValue().getProducts().get(0).getRole());
-            assertEquals(productRoleToPropagate, argumentCaptor.getValue().getProducts().get(0).getProductRole());
-            assertNull(argumentCaptor.getValue().getProducts().get(0).getToAddOnAggregates());
-        });
+        assertEquals(id, updated.getId());
+        assertEquals(2, updated.getProducts().size());
+        assertEquals("unrelated", updated.getProducts().get(0).getProductId());
+        assertPropagatedProduct(updated.getProducts().get(1));
+        var stored = read(id);
+        assertEquals("AR", stored.getString("tenantId"));
+        assertEquals("must survive CDC", stored.getString("unmappedField"));
+        assertEquals("Aggregate name", stored.getString("institutionDescription"));
+        assertEquals(parent.getInstitutionDescription(), stored.getString("institutionRootName"));
+        assertEquals(parent.getUserMailUuid(), stored.getString("userMailUuid"));
+        assertEquals(Date.from(UPDATED_AT.toInstant()), stored.getDate("userMailUpdatedAt"));
+        assertEquals("shared-role", stored.getList("products", Document.class).get(1).getString("roleId"));
+        assertEquals("ADMIN_EA", stored.getList("products", Document.class).get(1).getString("role"));
     }
 
     @Test
-    @RunOnVertxContext
-    public void propagateUserToAggregateTestWithExistingUserInstitution(UniAsserter asserter) {
-        final OnboardedProduct parentProduct = dummyOnboardedProduct("parentProduct", PartyRole.DELEGATE);
-        parentProduct.setRoleId("roleId");
-        parentProduct.setToAddOnAggregates(true);
-        final UserInstitution parentUser = new UserInstitution();
-        parentUser.setUserId("userId");
-        parentUser.setUserMailUuid("userMailUuid");
-        parentUser.setInstitutionDescription("parentInstitutionDescription");
-        parentUser.setProducts(List.of(
-                dummyOnboardedProduct("dummy1", PartyRole.OPERATOR),
-                parentProduct,
-                dummyOnboardedProduct("dummy2", PartyRole.MANAGER)
-        ));
-        final String aggregateId = "aggregateId";
-        final String aggregateDescription = "aggregateDescription";
-        final PartyRole roleToPropagate = PartyRole.ADMIN_EA;
-        final String productRoleToPropagate = "admin";
+    void updatesALegacyRecordAndAppendsTheNewRoleWithoutOverwritingItsTag() {
+        var parent = parent();
+        parent.setUserMailUuid(null);
+        parent.setUserMailUpdatedAt(null);
+        var id = seed(parent, null, List.of(new Document("productId", "unrelated").append("role", "OPERATOR")));
 
-        final UserInstitution existingUserInstitution = new UserInstitution();
-        existingUserInstitution.setId(new ObjectId());
-        existingUserInstitution.setUserId(parentUser.getUserId());
-        existingUserInstitution.setInstitutionId(aggregateId);
-        existingUserInstitution.setInstitutionDescription("oldDescription");
-        existingUserInstitution.setUserMailUuid("oldMailUuid");
-        existingUserInstitution.setInstitutionRootName("oldRootName");
-        existingUserInstitution.setProducts(List.of(dummyOnboardedProduct("otherProduct", PartyRole.OPERATOR)));
+        var updated = repository.propagateUserToAggregate(parent, parentProduct(),
+                AGGREGATE_ID, "Aggregate name", PartyRole.ADMIN_EA, "admin")
+                .await().atMost(TIMEOUT);
 
-        PanacheMock.mock(UserInstitution.class);
-        final ReactivePanacheQuery query = mock(ReactivePanacheQuery.class);
-        when(UserInstitution.find(anyString(), any(Object[].class))).thenReturn(query);
-        when(query.firstResultOptional()).thenReturn(Uni.createFrom().item(Optional.of(existingUserInstitution)));
-
-        userInstitutionRepository.propagateUserToAggregate(parentUser, parentProduct, aggregateId, aggregateDescription,
-                roleToPropagate, productRoleToPropagate).subscribe().withSubscriber(UniAssertSubscriber.create());
-
-        asserter.execute(() -> {
-            assertEquals(parentUser.getUserId(), existingUserInstitution.getUserId());
-            assertEquals(aggregateId, existingUserInstitution.getInstitutionId());
-            assertEquals(aggregateDescription, existingUserInstitution.getInstitutionDescription());
-            assertEquals(parentUser.getUserMailUuid(), existingUserInstitution.getUserMailUuid());
-            assertEquals(parentUser.getInstitutionDescription(), existingUserInstitution.getInstitutionRootName());
-            assertEquals(2, existingUserInstitution.getProducts().size());
-            assertEquals("otherProduct", existingUserInstitution.getProducts().get(0).getProductId());
-            assertEquals(PartyRole.OPERATOR, existingUserInstitution.getProducts().get(0).getRole());
-            assertEquals(OnboardedProductState.ACTIVE, existingUserInstitution.getProducts().get(0).getStatus());
-            assertEquals(parentProduct.getRoleId(), existingUserInstitution.getProducts().get(1).getRoleId());
-            assertEquals(parentProduct.getProductId(), existingUserInstitution.getProducts().get(1).getProductId());
-            assertEquals(parentProduct.getStatus(), existingUserInstitution.getProducts().get(1).getStatus());
-            assertEquals(roleToPropagate, existingUserInstitution.getProducts().get(1).getRole());
-            assertEquals(productRoleToPropagate, existingUserInstitution.getProducts().get(1).getProductRole());
-            assertNull(existingUserInstitution.getProducts().get(1).getToAddOnAggregates());
-        });
+        assertEquals(id, updated.getId());
+        assertEquals(2, updated.getProducts().size());
+        assertEquals("unrelated", updated.getProducts().get(0).getProductId());
+        assertPropagatedProduct(updated.getProducts().get(1));
+        var stored = read(id);
+        assertFalse(stored.containsKey("tenantId"));
+        assertFalse(stored.containsKey("userMailUuid"));
+        assertFalse(stored.containsKey("userMailUpdatedAt"));
     }
 
     @Test
-    @RunOnVertxContext
-    public void propagateUserToAggregateTestWithExistingUserInstitutionAndProduct(UniAsserter asserter) {
-        final OnboardedProduct parentProduct = dummyOnboardedProduct("parentProduct", PartyRole.DELEGATE);
-        parentProduct.setRoleId("roleId");
-        parentProduct.setToAddOnAggregates(true);
-        final UserInstitution parentUser = new UserInstitution();
-        parentUser.setUserId("userId");
-        parentUser.setUserMailUuid("userMailUuid");
-        parentUser.setInstitutionDescription("parentInstitutionDescription");
-        parentUser.setProducts(List.of(
-                dummyOnboardedProduct("dummy1", PartyRole.OPERATOR),
-                parentProduct,
-                dummyOnboardedProduct("dummy2", PartyRole.MANAGER)
-        ));
-        final String aggregateId = "aggregateId";
-        final String aggregateDescription = "aggregateDescription";
-        final PartyRole roleToPropagate = PartyRole.ADMIN_EA;
-        final String productRoleToPropagate = "admin";
-
-        final OnboardedProduct existingProduct = dummyOnboardedProduct("existingProduct", PartyRole.OPERATOR);
-        existingProduct.setRoleId("roleId");
-
-        final UserInstitution existingUserInstitution = new UserInstitution();
-        existingUserInstitution.setId(new ObjectId());
-        existingUserInstitution.setUserId(parentUser.getUserId());
-        existingUserInstitution.setInstitutionId(aggregateId);
-        existingUserInstitution.setInstitutionDescription("oldDescription");
-        existingUserInstitution.setUserMailUuid("oldMailUuid");
-        existingUserInstitution.setInstitutionRootName("oldRootName");
-        existingUserInstitution.setProducts(List.of(
-                dummyOnboardedProduct("otherProduct", PartyRole.OPERATOR),
-                existingProduct
-        ));
-
-        PanacheMock.mock(UserInstitution.class);
-        final ReactivePanacheQuery query = mock(ReactivePanacheQuery.class);
-        when(UserInstitution.find(anyString(), any(Object[].class))).thenReturn(query);
-        when(query.firstResultOptional()).thenReturn(Uni.createFrom().item(Optional.of(existingUserInstitution)));
-
-        userInstitutionRepository.propagateUserToAggregate(parentUser, parentProduct, aggregateId, aggregateDescription,
-                roleToPropagate, productRoleToPropagate).subscribe().withSubscriber(UniAssertSubscriber.create());
-
-        asserter.execute(() -> {
-            assertEquals(parentUser.getUserId(), existingUserInstitution.getUserId());
-            assertEquals(aggregateId, existingUserInstitution.getInstitutionId());
-            assertEquals(aggregateDescription, existingUserInstitution.getInstitutionDescription());
-            assertEquals(parentUser.getUserMailUuid(), existingUserInstitution.getUserMailUuid());
-            assertEquals(parentUser.getInstitutionDescription(), existingUserInstitution.getInstitutionRootName());
-            assertEquals(2, existingUserInstitution.getProducts().size());
-            assertEquals("otherProduct", existingUserInstitution.getProducts().get(0).getProductId());
-            assertEquals(PartyRole.OPERATOR, existingUserInstitution.getProducts().get(0).getRole());
-            assertEquals(OnboardedProductState.ACTIVE, existingUserInstitution.getProducts().get(0).getStatus());
-            assertEquals(parentProduct.getRoleId(), existingUserInstitution.getProducts().get(1).getRoleId());
-            assertEquals(parentProduct.getProductId(), existingUserInstitution.getProducts().get(1).getProductId());
-            assertEquals(parentProduct.getStatus(), existingUserInstitution.getProducts().get(1).getStatus());
-            assertEquals(roleToPropagate, existingUserInstitution.getProducts().get(1).getRole());
-            assertEquals(productRoleToPropagate, existingUserInstitution.getProducts().get(1).getProductRole());
-            assertNull(existingUserInstitution.getProducts().get(1).getToAddOnAggregates());
-        });
+    void refusesToChangeAnAggregateTaggedForAnotherTenant() {
+        var parent = parent();
+        var id = seed(parent, "PNPG", List.of());
+        var before = read(id);
+        var failure = assertThrows(IllegalStateException.class, () ->
+                repository.propagateUserToAggregate(parent, parentProduct(), AGGREGATE_ID,
+                        "Aggregate name", PartyRole.ADMIN_EA, "admin").await().atMost(TIMEOUT));
+        assertEquals("Target user institution no longer exists or belongs to another tenant", failure.getMessage());
+        assertEquals(before, read(id));
+        assertEquals(1L, documents().countDocuments(Filters.eq("userId", parent.getUserId())).await().atMost(TIMEOUT));
     }
 
+    @Test
+    void refusesToPropagateAParentTaggedForAnotherTenant() {
+        var parent = parent();
+        parent.setTenantId("PNPG");
+        var failure = assertThrows(IllegalStateException.class, () ->
+                repository.propagateUserToAggregate(parent, parentProduct(), AGGREGATE_ID,
+                        "Aggregate name", PartyRole.ADMIN_EA, "admin").await().atMost(TIMEOUT));
+        assertEquals("Source user institution belongs to another tenant", failure.getMessage());
+        assertEquals(0L, documents().countDocuments(Filters.eq("userId", parent.getUserId())).await().atMost(TIMEOUT));
+    }
+
+    private UserInstitution parent() {
+        var parent = new UserInstitution();
+        parent.setUserId(UUID.randomUUID().toString());
+        parent.setInstitutionDescription("Parent name");
+        parent.setUserMailUuid("new-mail");
+        parent.setUserMailUpdatedAt(UPDATED_AT);
+        return parent;
+    }
+
+    private OnboardedProduct parentProduct() {
+        var product = new OnboardedProduct();
+        product.setRoleId("shared-role");
+        product.setProductId("prod-io");
+        product.setRole(PartyRole.DELEGATE);
+        product.setStatus(OnboardedProductState.ACTIVE);
+        product.setToAddOnAggregates(true);
+        product.setUpdatedAt(UPDATED_AT);
+        return product;
+    }
+
+    private void assertPropagatedProduct(OnboardedProduct product) {
+        assertEquals("shared-role", product.getRoleId());
+        assertEquals("prod-io", product.getProductId());
+        assertEquals(PartyRole.ADMIN_EA, product.getRole());
+        assertEquals("admin", product.getProductRole());
+        assertEquals(OnboardedProductState.ACTIVE, product.getStatus());
+        assertNull(product.getToAddOnAggregates());
+    }
+
+    private ObjectId seed(UserInstitution parent, String tenant, List<Document> products) {
+        var id = new ObjectId();
+        var document = new Document("_id", id)
+                .append("userId", parent.getUserId())
+                .append("institutionId", AGGREGATE_ID)
+                .append("institutionDescription", "Old aggregate")
+                .append("userMailUuid", "old-mail")
+                .append("userMailUpdatedAt", new Date(0))
+                .append("unmappedField", "must survive CDC")
+                .append("products", products);
+        if (tenant != null) {
+            document.append("tenantId", tenant);
+        }
+        documents().insertOne(document).await().atMost(TIMEOUT);
+        return id;
+    }
+
+    private Document read(ObjectId id) {
+        var document = documents().find(Filters.eq("_id", id)).collect().first().await().atMost(TIMEOUT);
+        assertNotNull(document);
+        return document;
+    }
+
+    private ReactiveMongoCollection<Document> documents() {
+        return mongo.getDatabase("selcUser").getCollection("userInstitutions");
+    }
 }

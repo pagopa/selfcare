@@ -3,6 +3,7 @@ package it.pagopa.selfcare.onboarding.service;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.microsoft.azure.functions.ExecutionContext;
+import com.mongodb.client.result.UpdateResult;
 import io.quarkus.mongodb.panache.common.PanacheUpdate;
 import io.quarkus.test.InjectMock;
 import io.quarkus.test.junit.QuarkusTest;
@@ -62,6 +63,9 @@ public class CompletionServiceDefaultTest {
 
     @Inject
     CompletionServiceImpl completionServiceDefault;
+
+    @Inject
+    ObjectMapper configuredObjectMapper;
 
     @InjectMock
     OnboardingRepository onboardingRepository;
@@ -453,8 +457,9 @@ public class CompletionServiceDefaultTest {
 
         com.mongodb.client.MongoCollection mongoCollection = mock(com.mongodb.client.MongoCollection.class);
         when(onboardingRepository.mongoCollection()).thenReturn(mongoCollection);
-        when(mongoCollection.updateMany(any(org.bson.Document.class), any(org.bson.Document.class)))
-                .thenReturn(mock(com.mongodb.client.result.UpdateResult.class));
+      UpdateResult updateResult = mock(UpdateResult.class);
+      when(mongoCollection.updateMany(any(org.bson.Document.class), any(org.bson.Document.class)))
+                .thenReturn(updateResult);
 
         completionServiceDefault.overridePendingOnboardings(onboarding);
 
@@ -487,8 +492,9 @@ public class CompletionServiceDefaultTest {
 
         com.mongodb.client.MongoCollection mongoCollection = mock(com.mongodb.client.MongoCollection.class);
         when(onboardingRepository.mongoCollection()).thenReturn(mongoCollection);
-        when(mongoCollection.updateMany(any(org.bson.Document.class), any(org.bson.Document.class)))
-                .thenReturn(mock(com.mongodb.client.result.UpdateResult.class));
+      UpdateResult updateResult = mock(UpdateResult.class);
+      when(mongoCollection.updateMany(any(org.bson.Document.class), any(org.bson.Document.class)))
+                .thenReturn(updateResult);
 
         completionServiceDefault.overridePendingOnboardings(onboarding);
 
@@ -1309,6 +1315,58 @@ public class CompletionServiceDefaultTest {
     }
 
     @Test
+    void resolveAggregatorInstitutionIdAlreadyPresent() throws Exception {
+        Onboarding onboarding = createSampleOnboarding();
+        onboarding.getInstitution().setId("aggregator-id");
+        ObjectMapper mapper = configuredObjectMapper;
+        String original = mapper.writeValueAsString(onboarding);
+
+        String result = completionServiceDefault.resolveAggregatorInstitutionId(onboarding);
+
+        assertEquals(mapper.readTree(original), mapper.readTree(result));
+        verifyNoInteractions(onboardingRepository);
+    }
+
+    @Test
+    void resolveAggregatorInstitutionIdFound() throws Exception {
+        Onboarding onboarding = createSampleOnboarding();
+        onboarding.getInstitution().setOriginId("origin-id");
+        Onboarding found = createSampleOnboarding();
+        found.getInstitution().setId("aggregator-id");
+        when(onboardingRepository.findByFilters("taxCodeAggregate", null, "IPA", "origin-id", productId))
+                .thenReturn(List.of(found));
+        PanacheUpdate update = mock(PanacheUpdate.class);
+        when(onboardingRepository.update("institution.id = ?1", "aggregator-id")).thenReturn(update);
+
+        String result = completionServiceDefault.resolveAggregatorInstitutionId(onboarding);
+
+        Onboarding resolved = configuredObjectMapper.readValue(result, Onboarding.class);
+        assertEquals("aggregator-id", resolved.getInstitution().getId());
+        assertEquals("aggregator-id", onboarding.getInstitution().getId());
+        verify(onboardingRepository).findByFilters("taxCodeAggregate", null, "IPA", "origin-id", productId);
+        verify(onboardingRepository).update("institution.id = ?1", "aggregator-id");
+        verify(update).where("_id", onboarding.getId());
+        verifyNoMoreInteractions(onboardingRepository);
+    }
+
+    @Test
+    void resolveAggregatorInstitutionIdNotFound() throws Exception {
+        Onboarding onboarding = createSampleOnboarding();
+        onboarding.getInstitution().setOriginId("origin-id");
+        ObjectMapper mapper = configuredObjectMapper;
+        String original = mapper.writeValueAsString(onboarding);
+        when(onboardingRepository.findByFilters("taxCodeAggregate", null, "IPA", "origin-id", productId))
+                .thenReturn(List.of());
+
+        String result = assertDoesNotThrow(() -> completionServiceDefault.resolveAggregatorInstitutionId(onboarding));
+
+        assertNull(mapper.readValue(result, Onboarding.class).getInstitution().getId());
+        assertEquals(mapper.readTree(original), mapper.readTree(result));
+        verify(onboardingRepository).findByFilters("taxCodeAggregate", null, "IPA", "origin-id", productId);
+        verifyNoMoreInteractions(onboardingRepository);
+    }
+
+    @Test
     void testCreateAggregateOnboardingRequest() {
         // Given
         OnboardingAggregateOrchestratorInput input = createSampleOnboardingInput();
@@ -1322,6 +1380,8 @@ public class CompletionServiceDefaultTest {
 
         assertNotEquals(onboardingToUpdate.getId(), onboardingId);
         assertEquals(input.getAggregate().getTaxCode(), onboardingToUpdate.getInstitution().getTaxCode());
+        verify(onboardingRepository, never()).findByFilters(any(), any(), any(), any(), any());
+        verify(onboardingRepository, never()).update(anyString(), any(Object[].class));
     }
 
     @Test
@@ -1331,6 +1391,7 @@ public class CompletionServiceDefaultTest {
         input.getInstitution().setId(null);
         Onboarding onboardingToUpdate = createSampleOnboarding();
         Institution aggregator = new Institution();
+        aggregator.setId("aggregator-id");
         Onboarding onboardingAggregator = new Onboarding();
         onboardingAggregator.setInstitution(aggregator);
         List<Onboarding> onboardingList = new ArrayList<>();
@@ -1338,8 +1399,8 @@ public class CompletionServiceDefaultTest {
 
         // When
         when(onboardingRepository.findByFilters(any(), eq(null), any(), any(), any())).thenReturn(onboardingList);
-        when(onboardingRepository.findById(any())).thenReturn(onboardingAggregator);
-        doNothing().when(onboardingRepository).persistOrUpdate(any(Onboarding.class));
+        PanacheUpdate update = mock(PanacheUpdate.class);
+        when(onboardingRepository.update("institution.id = ?1", "aggregator-id")).thenReturn(update);
         String onboardingId = completionServiceDefault.createAggregateOnboardingRequest(input);
 
         ObjectMapper mapper = new ObjectMapper();
@@ -1347,6 +1408,15 @@ public class CompletionServiceDefaultTest {
 
         assertNotEquals(onboardingToUpdate.getId(), onboardingId);
         assertEquals(input.getAggregate().getTaxCode(), onboardingToUpdate.getInstitution().getTaxCode());
+        assertEquals("aggregator-id", input.getInstitution().getId());
+        verify(onboardingRepository).update("institution.id = ?1", "aggregator-id");
+        verify(update).where("_id", input.getId());
+        verify(onboardingRepository, never()).findById(any());
+        ArgumentCaptor<Onboarding> persisted = ArgumentCaptor.forClass(Onboarding.class);
+        verify(onboardingRepository).persistOrUpdate(persisted.capture());
+        assertEquals(onboardingId, persisted.getValue().getId());
+        assertNotEquals(input.getId(), persisted.getValue().getId());
+        assertEquals("aggregator-id", persisted.getValue().getAggregator().getId());
     }
 
     public static OnboardingAggregateOrchestratorInput createSampleOnboardingInput() {
@@ -1510,28 +1580,37 @@ public class CompletionServiceDefaultTest {
         input.setAggregate(aggregate);
         input.setInstitution(aggregator);
         Onboarding onboardingAggregator = new Onboarding();
+        Institution foundInstitution = new Institution();
+        foundInstitution.setId("aggregator-id");
 
         input.getInstitution().setOrigin(Origin.IPA);
         input.getInstitution().setOriginId("originId");
         input.getInstitution().setTaxCode("taxCode");
-        onboardingAggregator.setInstitution(aggregator);
+        onboardingAggregator.setInstitution(foundInstitution);
+        input.setId("onboarding-id");
         input.setProductId("prod-io");
 
         List<Onboarding> onboardingList = new ArrayList<>();
         onboardingList.add(onboardingAggregator);
 
         when(onboardingRepository.findByFilters(any(), eq(null), any(), any(), any())).thenReturn(onboardingList);
-        when(onboardingRepository.findById(any())).thenReturn(onboardingAggregator);
-        doNothing().when(onboardingRepository).persistOrUpdate(any(Onboarding.class));
+        PanacheUpdate update = mock(PanacheUpdate.class);
+        when(onboardingRepository.update("institution.id = ?1", "aggregator-id")).thenReturn(update);
 
         DelegationWithPaginationResponse delegationWithPaginationResponse = new DelegationWithPaginationResponse();
         delegationWithPaginationResponse.setDelegations(Collections.emptyList());
-        when(delegationApi.getDelegationsUsingGET1(null, aggregator.getId(), null, null, aggregator.getTaxCode(), null, null, null))
+        when(delegationApi.getDelegationsUsingGET1(null, "aggregator-id", null, null, aggregate.getTaxCode(), null, null, null))
                 .thenReturn(delegationWithPaginationResponse);
 
         String result = completionServiceDefault.existsDelegation(input);
 
         assertFalse(Boolean.parseBoolean(result));
+        assertEquals("aggregator-id", input.getInstitution().getId());
+        verify(onboardingRepository).update("institution.id = ?1", "aggregator-id");
+        verify(update).where("_id", input.getId());
+        verify(onboardingRepository, never()).findById(any());
+        verify(onboardingRepository, never()).persistOrUpdate(any(Onboarding.class));
+        verify(delegationApi).getDelegationsUsingGET1(null, "aggregator-id", null, null, aggregate.getTaxCode(), null, null, null);
     }
 
     @Test
