@@ -5,7 +5,7 @@
 | | |
 |---|---|
 | Path | `libs/selfcare-sdk-m2m` |
-| Artifact | `it.pagopa.selfcare:selfcare-sdk-m2m:0.1.0` (parent [`selfcare-sdk-pom:1.0.0`](selfcare-sdk-pom.md)) |
+| Artifact | `it.pagopa.selfcare:selfcare-sdk-m2m:0.2.0` (parent [`selfcare-sdk-pom:1.0.0`](selfcare-sdk-pom.md)) |
 | Stack | Quarkus (CDI, `quarkus-rest-client`), Jackson |
 | Used by | none on this branch |
 
@@ -37,9 +37,13 @@ The listener must remain CAE-only and neither endpoint must be published through
 <dependency>
   <groupId>it.pagopa.selfcare</groupId>
   <artifactId>selfcare-sdk-m2m</artifactId>
-  <version>0.1.0</version>
+  <version>0.2.0</version>
 </dependency>
 ```
+
+Do not use `0.1.0`: it predates the final auth contract (three-argument
+`token(tenant, audience, scope)` and a required `scope` in the response) and
+rejects every token issued by auth.
 
 ## Build and release
 
