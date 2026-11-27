@@ -32,7 +32,7 @@ locals {
   app_settings = [
     {
       name  = "TENANT_SUPPORTED_TENANTS"
-      value = "AR"
+      value = "AR,PNPG"
     },
     {
       name  = "JWT_TENANT_CLAIM_REQUIRED"
@@ -57,6 +57,26 @@ locals {
               authentication = {
                 type                   = "CONNECTION_STRING"
                 connectionStringEnvVar = "CONTRACTS_STORAGE_CONNECTION_STRING_AR"
+              }
+            }
+          }
+        },
+        PNPG = {
+          jwt = {
+            publicKeyEnvVar = "JWT_PUBLIC_KEY_PNPG"
+            issuers         = ["SPID", "PAGOPA"]
+            audiences       = ["pnpg.dev.selfcare.pagopa.it", "api-pnpg.dev.selfcare.pagopa.it"]
+          }
+          userRegistry = {
+            apiKeyEnvVar = "USER_REGISTRY_API_KEY_PNPG"
+          }
+          storages = {
+            contracts = {
+              account   = "selc${module.local.config.env_short}${module.local.config.location_short}pnpgcheckoutst01"
+              container = "sc-${module.local.config.env_short}-documents-blob"
+              authentication = {
+                type                   = "CONNECTION_STRING"
+                connectionStringEnvVar = "CONTRACTS_STORAGE_CONNECTION_STRING_PNPG"
               }
             }
           }
@@ -130,6 +150,18 @@ locals {
     {
       name  = "KONECTA_RAW_CONTRACT"
       value = "true"
+    },
+    {
+      name                = "USER_REGISTRY_API_KEY_PNPG"
+      key_vault_secret_id = "https://selc-${module.local.config.env_short}-pnpg-kv.vault.azure.net/secrets/user-registry-api-key"
+    },
+    {
+      name                = "JWT_PUBLIC_KEY_PNPG"
+      key_vault_secret_id = "https://selc-${module.local.config.env_short}-pnpg-kv.vault.azure.net/secrets/jwt-public-key"
+    },
+    {
+      name                = "CONTRACTS_STORAGE_CONNECTION_STRING_PNPG"
+      key_vault_secret_id = "https://selc-${module.local.config.env_short}-pnpg-kv.vault.azure.net/secrets/web-storage-connection-string"
     }
   ]
 
