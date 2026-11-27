@@ -19,6 +19,7 @@ import it.pagopa.selfcare.user.constant.PermissionTypeEnum;
 import it.pagopa.selfcare.user.controller.request.AddUserRoleDto;
 import it.pagopa.selfcare.user.controller.request.CreateUserDto;
 import it.pagopa.selfcare.user.controller.request.EmailType;
+import it.pagopa.selfcare.user.controller.request.InstitutionEmailType;
 import it.pagopa.selfcare.user.controller.request.UpdateDescriptionDto;
 import it.pagopa.selfcare.user.controller.request.UpdateProductUsersDto;
 import it.pagopa.selfcare.user.controller.response.*;
@@ -2657,6 +2658,110 @@ class UserServiceTest {
         when(userInstitutionService.persistOrUpdate(any())).thenAnswer(invocation -> Uni.createFrom().item((UserInstitution) invocation.getArgument(0)));
         when(userRegistryApi.findByIdUsingGET(anyString(), anyString())).thenReturn(Uni.createFrom().item(userResource));
         when(productService.getProduct(anyString())).thenReturn(new Product());
+    }
+
+    @Test
+    void sendInstitutionMail_contractUpdate() {
+        UserInstitution admin = buildProductUserInstitution("5d3b1c6e-8f2a-4b7d-9e10-2a4c6e8f0b13", MANAGER, ACTIVE);
+        Product product = new Product();
+        product.setId(UPDATE_PRODUCT_ID);
+        product.setTitle("Product Title");
+
+        when(userInstitutionService.retrieveFilteredUserInstitution(any())).thenReturn(Uni.createFrom().item(List.of(admin)));
+        when(productService.getProduct(anyString())).thenReturn(product);
+        when(userRegistryApi.findByIdUsingGET(anyString(), anyString())).thenReturn(Uni.createFrom().item(userResource));
+        when(userNotificationService.buildDataModelContractUpdateAndSendEmail(any(), any(), any())).thenReturn(Uni.createFrom().voidItem());
+
+        userService.sendInstitutionMail(UPDATE_INSTITUTION_ID, InstitutionEmailType.CONTRACT_UPDATE, List.of(UPDATE_PRODUCT_ID))
+                .subscribe().withSubscriber(UniAssertSubscriber.create())
+                .awaitItem();
+
+        verify(userNotificationService, times(1)).buildDataModelContractUpdateAndSendEmail(eq(userResource), eq(admin), eq(List.of("Product Title")));
+    }
+
+    @Test
+    void sendInstitutionMail_contractUpdate_noRecipients() {
+        when(userInstitutionService.retrieveFilteredUserInstitution(any())).thenReturn(Uni.createFrom().item(List.of()));
+
+        userService.sendInstitutionMail(UPDATE_INSTITUTION_ID, InstitutionEmailType.CONTRACT_UPDATE, List.of(UPDATE_PRODUCT_ID))
+                .subscribe().withSubscriber(UniAssertSubscriber.create())
+                .awaitItem();
+
+        verify(userNotificationService, never()).buildDataModelContractUpdateAndSendEmail(any(), any(), any());
+        ArgumentCaptor<Map<String, Object>> productFiltersCaptor = ArgumentCaptor.forClass(Map.class);
+        verify(userUtils).retrieveMapForFilter(any(Map.class), productFiltersCaptor.capture());
+        assertEquals(Set.of(MANAGER.name(), DELEGATE.name(), SUB_DELEGATE.name()),
+                new HashSet<>((List<String>) productFiltersCaptor.getValue().get("role")));
+        assertEquals(List.of(ACTIVE.name()), productFiltersCaptor.getValue().get("status"));
+        assertEquals(List.of(UPDATE_PRODUCT_ID), productFiltersCaptor.getValue().get("productId"));
+    }
+
+    @Test
+    void sendInstitutionMail_contractUpdate_doesNotFailWhenOneMailFails() {
+        UserInstitution failing = buildProductUserInstitution("5d3b1c6e-8f2a-4b7d-9e10-2a4c6e8f0b13", MANAGER, ACTIVE);
+        UserInstitution succeeding = buildProductUserInstitution("7a1c2e3f-4b5d-4e6f-8a9b-0c1d2e3f4a5b", DELEGATE, ACTIVE);
+        Product product = new Product();
+        product.setId(UPDATE_PRODUCT_ID);
+        product.setTitle("Product Title");
+
+        when(userInstitutionService.retrieveFilteredUserInstitution(any())).thenReturn(Uni.createFrom().item(List.of(failing, succeeding)));
+        when(productService.getProduct(anyString())).thenReturn(product);
+        when(userRegistryApi.findByIdUsingGET(anyString(), anyString())).thenReturn(Uni.createFrom().item(userResource));
+        when(userNotificationService.buildDataModelContractUpdateAndSendEmail(any(), eq(failing), any()))
+                .thenReturn(Uni.createFrom().failure(new InvalidRequestException("Missing mail")));
+        when(userNotificationService.buildDataModelContractUpdateAndSendEmail(any(), eq(succeeding), any()))
+                .thenReturn(Uni.createFrom().voidItem());
+
+        userService.sendInstitutionMail(UPDATE_INSTITUTION_ID, InstitutionEmailType.CONTRACT_UPDATE, List.of(UPDATE_PRODUCT_ID))
+                .subscribe().withSubscriber(UniAssertSubscriber.create())
+                .awaitItem();
+
+        verify(userNotificationService).buildDataModelContractUpdateAndSendEmail(any(), eq(failing), any());
+        verify(userNotificationService).buildDataModelContractUpdateAndSendEmail(any(), eq(succeeding), any());
+    }
+
+    @Test
+    void sendInstitutionMail_contractUpdate_sameProductNamesForAllUsers() {
+        final String prodPagopa = "prod-pagopa";
+        final String prodPn = "prod-pn";
+        UserInstitution userA = buildProductUserInstitution("5d3b1c6e-8f2a-4b7d-9e10-2a4c6e8f0b13", MANAGER, ACTIVE);
+        userA.getProducts().add(buildOnboardedProduct(prodPagopa, DELEGATE));
+        userA.getProducts().add(buildOnboardedProduct(prodPn, MANAGER));
+        UserInstitution userB = buildProductUserInstitution("7a1c2e3f-4b5d-4e6f-8a9b-0c1d2e3f4a5b", MANAGER, ACTIVE);
+        userB.getProducts().add(buildOnboardedProduct(prodPagopa, OPERATOR));
+
+        when(userInstitutionService.retrieveFilteredUserInstitution(any())).thenReturn(Uni.createFrom().item(List.of(userA, userB)));
+        when(productService.getProduct(anyString())).thenAnswer(invocation -> {
+            Product product = new Product();
+            product.setId(invocation.getArgument(0));
+            product.setTitle("Title " + invocation.getArgument(0));
+            return product;
+        });
+        when(userRegistryApi.findByIdUsingGET(anyString(), anyString())).thenReturn(Uni.createFrom().item(userResource));
+        when(userNotificationService.buildDataModelContractUpdateAndSendEmail(any(), any(), any())).thenReturn(Uni.createFrom().voidItem());
+
+        userService.sendInstitutionMail(UPDATE_INSTITUTION_ID, InstitutionEmailType.CONTRACT_UPDATE, List.of(UPDATE_PRODUCT_ID, prodPagopa))
+                .subscribe().withSubscriber(UniAssertSubscriber.create())
+                .awaitItem();
+
+        // every recipient gets the same list of requested products, whatever the role on each one
+        List<String> expectedNames = List.of("Title " + UPDATE_PRODUCT_ID, "Title " + prodPagopa);
+        verify(userNotificationService).buildDataModelContractUpdateAndSendEmail(any(), eq(userA), eq(expectedNames));
+        verify(userNotificationService).buildDataModelContractUpdateAndSendEmail(any(), eq(userB), eq(expectedNames));
+        // query pre-filter: only the fixed recipient roles
+        ArgumentCaptor<Map<String, Object>> productFiltersCaptor = ArgumentCaptor.forClass(Map.class);
+        verify(userUtils).retrieveMapForFilter(any(Map.class), productFiltersCaptor.capture());
+        assertEquals(Set.of(MANAGER.name(), DELEGATE.name(), SUB_DELEGATE.name()),
+                new HashSet<>((List<String>) productFiltersCaptor.getValue().get("role")));
+    }
+
+    private static OnboardedProduct buildOnboardedProduct(String productId, PartyRole role) {
+        OnboardedProduct onboardedProduct = new OnboardedProduct();
+        onboardedProduct.setProductId(productId);
+        onboardedProduct.setProductRole("admin");
+        onboardedProduct.setRole(role);
+        onboardedProduct.setStatus(ACTIVE);
+        return onboardedProduct;
     }
 
     @ParameterizedTest

@@ -23,4 +23,6 @@ public interface UserNotificationService {
 
     Uni<Void> buildDataModelConventionRequestAndSendEmail(UserResource user, UserInstitution institution, Product product);
 
+    Uni<Void> buildDataModelContractUpdateAndSendEmail(UserResource user, UserInstitution institution, List<String> productNames);
+
 }

@@ -39,4 +39,34 @@ public class GeneralUtils {
         }).toList() : Collections.emptyList();
     }
 
+    // Same masking as auth OtpUtils.maskEmail, e.g. john.doe@example.com -> j**n.d*e@example.com
+    public static String maskEmail(String email) {
+        if (email == null || !email.contains("@")) {
+            return email;
+        }
+
+        String[] parts = email.split("@", 2);
+        String[] nameParts = parts[0].split("\\.");
+
+        StringBuilder maskedUsername = new StringBuilder();
+        for (int i = 0; i < nameParts.length; i++) {
+            maskedUsername.append(maskPart(nameParts[i]));
+            if (i < nameParts.length - 1) {
+                maskedUsername.append(".");
+            }
+        }
+
+        return maskedUsername + "@" + parts[1];
+    }
+
+    private static String maskPart(String part) {
+        if (part.isEmpty()) {
+            return part;
+        }
+        if (part.length() <= 2) {
+            return part.charAt(0) + "*";
+        }
+        return part.charAt(0) + "*".repeat(part.length() - 2) + part.charAt(part.length() - 1);
+    }
+
 }

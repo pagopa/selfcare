@@ -35,7 +35,7 @@ public class TenantNotificationConfig {
         throw new IllegalStateException("Event Hub is configured only for AR");
       }
       Map<String, String> templates = new LinkedHashMap<>();
-      for (String name : List.of("activated", "deleted", "suspended", "request", "convention", "multi-role", "single-role")) {
+      for (String name : List.of("activated", "deleted", "suspended", "request", "convention", "multi-role", "single-role", "contract-update")) {
         templates.put(name, required(prefix + "onemail.template." + name));
       }
       boolean eventsEnabled = flag(prefix + "internalevents.enabled");

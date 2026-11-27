@@ -16,6 +16,7 @@ import org.openapi.quarkus.one_mail_json.model.EmailHighPriorityBodyDTOAllOfTo;
 import java.time.Duration;
 import java.util.Map;
 
+import static it.pagopa.selfcare.user.util.GeneralUtils.maskEmail;
 @Slf4j
 @ApplicationScoped
 public class OneMailServiceImpl implements MailService {
@@ -44,7 +45,7 @@ public class OneMailServiceImpl implements MailService {
         return Uni.createFrom().voidItem();
       }
 
-      log.info("Sending email. tenant={}, userId={}, templateId={}", tenant, userId, templateId);
+      log.info("Sending email. tenant={}, userId={}, email={}, templateId={}", tenant, userId, maskEmail(email), templateId);
 
       EmailHighPriorityBodyDTO emailRequest = EmailHighPriorityBodyDTO.builder()
         .from(new EmailHighPriorityBodyDTOAllOfFrom().email(settings.sender()))
