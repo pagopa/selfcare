@@ -11,6 +11,7 @@ import it.pagopa.selfcare.user.constant.PermissionTypeEnum;
 import it.pagopa.selfcare.user.controller.request.AddUserRoleDto;
 import it.pagopa.selfcare.user.controller.request.CreateUserDto;
 import it.pagopa.selfcare.user.controller.request.EmailType;
+import it.pagopa.selfcare.user.controller.request.InstitutionEmailType;
 import it.pagopa.selfcare.user.controller.request.UpdateDescriptionDto;
 import it.pagopa.selfcare.user.controller.request.UpdateProductUsersDto;
 import it.pagopa.selfcare.user.controller.response.*;
@@ -105,6 +106,7 @@ public class UserServiceImpl implements UserService {
     private static final String USER_INSTITUTION_FOUNDED = "UserInstitution with userId: {} and institutionId: {} founded";
     private static final String USER_INSTITUTION_NOT_FOUND = "UserInstitution with userId: {} and institutionId: {} not found";
     private static final List<String> PRODUCT_ADMIN_ROLES = List.of(PartyRole.MANAGER.name(), PartyRole.DELEGATE.name(), PartyRole.ADMIN_EA.name(), PartyRole.SUB_DELEGATE.name());
+    private static final List<PartyRole> INSTITUTION_MAIL_RECIPIENT_ROLES = List.of(PartyRole.MANAGER, PartyRole.DELEGATE, PartyRole.SUB_DELEGATE);
 
     /**
      * The updateUserStatus function updates the status of a user's onboarded product.
@@ -652,6 +654,58 @@ public class UserServiceImpl implements UserService {
                 .replaceWithVoid();
     }
 
+
+    @Override
+    public Uni<Void> sendInstitutionMail(String institutionId, InstitutionEmailType type, List<String> productIds) {
+        Map<String, Object> userInstitutionFilters = UserInstitutionFilter.builder().institutionId(institutionId).build().constructMap();
+        Map<String, Object> productFilters = OnboardedProductFilter.builder()
+                .role(INSTITUTION_MAIL_RECIPIENT_ROLES.stream().map(PartyRole::name).toList())
+                .status(List.of(ACTIVE.name()))
+                .productId(productIds)
+                .build().constructMap();
+        return userInstitutionService.retrieveFilteredUserInstitution(userUtils.retrieveMapForFilter(userInstitutionFilters, productFilters))
+                .onItem().transformToUni(recipients -> {
+                    if (recipients.isEmpty()) {
+                        return Uni.createFrom().item(0L);
+                    }
+                    // same products on every mail, whatever the role of each recipient
+                    return Uni.createFrom().item(() -> resolveProductNames(productIds))
+                            .runSubscriptionOn(Infrastructure.getDefaultWorkerPool())
+                            .onItem().transformToUni(productNames -> Multi.createFrom().iterable(recipients)
+                                    .onItem().transformToUniAndConcatenate(userInstitution -> sendInstitutionMailToUser(userInstitution, type, productNames))
+                                    .filter(Boolean.TRUE::equals)
+                                    .collect().with(Collectors.counting()));
+                })
+                .invoke(notifiedUsers -> log.info("{} mail sent to {} users for institutionId: {}, productIds: {}", type, notifiedUsers, Encode.forJava(institutionId), Encode.forJava(String.valueOf(productIds))))
+                .onFailure().invoke(throwable -> log.error("Error sending {} mail for institutionId: {} -> {}", type, Encode.forJava(institutionId), throwable.getMessage(), throwable))
+                .replaceWithVoid();
+    }
+
+    private Uni<Void> sendInstitutionMailByType(InstitutionEmailType type, UserResource userResource, UserInstitution userInstitution, List<String> productNames) {
+        return switch (type) {
+            case CONTRACT_UPDATE -> userNotificationService.buildDataModelContractUpdateAndSendEmail(userResource, userInstitution, productNames);
+        };
+    }
+
+    private Uni<Boolean> sendInstitutionMailToUser(UserInstitution userInstitution, InstitutionEmailType type, List<String> productNames) {
+        return userRegistryService.findByIdUsingGET(USERS_WORKS_FIELD_LIST, userInstitution.getUserId())
+                .onItem().transformToUni(userResource -> sendInstitutionMailByType(type, userResource, userInstitution, productNames))
+                .replaceWith(Boolean.TRUE)
+                .onFailure().recoverWithItem(throwable -> {
+                    log.error("Error sending {} mail to userId: {} for institutionId: {} -> {}", type, Encode.forJava(userInstitution.getUserId()), Encode.forJava(userInstitution.getInstitutionId()), throwable.getMessage(), throwable);
+                    return Boolean.FALSE;
+                });
+    }
+
+    private List<String> resolveProductNames(List<String> productIds) {
+        return productIds.stream()
+                .map(productId -> {
+                    Product product = productService.getProduct(productId);
+                    return product != null && StringUtils.isNotBlank(product.getTitle()) ? product.getTitle() : productId;
+                })
+                .distinct()
+                .toList();
+    }
 
     private Function<PrepareNotificationData, Uni<Void>> emailStrategy(EmailType type) {
         return data -> switch (type) {

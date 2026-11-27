@@ -374,6 +374,58 @@ paths:
           description: Not Allowed
       security:
       - SecurityScheme: []
+  /institutions/{institutionId}/send-mail:
+    post:
+      tags:
+      - Institution
+      summary: Send an email to the users of an institution for a list of products
+      description: "Sends the email identified by 'type' to the users of the institution\
+        \ enabled for it on the given products. Each type defines the recipients and\
+        \ the OneMail template: CONTRACT_UPDATE is sent to the users with role MANAGER,\
+        \ DELEGATE or SUB_DELEGATE on at least one ACTIVE product among 'productIds'\
+        \ (required), asking them to integrate the membership agreement documentation.\
+        \ Every mail lists the same 'productIds'."
+      operationId: sendInstitutionMail
+      parameters:
+      - name: institutionId
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SendInstitutionMailDto"
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
+        "401":
+          description: Not Authorized
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
+        "403":
+          description: Forbidden
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
+        "404":
+          description: Not Found
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
+      security:
+      - SecurityScheme: []
   /institutions/{institutionId}/user-institutions:
     get:
       tags:
@@ -1329,6 +1381,10 @@ components:
       - COLL
       - PROD
       type: string
+    InstitutionEmailType:
+      enum:
+      - CONTRACT_UPDATE
+      type: string
     InvalidParam:
       type: object
       properties:
@@ -1538,6 +1594,19 @@ components:
       properties:
         fiscalCode:
           type: string
+    SendInstitutionMailDto:
+      required:
+      - type
+      - productIds
+      type: object
+      properties:
+        type:
+          $ref: "#/components/schemas/InstitutionEmailType"
+        productIds:
+          minItems: 1
+          type: array
+          items:
+            type: string
     SendMailDto:
       required:
       - userMailUuid

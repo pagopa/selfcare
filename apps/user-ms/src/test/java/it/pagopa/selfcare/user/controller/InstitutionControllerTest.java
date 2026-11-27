@@ -8,6 +8,8 @@ import io.restassured.http.ContentType;
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
 import it.pagopa.selfcare.onboarding.common.PartyRole;
+import it.pagopa.selfcare.user.controller.request.InstitutionEmailType;
+import it.pagopa.selfcare.user.controller.request.SendInstitutionMailDto;
 import it.pagopa.selfcare.user.controller.request.UpdateDescriptionDto;
 import it.pagopa.selfcare.user.controller.request.UpdateProductUsersDto;
 import it.pagopa.selfcare.user.controller.response.DeletedUserCountResponse;
@@ -408,6 +410,76 @@ class InstitutionControllerTest {
                 .pathParam("institutionId", institutionId)
                 .pathParam("productId", productId)
                 .delete("/{institutionId}/products/{productId}/users")
+                .then()
+                .statusCode(401);
+    }
+
+    private static SendInstitutionMailDto buildSendInstitutionMailDto(InstitutionEmailType type, List<String> productIds) {
+        SendInstitutionMailDto dto = new SendInstitutionMailDto();
+        dto.setType(type);
+        dto.setProductIds(productIds);
+        return dto;
+    }
+
+    @Test
+    @TestSecurity(user = "userJwt")
+    void sendInstitutionMail() {
+        final String institutionId = "institutionId";
+        final List<String> productIds = List.of("prod-io");
+
+        Mockito.when(userService.sendInstitutionMail(institutionId, InstitutionEmailType.CONTRACT_UPDATE, productIds))
+                .thenReturn(Uni.createFrom().voidItem());
+
+        given()
+                .when()
+                .contentType(ContentType.JSON)
+                .pathParam("institutionId", institutionId)
+                .body(buildSendInstitutionMailDto(InstitutionEmailType.CONTRACT_UPDATE, productIds))
+                .post("/{institutionId}/send-mail")
+                .then()
+                .statusCode(204);
+
+        verify(userService).sendInstitutionMail(institutionId, InstitutionEmailType.CONTRACT_UPDATE, productIds);
+    }
+
+    @Test
+    @TestSecurity(user = "userJwt")
+    void sendInstitutionMail_missingType() {
+        given()
+                .when()
+                .contentType(ContentType.JSON)
+                .pathParam("institutionId", "institutionId")
+                .body(buildSendInstitutionMailDto(null, List.of("prod-io")))
+                .post("/{institutionId}/send-mail")
+                .then()
+                .statusCode(400);
+
+        Mockito.verifyNoInteractions(userService);
+    }
+
+    @Test
+    @TestSecurity(user = "userJwt")
+    void sendInstitutionMail_missingProductIds() {
+        given()
+                .when()
+                .contentType(ContentType.JSON)
+                .pathParam("institutionId", "institutionId")
+                .body(buildSendInstitutionMailDto(InstitutionEmailType.CONTRACT_UPDATE, List.of()))
+                .post("/{institutionId}/send-mail")
+                .then()
+                .statusCode(400);
+
+        Mockito.verifyNoInteractions(userService);
+    }
+
+    @Test
+    void sendInstitutionMail_NotAuthorized() {
+        given()
+                .when()
+                .contentType(ContentType.JSON)
+                .pathParam("institutionId", "institutionId")
+                .body(buildSendInstitutionMailDto(InstitutionEmailType.CONTRACT_UPDATE, List.of("prod-io")))
+                .post("/{institutionId}/send-mail")
                 .then()
                 .statusCode(401);
     }

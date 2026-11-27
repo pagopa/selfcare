@@ -6,6 +6,7 @@ import it.pagopa.selfcare.onboarding.common.PartyRole;
 import it.pagopa.selfcare.user.controller.request.AddUserRoleDto;
 import it.pagopa.selfcare.user.controller.request.CreateUserDto;
 import it.pagopa.selfcare.user.controller.request.EmailType;
+import it.pagopa.selfcare.user.controller.request.InstitutionEmailType;
 import it.pagopa.selfcare.user.controller.request.UpdateDescriptionDto;
 import it.pagopa.selfcare.user.controller.request.UpdateProductUsersDto;
 import it.pagopa.selfcare.user.controller.response.*;
@@ -72,6 +73,8 @@ public interface UserService {
     Uni<Boolean> checkUser(String fiscalCode, String institutionId, String productId);
 
     Uni<Void> sendMailUserRequest(String userId, String userMailUuid, String institutionName, String productId, EmailType type, String institutionId);
+
+    Uni<Void> sendInstitutionMail(String institutionId, InstitutionEmailType type, List<String> productIds);
 
     Uni<UserOtpEmailInfoResponse> getUserOtpEmailInfo(String userId);
 
