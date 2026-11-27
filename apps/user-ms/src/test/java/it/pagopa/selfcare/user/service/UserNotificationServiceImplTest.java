@@ -523,7 +523,7 @@ class UserNotificationServiceImplTest {
 
     @Test
     void testBuildDataModelContractUpdateAndSendEmail() {
-        when(mailService.sendOneMail(anyString(), anyString(), anyString(), anyMap())).thenReturn(Uni.createFrom().voidItem());
+        when(mailService.sendOneMail(eq("AR"), anyString(), anyString(), anyString(), anyMap())).thenReturn(Uni.createFrom().voidItem());
 
         userNotificationService.buildDataModelContractUpdateAndSendEmail(
                         userResource,
@@ -535,7 +535,7 @@ class UserNotificationServiceImplTest {
                 .awaitItem().assertCompleted();
 
         ArgumentCaptor<Map> captor = ArgumentCaptor.forClass(Map.class);
-        verify(mailService, timeout(2000).times(1)).sendOneMail(anyString(), anyString(), anyString(), captor.capture());
+        verify(mailService, timeout(2000).times(1)).sendOneMail(eq("AR"), anyString(), anyString(), anyString(), captor.capture());
         assertEquals("Product A e Product B", captor.getValue().get("productNames"));
         assertTrue(captor.getValue().get("documentInstitutionUrl").toString()
                 .endsWith("/dashboard/" + userInstitution.getInstitutionId() + "/documents"));
