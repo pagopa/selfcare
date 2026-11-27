@@ -97,6 +97,22 @@ class ContractUpdateCampaignServiceImplTest {
     }
 
     @Test
+    void send_shouldJoinThreeProductsWithCommaAndLastWithE() {
+        when(onboardingRepositoryService.findByQuery(any())).thenReturn(List.of(
+                adhesion("io-id", "prod-io", null), adhesion("pagopa-id", "prod-pagopa", null),
+                adhesion("pn-id", "prod-pn", null)));
+        mockInstitution(PEC);
+        mockProduct("prod-io", "App IO");
+        mockProduct("prod-pagopa", "Piattaforma pagoPA");
+        mockProduct("prod-pn", "SEND");
+
+        assertEquals(SENT, service.send(request("prod-io", "prod-pagopa", "prod-pn")).outcome());
+
+        assertEquals("App IO, Piattaforma pagoPA e SEND",
+                captureMail().getMailParameters().get(templatePlaceholdersConfig.productName()));
+    }
+
+    @Test
     void send_shouldNotifyOnlyAdhesionsNotYetNotified() {
         when(onboardingRepositoryService.findByQuery(any())).thenReturn(List.of(
                 adhesion("io-id", "prod-io", LocalDateTime.now()), adhesion("pagopa-id", "prod-pagopa", null)));

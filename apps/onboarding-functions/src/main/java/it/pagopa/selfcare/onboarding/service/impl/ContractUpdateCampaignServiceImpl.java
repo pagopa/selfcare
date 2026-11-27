@@ -85,11 +85,16 @@ public class ContractUpdateCampaignServiceImpl implements ContractUpdateCampaign
             return new ContractUpdateCampaignResponse(MISSING_PEC, null);
         }
 
-        String productNames = toNotify.stream()
-                .map(Onboarding::getProductId)
-                .distinct()
-                .map(productId -> productService.getProduct(productId).getTitle())
-                .collect(Collectors.joining(" e "));
+        List<String> names = toNotify.stream()
+          .map(Onboarding::getProductId)
+          .distinct()
+          .map(productId -> productService.getProduct(productId).getTitle())
+          .toList();
+
+        String productNames = names.size() <= 1
+          ? String.join("", names)
+          : String.join(", ", names.subList(0, names.size() - 1))
+          + " e " + names.get(names.size() - 1);
 
         notificationService.sendMail(NotificationMailRequest.builder()
                 .type(NotificationMailType.CONTRACT_UPDATE_CAMPAIGN)
