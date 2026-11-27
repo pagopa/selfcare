@@ -182,7 +182,7 @@ public class InstitutionController {
             summary = "Send an email to the users of an institution for a list of products",
             description = "Sends the email identified by 'type' to the users of the institution enabled for it on the given products. " +
                     "Each type defines the recipients and the OneMail template: CONTRACT_UPDATE is sent to the users with role MANAGER, DELEGATE or " +
-                                        "SUB_DELEGATE on at least one ACTIVE product among 'productIds' (required), asking them to subscribe again the membership agreement documentation. " +
+                                        "SUB_DELEGATE on at least one ACTIVE product among 'productIds' (required), asking them to integrate the membership agreement documentation. " +
                                         "Every mail lists the same 'productIds'."
     )
     @APIResponses(value = {
