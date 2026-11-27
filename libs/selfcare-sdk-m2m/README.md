@@ -94,7 +94,7 @@ environment variable:
       "session": {
         "privateKeyEnvVar": "TENANT_PNPG_JWT_SESSION_PRIVATE_KEY",
         "keyIdEnvVar": "TENANT_PNPG_JWT_SESSION_KEY_ID",
-        "audience": "api-pnpg.dev.selfcare.pagopa.it"
+        "audience": "pnpg.dev.selfcare.pagopa.it"
       }
     },
     "m2m": {
@@ -137,7 +137,12 @@ limited to AR unless PNPG resources are genuinely needed.
 Set `SESSION_TOKEN_TENANT_AUDIENCE_ENABLED=true` to use each tenant's
 `jwt.session.audience`; otherwise the existing `SESSION_TOKEN_AUDIENCE` applies.
 An absent/blank tenant audience falls back to the global value. This flag also
-affects user sessions: verify AR compatibility before changing it.
+affects user sessions. DEV/UAT/PROD Terraform sets it to `true` in both AR and PNPG
+auth roots, so every token carries the audience of its `tenant_id` (for example
+`pnpg.dev.selfcare.pagopa.it` for PNPG tokens issued by AR auth). AR user sessions
+are unchanged because the AR registry audience equals `SESSION_TOKEN_AUDIENCE`.
+Recipients must take the expected audience from their own configuration, never
+from `X-Tenant-Id`.
 
 ## Deployment and rollback
 
@@ -162,8 +167,8 @@ values from historical state versions.
 
 Before enabling tenant issuance, provision signing secrets and the technical IAM user/permissions
 and, for HTTPS deployments, the TLS certificate/key. Verify the configured
-transport from an actual caller and that port 8082 cannot be reached outside the CAE. No plan/apply,
-deployment, secret provisioning or IAM data changes are performed by this PR.
+transport from an actual caller and that port 8082 cannot be reached outside the CAE.
+Secret provisioning and IAM data are managed outside Terraform.
 Do not remove the legacy caller JWTs until consumers are migrated.
 Deploy an auth image supporting `M2M_TLS_ENABLED` before enabling the HTTP
 configuration; an older TLS-only image still requires certificate/key secrets.
@@ -219,8 +224,8 @@ Each app-name endpoint is for callers in that auth CAE only.
 It can request either tenant once policies are configured; it does not make
 the listener reachable from the separate PNPG CAE. Tenant JWT signing keys are
 required even when caller transport is HTTP; auth makes no IAM call for issuance.
-No consumer deployment is changed automatically by these settings. AR auth currently
-uses the global session audience; the PNPG-specific audience is used by PNPG auth.
+No consumer deployment is changed automatically by these settings. Both AR and PNPG
+auth use the per-tenant session audience (`SESSION_TOKEN_TENANT_AUDIENCE_ENABLED=true`).
 
 ## Callers outside the CAE (Function subnet proxy)
 
@@ -257,8 +262,8 @@ root; PNPG has a separate proxy and CAE. Ensure the private DNS zone is linked a
 the Function subnet has a route to the CAE on HTTP port 80. After deployment verify
 the real Function request succeeds and traffic from an unlisted subnet is denied:
 the source IP observed by the CAE must actually belong to the integration subnet.
-Also verify that auth's TCP 8082 mapping is present with `external=false`; at the
-last DEV check, PNPG had `external=true` and AR had no additional port mapping.
+Also verify that auth's TCP 8082 mapping is present with `external=false`: manual
+changes in an environment can drift from Terraform (e.g. `external=true`).
 No Function configuration is changed here.
 `trigger_release_auth.yml` targets AR only; PNPG must be released separately using
 the `Release App` workflow with `app=auth` and `target=pnpg`.
@@ -270,9 +275,11 @@ or fall back to a static JWT. The REST-client filter remains asynchronous.
 
 ## Publication and local checks
 
-Publish `selfcare-sdk-m2m:0.1.0` using **Release SDKs**
+Publish `selfcare-sdk-m2m:0.2.0` using **Release SDKs**
 (`.github/workflows/release-sdk.yml`, `module=selfcare-sdk-m2m` or `all`).
 Bump the version if this version was already published; never overwrite a release.
+`0.1.0` was published before the final contract (three-argument `token` and a
+required `scope` in the response): it rejects every auth response, do not use it.
 Consumer adapters from #1126 require updating before adoption.
 
 ```shell

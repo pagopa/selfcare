@@ -230,7 +230,7 @@ locals {
     },
     {
       name  = "SESSION_TOKEN_TENANT_AUDIENCE_ENABLED"
-      value = "false"
+      value = "true"
     },
     {
       name  = "USER_REGISTRY_URL"
